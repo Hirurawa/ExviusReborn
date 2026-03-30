@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://b785keqddokby"]
+
+[ext_resource type="Script" uid="uid://bs520eu2basck" path="res://demo.gd" id="1_0bhed"]
+[ext_resource type="Script" uid="uid://dpryy3vvrydce" path="res://server_connection.gd" id="2_m0rpm"]
+[ext_resource type="Script" uid="uid://chwjubnjt8jbk" path="res://debug_panel.gd" id="3_m0rpm"]
+
+[node name="Demo" type="Node2D" unique_id=647364239]
+script = ExtResource("1_0bhed")
+
+[node name="ServerConnection" type="Node" parent="." unique_id=182497237]
+script = ExtResource("2_m0rpm")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=401059779]
+
+[node name="DebugPanel" type="Panel" parent="CanvasLayer" unique_id=42135515]
+offset_right = 628.0
+offset_bottom = 123.0
+script = ExtResource("3_m0rpm")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer/DebugPanel" unique_id=513090774]
+layout_mode = 0
+offset_right = 624.0
+offset_bottom = 120.0

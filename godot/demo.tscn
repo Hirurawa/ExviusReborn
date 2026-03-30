@@ -46,12 +46,8 @@ grow_vertical = 2
 
 [node name="FeedbackLabel" type="Label" parent="CanvasLayer/LoginUI/VBoxContainer"]
 layout_mode = 2
-text = "Please Login or Register"
+text = "Please Login"
 horizontal_alignment = 1
-
-[node name="UsernameInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
-layout_mode = 2
-placeholder_text = "Username (Register only)"
 
 [node name="EmailInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
 layout_mode = 2
@@ -70,9 +66,62 @@ alignment = 1
 layout_mode = 2
 text = "Login"
 
-[node name="RegisterButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer"]
+[node name="GoToRegisterButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Go to Register"
+
+[node name="RegisterUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/RegisterUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+layout_mode = 2
+text = "Please Register"
+horizontal_alignment = 1
+
+[node name="UsernameInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Username"
+
+[node name="EmailInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Password"
+secret = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="RegisterButton" type="Button" parent="CanvasLayer/RegisterUI/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "Register"
+
+[node name="BackToLoginButton" type="Button" parent="CanvasLayer/RegisterUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Back to Login"
 
 [node name="GameUI" type="Control" parent="CanvasLayer"]
 visible = false
@@ -97,3 +146,62 @@ offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_alignment = 1
+
+[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer/GameUI"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -100.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "User Options"
+item_count = 2
+popup/item_0/text = "Edit Profile"
+popup/item_0/id = 0
+popup/item_1/text = "Logout"
+popup/item_1/id = 1
+
+[node name="EditProfileUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/EditProfileUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/EditProfileUI/VBoxContainer"]
+layout_mode = 2
+text = "Edit Profile"
+horizontal_alignment = 1
+
+[node name="NewUsernameInput" type="LineEdit" parent="CanvasLayer/EditProfileUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "New Username"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/EditProfileUI/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="UpdateButton" type="Button" parent="CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Update"
+
+[node name="CancelButton" type="Button" parent="CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Cancel"

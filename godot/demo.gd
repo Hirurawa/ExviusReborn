@@ -2,7 +2,6 @@ extends Node2D
 
 
 @onready var server_connection := $ServerConnection
-@onready var debug_panel := $CanvasLayer/DebugPanel
 
 @onready var login_ui := $CanvasLayer/LoginUI
 @onready var register_ui := $CanvasLayer/RegisterUI
@@ -29,6 +28,14 @@ extends Node2D
 @onready var edit_update_button := $CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer/UpdateButton
 @onready var edit_cancel_button := $CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer/CancelButton
 
+
+@onready var stats_level_label := $CanvasLayer/GameUI/StatsContainer/LevelLabel
+@onready var stats_xp_label := $CanvasLayer/GameUI/StatsContainer/XPLabel
+@onready var stats_xp_input := $CanvasLayer/GameUI/StatsContainer/HBoxContainer/XPInput
+@onready var stats_add_xp_button := $CanvasLayer/GameUI/StatsContainer/HBoxContainer/AddXPButton
+
+var current_level: int = 1
+var current_xp: int = 0
 @onready var user_info_label := $CanvasLayer/GameUI/UserInfoLabel
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
 @onready var friends_button := $CanvasLayer/GameUI/FriendsButton
@@ -41,6 +48,8 @@ extends Node2D
 @onready var back_home_button := $CanvasLayer/FriendsUI/VBoxContainer/BackHomeButton
 
 func _ready() -> void:
+
+	stats_add_xp_button.pressed.connect(_on_add_xp_button_pressed)
 	login_button.pressed.connect(_on_login_button_pressed)
 	go_to_register_button.pressed.connect(_on_go_to_register_button_pressed)
 	register_button.pressed.connect(_on_register_button_pressed)
@@ -54,6 +63,30 @@ func _ready() -> void:
 	friends_button.pressed.connect(_on_friends_button_pressed)
 	add_friend_button.pressed.connect(_on_add_friend_button_pressed)
 	back_home_button.pressed.connect(_on_back_home_button_pressed)
+
+
+func _update_stats_ui() -> void:
+	var required_xp = current_level * 100
+	stats_level_label.text = "Level: %d" % current_level
+	stats_xp_label.text = "XP: %d / %d" % [current_xp, required_xp]
+
+func _on_add_xp_button_pressed() -> void:
+	var xp_to_add: int = stats_xp_input.text.to_int()
+	if xp_to_add <= 0:
+		return
+
+	current_xp += xp_to_add
+
+	var required_xp = current_level * 100
+	while current_xp >= required_xp:
+		current_xp -= required_xp
+		current_level += 1
+		required_xp = current_level * 100
+
+	_update_stats_ui()
+	stats_xp_input.text = ""
+
+	await server_connection.write_player_stats_async(current_level, current_xp)
 
 func _on_user_menu_id_pressed(id: int) -> void:
 	if id == 0:
@@ -90,13 +123,11 @@ func _on_add_friend_button_pressed() -> void:
 		return
 
 	friends_feedback_label.text = "Adding friend..."
-	debug_panel.write_message("Adding friend %s." % username)
 
 	var result: int = await(server_connection.add_friends_async(username))
 
 	if result == OK:
 		friends_feedback_label.text = "Friend request sent/accepted!"
-		debug_panel.write_message("SUCCESS")
 		add_friend_input.text = ""
 		_refresh_friends_list()
 	elif result == ERR_UNAUTHORIZED:
@@ -105,7 +136,6 @@ func _on_add_friend_button_pressed() -> void:
 		friends_feedback_label.text = "User not found or invalid."
 	else:
 		friends_feedback_label.text = "Failed to add friend. Code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _refresh_friends_list() -> void:
 	for child in friends_list_container.get_children():
@@ -167,51 +197,39 @@ func _refresh_friends_list() -> void:
 
 func _on_delete_friend_pressed(username: String) -> void:
 	friends_feedback_label.text = "Deleting friend..."
-	debug_panel.write_message("Deleting friend %s." % username)
 	var result: int = await(server_connection.delete_friends_async(username))
 	if result == OK:
 		friends_feedback_label.text = "Friend deleted."
-		debug_panel.write_message("SUCCESS")
 		_refresh_friends_list()
 	else:
 		friends_feedback_label.text = "Failed to delete friend. Code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _on_undo_request_pressed(username: String) -> void:
 	friends_feedback_label.text = "Undoing friend request..."
-	debug_panel.write_message("Undoing friend request to %s." % username)
 	var result: int = await(server_connection.delete_friends_async(username))
 	if result == OK:
 		friends_feedback_label.text = "Friend request undone."
-		debug_panel.write_message("SUCCESS")
 		_refresh_friends_list()
 	else:
 		friends_feedback_label.text = "Failed to undo request. Code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _on_accept_request_pressed(username: String) -> void:
 	friends_feedback_label.text = "Accepting friend request..."
-	debug_panel.write_message("Accepting friend request from %s." % username)
 	var result: int = await(server_connection.add_friends_async(username))
 	if result == OK:
 		friends_feedback_label.text = "Friend request accepted."
-		debug_panel.write_message("SUCCESS")
 		_refresh_friends_list()
 	else:
 		friends_feedback_label.text = "Failed to accept request. Code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _on_decline_request_pressed(username: String) -> void:
 	friends_feedback_label.text = "Declining friend request..."
-	debug_panel.write_message("Declining friend request from %s." % username)
 	var result: int = await(server_connection.delete_friends_async(username))
 	if result == OK:
 		friends_feedback_label.text = "Friend request declined."
-		debug_panel.write_message("SUCCESS")
 		_refresh_friends_list()
 	else:
 		friends_feedback_label.text = "Failed to decline request. Code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 
 func _on_edit_update_button_pressed() -> void:
@@ -222,13 +240,11 @@ func _on_edit_update_button_pressed() -> void:
 		return
 
 	edit_feedback_label.text = "Updating profile..."
-	debug_panel.write_message("Updating username to %s." % new_username)
 
 	var result: int = await(server_connection.update_account_async(new_username))
 
 	if result == OK:
 		edit_feedback_label.text = "Update successful!"
-		debug_panel.write_message("SUCCESS")
 		edit_profile_ui.hide()
 		game_ui.show()
 
@@ -237,7 +253,6 @@ func _on_edit_update_button_pressed() -> void:
 			user_info_label.text = "Welcome, " + account.user.username + "!"
 	else:
 		edit_feedback_label.text = "Update failed. Error code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _on_logout_pressed() -> void:
 	server_connection.logout()
@@ -245,7 +260,6 @@ func _on_logout_pressed() -> void:
 	login_ui.show()
 	user_info_label.text = ""
 	login_feedback_label.text = "Logged out successfully."
-	debug_panel.write_message("User logged out.")
 
 func _on_go_to_register_button_pressed() -> void:
 	login_ui.hide()
@@ -264,17 +278,14 @@ func _on_login_button_pressed() -> void:
 		return
 
 	login_feedback_label.text = "Logging in..."
-	debug_panel.write_message("Authenticating user %s." % email)
 
 	var result: int = await(server_connection.authenticate_async(email, password))
 	
 	if result == OK:
 		login_feedback_label.text = "Login successful!"
-		debug_panel.write_message("SUCCESS")
 		_transition_to_game(email)
 	else:
 		login_feedback_label.text = "Login failed. Error code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _on_register_button_pressed() -> void:
 	var username: String = register_username_input.text.strip_edges()
@@ -286,22 +297,25 @@ func _on_register_button_pressed() -> void:
 		return
 
 	register_feedback_label.text = "Registering..."
-	debug_panel.write_message("Registering user %s." % email)
 
 	var result: int = await(server_connection.register_async(email, password, username))
 
 	if result == OK:
 		register_feedback_label.text = "Registration successful!"
-		debug_panel.write_message("SUCCESS")
 		_transition_to_game(email)
 	else:
 		register_feedback_label.text = "Registration failed. Error code: %d" % result
-		debug_panel.write_message("FAIL: %d" % result)
 
 func _transition_to_game(email: String) -> void:
 	login_ui.hide()
 	register_ui.hide()
 	game_ui.show()
+
+	var stats = await server_connection.read_player_stats_async()
+	current_level = int(stats.get("level", 1))
+	current_xp = int(stats.get("xp", 0))
+	_update_stats_ui()
+
 	user_info_label.text = "Fetching profile..."
 
 	var account = await(server_connection.get_account_async())

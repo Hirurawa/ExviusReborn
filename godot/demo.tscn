@@ -21,3 +21,79 @@ script = ExtResource("3_m0rpm")
 layout_mode = 0
 offset_right = 624.0
 offset_bottom = 120.0
+
+[node name="LoginUI" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/LoginUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/LoginUI/VBoxContainer"]
+layout_mode = 2
+text = "Please Login or Register"
+horizontal_alignment = 1
+
+[node name="UsernameInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Username (Register only)"
+
+[node name="EmailInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Password"
+secret = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/LoginUI/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="LoginButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Login"
+
+[node name="RegisterButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Register"
+
+[node name="GameUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UserInfoLabel" type="Label" parent="CanvasLayer/GameUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1

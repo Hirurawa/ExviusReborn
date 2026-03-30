@@ -53,3 +53,26 @@ func register_async(email: String, password: String, username: String) -> int:
 		result = new_session.get_exception().status_code
 	
 	return result
+
+func add_friends_async(username: String) -> int:
+	if _session == null or _session.is_expired():
+		return ERR_UNAUTHORIZED
+
+	var usernames: PackedStringArray = [username]
+	var result = await(_client.add_friends_async(_session, [], usernames))
+
+	if result.is_exception():
+		return result.get_exception().status_code
+
+	return OK
+
+func list_friends_async() -> NakamaAPI.ApiFriendList:
+	if _session == null or _session.is_expired():
+		return null
+
+	var result = await(_client.list_friends_async(_session, null, 100))
+
+	if result.is_exception():
+		return null
+
+	return result as NakamaAPI.ApiFriendList

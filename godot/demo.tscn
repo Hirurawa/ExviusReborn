@@ -162,6 +162,79 @@ popup/item_0/id = 0
 popup/item_1/text = "Logout"
 popup/item_1/id = 1
 
+[node name="FriendsButton" type="Button" parent="CanvasLayer/GameUI"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -50.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Friends"
+
+[node name="FriendsUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/FriendsUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+layout_mode = 2
+text = "Friends"
+horizontal_alignment = 1
+
+[node name="AddFriendHBox" type="HBoxContainer" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="AddFriendInput" type="LineEdit" parent="CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Username"
+
+[node name="AddFriendButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox"]
+layout_mode = 2
+text = "Add Friend"
+
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FriendsListContainer" type="VBoxContainer" parent="CanvasLayer/FriendsUI/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BackHomeButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+layout_mode = 2
+text = "Back Home"
+
 [node name="EditProfileUI" type="Control" parent="CanvasLayer"]
 visible = false
 layout_mode = 3

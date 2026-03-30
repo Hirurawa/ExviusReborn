@@ -31,6 +31,14 @@ extends Node2D
 
 @onready var user_info_label := $CanvasLayer/GameUI/UserInfoLabel
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
+@onready var friends_button := $CanvasLayer/GameUI/FriendsButton
+
+@onready var friends_ui := $CanvasLayer/FriendsUI
+@onready var add_friend_input := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendInput
+@onready var add_friend_button := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendButton
+@onready var friends_feedback_label := $CanvasLayer/FriendsUI/VBoxContainer/FeedbackLabel
+@onready var friends_list_container := $CanvasLayer/FriendsUI/VBoxContainer/ScrollContainer/FriendsListContainer
+@onready var back_home_button := $CanvasLayer/FriendsUI/VBoxContainer/BackHomeButton
 
 func _ready() -> void:
 	login_button.pressed.connect(_on_login_button_pressed)
@@ -42,6 +50,10 @@ func _ready() -> void:
 	edit_cancel_button.pressed.connect(_on_edit_cancel_button_pressed)
 
 	user_menu_button.get_popup().id_pressed.connect(_on_user_menu_id_pressed)
+
+	friends_button.pressed.connect(_on_friends_button_pressed)
+	add_friend_button.pressed.connect(_on_add_friend_button_pressed)
+	back_home_button.pressed.connect(_on_back_home_button_pressed)
 
 func _on_user_menu_id_pressed(id: int) -> void:
 	if id == 0:
@@ -58,6 +70,76 @@ func _on_edit_profile_pressed() -> void:
 func _on_edit_cancel_button_pressed() -> void:
 	edit_profile_ui.hide()
 	game_ui.show()
+
+func _on_friends_button_pressed() -> void:
+	game_ui.hide()
+	friends_ui.show()
+	friends_feedback_label.text = ""
+	add_friend_input.text = ""
+	_refresh_friends_list()
+
+func _on_back_home_button_pressed() -> void:
+	friends_ui.hide()
+	game_ui.show()
+
+func _on_add_friend_button_pressed() -> void:
+	var username: String = add_friend_input.text.strip_edges()
+
+	if username.is_empty():
+		friends_feedback_label.text = "Username cannot be empty."
+		return
+
+	friends_feedback_label.text = "Adding friend..."
+	debug_panel.write_message("Adding friend %s." % username)
+
+	var result: int = await(server_connection.add_friends_async(username))
+
+	if result == OK:
+		friends_feedback_label.text = "Friend request sent/accepted!"
+		debug_panel.write_message("SUCCESS")
+		add_friend_input.text = ""
+		_refresh_friends_list()
+	elif result == ERR_UNAUTHORIZED:
+		friends_feedback_label.text = "Not authorized."
+	elif result == 3: # Invalid argument, usually means username not found or trying to add self
+		friends_feedback_label.text = "User not found or invalid."
+	else:
+		friends_feedback_label.text = "Failed to add friend. Code: %d" % result
+		debug_panel.write_message("FAIL: %d" % result)
+
+func _refresh_friends_list() -> void:
+	for child in friends_list_container.get_children():
+		friends_list_container.remove_child(child)
+		child.queue_free()
+
+	var friends_list: NakamaAPI.ApiFriendList = await(server_connection.list_friends_async())
+
+	if friends_list == null:
+		var err_label := Label.new()
+		err_label.text = "Failed to load friends."
+		friends_list_container.add_child(err_label)
+		return
+
+	if friends_list.friends.is_empty():
+		var empty_label := Label.new()
+		empty_label.text = "No friends yet."
+		friends_list_container.add_child(empty_label)
+		return
+
+	for friend_obj in friends_list.friends:
+		var friend: NakamaAPI.ApiFriend = friend_obj as NakamaAPI.ApiFriend
+		var label := Label.new()
+		var state_str := "Unknown"
+
+		# State: 0 = Friend, 1 = Invite sent, 2 = Invite received, 3 = Blocked
+		match friend.state:
+			0: state_str = "Friend"
+			1: state_str = "Invite Sent"
+			2: state_str = "Invite Received"
+			3: state_str = "Blocked"
+
+		label.text = "%s (%s)" % [friend.user.username, state_str]
+		friends_list_container.add_child(label)
 
 func _on_edit_update_button_pressed() -> void:
 	var new_username: String = edit_new_username_input.text.strip_edges()

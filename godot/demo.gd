@@ -128,6 +128,7 @@ func _refresh_friends_list() -> void:
 
 	for friend_obj in friends_list.friends:
 		var friend: NakamaAPI.ApiFriend = friend_obj as NakamaAPI.ApiFriend
+		var hbox := HBoxContainer.new()
 		var label := Label.new()
 		var state_str := "Unknown"
 
@@ -139,7 +140,79 @@ func _refresh_friends_list() -> void:
 			3: state_str = "Blocked"
 
 		label.text = "%s (%s)" % [friend.user.username, state_str]
-		friends_list_container.add_child(label)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(label)
+
+		if friend.state == 0:
+			var delete_btn := Button.new()
+			delete_btn.text = "Delete"
+			delete_btn.pressed.connect(_on_delete_friend_pressed.bind(friend.user.username))
+			hbox.add_child(delete_btn)
+		elif friend.state == 1:
+			var undo_btn := Button.new()
+			undo_btn.text = "Undo"
+			undo_btn.pressed.connect(_on_undo_request_pressed.bind(friend.user.username))
+			hbox.add_child(undo_btn)
+		elif friend.state == 2:
+			var accept_btn := Button.new()
+			accept_btn.text = "Accept"
+			accept_btn.pressed.connect(_on_accept_request_pressed.bind(friend.user.username))
+			hbox.add_child(accept_btn)
+			var decline_btn := Button.new()
+			decline_btn.text = "Decline"
+			decline_btn.pressed.connect(_on_decline_request_pressed.bind(friend.user.username))
+			hbox.add_child(decline_btn)
+
+		friends_list_container.add_child(hbox)
+
+func _on_delete_friend_pressed(username: String) -> void:
+	friends_feedback_label.text = "Deleting friend..."
+	debug_panel.write_message("Deleting friend %s." % username)
+	var result: int = await(server_connection.delete_friends_async(username))
+	if result == OK:
+		friends_feedback_label.text = "Friend deleted."
+		debug_panel.write_message("SUCCESS")
+		_refresh_friends_list()
+	else:
+		friends_feedback_label.text = "Failed to delete friend. Code: %d" % result
+		debug_panel.write_message("FAIL: %d" % result)
+
+func _on_undo_request_pressed(username: String) -> void:
+	friends_feedback_label.text = "Undoing friend request..."
+	debug_panel.write_message("Undoing friend request to %s." % username)
+	var result: int = await(server_connection.delete_friends_async(username))
+	if result == OK:
+		friends_feedback_label.text = "Friend request undone."
+		debug_panel.write_message("SUCCESS")
+		_refresh_friends_list()
+	else:
+		friends_feedback_label.text = "Failed to undo request. Code: %d" % result
+		debug_panel.write_message("FAIL: %d" % result)
+
+func _on_accept_request_pressed(username: String) -> void:
+	friends_feedback_label.text = "Accepting friend request..."
+	debug_panel.write_message("Accepting friend request from %s." % username)
+	var result: int = await(server_connection.add_friends_async(username))
+	if result == OK:
+		friends_feedback_label.text = "Friend request accepted."
+		debug_panel.write_message("SUCCESS")
+		_refresh_friends_list()
+	else:
+		friends_feedback_label.text = "Failed to accept request. Code: %d" % result
+		debug_panel.write_message("FAIL: %d" % result)
+
+func _on_decline_request_pressed(username: String) -> void:
+	friends_feedback_label.text = "Declining friend request..."
+	debug_panel.write_message("Declining friend request from %s." % username)
+	var result: int = await(server_connection.delete_friends_async(username))
+	if result == OK:
+		friends_feedback_label.text = "Friend request declined."
+		debug_panel.write_message("SUCCESS")
+		_refresh_friends_list()
+	else:
+		friends_feedback_label.text = "Failed to decline request. Code: %d" % result
+		debug_panel.write_message("FAIL: %d" % result)
+
 
 func _on_edit_update_button_pressed() -> void:
 	var new_username: String = edit_new_username_input.text.strip_edges()

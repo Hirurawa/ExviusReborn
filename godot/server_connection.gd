@@ -66,6 +66,18 @@ func add_friends_async(username: String) -> int:
 
 	return OK
 
+func delete_friends_async(username: String) -> int:
+	if _session == null or _session.is_expired():
+		return ERR_UNAUTHORIZED
+
+	var usernames: PackedStringArray = [username]
+	var result = await(_client.delete_friends_async(_session, [], usernames))
+
+	if result.is_exception():
+		return result.get_exception().status_code
+
+	return OK
+
 func list_friends_async() -> NakamaAPI.ApiFriendList:
 	if _session == null or _session.is_expired():
 		return null

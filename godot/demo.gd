@@ -22,8 +22,8 @@ func _ready() -> void:
 	register_button.pressed.connect(_on_register_button_pressed)
 
 func _on_login_button_pressed() -> void:
-	var email := email_input.text.strip_edges()
-	var password := password_input.text.strip_edges()
+	var email: String = email_input.text.strip_edges()
+	var password: String = password_input.text.strip_edges()
 	
 	if email.is_empty() or password.is_empty():
 		feedback_label.text = "Email and Password are required."
@@ -43,9 +43,9 @@ func _on_login_button_pressed() -> void:
 		debug_panel.write_message("FAIL: %d" % result)
 
 func _on_register_button_pressed() -> void:
-	var username := username_input.text.strip_edges()
-	var email := email_input.text.strip_edges()
-	var password := password_input.text.strip_edges()
+	var username: String = username_input.text.strip_edges()
+	var email: String = email_input.text.strip_edges()
+	var password: String = password_input.text.strip_edges()
 
 	if username.is_empty() or email.is_empty() or password.is_empty():
 		feedback_label.text = "Username, Email, and Password are required."

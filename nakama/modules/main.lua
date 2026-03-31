@@ -1,16 +1,14 @@
 local nk = require("nakama")
 
 local function read_json_file(file_path)
-    local f = io.open(file_path, "r")
-    if not f then
+    local success, content = pcall(nk.file_read, file_path)
+    if not success or not content then
         nk.logger_warn("Could not open file: " .. file_path)
         return nil
     end
-    local content = f:read("*all")
-    f:close()
 
-    local success, decoded = pcall(nk.json_decode, content)
-    if not success then
+    local decode_success, decoded = pcall(nk.json_decode, content)
+    if not decode_success then
         nk.logger_warn("Could not decode JSON from file: " .. file_path)
         return nil
     end

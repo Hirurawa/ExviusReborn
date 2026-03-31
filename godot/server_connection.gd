@@ -131,6 +131,45 @@ func read_player_stats_async() -> Dictionary:
 
 	return default_stats
 
+func write_player_units_async(units: Array) -> int:
+	if _session == null or _session.is_expired():
+		return ERR_UNAUTHORIZED
+
+	var data := {
+		"units": units
+	}
+
+	var json_data := JSON.stringify(data)
+
+	var object := NakamaWriteStorageObject.new("units", "player_units", 1, 1, json_data, "")
+	var result = await(_client.write_storage_objects_async(_session, [object]))
+
+	if result.is_exception():
+		return result.get_exception().status_code
+
+	return OK
+
+func read_player_units_async() -> Array:
+	if _session == null or _session.is_expired():
+		return []
+
+	var object_id := NakamaStorageObjectId.new("units", "player_units", _session.user_id)
+	var result: NakamaAPI.ApiStorageObjects = await(_client.read_storage_objects_async(_session, [object_id]))
+
+	if result.is_exception():
+		return []
+
+	if result.objects.is_empty():
+		return []
+
+	var obj: NakamaAPI.ApiStorageObject = result.objects[0]
+	var dict = JSON.parse_string(obj.value)
+
+	if dict and dict is Dictionary and dict.has("units") and dict["units"] is Array:
+		return dict["units"]
+
+	return []
+
 func get_game_data_async() -> Dictionary:
 	if _session == null or _session.is_expired():
 		return {}

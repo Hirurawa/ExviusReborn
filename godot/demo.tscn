@@ -204,6 +204,18 @@ offset_bottom = -10.0
 grow_vertical = 0
 text = "Units"
 
+[node name="SummonButton" type="Button" parent="CanvasLayer/GameUI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 110.0
+offset_top = -50.0
+offset_right = 200.0
+offset_bottom = -10.0
+grow_vertical = 0
+text = "Summon"
+
 [node name="FriendsUI" type="Control" parent="CanvasLayer"]
 visible = false
 layout_mode = 3
@@ -346,3 +358,81 @@ size_flags_vertical = 3
 [node name="BackHomeButton" type="Button" parent="CanvasLayer/UnitsUI/VBoxContainer"]
 layout_mode = 2
 text = "Back Home"
+
+[node name="SummonUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/SummonUI/VBoxContainer"]
+layout_mode = 2
+text = "Summon"
+horizontal_alignment = 1
+
+[node name="PerformSummonButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer"]
+layout_mode = 2
+text = "Summon 3 Units"
+
+[node name="BackHomeButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer"]
+layout_mode = 2
+text = "Back Home"
+
+[node name="SummonOverlay" type="ColorRect" parent="CanvasLayer/SummonUI"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI/SummonOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -150.0
+offset_right = 150.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer"]
+layout_mode = 2
+text = "Summon Results"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ResultsListContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CloseOverlayButton" type="Button" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer"]
+layout_mode = 2
+text = "Close"

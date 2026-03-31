@@ -40,6 +40,7 @@ var current_xp: int = 0
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
 @onready var friends_button := $CanvasLayer/GameUI/FriendsButton
 @onready var units_button := $CanvasLayer/GameUI/UnitsButton
+@onready var summon_button := $CanvasLayer/GameUI/SummonButton
 
 @onready var units_ui := $CanvasLayer/UnitsUI
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
@@ -49,12 +50,21 @@ var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
 var game_data_weapons: Dictionary = {}
 
+var owned_units_ids: Array = []
+
 @onready var friends_ui := $CanvasLayer/FriendsUI
 @onready var add_friend_input := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendInput
 @onready var add_friend_button := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendButton
 @onready var friends_feedback_label := $CanvasLayer/FriendsUI/VBoxContainer/FeedbackLabel
 @onready var friends_list_container := $CanvasLayer/FriendsUI/VBoxContainer/ScrollContainer/FriendsListContainer
 @onready var back_home_button := $CanvasLayer/FriendsUI/VBoxContainer/BackHomeButton
+
+@onready var summon_ui := $CanvasLayer/SummonUI
+@onready var summon_perform_button := $CanvasLayer/SummonUI/VBoxContainer/PerformSummonButton
+@onready var summon_back_home_button := $CanvasLayer/SummonUI/VBoxContainer/BackHomeButton
+@onready var summon_overlay := $CanvasLayer/SummonUI/SummonOverlay
+@onready var summon_results_list := $CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/ScrollContainer/ResultsListContainer
+@onready var summon_close_overlay_button := $CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/CloseOverlayButton
 
 func _ready() -> void:
 
@@ -75,6 +85,11 @@ func _ready() -> void:
 
 	units_button.pressed.connect(_on_units_button_pressed)
 	units_back_home_button.pressed.connect(_on_units_back_home_button_pressed)
+
+	summon_button.pressed.connect(_on_summon_button_pressed)
+	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
+	summon_back_home_button.pressed.connect(_on_summon_back_home_button_pressed)
+	summon_close_overlay_button.pressed.connect(_on_summon_close_overlay_button_pressed)
 
 func _update_stats_ui() -> void:
 	var required_xp = current_level * 100
@@ -135,19 +150,77 @@ func _on_units_back_home_button_pressed() -> void:
 	units_ui.hide()
 	game_ui.show()
 
+func _on_summon_button_pressed() -> void:
+	game_ui.hide()
+	summon_ui.show()
+
+func _on_summon_back_home_button_pressed() -> void:
+	summon_ui.hide()
+	game_ui.show()
+
+func _on_summon_close_overlay_button_pressed() -> void:
+	summon_overlay.hide()
+
+func _on_summon_perform_button_pressed() -> void:
+	if game_data_units.is_empty():
+		return
+
+	var available_unit_ids = game_data_units.keys()
+	var summoned_ids = []
+
+	for i in range(3):
+		var random_index = randi() % available_unit_ids.size()
+		summoned_ids.append(available_unit_ids[random_index])
+
+	owned_units_ids.append_array(summoned_ids)
+	await server_connection.write_player_units_async(owned_units_ids)
+
+	for child in summon_results_list.get_children():
+		summon_results_list.remove_child(child)
+		child.queue_free()
+
+	for unit_id in summoned_ids:
+		var unit_data: Dictionary = game_data_units.get(unit_id, {})
+		var vbox := VBoxContainer.new()
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var name_label := Label.new()
+		name_label.text = "Name: %s" % unit_data.get("name", "Unknown")
+		name_label.add_theme_font_size_override("font_size", 18)
+		vbox.add_child(name_label)
+
+		var stats_label := Label.new()
+		var base_stats = unit_data.get("base_stats", {})
+		var stats_text = "HP: %s | MP: %s | ATK: %s | DEF: %s" % [
+			base_stats.get("hp", "?"),
+			base_stats.get("mp", "?"),
+			base_stats.get("atk", "?"),
+			base_stats.get("def", "?")
+		]
+		stats_label.text = stats_text
+		vbox.add_child(stats_label)
+
+		var separator := HSeparator.new()
+		vbox.add_child(separator)
+
+		summon_results_list.add_child(vbox)
+
+	summon_overlay.show()
+
+
 func _refresh_units_list() -> void:
 	for child in units_list_container.get_children():
 		units_list_container.remove_child(child)
 		child.queue_free()
 
-	if game_data_units.is_empty():
+	if owned_units_ids.is_empty():
 		var empty_label := Label.new()
-		empty_label.text = "No units found."
+		empty_label.text = "No units owned."
 		units_list_container.add_child(empty_label)
 		return
 
-	for unit_id in game_data_units:
-		var unit_data: Dictionary = game_data_units[unit_id]
+	for unit_id in owned_units_ids:
+		var unit_data: Dictionary = game_data_units.get(unit_id, {})
 		var vbox := VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -372,6 +445,8 @@ func _transition_to_game(email: String) -> void:
 	current_level = int(stats.get("level", 1))
 	current_xp = int(stats.get("xp", 0))
 	_update_stats_ui()
+
+	owned_units_ids = await server_connection.read_player_units_async()
 
 	var game_data = await server_connection.get_game_data_async()
 	if game_data:

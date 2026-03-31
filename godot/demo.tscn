@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://bs520eu2basck" path="res://demo.gd" id="1_0bhed"]
 [ext_resource type="Script" uid="uid://dpryy3vvrydce" path="res://server_connection.gd" id="2_m0rpm"]
-[ext_resource type="Script" uid="uid://chwjubnjt8jbk" path="res://debug_panel.gd" id="3_m0rpm"]
 
 [node name="Demo" type="Node2D" unique_id=647364239]
 script = ExtResource("1_0bhed")
@@ -11,16 +10,6 @@ script = ExtResource("1_0bhed")
 script = ExtResource("2_m0rpm")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=401059779]
-
-[node name="DebugPanel" type="Panel" parent="CanvasLayer" unique_id=42135515]
-offset_right = 628.0
-offset_bottom = 123.0
-script = ExtResource("3_m0rpm")
-
-[node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer/DebugPanel" unique_id=513090774]
-layout_mode = 0
-offset_right = 624.0
-offset_bottom = 120.0
 
 [node name="LoginUI" type="Control" parent="CanvasLayer"]
 layout_mode = 3
@@ -131,6 +120,32 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="StatsContainer" type="VBoxContainer" parent="CanvasLayer/GameUI"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 210.0
+offset_bottom = 70.0
+
+[node name="LevelLabel" type="Label" parent="CanvasLayer/GameUI/StatsContainer"]
+layout_mode = 2
+text = "Level: 1"
+
+[node name="XPLabel" type="Label" parent="CanvasLayer/GameUI/StatsContainer"]
+layout_mode = 2
+text = "XP: 0 / 100"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/StatsContainer"]
+layout_mode = 2
+
+[node name="XPInput" type="LineEdit" parent="CanvasLayer/GameUI/StatsContainer/HBoxContainer"]
+layout_mode = 2
+placeholder_text = "XP Amount"
+
+[node name="AddXPButton" type="Button" parent="CanvasLayer/GameUI/StatsContainer/HBoxContainer"]
+layout_mode = 2
+text = "Add XP"
 
 [node name="UserInfoLabel" type="Label" parent="CanvasLayer/GameUI"]
 layout_mode = 1

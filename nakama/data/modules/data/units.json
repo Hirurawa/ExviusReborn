@@ -1,0 +1,50 @@
+{
+  "unit_001": {
+    "name": "Rain",
+    "rarity": 3,
+    "max_level": 40,
+    "base_stats": {
+      "hp": 450,
+      "mp": 30,
+      "atk": 25,
+      "def": 20
+    },
+    "element_resist": {
+      "fire": 50,
+      "water": -20
+    }
+  },
+  "unit_002": {
+    "name": "Lasswell",
+    "rarity": 3,
+    "max_level": 40,
+    "base_stats": {
+      "hp": 400,
+      "mp": 35,
+      "atk": 30,
+      "def": 18
+    }
+  },
+  "unit_003": {
+    "name": "Fina",
+    "rarity": 3,
+    "max_level": 40,
+    "base_stats": {
+      "hp": 350,
+      "mp": 45,
+      "atk": 15,
+      "def": 15
+    }
+  },
+  "unit_004": {
+    "name": "Lid",
+    "rarity": 3,
+    "max_level": 40,
+    "base_stats": {
+      "hp": 380,
+      "mp": 32,
+      "atk": 22,
+      "def": 25
+    }
+  }
+}

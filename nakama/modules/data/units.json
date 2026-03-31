@@ -1,8 +1,9 @@
 {
   "unit_001": {
     "name": "Rain",
-    "rarity": 3,
-    "max_level": 40,
+    "min_rarity": 2,
+    "max_rarity": 6,
+	"growth_pattern": 2,
     "base_stats": {
       "hp": 450,
       "mp": 30,
@@ -16,8 +17,9 @@
   },
   "unit_002": {
     "name": "Lasswell",
-    "rarity": 3,
-    "max_level": 40,
+    "min_rarity": 2,
+	"max_rarity": 6,
+	"growth_pattern": 2,
     "base_stats": {
       "hp": 400,
       "mp": 35,
@@ -27,8 +29,9 @@
   },
   "unit_003": {
     "name": "Fina",
-    "rarity": 3,
-    "max_level": 40,
+    "min_rarity": 2,
+    "max_rarity": 6,
+	"growth_pattern": 2,
     "base_stats": {
       "hp": 350,
       "mp": 45,
@@ -38,8 +41,9 @@
   },
   "unit_004": {
     "name": "Lid",
-    "rarity": 3,
-    "max_level": 40,
+    "min_rarity": 3,
+    "max_rarity": 5,
+	"growth_pattern": 2,
     "base_stats": {
       "hp": 380,
       "mp": 32,

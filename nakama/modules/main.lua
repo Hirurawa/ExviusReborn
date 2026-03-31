@@ -16,9 +16,9 @@ local function read_json_file(file_path)
     return decoded
 end
 
-local units_data = read_json_file("modules/data/units.json") or {}
-local items_data = read_json_file("modules/data/items.json") or {}
-local weapons_data = read_json_file("modules/data/weapons.json") or {}
+local units_data = read_json_file("data/units.json") or {}
+local items_data = read_json_file("data/items.json") or {}
+local weapons_data = read_json_file("data/weapons.json") or {}
 
 local cached_game_data = {
     units = units_data,

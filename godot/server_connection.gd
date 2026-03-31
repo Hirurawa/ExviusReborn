@@ -141,7 +141,11 @@ func get_game_data_async() -> Dictionary:
 		push_error("Failed to get game data: %s" % result.get_exception().message)
 		return {}
 
+	print("Raw payload from get_game_data: ", result.payload)
+
 	var dict = JSON.parse_string(result.payload)
+	print("Parsed dictionary type: ", typeof(dict), ", value: ", dict)
+
 	if dict and dict is Dictionary:
 		return dict
 

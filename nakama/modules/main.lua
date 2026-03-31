@@ -16,13 +16,20 @@ local function read_json_file(file_path)
     return decoded
 end
 
+local units_data = read_json_file("/nakama/data/modules/data/units.json") or {}
+local items_data = read_json_file("/nakama/data/modules/data/items.json") or {}
+local weapons_data = read_json_file("/nakama/data/modules/data/weapons.json") or {}
+
+nk.logger_info("Loaded units data size: " .. tostring(nk.json_encode(units_data):len()))
+
 local cached_game_data = {
-    units = read_json_file("/nakama/data/modules/data/units.json") or {},
-    items = read_json_file("/nakama/data/modules/data/items.json") or {},
-    weapons = read_json_file("/nakama/data/modules/data/weapons.json") or {}
+    units = units_data,
+    items = items_data,
+    weapons = weapons_data
 }
 
 local function get_game_data(context, payload)
+    nk.logger_info("get_game_data RPC called. Returning: " .. nk.json_encode(cached_game_data))
     return nk.json_encode(cached_game_data)
 end
 

@@ -165,21 +165,15 @@ func _on_summon_perform_button_pressed() -> void:
 	if game_data_units.is_empty():
 		return
 
-	var available_unit_ids = game_data_units.keys()
-	var summoned_ids = []
-
-	for i in range(3):
-		var random_index = randi() % available_unit_ids.size()
-		summoned_ids.append(available_unit_ids[random_index])
-
-	owned_units_ids.append_array(summoned_ids)
-	await server_connection.write_player_units_async(owned_units_ids)
+	var summoned_units = await server_connection.summon_units_async(3)
+	owned_units_ids.append_array(summoned_units)
 
 	for child in summon_results_list.get_children():
 		summon_results_list.remove_child(child)
 		child.queue_free()
 
-	for unit_id in summoned_ids:
+	for unit_inst in summoned_units:
+		var unit_id = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = game_data_units.get(unit_id, {})
 		var vbox := VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -188,6 +182,14 @@ func _on_summon_perform_button_pressed() -> void:
 		name_label.text = "Name: %s" % unit_data.get("name", "Unknown")
 		name_label.add_theme_font_size_override("font_size", 18)
 		vbox.add_child(name_label)
+
+		var level_label := Label.new()
+		level_label.text = "Level: %d (XP: %d) | Rarity: %d★" % [
+			unit_inst.get("level", 1),
+			unit_inst.get("xp", 0),
+			unit_inst.get("current_rarity", 1)
+		]
+		vbox.add_child(level_label)
 
 		var stats_label := Label.new()
 		var base_stats = unit_data.get("base_stats", {})
@@ -219,7 +221,11 @@ func _refresh_units_list() -> void:
 		units_list_container.add_child(empty_label)
 		return
 
-	for unit_id in owned_units_ids:
+	for unit_inst in owned_units_ids:
+		if not unit_inst is Dictionary:
+			continue
+
+		var unit_id = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = game_data_units.get(unit_id, {})
 		var vbox := VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -228,6 +234,14 @@ func _refresh_units_list() -> void:
 		name_label.text = "Name: %s" % unit_data.get("name", "Unknown")
 		name_label.add_theme_font_size_override("font_size", 18)
 		vbox.add_child(name_label)
+
+		var level_label := Label.new()
+		level_label.text = "Level: %d (XP: %d) | Rarity: %d★" % [
+			unit_inst.get("level", 1),
+			unit_inst.get("xp", 0),
+			unit_inst.get("current_rarity", 1)
+		]
+		vbox.add_child(level_label)
 
 		var stats_label := Label.new()
 		var base_stats = unit_data.get("base_stats", {})
@@ -240,10 +254,42 @@ func _refresh_units_list() -> void:
 		stats_label.text = stats_text
 		vbox.add_child(stats_label)
 
+		var action_hbox := HBoxContainer.new()
+
+		var add_xp_btn := Button.new()
+		add_xp_btn.text = "Add 1000 XP"
+		add_xp_btn.pressed.connect(_on_unit_add_xp_pressed.bind(unit_inst.get("instance_id", "")))
+		action_hbox.add_child(add_xp_btn)
+
+		var awaken_btn := Button.new()
+		awaken_btn.text = "Awaken"
+		awaken_btn.pressed.connect(_on_unit_awaken_pressed.bind(unit_inst.get("instance_id", "")))
+		action_hbox.add_child(awaken_btn)
+
+		vbox.add_child(action_hbox)
+
 		var separator := HSeparator.new()
 		vbox.add_child(separator)
 
 		units_list_container.add_child(vbox)
+
+func _on_unit_add_xp_pressed(instance_id: String) -> void:
+	var result = await server_connection.add_unit_xp_async(instance_id, 1000)
+	if result.has("error"):
+		print("Failed to add XP: ", result.error)
+	else:
+		# Refresh full units list
+		owned_units_ids = await server_connection.read_player_units_async()
+		_refresh_units_list()
+
+func _on_unit_awaken_pressed(instance_id: String) -> void:
+	var result = await server_connection.awaken_unit_async(instance_id)
+	if result.has("error"):
+		print("Failed to awaken: ", result.error)
+	else:
+		# Refresh full units list
+		owned_units_ids = await server_connection.read_player_units_async()
+		_refresh_units_list()
 
 func _on_add_friend_button_pressed() -> void:
 	var username: String = add_friend_input.text.strip_edges()

@@ -185,3 +185,57 @@ func get_game_data_async() -> Dictionary:
 		return dict
 
 	return {}
+
+func summon_units_async(amount: int) -> Array:
+	if _session == null or _session.is_expired():
+		return []
+
+	var payload = JSON.stringify({"amount": amount})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "summon_units", payload)
+
+	if result.is_exception():
+		push_error("Failed to summon units: %s" % result.get_exception().message)
+		return []
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary and dict.has("summoned") and dict["summoned"] is Array:
+		return dict["summoned"]
+
+	return []
+
+func add_unit_xp_async(instance_id: String, xp_amount: int) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({
+		"instance_id": instance_id,
+		"xp_amount": xp_amount
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_unit_xp", payload)
+
+	if result.is_exception():
+		push_error("Failed to add unit xp: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}
+
+func awaken_unit_async(instance_id: String) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({"instance_id": instance_id})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "awaken_unit", payload)
+
+	if result.is_exception():
+		push_error("Failed to awaken unit: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}

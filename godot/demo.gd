@@ -39,6 +39,15 @@ var current_xp: int = 0
 @onready var user_info_label := $CanvasLayer/GameUI/UserInfoLabel
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
 @onready var friends_button := $CanvasLayer/GameUI/FriendsButton
+@onready var units_button := $CanvasLayer/GameUI/UnitsButton
+
+@onready var units_ui := $CanvasLayer/UnitsUI
+@onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
+@onready var units_back_home_button := $CanvasLayer/UnitsUI/VBoxContainer/BackHomeButton
+
+var game_data_units: Dictionary = {}
+var game_data_items: Dictionary = {}
+var game_data_weapons: Dictionary = {}
 
 @onready var friends_ui := $CanvasLayer/FriendsUI
 @onready var add_friend_input := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendInput
@@ -64,6 +73,8 @@ func _ready() -> void:
 	add_friend_button.pressed.connect(_on_add_friend_button_pressed)
 	back_home_button.pressed.connect(_on_back_home_button_pressed)
 
+	units_button.pressed.connect(_on_units_button_pressed)
+	units_back_home_button.pressed.connect(_on_units_back_home_button_pressed)
 
 func _update_stats_ui() -> void:
 	var required_xp = current_level * 100
@@ -114,6 +125,52 @@ func _on_friends_button_pressed() -> void:
 func _on_back_home_button_pressed() -> void:
 	friends_ui.hide()
 	game_ui.show()
+
+func _on_units_button_pressed() -> void:
+	game_ui.hide()
+	units_ui.show()
+	_refresh_units_list()
+
+func _on_units_back_home_button_pressed() -> void:
+	units_ui.hide()
+	game_ui.show()
+
+func _refresh_units_list() -> void:
+	for child in units_list_container.get_children():
+		units_list_container.remove_child(child)
+		child.queue_free()
+
+	if game_data_units.is_empty():
+		var empty_label := Label.new()
+		empty_label.text = "No units found."
+		units_list_container.add_child(empty_label)
+		return
+
+	for unit_id in game_data_units:
+		var unit_data: Dictionary = game_data_units[unit_id]
+		var vbox := VBoxContainer.new()
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var name_label := Label.new()
+		name_label.text = "Name: %s" % unit_data.get("name", "Unknown")
+		name_label.add_theme_font_size_override("font_size", 18)
+		vbox.add_child(name_label)
+
+		var stats_label := Label.new()
+		var base_stats = unit_data.get("base_stats", {})
+		var stats_text = "HP: %s | MP: %s | ATK: %s | DEF: %s" % [
+			base_stats.get("hp", "?"),
+			base_stats.get("mp", "?"),
+			base_stats.get("atk", "?"),
+			base_stats.get("def", "?")
+		]
+		stats_label.text = stats_text
+		vbox.add_child(stats_label)
+
+		var separator := HSeparator.new()
+		vbox.add_child(separator)
+
+		units_list_container.add_child(vbox)
 
 func _on_add_friend_button_pressed() -> void:
 	var username: String = add_friend_input.text.strip_edges()
@@ -315,6 +372,12 @@ func _transition_to_game(email: String) -> void:
 	current_level = int(stats.get("level", 1))
 	current_xp = int(stats.get("xp", 0))
 	_update_stats_ui()
+
+	var game_data = await server_connection.get_game_data_async()
+	if game_data:
+		game_data_units = game_data.get("units", {})
+		game_data_items = game_data.get("items", {})
+		game_data_weapons = game_data.get("weapons", {})
 
 	user_info_label.text = "Fetching profile..."
 

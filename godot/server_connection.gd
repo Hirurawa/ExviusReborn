@@ -130,3 +130,19 @@ func read_player_stats_async() -> Dictionary:
 		return dict
 
 	return default_stats
+
+func get_game_data_async() -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_game_data", "")
+
+	if result.is_exception():
+		push_error("Failed to get game data: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}

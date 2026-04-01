@@ -313,7 +313,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var unit_id = unit_inst.get("unit_id", "")
 	var unit_data: Dictionary = game_data_units.get(unit_id, {})
 	var base_stats = unit_data.get("base_stats", {})
-
+	
 	unit_detail_name_label.text = unit_data.get("name", "Unknown")
 
 	var rarity = unit_inst.get("current_rarity", 1)
@@ -333,7 +333,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	}
 
 	var level = unit_inst.get("level", 1)
-	var max_level = rarity_max_levels.get(rarity, 15)
+	var max_level = rarity_max_levels.get(int(rarity), 15)
 	unit_detail_level_label.text = "Lvl %d/%d" % [level, max_level]
 
 	var xp = unit_inst.get("xp", 0)

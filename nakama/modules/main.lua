@@ -237,7 +237,7 @@ local function get_player_items(user_id)
     local objects = nk.storage_read(object_ids)
 
     if #objects > 0 then
-        local data = nk.json_decode(objects[1].value)
+        local data = objects[1].value
         if data and data.items then
             return data.items
         end
@@ -252,7 +252,7 @@ local function save_player_items(user_id, items)
             collection = "items",
             key = "player_items",
             user_id = user_id,
-            value = nk.json_encode({items = items}),
+            value = {items = items},
             permission_read = 1,
             permission_write = 1
         }

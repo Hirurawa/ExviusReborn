@@ -262,13 +262,43 @@ func _on_summon_perform_button_pressed() -> void:
 		vbox.add_child(level_label)
 
 		var stats_label := Label.new()
-		var base_stats = unit_data.get("base_stats", {})
-		var stats_text = "HP: %s | MP: %s | ATK: %s | DEF: %s" % [
-			base_stats.get("hp", "?"),
-			base_stats.get("mp", "?"),
-			base_stats.get("atk", "?"),
-			base_stats.get("def", "?")
-		]
+
+		var rarity = unit_inst.get("current_rarity", 1)
+		var level = unit_inst.get("level", 1)
+		var entries = unit_data.get("entries", {})
+		var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
+
+		# In some json the key in entries is the unit id, or just find entry by checking rarity inside entries
+		for key in entries.keys():
+			if entries[key].get("rarity") == rarity:
+				entry = entries[key]
+				break
+
+		var hp = "?"
+		var mp = "?"
+		var atk = "?"
+		var def = "?"
+
+		var stats = entry.get("stats", {})
+		if not stats.is_empty():
+			var max_levels = {1: 15, 2: 30, 3: 40, 4: 60, 5: 80, 6: 100, 7: 120}
+			var max_level = max_levels.get(int(rarity), 15)
+
+			for stat_name in ["HP", "MP", "ATK", "DEF"]:
+				var stat_arr = stats.get(stat_name, [0, 0])
+				if stat_arr.size() >= 2:
+					var min_stat = stat_arr[0]
+					var max_stat = stat_arr[1]
+					var current_stat = min_stat
+					if max_level > 1:
+						current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
+
+					if stat_name == "HP": hp = str(round(current_stat))
+					elif stat_name == "MP": mp = str(round(current_stat))
+					elif stat_name == "ATK": atk = str(round(current_stat))
+					elif stat_name == "DEF": def = str(round(current_stat))
+
+		var stats_text = "HP: %s | MP: %s | ATK: %s | DEF: %s" % [hp, mp, atk, def]
 		stats_label.text = stats_text
 		vbox.add_child(stats_label)
 
@@ -312,7 +342,6 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 
 	var unit_id = unit_inst.get("unit_id", "")
 	var unit_data: Dictionary = game_data_units.get(unit_id, {})
-	var base_stats = unit_data.get("base_stats", {})
 	
 	unit_detail_name_label.text = unit_data.get("name", "Unknown")
 
@@ -343,14 +372,47 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		next_xp = 0
 	unit_detail_next_xp_label.text = "next %d" % next_xp
 
-	unit_detail_hp_value.text = str(int(base_stats.get("hp", 0)))
-	unit_detail_mp_value.text = str(int(base_stats.get("mp", 0)))
-	unit_detail_atk_value.text = str(int(base_stats.get("atk", 0)))
-	unit_detail_def_value.text = str(int(base_stats.get("def", 0)))
+	var entries = unit_data.get("entries", {})
+	var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
+
+	for key in entries.keys():
+		if entries[key].get("rarity") == rarity:
+			entry = entries[key]
+			break
+
+	var stats = entry.get("stats", {})
+	var hp = 0
+	var mp = 0
+	var atk = 0
+	var def_stat = 0
+	var mag = 0
+	var spr = 0
+
+	if not stats.is_empty():
+		for stat_name in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
+			var stat_arr = stats.get(stat_name, [0, 0])
+			if stat_arr.size() >= 2:
+				var min_stat = stat_arr[0]
+				var max_stat = stat_arr[1]
+				var current_stat = min_stat
+				if max_level > 1:
+					current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
+
+				if stat_name == "HP": hp = round(current_stat)
+				elif stat_name == "MP": mp = round(current_stat)
+				elif stat_name == "ATK": atk = round(current_stat)
+				elif stat_name == "DEF": def_stat = round(current_stat)
+				elif stat_name == "MAG": mag = round(current_stat)
+				elif stat_name == "SPR": spr = round(current_stat)
+
+	unit_detail_hp_value.text = str(int(hp))
+	unit_detail_mp_value.text = str(int(mp))
+	unit_detail_atk_value.text = str(int(atk))
+	unit_detail_def_value.text = str(int(def_stat))
 
 	# Fallback values for missing stats based on user instruction
-	unit_detail_mag_value.text = "0"
-	unit_detail_spr_value.text = "0"
+	unit_detail_mag_value.text = str(int(mag))
+	unit_detail_spr_value.text = str(int(spr))
 
 	# Disconnect previously bound signals to avoid duplicate calls
 	for connection in unit_detail_add_xp_button.pressed.get_connections():

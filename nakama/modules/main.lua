@@ -298,3 +298,84 @@ local function add_item(context, payload)
 end
 
 nk.register_rpc(add_item, "add_item")
+
+local function add_currency(context, payload)
+    local request = nk.json_decode(payload)
+    local gil = request.gil or 0
+    local lapis = request.lapis or 0
+
+    if gil == 0 and lapis == 0 then
+        return nk.json_encode({error = "No currency to add"})
+    end
+
+    local changeset = {}
+    if gil ~= 0 then changeset.gil = gil end
+    if lapis ~= 0 then changeset.lapis = lapis end
+
+    local metadata = { source = "debug_add" }
+
+    local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
+
+    if not status then
+        return nk.json_encode({error = "Failed to update wallet: " .. tostring(result)})
+    end
+
+    -- Return the updated wallet to the client
+    local account = nk.account_get_id(context.user_id)
+    return nk.json_encode({success = true, wallet = account.wallet})
+end
+
+nk.register_rpc(add_currency, "add_currency")
+
+local function buy_potion(context, payload)
+    local account = nk.account_get_id(context.user_id)
+    local wallet = {}
+    if account.wallet and account.wallet ~= "" then
+        wallet = nk.json_decode(account.wallet)
+    end
+
+    local current_gil = wallet.gil or 0
+
+    if current_gil < 100 then
+        return nk.json_encode({error = "Insufficient gil. Need 100, have " .. tostring(current_gil)})
+    end
+
+    local changeset = { gil = -100 }
+    local metadata = { source = "buy_potion" }
+
+    local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
+
+    if not status then
+        return nk.json_encode({error = "Failed to deduct gil: " .. tostring(result)})
+    end
+
+    -- Add the item
+    local item_id = "item_001"
+    local quantity = 1
+
+    local player_items = get_player_items(context.user_id)
+    local item_found = false
+
+    for i, item in ipairs(player_items) do
+        if item.item_id == item_id then
+            item.quantity = item.quantity + quantity
+            item_found = true
+            break
+        end
+    end
+
+    if not item_found then
+        table.insert(player_items, {
+            item_id = item_id,
+            quantity = quantity
+        })
+    end
+
+    save_player_items(context.user_id, player_items)
+
+    -- Return the updated wallet to the client
+    account = nk.account_get_id(context.user_id)
+    return nk.json_encode({success = true, wallet = account.wallet, items = player_items})
+end
+
+nk.register_rpc(buy_potion, "buy_potion")

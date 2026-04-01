@@ -280,3 +280,40 @@ func add_item_async(item_id: String, quantity: int = 1) -> Dictionary:
 		return dict
 
 	return {}
+
+func add_currency_async(gil: int, lapis: int) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({
+		"gil": gil,
+		"lapis": lapis
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_currency", payload)
+
+	if result.is_exception():
+		push_error("Failed to add currency: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}
+
+func buy_potion_async() -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "buy_potion", payload)
+
+	if result.is_exception():
+		push_error("Failed to buy potion: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}

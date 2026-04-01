@@ -35,6 +35,13 @@ extends Node2D
 @onready var stats_xp_input := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/XPInput
 @onready var stats_add_xp_button := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/AddXPButton
 
+@onready var stats_gil_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/GilLabel
+@onready var stats_lapis_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/LapisLabel
+@onready var debug_gil_input := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/GilInput
+@onready var debug_add_gil_button := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/AddGilButton
+@onready var debug_lapis_input := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/LapisInput
+@onready var debug_add_lapis_button := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/AddLapisButton
+
 var current_level: int = 1
 var current_xp: int = 0
 @onready var user_info_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/UserInfoLabel
@@ -46,6 +53,10 @@ var current_xp: int = 0
 @onready var units_button := $CanvasLayer/BottomNav/HBox/UnitsButton
 @onready var items_button := $CanvasLayer/BottomNav/HBox/ItemsButton
 @onready var summon_button := $CanvasLayer/BottomNav/HBox/SummonButton
+@onready var shop_button := $CanvasLayer/BottomNav/HBox/ShopButton
+
+@onready var shop_ui := $CanvasLayer/ShopUI
+@onready var shop_feedback_label := $CanvasLayer/ShopUI/VBoxContainer/ShopFeedbackLabel
 
 @onready var units_ui := $CanvasLayer/UnitsUI
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
@@ -67,7 +78,7 @@ var current_xp: int = 0
 
 @onready var items_ui := $CanvasLayer/ItemsUI
 @onready var items_list_container := $CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer/ItemsListContainer
-@onready var add_potion_button := $CanvasLayer/ItemsUI/VBoxContainer/AddPotionButton
+@onready var add_potion_button := $CanvasLayer/ShopUI/VBoxContainer/AddPotionButton
 
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
@@ -91,6 +102,9 @@ var owned_items: Array = []
 func _ready() -> void:
 
 	stats_add_xp_button.pressed.connect(_on_add_xp_button_pressed)
+	debug_add_gil_button.pressed.connect(_on_add_gil_button_pressed)
+	debug_add_lapis_button.pressed.connect(_on_add_lapis_button_pressed)
+
 	login_button.pressed.connect(_on_login_button_pressed)
 	go_to_register_button.pressed.connect(_on_go_to_register_button_pressed)
 	register_button.pressed.connect(_on_register_button_pressed)
@@ -111,6 +125,8 @@ func _ready() -> void:
 	add_potion_button.pressed.connect(_on_add_potion_button_pressed)
 
 	summon_button.pressed.connect(_on_summon_button_pressed)
+	shop_button.pressed.connect(_on_shop_button_pressed)
+
 	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
 	summon_close_overlay_button.pressed.connect(_on_summon_close_overlay_button_pressed)
 
@@ -150,14 +166,48 @@ func _on_user_menu_id_pressed(id: int) -> void:
 	elif id == 1:
 		_on_logout_pressed()
 
+func _update_wallet_ui(wallet: Dictionary) -> void:
+	var gil: int = int(wallet.get("gil", 0))
+	var lapis: int = int(wallet.get("lapis", 0))
+	stats_gil_label.text = "Gil: %d" % gil
+	stats_lapis_label.text = "Lapis: %d" % lapis
+
+func _on_add_gil_button_pressed() -> void:
+	var gil_to_add: int = debug_gil_input.text.to_int()
+	if gil_to_add <= 0:
+		return
+
+	debug_gil_input.text = ""
+	var result = await server_connection.add_currency_async(gil_to_add, 0)
+	if result.has("wallet"):
+		var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
+		_update_wallet_ui(wallet)
+
+func _on_add_lapis_button_pressed() -> void:
+	var lapis_to_add: int = debug_lapis_input.text.to_int()
+	if lapis_to_add <= 0:
+		return
+
+	debug_lapis_input.text = ""
+	var result = await server_connection.add_currency_async(0, lapis_to_add)
+	if result.has("wallet"):
+		var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
+		_update_wallet_ui(wallet)
+
 func _hide_all_ui() -> void:
 	game_ui.hide()
 	friends_ui.hide()
 	units_ui.hide()
 	items_ui.hide()
 	summon_ui.hide()
+	shop_ui.hide()
 	edit_profile_ui.hide()
 	unit_detail_ui.hide()
+
+func _on_shop_button_pressed() -> void:
+	_hide_all_ui()
+	shop_ui.show()
+	shop_feedback_label.text = ""
 
 func _on_home_button_pressed() -> void:
 	_hide_all_ui()
@@ -194,12 +244,17 @@ func _on_items_button_pressed() -> void:
 	_refresh_items_list()
 
 func _on_add_potion_button_pressed() -> void:
-	var result = await server_connection.add_item_async("item_001", 1)
+	var result = await server_connection.buy_potion_async()
 	if result.has("error"):
-		print("Failed to add potion: ", result.error)
+		print("Failed to buy potion: ", result.error)
+		shop_feedback_label.text = result.error
 	else:
-		owned_items = await server_connection.read_player_items_async()
-		_refresh_items_list()
+		shop_feedback_label.text = "Potion purchased successfully!"
+		if result.has("items"):
+			owned_items = result.items
+		if result.has("wallet"):
+			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
+			_update_wallet_ui(wallet)
 
 func _refresh_items_list() -> void:
 	for child in items_list_container.get_children():
@@ -680,5 +735,14 @@ func _transition_to_game(email: String) -> void:
 			user_info_label.text = account.user.username 
 		else:
 			user_info_label.text = email
+
+		var wallet_str = account.wallet
+		if wallet_str and wallet_str != "":
+			var wallet = JSON.parse_string(wallet_str)
+			if wallet and wallet is Dictionary:
+				_update_wallet_ui(wallet)
+		else:
+			_update_wallet_ui({})
 	else:
 		user_info_label.text = "Welcome!"
+		_update_wallet_ui({})

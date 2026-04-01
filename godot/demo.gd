@@ -39,18 +39,19 @@ var current_level: int = 1
 var current_xp: int = 0
 @onready var user_info_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/UserInfoLabel
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
-@onready var friends_button := $CanvasLayer/GameUI/FriendsButton
-@onready var units_button := $CanvasLayer/GameUI/UnitsButton
-@onready var items_button := $CanvasLayer/GameUI/ItemsButton
-@onready var summon_button := $CanvasLayer/GameUI/SummonButton
+
+@onready var bottom_nav := $CanvasLayer/BottomNav
+@onready var home_button := $CanvasLayer/BottomNav/HBox/HomeButton
+@onready var friends_button := $CanvasLayer/BottomNav/HBox/FriendsButton
+@onready var units_button := $CanvasLayer/BottomNav/HBox/UnitsButton
+@onready var items_button := $CanvasLayer/BottomNav/HBox/ItemsButton
+@onready var summon_button := $CanvasLayer/BottomNav/HBox/SummonButton
 
 @onready var units_ui := $CanvasLayer/UnitsUI
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
-@onready var units_back_home_button := $CanvasLayer/UnitsUI/VBoxContainer/BackHomeButton
 
 @onready var items_ui := $CanvasLayer/ItemsUI
 @onready var items_list_container := $CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer/ItemsListContainer
-@onready var items_back_home_button := $CanvasLayer/ItemsUI/VBoxContainer/BackHomeButton
 @onready var add_potion_button := $CanvasLayer/ItemsUI/VBoxContainer/AddPotionButton
 
 var game_data_units: Dictionary = {}
@@ -65,11 +66,9 @@ var owned_items: Array = []
 @onready var add_friend_button := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendButton
 @onready var friends_feedback_label := $CanvasLayer/FriendsUI/VBoxContainer/FeedbackLabel
 @onready var friends_list_container := $CanvasLayer/FriendsUI/VBoxContainer/ScrollContainer/FriendsListContainer
-@onready var back_home_button := $CanvasLayer/FriendsUI/VBoxContainer/BackHomeButton
 
 @onready var summon_ui := $CanvasLayer/SummonUI
 @onready var summon_perform_button := $CanvasLayer/SummonUI/VBoxContainer/PerformSummonButton
-@onready var summon_back_home_button := $CanvasLayer/SummonUI/VBoxContainer/BackHomeButton
 @onready var summon_overlay := $CanvasLayer/SummonUI/SummonOverlay
 @onready var summon_results_list := $CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/ScrollContainer/ResultsListContainer
 @onready var summon_close_overlay_button := $CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/CloseOverlayButton
@@ -87,20 +86,17 @@ func _ready() -> void:
 
 	user_menu_button.get_popup().id_pressed.connect(_on_user_menu_id_pressed)
 
+	home_button.pressed.connect(_on_home_button_pressed)
 	friends_button.pressed.connect(_on_friends_button_pressed)
 	add_friend_button.pressed.connect(_on_add_friend_button_pressed)
-	back_home_button.pressed.connect(_on_back_home_button_pressed)
 
 	units_button.pressed.connect(_on_units_button_pressed)
-	units_back_home_button.pressed.connect(_on_units_back_home_button_pressed)
 
 	items_button.pressed.connect(_on_items_button_pressed)
-	items_back_home_button.pressed.connect(_on_items_back_home_button_pressed)
 	add_potion_button.pressed.connect(_on_add_potion_button_pressed)
 
 	summon_button.pressed.connect(_on_summon_button_pressed)
 	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
-	summon_back_home_button.pressed.connect(_on_summon_back_home_button_pressed)
 	summon_close_overlay_button.pressed.connect(_on_summon_close_overlay_button_pressed)
 
 func _update_stats_ui() -> void:
@@ -137,8 +133,22 @@ func _on_user_menu_id_pressed(id: int) -> void:
 	elif id == 1:
 		_on_logout_pressed()
 
-func _on_edit_profile_pressed() -> void:
+func _hide_all_ui() -> void:
 	game_ui.hide()
+	friends_ui.hide()
+	units_ui.hide()
+	items_ui.hide()
+	summon_ui.hide()
+	edit_profile_ui.hide()
+
+func _on_home_button_pressed() -> void:
+	_hide_all_ui()
+	game_ui.show()
+	bottom_nav.show()
+
+func _on_edit_profile_pressed() -> void:
+	_hide_all_ui()
+	bottom_nav.hide()
 	edit_profile_ui.show()
 	edit_new_username_input.text = ""
 	edit_feedback_label.text = "Enter new username"
@@ -146,35 +156,24 @@ func _on_edit_profile_pressed() -> void:
 func _on_edit_cancel_button_pressed() -> void:
 	edit_profile_ui.hide()
 	game_ui.show()
+	bottom_nav.show()
 
 func _on_friends_button_pressed() -> void:
-	game_ui.hide()
+	_hide_all_ui()
 	friends_ui.show()
 	friends_feedback_label.text = ""
 	add_friend_input.text = ""
 	_refresh_friends_list()
 
-func _on_back_home_button_pressed() -> void:
-	friends_ui.hide()
-	game_ui.show()
-
 func _on_units_button_pressed() -> void:
-	game_ui.hide()
+	_hide_all_ui()
 	units_ui.show()
 	_refresh_units_list()
 
-func _on_units_back_home_button_pressed() -> void:
-	units_ui.hide()
-	game_ui.show()
-
 func _on_items_button_pressed() -> void:
-	game_ui.hide()
+	_hide_all_ui()
 	items_ui.show()
 	_refresh_items_list()
-
-func _on_items_back_home_button_pressed() -> void:
-	items_ui.hide()
-	game_ui.show()
 
 func _on_add_potion_button_pressed() -> void:
 	var result = await server_connection.add_item_async("item_001", 1)
@@ -208,12 +207,8 @@ func _refresh_items_list() -> void:
 		items_list_container.add_child(label)
 
 func _on_summon_button_pressed() -> void:
-	game_ui.hide()
+	_hide_all_ui()
 	summon_ui.show()
-
-func _on_summon_back_home_button_pressed() -> void:
-	summon_ui.hide()
-	game_ui.show()
 
 func _on_summon_close_overlay_button_pressed() -> void:
 	summon_overlay.hide()
@@ -480,6 +475,7 @@ func _on_edit_update_button_pressed() -> void:
 		edit_feedback_label.text = "Update successful!"
 		edit_profile_ui.hide()
 		game_ui.show()
+		bottom_nav.show()
 
 		var account = await(server_connection.get_account_async())
 		if account and account.user.username != "":
@@ -489,7 +485,8 @@ func _on_edit_update_button_pressed() -> void:
 
 func _on_logout_pressed() -> void:
 	server_connection.logout()
-	game_ui.hide()
+	_hide_all_ui()
+	bottom_nav.hide()
 	login_ui.show()
 	user_info_label.text = ""
 	login_feedback_label.text = "Logged out successfully."
@@ -543,6 +540,7 @@ func _transition_to_game(email: String) -> void:
 	login_ui.hide()
 	register_ui.hide()
 	game_ui.show()
+	bottom_nav.show()
 
 	var stats = await server_connection.read_player_stats_async()
 	current_level = int(stats.get("level", 1))

@@ -333,57 +333,6 @@ popup/item_0/id = 0
 popup/item_1/text = "Logout"
 popup/item_1/id = 1
 
-[node name="FriendsButton" type="Button" parent="CanvasLayer/GameUI" unique_id=853502796]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -100.0
-offset_top = -50.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "Friends"
-
-[node name="UnitsButton" type="Button" parent="CanvasLayer/GameUI" unique_id=791310302]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = -50.0
-offset_right = 100.0
-offset_bottom = -10.0
-grow_vertical = 0
-text = "Units"
-
-[node name="ItemsButton" type="Button" parent="CanvasLayer/GameUI" unique_id=76072141]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 110.0
-offset_top = -50.0
-offset_right = 200.0
-offset_bottom = -10.0
-grow_vertical = 0
-text = "Items"
-
-[node name="SummonButton" type="Button" parent="CanvasLayer/GameUI" unique_id=875945712]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 210.0
-offset_top = -50.0
-offset_right = 300.0
-offset_bottom = -10.0
-grow_vertical = 0
-text = "Summon"
-
 [node name="FriendsUI" type="Control" parent="CanvasLayer" unique_id=602361321]
 visible = false
 layout_mode = 3
@@ -437,10 +386,6 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer" unique_id=584398201]
-layout_mode = 2
-text = "Back Home"
 
 [node name="EditProfileUI" type="Control" parent="CanvasLayer" unique_id=95454907]
 visible = false
@@ -523,10 +468,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/UnitsUI/VBoxContainer" unique_id=1303272049]
-layout_mode = 2
-text = "Back Home"
-
 [node name="ItemsUI" type="Control" parent="CanvasLayer" unique_id=1956343535]
 visible = false
 layout_mode = 3
@@ -568,10 +509,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/ItemsUI/VBoxContainer" unique_id=563129181]
-layout_mode = 2
-text = "Back Home"
-
 [node name="SummonUI" type="Control" parent="CanvasLayer" unique_id=1843260387]
 visible = false
 layout_mode = 3
@@ -603,10 +540,6 @@ horizontal_alignment = 1
 [node name="PerformSummonButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer" unique_id=6548403]
 layout_mode = 2
 text = "Summon 3 Units"
-
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer" unique_id=1592844208]
-layout_mode = 2
-text = "Back Home"
 
 [node name="SummonOverlay" type="ColorRect" parent="CanvasLayer/SummonUI" unique_id=2000668479]
 visible = false
@@ -649,3 +582,48 @@ size_flags_vertical = 3
 [node name="CloseOverlayButton" type="Button" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer" unique_id=1550433242]
 layout_mode = 2
 text = "Close"
+
+[node name="BottomNav" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/BottomNav"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="HomeButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Home"
+
+[node name="UnitsButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Units"
+
+[node name="ItemsButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Items"
+
+[node name="SummonButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Summon"
+
+[node name="FriendsButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Friends"

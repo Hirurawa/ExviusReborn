@@ -21,8 +21,8 @@ Nakama="*uid://c4wa1wmbnm2fm"
 
 [display]
 
-window/size/viewport_width=720
-window/size/viewport_height=1280
+window/size/viewport_width=500
+window/size/viewport_height=900
 window/handheld/orientation=1
 
 [physics]

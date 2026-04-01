@@ -50,6 +50,21 @@ var current_xp: int = 0
 @onready var units_ui := $CanvasLayer/UnitsUI
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
 
+@onready var unit_detail_ui := $CanvasLayer/UnitDetailUI
+@onready var unit_detail_back_button := $CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/BackButton
+@onready var unit_detail_name_label := $CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox/NameLabel
+@onready var unit_detail_rarity_label := $CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox/InfoHBox/RarityLabel
+@onready var unit_detail_level_label := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox/LevelLabel
+@onready var unit_detail_next_xp_label := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox/NextXPLabel
+@onready var unit_detail_hp_value := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/HPValue
+@onready var unit_detail_mp_value := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MPValue
+@onready var unit_detail_atk_value := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/ATKValue
+@onready var unit_detail_def_value := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/DEFValue
+@onready var unit_detail_mag_value := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MAGValue
+@onready var unit_detail_spr_value := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/SPRValue
+@onready var unit_detail_add_xp_button := $CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox/AddXPButton
+@onready var unit_detail_awaken_button := $CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox/AwakenButton
+
 @onready var items_ui := $CanvasLayer/ItemsUI
 @onready var items_list_container := $CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer/ItemsListContainer
 @onready var add_potion_button := $CanvasLayer/ItemsUI/VBoxContainer/AddPotionButton
@@ -99,6 +114,8 @@ func _ready() -> void:
 	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
 	summon_close_overlay_button.pressed.connect(_on_summon_close_overlay_button_pressed)
 
+	unit_detail_back_button.pressed.connect(_on_unit_detail_back_button_pressed)
+
 func _update_stats_ui() -> void:
 	var required_xp = current_level * 100
 	stats_level_label.text = "%d" % current_level
@@ -140,6 +157,7 @@ func _hide_all_ui() -> void:
 	items_ui.hide()
 	summon_ui.hide()
 	edit_profile_ui.hide()
+	unit_detail_ui.hide()
 
 func _on_home_button_pressed() -> void:
 	_hide_all_ui()
@@ -279,51 +297,65 @@ func _refresh_units_list() -> void:
 
 		var unit_id = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = game_data_units.get(unit_id, {})
-		var vbox := VBoxContainer.new()
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-		var name_label := Label.new()
-		name_label.text = "Name: %s" % unit_data.get("name", "Unknown")
-		name_label.add_theme_font_size_override("font_size", 18)
-		vbox.add_child(name_label)
+		var grid_item := Button.new()
+		grid_item.custom_minimum_size = Vector2(0, 80)
+		grid_item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid_item.text = unit_data.get("name", "Unknown")
+		grid_item.pressed.connect(_show_unit_detail.bind(unit_inst))
 
-		var level_label := Label.new()
-		level_label.text = "Level: %d (XP: %d) | Rarity: %d★" % [
-			unit_inst.get("level", 1),
-			unit_inst.get("xp", 0),
-			unit_inst.get("current_rarity", 1)
-		]
-		vbox.add_child(level_label)
+		units_list_container.add_child(grid_item)
 
-		var stats_label := Label.new()
-		var base_stats = unit_data.get("base_stats", {})
-		var stats_text = "HP: %s | MP: %s | ATK: %s | DEF: %s" % [
-			base_stats.get("hp", "?"),
-			base_stats.get("mp", "?"),
-			base_stats.get("atk", "?"),
-			base_stats.get("def", "?")
-		]
-		stats_label.text = stats_text
-		vbox.add_child(stats_label)
+func _show_unit_detail(unit_inst: Dictionary) -> void:
+	_hide_all_ui()
+	unit_detail_ui.show()
 
-		var action_hbox := HBoxContainer.new()
+	var unit_id = unit_inst.get("unit_id", "")
+	var unit_data: Dictionary = game_data_units.get(unit_id, {})
+	var base_stats = unit_data.get("base_stats", {})
 
-		var add_xp_btn := Button.new()
-		add_xp_btn.text = "Add 1000 XP"
-		add_xp_btn.pressed.connect(_on_unit_add_xp_pressed.bind(unit_inst.get("instance_id", "")))
-		action_hbox.add_child(add_xp_btn)
+	unit_detail_name_label.text = unit_data.get("name", "Unknown")
 
-		var awaken_btn := Button.new()
-		awaken_btn.text = "Awaken"
-		awaken_btn.pressed.connect(_on_unit_awaken_pressed.bind(unit_inst.get("instance_id", "")))
-		action_hbox.add_child(awaken_btn)
+	var rarity = unit_inst.get("current_rarity", 1)
+	var stars = ""
+	for i in range(rarity):
+		stars += "★"
+	unit_detail_rarity_label.text = stars
 
-		vbox.add_child(action_hbox)
+	var level = unit_inst.get("level", 1)
+	var max_level = 80 # default max level
+	unit_detail_level_label.text = "Lvl %d/%d" % [level, max_level]
 
-		var separator := HSeparator.new()
-		vbox.add_child(separator)
+	var xp = unit_inst.get("xp", 0)
+	var required_xp = level * 1000 # placeholder required xp logic
+	var next_xp = required_xp - xp
+	if next_xp < 0:
+		next_xp = 0
+	unit_detail_next_xp_label.text = "next %d" % next_xp
 
-		units_list_container.add_child(vbox)
+	unit_detail_hp_value.text = str(base_stats.get("hp", 0))
+	unit_detail_mp_value.text = str(base_stats.get("mp", 0))
+	unit_detail_atk_value.text = str(base_stats.get("atk", 0))
+	unit_detail_def_value.text = str(base_stats.get("def", 0))
+
+	# Fallback values for missing stats based on user instruction
+	unit_detail_mag_value.text = "0"
+	unit_detail_spr_value.text = "0"
+
+	# Disconnect previously bound signals to avoid duplicate calls
+	for connection in unit_detail_add_xp_button.pressed.get_connections():
+		unit_detail_add_xp_button.pressed.disconnect(connection["callable"])
+
+	for connection in unit_detail_awaken_button.pressed.get_connections():
+		unit_detail_awaken_button.pressed.disconnect(connection["callable"])
+
+	var instance_id = unit_inst.get("instance_id", "")
+	unit_detail_add_xp_button.pressed.connect(_on_unit_add_xp_pressed.bind(instance_id))
+	unit_detail_awaken_button.pressed.connect(_on_unit_awaken_pressed.bind(instance_id))
+
+func _on_unit_detail_back_button_pressed() -> void:
+	unit_detail_ui.hide()
+	units_ui.show()
 
 func _on_unit_add_xp_pressed(instance_id: String) -> void:
 	var result = await server_connection.add_unit_xp_async(instance_id, 1000)
@@ -333,6 +365,12 @@ func _on_unit_add_xp_pressed(instance_id: String) -> void:
 		# Refresh full units list
 		owned_units_ids = await server_connection.read_player_units_async()
 		_refresh_units_list()
+		# Re-render detail page with updated data if it's currently showing
+		if unit_detail_ui.visible:
+			for unit in owned_units_ids:
+				if unit.get("instance_id") == instance_id:
+					_show_unit_detail(unit)
+					break
 
 func _on_unit_awaken_pressed(instance_id: String) -> void:
 	var result = await server_connection.awaken_unit_async(instance_id)
@@ -342,6 +380,12 @@ func _on_unit_awaken_pressed(instance_id: String) -> void:
 		# Refresh full units list
 		owned_units_ids = await server_connection.read_player_units_async()
 		_refresh_units_list()
+		# Re-render detail page with updated data if it's currently showing
+		if unit_detail_ui.visible:
+			for unit in owned_units_ids:
+				if unit.get("instance_id") == instance_id:
+					_show_unit_detail(unit)
+					break
 
 func _on_add_friend_button_pressed() -> void:
 	var username: String = add_friend_input.text.strip_edges()

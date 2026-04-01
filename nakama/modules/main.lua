@@ -122,7 +122,7 @@ local function summon_units(context, payload)
             unit_id = unit_id,
             level = 1,
             xp = 0,
-            current_rarity = unit_data.base_rarity or 1
+            current_rarity = unit_data.min_rarity or unit_data.base_rarity or 1
         }
 
         table.insert(player_units, new_unit)

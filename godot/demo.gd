@@ -322,8 +322,18 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		stars += "★"
 	unit_detail_rarity_label.text = stars
 
+	var rarity_max_levels = {
+		1: 15,
+		2: 30,
+		3: 40,
+		4: 60,
+		5: 80,
+		6: 100,
+		7: 120
+	}
+
 	var level = unit_inst.get("level", 1)
-	var max_level = 80 # default max level
+	var max_level = rarity_max_levels.get(rarity, 15)
 	unit_detail_level_label.text = "Lvl %d/%d" % [level, max_level]
 
 	var xp = unit_inst.get("xp", 0)

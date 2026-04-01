@@ -483,7 +483,7 @@ func _on_edit_update_button_pressed() -> void:
 
 		var account = await(server_connection.get_account_async())
 		if account and account.user.username != "":
-			user_info_label.text = "Welcome, " + account.user.username + "!"
+			user_info_label.text = account.user.username
 	else:
 		edit_feedback_label.text = "Update failed. Error code: %d" % result
 
@@ -563,8 +563,8 @@ func _transition_to_game(email: String) -> void:
 	var account = await(server_connection.get_account_async())
 	if account:
 		if account.user.username != "":
-			user_info_label.text = "Welcome, " + account.user.username + "!"
+			user_info_label.text = account.user.username 
 		else:
-			user_info_label.text = "Welcome, " + email + "!"
+			user_info_label.text = email
 	else:
 		user_info_label.text = "Welcome!"

@@ -15,15 +15,6 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.1, 0.1, 0.1, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nrg"]
-bg_color = Color(0.2, 0.6, 1, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp"]
-bg_color = Color(0.4, 0.8, 0.2, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
 bg_color = Color(0.02, 0.1, 0.3, 1)
 border_width_left = 2
@@ -36,6 +27,14 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.1, 0.1, 0.1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nrg"]
+bg_color = Color(0.2, 0.6, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp"]
+bg_color = Color(0.4, 0.8, 0.2, 1)
 
 [node name="Demo" type="Node2D" unique_id=647364239]
 script = ExtResource("1_0bhed")
@@ -45,7 +44,7 @@ script = ExtResource("2_m0rpm")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=401059779]
 
-[node name="LoginUI" type="Control" parent="CanvasLayer"]
+[node name="LoginUI" type="Control" parent="CanvasLayer" unique_id=1106424834]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -53,7 +52,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/LoginUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/LoginUI" unique_id=2099416009]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -67,33 +66,33 @@ offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FeedbackLabel" type="Label" parent="CanvasLayer/LoginUI/VBoxContainer"]
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/LoginUI/VBoxContainer" unique_id=883389408]
 layout_mode = 2
 text = "Please Login"
 horizontal_alignment = 1
 
-[node name="EmailInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
+[node name="EmailInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer" unique_id=1928792740]
 layout_mode = 2
 placeholder_text = "Email"
 
-[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer"]
+[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/LoginUI/VBoxContainer" unique_id=580567554]
 layout_mode = 2
 placeholder_text = "Password"
 secret = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/LoginUI/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/LoginUI/VBoxContainer" unique_id=1008584241]
 layout_mode = 2
 alignment = 1
 
-[node name="LoginButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer"]
+[node name="LoginButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer" unique_id=1201842923]
 layout_mode = 2
 text = "Login"
 
-[node name="GoToRegisterButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer"]
+[node name="GoToRegisterButton" type="Button" parent="CanvasLayer/LoginUI/VBoxContainer/HBoxContainer" unique_id=104683171]
 layout_mode = 2
 text = "Go to Register"
 
-[node name="RegisterUI" type="Control" parent="CanvasLayer"]
+[node name="RegisterUI" type="Control" parent="CanvasLayer" unique_id=1069403292]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -102,7 +101,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/RegisterUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/RegisterUI" unique_id=1427206053]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -116,37 +115,37 @@ offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FeedbackLabel" type="Label" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/RegisterUI/VBoxContainer" unique_id=2088859416]
 layout_mode = 2
 text = "Please Register"
 horizontal_alignment = 1
 
-[node name="UsernameInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+[node name="UsernameInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer" unique_id=972266571]
 layout_mode = 2
 placeholder_text = "Username"
 
-[node name="EmailInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+[node name="EmailInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer" unique_id=1188590516]
 layout_mode = 2
 placeholder_text = "Email"
 
-[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+[node name="PasswordInput" type="LineEdit" parent="CanvasLayer/RegisterUI/VBoxContainer" unique_id=718655684]
 layout_mode = 2
 placeholder_text = "Password"
 secret = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/RegisterUI/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/RegisterUI/VBoxContainer" unique_id=1057992119]
 layout_mode = 2
 alignment = 1
 
-[node name="RegisterButton" type="Button" parent="CanvasLayer/RegisterUI/VBoxContainer/HBoxContainer"]
+[node name="RegisterButton" type="Button" parent="CanvasLayer/RegisterUI/VBoxContainer/HBoxContainer" unique_id=367694949]
 layout_mode = 2
 text = "Register"
 
-[node name="BackToLoginButton" type="Button" parent="CanvasLayer/RegisterUI/VBoxContainer/HBoxContainer"]
+[node name="BackToLoginButton" type="Button" parent="CanvasLayer/RegisterUI/VBoxContainer/HBoxContainer" unique_id=696554968]
 layout_mode = 2
 text = "Back to Login"
 
-[node name="GameUI" type="Control" parent="CanvasLayer"]
+[node name="GameUI" type="Control" parent="CanvasLayer" unique_id=1050488302]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -155,19 +154,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-
-
-
-
-
-
-
-
-
-
-
-
-[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer/GameUI"]
+[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer/GameUI" unique_id=1024202790]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -175,67 +162,67 @@ offset_bottom = 120.0
 grow_horizontal = 2
 theme_override_constants/separation = 0
 
-[node name="TopRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader"]
+[node name="TopRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=1819523158]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/TopRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/TopRow" unique_id=1051034379]
 layout_mode = 2
 
-[node name="GilLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox"]
+[node name="GilLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox" unique_id=97691349]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Gil: 0"
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
-theme_override_font_sizes/font_size = 20
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "Gil: 0"
 vertical_alignment = 1
 
-[node name="UserInfoLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox"]
+[node name="UserInfoLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox" unique_id=1858613764]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
 text = "Player"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
 vertical_alignment = 1
 
-[node name="LapisLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox"]
+[node name="LapisLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox" unique_id=593576035]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Lapis: 0"
-horizontal_alignment = 2
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 20
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "Lapis: 0"
+horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BottomRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader"]
+[node name="BottomRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=1199200510]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_2")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow" unique_id=636958855]
 layout_mode = 2
 
-[node name="EnergyContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox"]
+[node name="EnergyContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=990643421]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer"]
+[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer" unique_id=1683328830]
 layout_mode = 2
-text = "NRG"
 theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "NRG"
 vertical_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer" unique_id=23248404]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -244,48 +231,48 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_nrg")
 value = 100.0
 show_percentage = false
 
-[node name="EnergyText" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar"]
+[node name="EnergyText" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar" unique_id=1935224873]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "150/178"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "150/178"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox"]
+[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=476669917]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer"]
+[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer" unique_id=615858744]
 layout_mode = 2
-text = "RANK"
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 14
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "RANK"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LevelLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer"]
+[node name="LevelLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer" unique_id=1783661534]
 layout_mode = 2
-text = "177"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 32
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 32
+text = "177"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="EXPContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox"]
+[node name="EXPContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=1561870244]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer" unique_id=1025262147]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -294,48 +281,50 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_exp")
 value = 50.0
 show_percentage = false
 
-[node name="XPLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar"]
+[node name="XPLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar" unique_id=1533892609]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
 text = "50%"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
 vertical_alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer"]
+[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer" unique_id=2004385761]
 layout_mode = 2
-text = "EXP"
-theme_override_colors/font_color = Color(0.6, 1.0, 0.6, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "EXP"
 vertical_alignment = 1
 
-[node name="DebugXPContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader"]
+[node name="DebugXPContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=549850879]
 layout_mode = 2
 alignment = 1
 
-[node name="XPInput" type="LineEdit" parent="CanvasLayer/GameUI/TopHeader/DebugXPContainer"]
+[node name="XPInput" type="LineEdit" parent="CanvasLayer/GameUI/TopHeader/DebugXPContainer" unique_id=76692353]
 layout_mode = 2
 placeholder_text = "XP Amount"
 
-[node name="AddXPButton" type="Button" parent="CanvasLayer/GameUI/TopHeader/DebugXPContainer"]
+[node name="AddXPButton" type="Button" parent="CanvasLayer/GameUI/TopHeader/DebugXPContainer" unique_id=2098501005]
 layout_mode = 2
 text = "Add XP"
 
-[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer/GameUI"]
+[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer/GameUI" unique_id=360065264]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -100.0
-offset_bottom = 31.0
+offset_left = -120.0
+offset_top = 130.0
+offset_right = -10.0
+offset_bottom = 161.0
 grow_horizontal = 0
 text = "User Options"
 item_count = 2
@@ -344,7 +333,7 @@ popup/item_0/id = 0
 popup/item_1/text = "Logout"
 popup/item_1/id = 1
 
-[node name="FriendsButton" type="Button" parent="CanvasLayer/GameUI"]
+[node name="FriendsButton" type="Button" parent="CanvasLayer/GameUI" unique_id=853502796]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -359,7 +348,7 @@ grow_horizontal = 0
 grow_vertical = 0
 text = "Friends"
 
-[node name="UnitsButton" type="Button" parent="CanvasLayer/GameUI"]
+[node name="UnitsButton" type="Button" parent="CanvasLayer/GameUI" unique_id=791310302]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -371,7 +360,7 @@ offset_bottom = -10.0
 grow_vertical = 0
 text = "Units"
 
-[node name="ItemsButton" type="Button" parent="CanvasLayer/GameUI"]
+[node name="ItemsButton" type="Button" parent="CanvasLayer/GameUI" unique_id=76072141]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -383,7 +372,7 @@ offset_bottom = -10.0
 grow_vertical = 0
 text = "Items"
 
-[node name="SummonButton" type="Button" parent="CanvasLayer/GameUI"]
+[node name="SummonButton" type="Button" parent="CanvasLayer/GameUI" unique_id=875945712]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -395,7 +384,7 @@ offset_bottom = -10.0
 grow_vertical = 0
 text = "Summon"
 
-[node name="FriendsUI" type="Control" parent="CanvasLayer"]
+[node name="FriendsUI" type="Control" parent="CanvasLayer" unique_id=602361321]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -404,7 +393,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/FriendsUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/FriendsUI" unique_id=1675221541]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -418,42 +407,42 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/FriendsUI/VBoxContainer" unique_id=1211665910]
 layout_mode = 2
 text = "Friends"
 horizontal_alignment = 1
 
-[node name="AddFriendHBox" type="HBoxContainer" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+[node name="AddFriendHBox" type="HBoxContainer" parent="CanvasLayer/FriendsUI/VBoxContainer" unique_id=1958188335]
 layout_mode = 2
 alignment = 1
 
-[node name="AddFriendInput" type="LineEdit" parent="CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox"]
+[node name="AddFriendInput" type="LineEdit" parent="CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox" unique_id=819022332]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Username"
 
-[node name="AddFriendButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox"]
+[node name="AddFriendButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox" unique_id=335691021]
 layout_mode = 2
 text = "Add Friend"
 
-[node name="FeedbackLabel" type="Label" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/FriendsUI/VBoxContainer" unique_id=1620429377]
 layout_mode = 2
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/FriendsUI/VBoxContainer" unique_id=782602510]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="FriendsListContainer" type="VBoxContainer" parent="CanvasLayer/FriendsUI/VBoxContainer/ScrollContainer"]
+[node name="FriendsListContainer" type="VBoxContainer" parent="CanvasLayer/FriendsUI/VBoxContainer/ScrollContainer" unique_id=326890969]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer"]
+[node name="BackHomeButton" type="Button" parent="CanvasLayer/FriendsUI/VBoxContainer" unique_id=584398201]
 layout_mode = 2
 text = "Back Home"
 
-[node name="EditProfileUI" type="Control" parent="CanvasLayer"]
+[node name="EditProfileUI" type="Control" parent="CanvasLayer" unique_id=95454907]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -462,7 +451,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/EditProfileUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/EditProfileUI" unique_id=1600055808]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -476,28 +465,28 @@ offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FeedbackLabel" type="Label" parent="CanvasLayer/EditProfileUI/VBoxContainer"]
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer/EditProfileUI/VBoxContainer" unique_id=1781862906]
 layout_mode = 2
 text = "Edit Profile"
 horizontal_alignment = 1
 
-[node name="NewUsernameInput" type="LineEdit" parent="CanvasLayer/EditProfileUI/VBoxContainer"]
+[node name="NewUsernameInput" type="LineEdit" parent="CanvasLayer/EditProfileUI/VBoxContainer" unique_id=2142242904]
 layout_mode = 2
 placeholder_text = "New Username"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/EditProfileUI/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/EditProfileUI/VBoxContainer" unique_id=394090842]
 layout_mode = 2
 alignment = 1
 
-[node name="UpdateButton" type="Button" parent="CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer"]
+[node name="UpdateButton" type="Button" parent="CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer" unique_id=1651296772]
 layout_mode = 2
 text = "Update"
 
-[node name="CancelButton" type="Button" parent="CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer"]
+[node name="CancelButton" type="Button" parent="CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer" unique_id=1081649333]
 layout_mode = 2
 text = "Cancel"
 
-[node name="UnitsUI" type="Control" parent="CanvasLayer"]
+[node name="UnitsUI" type="Control" parent="CanvasLayer" unique_id=1099922423]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -506,7 +495,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI" unique_id=1428925648]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -520,25 +509,25 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/UnitsUI/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/UnitsUI/VBoxContainer" unique_id=2084591964]
 layout_mode = 2
 text = "Units"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/UnitsUI/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/UnitsUI/VBoxContainer" unique_id=1741765047]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="UnitsListContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer"]
+[node name="UnitsListContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer" unique_id=798742642]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/UnitsUI/VBoxContainer"]
+[node name="BackHomeButton" type="Button" parent="CanvasLayer/UnitsUI/VBoxContainer" unique_id=1303272049]
 layout_mode = 2
 text = "Back Home"
 
-[node name="ItemsUI" type="Control" parent="CanvasLayer"]
+[node name="ItemsUI" type="Control" parent="CanvasLayer" unique_id=1956343535]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -547,7 +536,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ItemsUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ItemsUI" unique_id=1637998376]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -561,29 +550,29 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/ItemsUI/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/ItemsUI/VBoxContainer" unique_id=1676141924]
 layout_mode = 2
 text = "Items"
 horizontal_alignment = 1
 
-[node name="AddPotionButton" type="Button" parent="CanvasLayer/ItemsUI/VBoxContainer"]
+[node name="AddPotionButton" type="Button" parent="CanvasLayer/ItemsUI/VBoxContainer" unique_id=1025379744]
 layout_mode = 2
 text = "Add Potion (Test)"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/ItemsUI/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/ItemsUI/VBoxContainer" unique_id=1069450743]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemsListContainer" type="VBoxContainer" parent="CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer"]
+[node name="ItemsListContainer" type="VBoxContainer" parent="CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer" unique_id=1695072220]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/ItemsUI/VBoxContainer"]
+[node name="BackHomeButton" type="Button" parent="CanvasLayer/ItemsUI/VBoxContainer" unique_id=563129181]
 layout_mode = 2
 text = "Back Home"
 
-[node name="SummonUI" type="Control" parent="CanvasLayer"]
+[node name="SummonUI" type="Control" parent="CanvasLayer" unique_id=1843260387]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -592,7 +581,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI" unique_id=818378946]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -606,20 +595,20 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/SummonUI/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/SummonUI/VBoxContainer" unique_id=779247940]
 layout_mode = 2
 text = "Summon"
 horizontal_alignment = 1
 
-[node name="PerformSummonButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer"]
+[node name="PerformSummonButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer" unique_id=6548403]
 layout_mode = 2
 text = "Summon 3 Units"
 
-[node name="BackHomeButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer"]
+[node name="BackHomeButton" type="Button" parent="CanvasLayer/SummonUI/VBoxContainer" unique_id=1592844208]
 layout_mode = 2
 text = "Back Home"
 
-[node name="SummonOverlay" type="ColorRect" parent="CanvasLayer/SummonUI"]
+[node name="SummonOverlay" type="ColorRect" parent="CanvasLayer/SummonUI" unique_id=2000668479]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -629,7 +618,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.8)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI/SummonOverlay"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI/SummonOverlay" unique_id=491751991]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -643,20 +632,20 @@ offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer" unique_id=735420058]
 layout_mode = 2
 text = "Summon Results"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer" unique_id=1121673232]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ResultsListContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/ScrollContainer"]
+[node name="ResultsListContainer" type="VBoxContainer" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/ScrollContainer" unique_id=1839588559]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="CloseOverlayButton" type="Button" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer"]
+[node name="CloseOverlayButton" type="Button" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer" unique_id=1550433242]
 layout_mode = 2
 text = "Close"

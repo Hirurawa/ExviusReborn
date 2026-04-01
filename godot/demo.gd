@@ -29,14 +29,15 @@ extends Node2D
 @onready var edit_cancel_button := $CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer/CancelButton
 
 
-@onready var stats_level_label := $CanvasLayer/GameUI/StatsContainer/LevelLabel
-@onready var stats_xp_label := $CanvasLayer/GameUI/StatsContainer/XPLabel
-@onready var stats_xp_input := $CanvasLayer/GameUI/StatsContainer/HBoxContainer/XPInput
-@onready var stats_add_xp_button := $CanvasLayer/GameUI/StatsContainer/HBoxContainer/AddXPButton
+@onready var stats_level_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer/LevelLabel
+@onready var stats_xp_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar/XPLabel
+@onready var stats_xp_bar := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar
+@onready var stats_xp_input := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/XPInput
+@onready var stats_add_xp_button := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/AddXPButton
 
 var current_level: int = 1
 var current_xp: int = 0
-@onready var user_info_label := $CanvasLayer/GameUI/UserInfoLabel
+@onready var user_info_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/UserInfoLabel
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
 @onready var friends_button := $CanvasLayer/GameUI/FriendsButton
 @onready var units_button := $CanvasLayer/GameUI/UnitsButton
@@ -104,8 +105,13 @@ func _ready() -> void:
 
 func _update_stats_ui() -> void:
 	var required_xp = current_level * 100
-	stats_level_label.text = "Level: %d" % current_level
-	stats_xp_label.text = "XP: %d / %d" % [current_xp, required_xp]
+	stats_level_label.text = "%d" % current_level
+
+	if required_xp > 0:
+		stats_xp_bar.max_value = required_xp
+		stats_xp_bar.value = current_xp
+
+	stats_xp_label.text = "%d / %d" % [current_xp, required_xp]
 
 func _on_add_xp_button_pressed() -> void:
 	var xp_to_add: int = stats_xp_input.text.to_int()
@@ -477,7 +483,7 @@ func _on_edit_update_button_pressed() -> void:
 
 		var account = await(server_connection.get_account_async())
 		if account and account.user.username != "":
-			user_info_label.text = "Welcome, " + account.user.username + "!"
+			user_info_label.text = account.user.username
 	else:
 		edit_feedback_label.text = "Update failed. Error code: %d" % result
 
@@ -557,8 +563,8 @@ func _transition_to_game(email: String) -> void:
 	var account = await(server_connection.get_account_async())
 	if account:
 		if account.user.username != "":
-			user_info_label.text = "Welcome, " + account.user.username + "!"
+			user_info_label.text = account.user.username 
 		else:
-			user_info_label.text = "Welcome, " + email + "!"
+			user_info_label.text = email
 	else:
 		user_info_label.text = "Welcome!"

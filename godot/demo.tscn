@@ -990,6 +990,10 @@ text = "Add 1000 XP"
 layout_mode = 2
 text = "Awaken"
 
+[node name="BottomSpacer" type="Control" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+
 [node name="ItemsUI" type="Control" parent="CanvasLayer" unique_id=1956343535]
 visible = false
 layout_mode = 3

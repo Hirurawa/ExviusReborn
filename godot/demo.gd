@@ -333,10 +333,10 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		next_xp = 0
 	unit_detail_next_xp_label.text = "next %d" % next_xp
 
-	unit_detail_hp_value.text = str(base_stats.get("hp", 0))
-	unit_detail_mp_value.text = str(base_stats.get("mp", 0))
-	unit_detail_atk_value.text = str(base_stats.get("atk", 0))
-	unit_detail_def_value.text = str(base_stats.get("def", 0))
+	unit_detail_hp_value.text = str(int(base_stats.get("hp", 0)))
+	unit_detail_mp_value.text = str(int(base_stats.get("mp", 0)))
+	unit_detail_atk_value.text = str(int(base_stats.get("atk", 0)))
+	unit_detail_def_value.text = str(int(base_stats.get("def", 0)))
 
 	# Fallback values for missing stats based on user instruction
 	unit_detail_mag_value.text = "0"

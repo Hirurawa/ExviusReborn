@@ -330,8 +330,12 @@ nk.register_rpc(add_currency, "add_currency")
 local function buy_potion(context, payload)
     local account = nk.account_get_id(context.user_id)
     local wallet = {}
-    if account.wallet and account.wallet ~= "" then
-        wallet = nk.json_decode(account.wallet)
+    if account.wallet then
+        if type(account.wallet) == "table" then
+            wallet = account.wallet
+        elseif type(account.wallet) == "string" and account.wallet ~= "" then
+            wallet = nk.json_decode(account.wallet)
+        end
     end
 
     local current_gil = wallet.gil or 0

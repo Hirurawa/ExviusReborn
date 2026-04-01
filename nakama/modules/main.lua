@@ -229,3 +229,72 @@ local function awaken_unit(context, payload)
 end
 
 nk.register_rpc(awaken_unit, "awaken_unit")
+
+local function get_player_items(user_id)
+    local object_ids = {
+        {collection = "items", key = "player_items", user_id = user_id}
+    }
+    local objects = nk.storage_read(object_ids)
+
+    if #objects > 0 then
+        local data = nk.json_decode(objects[1].value)
+        if data and data.items then
+            return data.items
+        end
+    end
+
+    return {}
+end
+
+local function save_player_items(user_id, items)
+    local objects = {
+        {
+            collection = "items",
+            key = "player_items",
+            user_id = user_id,
+            value = nk.json_encode({items = items}),
+            permission_read = 1,
+            permission_write = 1
+        }
+    }
+    nk.storage_write(objects)
+end
+
+local function add_item(context, payload)
+    local request = nk.json_decode(payload)
+    local item_id = request.item_id
+    local quantity = request.quantity or 1
+
+    if not item_id or quantity <= 0 then
+        return nk.json_encode({error = "Invalid parameters"})
+    end
+
+    local item_data = items_data[item_id]
+    if not item_data then
+        return nk.json_encode({error = "Item data not found"})
+    end
+
+    local player_items = get_player_items(context.user_id)
+    local item_found = false
+
+    for i, item in ipairs(player_items) do
+        if item.item_id == item_id then
+            item.quantity = item.quantity + quantity
+            item_found = true
+            break
+        end
+    end
+
+    if not item_found then
+        table.insert(player_items, {
+            item_id = item_id,
+            quantity = quantity
+        })
+    end
+
+    save_player_items(context.user_id, player_items)
+
+    return nk.json_encode({success = true, items = player_items})
+end
+
+nk.register_rpc(add_item, "add_item")

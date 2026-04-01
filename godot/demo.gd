@@ -40,17 +40,24 @@ var current_xp: int = 0
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
 @onready var friends_button := $CanvasLayer/GameUI/FriendsButton
 @onready var units_button := $CanvasLayer/GameUI/UnitsButton
+@onready var items_button := $CanvasLayer/GameUI/ItemsButton
 @onready var summon_button := $CanvasLayer/GameUI/SummonButton
 
 @onready var units_ui := $CanvasLayer/UnitsUI
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
 @onready var units_back_home_button := $CanvasLayer/UnitsUI/VBoxContainer/BackHomeButton
 
+@onready var items_ui := $CanvasLayer/ItemsUI
+@onready var items_list_container := $CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer/ItemsListContainer
+@onready var items_back_home_button := $CanvasLayer/ItemsUI/VBoxContainer/BackHomeButton
+@onready var add_potion_button := $CanvasLayer/ItemsUI/VBoxContainer/AddPotionButton
+
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
 var game_data_weapons: Dictionary = {}
 
 var owned_units_ids: Array = []
+var owned_items: Array = []
 
 @onready var friends_ui := $CanvasLayer/FriendsUI
 @onready var add_friend_input := $CanvasLayer/FriendsUI/VBoxContainer/AddFriendHBox/AddFriendInput
@@ -85,6 +92,10 @@ func _ready() -> void:
 
 	units_button.pressed.connect(_on_units_button_pressed)
 	units_back_home_button.pressed.connect(_on_units_back_home_button_pressed)
+
+	items_button.pressed.connect(_on_items_button_pressed)
+	items_back_home_button.pressed.connect(_on_items_back_home_button_pressed)
+	add_potion_button.pressed.connect(_on_add_potion_button_pressed)
 
 	summon_button.pressed.connect(_on_summon_button_pressed)
 	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
@@ -149,6 +160,46 @@ func _on_units_button_pressed() -> void:
 func _on_units_back_home_button_pressed() -> void:
 	units_ui.hide()
 	game_ui.show()
+
+func _on_items_button_pressed() -> void:
+	game_ui.hide()
+	items_ui.show()
+	_refresh_items_list()
+
+func _on_items_back_home_button_pressed() -> void:
+	items_ui.hide()
+	game_ui.show()
+
+func _on_add_potion_button_pressed() -> void:
+	var result = await server_connection.add_item_async("item_001", 1)
+	if result.has("error"):
+		print("Failed to add potion: ", result.error)
+	else:
+		owned_items = await server_connection.read_player_items_async()
+		_refresh_items_list()
+
+func _refresh_items_list() -> void:
+	for child in items_list_container.get_children():
+		items_list_container.remove_child(child)
+		child.queue_free()
+
+	if owned_items.is_empty():
+		var empty_label := Label.new()
+		empty_label.text = "No items owned."
+		items_list_container.add_child(empty_label)
+		return
+
+	for item in owned_items:
+		if not item is Dictionary:
+			continue
+
+		var item_id = item.get("item_id", "")
+		var item_data: Dictionary = game_data_items.get(item_id, {})
+
+		var label := Label.new()
+		label.text = "%s x%d" % [item_data.get("name", "Unknown Item"), item.get("quantity", 0)]
+		label.add_theme_font_size_override("font_size", 18)
+		items_list_container.add_child(label)
 
 func _on_summon_button_pressed() -> void:
 	game_ui.hide()
@@ -493,6 +544,7 @@ func _transition_to_game(email: String) -> void:
 	_update_stats_ui()
 
 	owned_units_ids = await server_connection.read_player_units_async()
+	owned_items = await server_connection.read_player_items_async()
 
 	var game_data = await server_connection.get_game_data_async()
 	if game_data:

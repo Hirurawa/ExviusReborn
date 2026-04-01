@@ -239,3 +239,44 @@ func awaken_unit_async(instance_id: String) -> Dictionary:
 		return dict
 
 	return {}
+
+func read_player_items_async() -> Array:
+	if _session == null or _session.is_expired():
+		return []
+
+	var object_id := NakamaStorageObjectId.new("items", "player_items", _session.user_id)
+	var result: NakamaAPI.ApiStorageObjects = await(_client.read_storage_objects_async(_session, [object_id]))
+
+	if result.is_exception():
+		return []
+
+	if result.objects.is_empty():
+		return []
+
+	var obj: NakamaAPI.ApiStorageObject = result.objects[0]
+	var dict = JSON.parse_string(obj.value)
+
+	if dict and dict is Dictionary and dict.has("items") and dict["items"] is Array:
+		return dict["items"]
+
+	return []
+
+func add_item_async(item_id: String, quantity: int = 1) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({
+		"item_id": item_id,
+		"quantity": quantity
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_item", payload)
+
+	if result.is_exception():
+		push_error("Failed to add item: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}

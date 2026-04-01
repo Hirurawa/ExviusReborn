@@ -122,7 +122,7 @@ local function summon_units(context, payload)
             unit_id = unit_id,
             level = 1,
             xp = 0,
-            current_rarity = unit_data.base_rarity or 1
+            current_rarity = unit_data.min_rarity or 1
         }
 
         table.insert(player_units, new_unit)
@@ -200,7 +200,7 @@ local function awaken_unit(context, payload)
             end
 
             local max_level = rarity_max_levels[unit.current_rarity] or 15
-            local max_rarity = unit_data.max_rarity or unit_data.base_rarity or 1
+            local max_rarity = unit_data.max_rarity or 1
 
             if unit.level < max_level then
                 return nk.json_encode({error = "Unit is not at max level for current rarity"})

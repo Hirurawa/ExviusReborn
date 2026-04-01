@@ -463,10 +463,536 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="UnitsListContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer" unique_id=798742642]
+[node name="UnitsListContainer" type="GridContainer" parent="CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer" unique_id=798742642]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+columns = 5
+
+[node name="UnitDetailUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="CanvasLayer/UnitDetailUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.05, 0.2, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BackButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "Back"
+
+[node name="TitleBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="InfoHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox"]
+layout_mode = 2
+
+[node name="NumberLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox/InfoHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "No. ???"
+
+[node name="RarityLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox/InfoHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "★★★★★"
+
+[node name="NameLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Unit Name"
+
+[node name="LockIcon" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.2, 0.6, 0.2, 1)
+
+[node name="DetailsButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "Details"
+
+[node name="CharInfoHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SpritePlaceholder" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox"]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+color = Color(0.1, 0.3, 0.4, 1)
+
+[node name="StatsVBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LevelHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Lvl 1/80"
+
+[node name="NextXPLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox"]
+layout_mode = 2
+text = "next 0"
+
+[node name="HSeparator" type="HSeparator" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+columns = 4
+
+[node name="HPTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "HP"
+
+[node name="HPValue" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="MPTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "MP"
+
+[node name="MPValue" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="ATKTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "ATK"
+
+[node name="ATKValue" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="DEFTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "DEF"
+
+[node name="DEFValue" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="MAGTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "MAG"
+
+[node name="MAGValue" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="SPRTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "SPR"
+
+[node name="SPRValue" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="TabsHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="EquipButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Equip"
+
+[node name="TraitButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Trait"
+
+[node name="MagicButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Magic"
+
+[node name="SpecialButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Special"
+
+[node name="TraitContent" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ElementResistLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent"]
+layout_mode = 2
+text = "Element Resistance"
+
+[node name="ElementResistGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent"]
+layout_mode = 2
+columns = 8
+theme_override_constants/h_separation = 5
+
+[node name="Resist1" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.8, 0.2, 0.2, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist2" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.2, 0.2, 0.8, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist3" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.8, 0.8, 0.2, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist4" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.2, 0.6, 0.8, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist5" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.2, 0.8, 0.2, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist6" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.6, 0.4, 0.2, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist7" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.8, 0.8, 0.8, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist7"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist8" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.4, 0.2, 0.6, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist8"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusResistLabel" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent"]
+layout_mode = 2
+text = "Status Resistance"
+
+[node name="StatusResistGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent"]
+layout_mode = 2
+columns = 8
+theme_override_constants/h_separation = 5
+
+[node name="Resist1" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist2" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist3" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist4" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist5" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist6" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist7" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist7"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist8" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist8"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LimitBurstHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="LBTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/LimitBurstHBox"]
+layout_mode = 2
+text = "Limit Burst"
+
+[node name="LBName" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/LimitBurstHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Skill Name"
+
+[node name="LBLvl" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/LimitBurstHBox"]
+layout_mode = 2
+text = "Lvl 1/20"
+
+[node name="TrustMasterHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TMTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox"]
+layout_mode = 2
+text = "0.0%"
+
+[node name="TMIcon" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.4, 0.6, 0.8, 1)
+
+[node name="TMInfoVBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox"]
+layout_mode = 2
+
+[node name="TMSubtitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox/TMInfoVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 0.8, 1)
+text = "Trust Master Reward"
+
+[node name="TMName" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox/TMInfoVBox"]
+layout_mode = 2
+text = "Reward Name"
+
+[node name="Spacer" type="Control" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ActionsHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="AddXPButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox"]
+layout_mode = 2
+text = "Add 1000 XP"
+
+[node name="AwakenButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox"]
+layout_mode = 2
+text = "Awaken"
+
+[node name="BottomSpacer" type="Control" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
 
 [node name="ItemsUI" type="Control" parent="CanvasLayer" unique_id=1956343535]
 visible = false

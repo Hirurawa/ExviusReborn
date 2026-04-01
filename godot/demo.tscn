@@ -60,28 +60,33 @@ alignment = 1
 theme_override_constants/separation = 10
 
 [node name="HomeButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
-custom_minimum_size = Vector2(100, 50)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Home"
 
 [node name="UnitsButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
-custom_minimum_size = Vector2(100, 50)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Units"
 
 [node name="ItemsButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
-custom_minimum_size = Vector2(100, 50)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Items"
 
 [node name="SummonButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
-custom_minimum_size = Vector2(100, 50)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Summon"
 
 [node name="FriendsButton" type="Button" parent="CanvasLayer/BottomNav/HBox"]
-custom_minimum_size = Vector2(100, 50)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Friends"
 
 [node name="LoginUI" type="Control" parent="CanvasLayer" unique_id=1106424834]

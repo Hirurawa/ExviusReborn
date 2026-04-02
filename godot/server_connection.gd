@@ -89,42 +89,39 @@ func list_friends_async() -> NakamaAPI.ApiFriendList:
 
 	return result as NakamaAPI.ApiFriendList
 
-func write_player_stats_async(level: int, xp: int) -> int:
+func add_rank_xp_async(xp_amount: int) -> Dictionary:
 	if _session == null or _session.is_expired():
-		return ERR_UNAUTHORIZED
+		return {}
 
-	var data := {
-		"level": level,
-		"xp": xp
-	}
+	var payload = JSON.stringify({
+		"xp_amount": xp_amount
+	})
 
-	var json_data := JSON.stringify(data)
-
-	var object := NakamaWriteStorageObject.new("stats", "player_stats", 1, 1, json_data, "")
-	var result = await(_client.write_storage_objects_async(_session, [object]))
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_rank_xp", payload)
 
 	if result.is_exception():
-		return result.get_exception().status_code
+		push_error("Failed to add rank xp: %s" % result.get_exception().message)
+		return {}
 
-	return OK
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}
 
 func read_player_stats_async() -> Dictionary:
-	var default_stats := {"level": 1, "xp": 0}
+	var default_stats := {"rank": 1, "xp": 0, "energy": 41, "max_energy": 41}
 
 	if _session == null or _session.is_expired():
 		return default_stats
 
-	var object_id := NakamaStorageObjectId.new("stats", "player_stats", _session.user_id)
-	var result: NakamaAPI.ApiStorageObjects = await(_client.read_storage_objects_async(_session, [object_id]))
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_player_stats", "{}")
 
 	if result.is_exception():
+		push_error("Failed to read player stats: %s" % result.get_exception().message)
 		return default_stats
 
-	if result.objects.is_empty():
-		return default_stats
-
-	var obj: NakamaAPI.ApiStorageObject = result.objects[0]
-	var dict = JSON.parse_string(obj.value)
+	var dict = JSON.parse_string(result.payload)
 
 	if dict and dict is Dictionary:
 		return dict

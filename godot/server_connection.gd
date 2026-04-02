@@ -167,19 +167,37 @@ func read_player_units_async() -> Array:
 
 	return []
 
-func get_game_data_async() -> Dictionary:
+func get_game_data_async(data_type: String = "core") -> Dictionary:
 	if _session == null or _session.is_expired():
 		return {}
 
-	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_game_data", "")
+	var payload = JSON.stringify({"type": data_type})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_game_data", payload)
 
 	if result.is_exception():
-		push_error("Failed to get game data: %s" % result.get_exception().message)
+		push_error("Failed to get game data (%s): %s" % [data_type, result.get_exception().message])
 		return {}
 
 	var dict = JSON.parse_string(result.payload)
 	if dict and dict is Dictionary:
 		return dict
+
+	return {}
+
+func get_dungeon_missions_async(mission_ids: Array) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({"mission_ids": mission_ids})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_dungeon_missions", payload)
+
+	if result.is_exception():
+		push_error("Failed to get dungeon missions: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary and dict.has("missions"):
+		return dict.get("missions", {})
 
 	return {}
 

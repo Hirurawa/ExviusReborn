@@ -61,9 +61,21 @@ var seconds_until_next_nrg: float = 0.0
 @onready var items_button := $CanvasLayer/BottomNav/HBox/ItemsButton
 @onready var summon_button := $CanvasLayer/BottomNav/HBox/SummonButton
 @onready var shop_button := $CanvasLayer/BottomNav/HBox/ShopButton
+@onready var world_map_button := $CanvasLayer/WorldMapButton
 
 @onready var shop_ui := $CanvasLayer/ShopUI
 @onready var shop_feedback_label := $CanvasLayer/ShopUI/VBoxContainer/ShopFeedbackLabel
+
+@onready var map_ui := $CanvasLayer/MapUI
+@onready var map_world_option := $CanvasLayer/MapUI/VBoxContainer/HBoxContainer/WorldOptionButton
+@onready var map_region_option := $CanvasLayer/MapUI/VBoxContainer/HBoxContainer/RegionOptionButton
+@onready var map_subregion_option := $CanvasLayer/MapUI/VBoxContainer/HBoxContainer/SubregionOptionButton
+@onready var map_scroll := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer
+@onready var map_content := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapContent
+@onready var map_image := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapContent/MapImage
+@onready var mission_details_popup := $CanvasLayer/MapUI/MissionDetailsPopup
+@onready var mission_dungeon_name := $CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer/DungeonNameLabel
+@onready var missions_list_container := $CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer/ScrollContainer/MissionsListContainer
 
 @onready var units_ui := $CanvasLayer/UnitsUI
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
@@ -93,6 +105,15 @@ var seconds_until_next_nrg: float = 0.0
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
 var game_data_weapons: Dictionary = {}
+var game_data_worlds: Dictionary = {}
+var game_data_dungeons: Dictionary = {}
+var game_data_missions: Dictionary = {}
+
+var current_selected_world: String = ""
+var current_selected_region: String = ""
+var current_selected_subregion: String = ""
+
+var map_zoom_level: float = 1.0
 
 var owned_units_ids: Array = []
 var owned_items: Array = []
@@ -143,6 +164,13 @@ func _ready() -> void:
 	summon_close_overlay_button.pressed.connect(_on_summon_close_overlay_button_pressed)
 
 	unit_detail_back_button.pressed.connect(_on_unit_detail_back_button_pressed)
+	
+	world_map_button.pressed.connect(_on_world_map_button_pressed)
+	map_world_option.item_selected.connect(_on_map_world_selected)
+	map_region_option.item_selected.connect(_on_map_region_selected)
+	map_subregion_option.item_selected.connect(_on_map_subregion_selected)
+	
+	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
 
 func _process(delta: float) -> void:
 	if not game_ui.visible and not bottom_nav.visible:
@@ -242,6 +270,7 @@ func _hide_all_ui() -> void:
 	shop_ui.hide()
 	edit_profile_ui.hide()
 	unit_detail_ui.hide()
+	map_ui.hide()
 
 func _on_shop_button_pressed() -> void:
 	_hide_all_ui()
@@ -281,6 +310,274 @@ func _on_items_button_pressed() -> void:
 	_hide_all_ui()
 	items_ui.show()
 	_refresh_items_list()
+
+func _on_world_map_button_pressed() -> void:
+	_hide_all_ui()
+	map_ui.show()
+	_populate_world_options()
+	map_zoom_level = 1.0
+	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+
+func _on_map_scroll_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		var old_zoom = map_zoom_level
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			map_zoom_level = clamp(map_zoom_level + 0.1, 0.5, 3.0)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			map_zoom_level = clamp(map_zoom_level - 0.1, 0.5, 3.0)
+			
+		if old_zoom != map_zoom_level:
+			map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+			map_content.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
+
+func _populate_world_options() -> void:
+	map_world_option.clear()
+	map_region_option.clear()
+	map_subregion_option.clear()
+	
+	for child in map_content.get_children():
+		if child != map_image:
+			map_content.remove_child(child)
+			child.queue_free()
+
+	map_world_option.add_item("Select a World", 0)
+	map_world_option.set_item_metadata(0, "")
+	
+	var idx = 1
+	for world_id in game_data_worlds.keys():
+		var world_data = game_data_worlds[world_id]
+		var world_name = "Unknown World"
+		if world_data.has("names") and world_data.names.size() > 0 and world_data.names[0]:
+			world_name = world_data.names[0]
+		map_world_option.add_item(world_name, idx)
+		map_world_option.set_item_metadata(idx, world_id)
+		idx += 1
+
+func _on_map_world_selected(index: int) -> void:
+	map_region_option.clear()
+	map_subregion_option.clear()
+	current_selected_world = map_world_option.get_item_metadata(index)
+	
+	for child in map_content.get_children():
+		if child != map_image:
+			map_content.remove_child(child)
+			child.queue_free()
+
+	if current_selected_world == "":
+		return
+
+	var world_data = game_data_worlds.get(current_selected_world, {})
+	var regions = world_data.get("regions", {})
+
+	map_region_option.add_item("Select a Region", 0)
+	map_region_option.set_item_metadata(0, "")
+	
+	var idx = 1
+	for region_id in regions.keys():
+		var region_data = regions[region_id]
+		var region_name = "Unknown Region"
+		if region_data.has("names") and region_data.names.size() > 0 and region_data.names[0]:
+			region_name = region_data.names[0]
+		map_region_option.add_item(region_name, idx)
+		map_region_option.set_item_metadata(idx, region_id)
+		idx += 1
+
+func _on_map_region_selected(index: int) -> void:
+	map_subregion_option.clear()
+	current_selected_region = map_region_option.get_item_metadata(index)
+	
+	for child in map_content.get_children():
+		if child != map_image:
+			map_content.remove_child(child)
+			child.queue_free()
+
+	if current_selected_region == "" or current_selected_world == "":
+		return
+
+	var world_data = game_data_worlds.get(current_selected_world, {})
+	var regions = world_data.get("regions", {})
+	var region_data = regions.get(current_selected_region, {})
+	var subregions = region_data.get("subregions", {})
+
+	map_subregion_option.add_item("Select a Subregion", 0)
+	map_subregion_option.set_item_metadata(0, "")
+
+	var idx = 1
+	for subregion_id in subregions.keys():
+		var subregion_data = subregions[subregion_id]
+		var subregion_name = "Unknown Subregion"
+		if subregion_data.has("names") and subregion_data.names.size() > 0 and subregion_data.names[0]:
+			subregion_name = subregion_data.names[0]
+		map_subregion_option.add_item(subregion_name, idx)
+		map_subregion_option.set_item_metadata(idx, subregion_id)
+		idx += 1
+
+func _on_map_subregion_selected(index: int) -> void:
+	current_selected_subregion = map_subregion_option.get_item_metadata(index)
+	
+	for child in map_content.get_children():
+		if child != map_image:
+			map_content.remove_child(child)
+			child.queue_free()
+
+	if current_selected_subregion == "" or current_selected_region == "" or current_selected_world == "":
+		return
+
+	var world_data = game_data_worlds.get(current_selected_world, {})
+	var regions = world_data.get("regions", {})
+	var region_data = regions.get(current_selected_region, {})
+	var subregions = region_data.get("subregions", {})
+	var subregion_data = subregions.get(current_selected_subregion, {})
+	var dungeons = subregion_data.get("dungeons", {})
+
+	var dungeon_ids = []
+	if dungeons is Dictionary:
+		dungeon_ids = dungeons.keys()
+	elif dungeons is Array:
+		dungeon_ids = dungeons
+	elif dungeons is String:
+		dungeon_ids = [dungeons]
+
+	for dungeon_id in dungeon_ids:
+		var dungeon_data = game_data_dungeons.get(str(dungeon_id), {})
+		if dungeon_data.is_empty():
+			continue
+
+		var pos = dungeon_data.get("position", [0, 0])
+		var x = pos[0]
+		var y = pos[1]
+
+		var icon_name = dungeon_data.get("icon", "")
+		var icon_path = "res://assets/map_icons/" + icon_name
+
+		var btn = TextureButton.new()
+		var tex = load(icon_path)
+		if not tex:
+			tex = load("res://icon.svg") # Fallback
+		
+		if tex:
+			btn.texture_normal = tex
+			btn.position = Vector2(x, y)
+			
+			var lbl = Label.new()
+			var d_names = dungeon_data.get("names", [])
+			if d_names.size() > 0 and d_names[0]:
+				lbl.text = d_names[0]
+			else:
+				lbl.text = "Unknown Dungeon"
+			
+			lbl.position = Vector2(-lbl.get_minimum_size().x/2 + btn.size.x/2, btn.size.y)
+			lbl.add_theme_font_size_override("font_size", 14)
+			lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+			lbl.add_theme_constant_override("outline_size", 4)
+			btn.add_child(lbl)
+			
+			btn.pressed.connect(_on_dungeon_clicked.bind(str(dungeon_id)))
+			map_content.add_child(btn)
+
+func _on_dungeon_clicked(dungeon_id: String) -> void:
+	var dungeon_data = game_data_dungeons.get(dungeon_id, {})
+	var d_names = dungeon_data.get("names", [])
+	if d_names.size() > 0 and d_names[0]:
+		mission_dungeon_name.text = d_names[0]
+	else:
+		mission_dungeon_name.text = "Unknown Dungeon"
+
+	for child in missions_list_container.get_children():
+		missions_list_container.remove_child(child)
+		child.queue_free()
+
+	var dungeon_missions = dungeon_data.get("missions", {})
+	var mission_ids = []
+	if dungeon_missions is Dictionary:
+		mission_ids = dungeon_missions.keys()
+	elif dungeon_missions is Array:
+		mission_ids = dungeon_missions
+	elif dungeon_missions is String:
+		mission_ids = [dungeon_missions]
+
+	for mission_id in mission_ids:
+		var mission_data = game_data_missions.get(str(mission_id), {})
+		if mission_data.is_empty():
+			continue
+		
+		var vbox = VBoxContainer.new()
+		
+		var name_lbl = Label.new()
+		name_lbl.text = mission_data.get("name", "Unknown Mission")
+		name_lbl.add_theme_font_size_override("font_size", 16)
+		vbox.add_child(name_lbl)
+		
+		var cost_lbl = Label.new()
+		cost_lbl.text = "Cost: %d %s" % [mission_data.get("cost", 0), mission_data.get("cost_type", "NRG")]
+		cost_lbl.add_theme_font_size_override("font_size", 12)
+		vbox.add_child(cost_lbl)
+		
+		var challenges = mission_data.get("challenges", [])
+		if challenges.size() > 0:
+			var ch_lbl = Label.new()
+			ch_lbl.text = "Challenges:"
+			ch_lbl.add_theme_font_size_override("font_size", 12)
+			vbox.add_child(ch_lbl)
+			for ch in challenges:
+				var ch_item_lbl = Label.new()
+				ch_item_lbl.text = "- " + ch.get("string", "")
+				ch_item_lbl.add_theme_font_size_override("font_size", 10)
+				vbox.add_child(ch_item_lbl)
+				
+		var sep = HSeparator.new()
+		vbox.add_child(sep)
+		
+		missions_list_container.add_child(vbox)
+
+	mission_details_popup.popup_centered()
+
+	# Lazy load actual mission data
+	var detailed_missions = await server_connection.get_dungeon_missions_async(mission_ids)
+	if not mission_details_popup.visible:
+		return # Closed before loading
+
+	for child in missions_list_container.get_children():
+		missions_list_container.remove_child(child)
+		child.queue_free()
+
+	for mission_id in mission_ids:
+		var mission_data = detailed_missions.get(str(mission_id), {})
+		if mission_data.is_empty():
+			mission_data = game_data_missions.get(str(mission_id), {})
+			if mission_data.is_empty():
+				continue
+		else:
+			game_data_missions[str(mission_id)] = mission_data # Cache it
+
+		var vbox = VBoxContainer.new()
+		
+		var name_lbl = Label.new()
+		name_lbl.text = mission_data.get("name", "Unknown Mission")
+		name_lbl.add_theme_font_size_override("font_size", 16)
+		vbox.add_child(name_lbl)
+		
+		var cost_lbl = Label.new()
+		cost_lbl.text = "Cost: %d %s" % [mission_data.get("cost", 0), mission_data.get("cost_type", "NRG")]
+		cost_lbl.add_theme_font_size_override("font_size", 12)
+		vbox.add_child(cost_lbl)
+		
+		var challenges = mission_data.get("challenges", [])
+		if challenges.size() > 0:
+			var ch_lbl = Label.new()
+			ch_lbl.text = "Challenges:"
+			ch_lbl.add_theme_font_size_override("font_size", 12)
+			vbox.add_child(ch_lbl)
+			for ch in challenges:
+				var ch_item_lbl = Label.new()
+				ch_item_lbl.text = "- " + ch.get("string", "")
+				ch_item_lbl.add_theme_font_size_override("font_size", 10)
+				vbox.add_child(ch_item_lbl)
+				
+		var sep = HSeparator.new()
+		vbox.add_child(sep)
+		
+		missions_list_container.add_child(vbox)
 
 func _on_add_potion_button_pressed() -> void:
 	var result = await server_connection.buy_potion_async()
@@ -800,10 +1097,11 @@ func _transition_to_game(email: String) -> void:
 	owned_units_ids = await server_connection.read_player_units_async()
 	owned_items = await server_connection.read_player_items_async()
 
-	var game_data = await server_connection.get_game_data_async()
-	if game_data:
-		game_data_units = game_data.get("units", {})
-		game_data_items = game_data.get("items", {})
+	var core_data = await server_connection.get_game_data_async("core")
+	if core_data:
+		game_data_units = core_data.get("units", {})
+		game_data_items = core_data.get("items", {})
+		game_data_weapons = core_data.get("weapons", {})
 
 		# Update shop potion UI dynamically
 		var potion_data = game_data_items.get("101000100", {})
@@ -818,7 +1116,11 @@ func _transition_to_game(email: String) -> void:
 				var tex = load("res://assets/items/" + icon_name)
 				if tex:
 					shop_potion_icon.texture = tex
-		game_data_weapons = game_data.get("weapons", {})
+
+	var map_data = await server_connection.get_game_data_async("map")
+	if map_data:
+		game_data_worlds = map_data.get("worlds", {})
+		game_data_dungeons = map_data.get("dungeons", {})
 
 	user_info_label.text = "Fetching profile..."
 

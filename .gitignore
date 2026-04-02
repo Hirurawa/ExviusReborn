@@ -17,4 +17,4 @@ mono_crash.*.json
 
 *.import
 
-*/.gdingore
+**/.gdignore

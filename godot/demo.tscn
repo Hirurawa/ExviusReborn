@@ -151,16 +151,9 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer/GameUI" unique_id=1024202790]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 120.0
-grow_horizontal = 2
-theme_override_constants/separation = 0
 
 [node name="TopRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=1819523158]
 custom_minimum_size = Vector2(0, 50)
@@ -209,11 +202,16 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_2")
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow" unique_id=636958855]
 layout_mode = 2
 
-[node name="EnergyContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=990643421]
+[node name="EnergyContainer" type="VBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer" unique_id=1683328830]
+[node name="NRGTopHBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -222,7 +220,7 @@ theme_override_font_sizes/font_size = 18
 text = "NRG"
 vertical_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer" unique_id=23248404]
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -231,7 +229,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_nrg")
 value = 100.0
 show_percentage = false
 
-[node name="EnergyText" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar" unique_id=1935224873]
+[node name="EnergyText" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -241,7 +239,17 @@ grow_vertical = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 18
-text = "150/178"
+text = "0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NRGTimeLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "Fully Charged"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -336,29 +344,13 @@ placeholder_text = "Lapis Amount"
 layout_mode = 2
 text = "Add Lapis"
 
-[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer/GameUI" unique_id=360065264]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -120.0
-offset_top = 130.0
-offset_right = -10.0
-offset_bottom = 161.0
-grow_horizontal = 0
-text = "User Options"
-item_count = 2
-popup/item_0/text = "Edit Profile"
-popup/item_0/id = 0
-popup/item_1/text = "Logout"
-popup/item_1/id = 1
-
 [node name="FriendsUI" type="Control" parent="CanvasLayer" unique_id=602361321]
 visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -457,20 +449,16 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI" unique_id=1428925648]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -495,6 +483,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1020,6 +1009,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1057,35 +1047,84 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ShopUI"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "Shop"
 horizontal_alignment = 1
 
 [node name="ShopFeedbackLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.8, 0.8, 0.2, 1)
 
-[node name="AddPotionButton" type="Button" parent="CanvasLayer/ShopUI/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/ShopUI/VBoxContainer"]
 layout_mode = 2
-text = "Buy Potion (100 Gil)"
+size_flags_vertical = 3
+
+[node name="ShopListContainer" type="VBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="PotionItem" type="PanelContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="IconRect" type="TextureRect" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Potion"
+
+[node name="DescLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "Restore a small amount of HP to one ally"
+autowrap_mode = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="PriceLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+text = "100 Gil"
+horizontal_alignment = 1
+
+[node name="AddPotionButton" type="Button" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "Buy"
 
 [node name="SummonUI" type="Control" parent="CanvasLayer" unique_id=1843260387]
 visible = false
@@ -1093,6 +1132,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1160,6 +1200,31 @@ size_flags_vertical = 3
 [node name="CloseOverlayButton" type="Button" parent="CanvasLayer/SummonUI/SummonOverlay/VBoxContainer" unique_id=1550433242]
 layout_mode = 2
 text = "Close"
+
+[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer" unique_id=1024202790]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 120.0
+grow_horizontal = 2
+theme_override_constants/separation = 0
+
+[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer" unique_id=360065264]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 130.0
+offset_right = -10.0
+offset_bottom = 161.0
+grow_horizontal = 0
+text = "User Options"
+item_count = 2
+popup/item_0/text = "Edit Profile"
+popup/item_0/id = 0
+popup/item_1/text = "Logout"
+popup/item_1/id = 1
 
 [node name="BottomNav" type="PanelContainer" parent="CanvasLayer"]
 visible = false

@@ -340,11 +340,19 @@ local function buy_potion(context, payload)
 
     local current_gil = wallet.gil or 0
 
-    if current_gil < 100 then
-        return nk.json_encode({error = "Insufficient gil. Need 100, have " .. tostring(current_gil)})
+    local item_id = "101000100"
+    local item_data = items_data[item_id]
+    if not item_data then
+        return nk.json_encode({error = "Item data not found"})
     end
 
-    local changeset = { gil = -100 }
+    local cost = item_data.price_buy or 100
+
+    if current_gil < cost then
+        return nk.json_encode({error = "Insufficient gil. Need " .. tostring(cost) .. ", have " .. tostring(current_gil)})
+    end
+
+    local changeset = { gil = -cost }
     local metadata = { source = "buy_potion" }
 
     local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
@@ -354,7 +362,6 @@ local function buy_potion(context, payload)
     end
 
     -- Add the item
-    local item_id = "item_001"
     local quantity = 1
 
     local player_items = get_player_items(context.user_id)

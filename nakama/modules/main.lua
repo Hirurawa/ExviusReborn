@@ -19,18 +19,61 @@ end
 local units_data = read_json_file("data/units.json") or {}
 local items_data = read_json_file("data/items.json") or {}
 local weapons_data = read_json_file("data/weapons.json") or {}
+local worlds_data = read_json_file("data/worlds.json") or {}
+local dungeons_data = read_json_file("data/dungeons.json") or {}
+local missions_data = read_json_file("data/missions.json") or {}
 
 local cached_game_data = {
     units = units_data,
     items = items_data,
-    weapons = weapons_data
+    weapons = weapons_data,
+    worlds = worlds_data,
+    dungeons = dungeons_data,
+    missions = missions_data
 }
 
 local function get_game_data(context, payload)
-    return nk.json_encode(cached_game_data)
+    local request = {}
+    if payload and payload ~= "" then
+        pcall(function() request = nk.json_decode(payload) end)
+    end
+
+    local data_type = request.type or "all"
+    
+    if data_type == "core" then
+        return nk.json_encode({
+            units = units_data,
+            items = items_data,
+            weapons = weapons_data
+        })
+    elseif data_type == "map" then
+        return nk.json_encode({
+            worlds = worlds_data,
+            dungeons = dungeons_data
+        })
+    else
+        -- Fallback for older clients, but might exceed limits
+        return nk.json_encode(cached_game_data)
+    end
 end
 
 nk.register_rpc(get_game_data, "get_game_data")
+
+local function get_dungeon_missions(context, payload)
+    local request = nk.json_decode(payload)
+    local mission_ids = request.mission_ids or {}
+
+    local result = {}
+    for _, id in ipairs(mission_ids) do
+        if missions_data[tostring(id)] then
+            result[tostring(id)] = missions_data[tostring(id)]
+        end
+    end
+
+    return nk.json_encode({missions = result})
+end
+
+nk.register_rpc(get_dungeon_missions, "get_dungeon_missions")
 
 local rarity_max_levels = {
     [1] = 15,

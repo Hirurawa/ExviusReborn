@@ -151,10 +151,11 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer/GameUI" unique_id=1024202790]
+[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer" unique_id=1024202790]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -162,15 +163,15 @@ offset_bottom = 120.0
 grow_horizontal = 2
 theme_override_constants/separation = 0
 
-[node name="TopRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=1819523158]
+[node name="TopRow" type="PanelContainer" parent="CanvasLayer/TopHeader" unique_id=1819523158]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/TopRow" unique_id=1051034379]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/TopRow" unique_id=1051034379]
 layout_mode = 2
 
-[node name="GilLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox" unique_id=97691349]
+[node name="GilLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=97691349]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
@@ -180,7 +181,7 @@ theme_override_font_sizes/font_size = 20
 text = "Gil: 0"
 vertical_alignment = 1
 
-[node name="UserInfoLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox" unique_id=1858613764]
+[node name="UserInfoLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=1858613764]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -190,7 +191,7 @@ text = "Player"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LapisLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/TopRow/HBox" unique_id=593576035]
+[node name="LapisLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=593576035]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
@@ -201,19 +202,24 @@ text = "Lapis: 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BottomRow" type="PanelContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=1199200510]
+[node name="BottomRow" type="PanelContainer" parent="CanvasLayer/TopHeader" unique_id=1199200510]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_2")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow" unique_id=636958855]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow" unique_id=636958855]
 layout_mode = 2
 
-[node name="EnergyContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=990643421]
+[node name="EnergyContainer" type="VBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer" unique_id=1683328830]
+[node name="NRGTopHBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -222,7 +228,7 @@ theme_override_font_sizes/font_size = 18
 text = "NRG"
 vertical_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer" unique_id=23248404]
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -231,7 +237,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_nrg")
 value = 100.0
 show_percentage = false
 
-[node name="EnergyText" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar" unique_id=1935224873]
+[node name="EnergyText" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -241,15 +247,25 @@ grow_vertical = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 18
-text = "150/178"
+text = "0/0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox"]
+[node name="NRGTimeLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "Fully Charged"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox"]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer"]
+[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/RankContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -259,7 +275,7 @@ text = "RANK"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RankLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer"]
+[node name="RankLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/RankContainer"]
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
@@ -268,11 +284,11 @@ text = "177"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="EXPContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=1561870244]
+[node name="EXPContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox" unique_id=1561870244]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer" unique_id=1025262147]
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer" unique_id=1025262147]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -281,7 +297,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_exp")
 value = 50.0
 show_percentage = false
 
-[node name="XPLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar" unique_id=1533892609]
+[node name="XPLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar" unique_id=1533892609]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -295,7 +311,7 @@ text = "50%"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer" unique_id=2004385761]
+[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer" unique_id=2004385761]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -304,39 +320,39 @@ theme_override_font_sizes/font_size = 18
 text = "EXP"
 vertical_alignment = 1
 
-[node name="DebugXPContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader" unique_id=549850879]
+[node name="DebugXPContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader" unique_id=549850879]
 layout_mode = 2
 alignment = 1
 
-[node name="XPInput" type="LineEdit" parent="CanvasLayer/GameUI/TopHeader/DebugXPContainer" unique_id=76692353]
+[node name="XPInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugXPContainer" unique_id=76692353]
 layout_mode = 2
 placeholder_text = "XP Amount"
 
-[node name="AddXPButton" type="Button" parent="CanvasLayer/GameUI/TopHeader/DebugXPContainer" unique_id=2098501005]
+[node name="AddXPButton" type="Button" parent="CanvasLayer/TopHeader/DebugXPContainer" unique_id=2098501005]
 layout_mode = 2
 text = "Add XP"
 
-[node name="DebugWalletContainer" type="HBoxContainer" parent="CanvasLayer/GameUI/TopHeader"]
+[node name="DebugWalletContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader"]
 layout_mode = 2
 alignment = 1
 
-[node name="GilInput" type="LineEdit" parent="CanvasLayer/GameUI/TopHeader/DebugWalletContainer"]
+[node name="GilInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
 layout_mode = 2
 placeholder_text = "Gil Amount"
 
-[node name="AddGilButton" type="Button" parent="CanvasLayer/GameUI/TopHeader/DebugWalletContainer"]
+[node name="AddGilButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
 layout_mode = 2
 text = "Add Gil"
 
-[node name="LapisInput" type="LineEdit" parent="CanvasLayer/GameUI/TopHeader/DebugWalletContainer"]
+[node name="LapisInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
 layout_mode = 2
 placeholder_text = "Lapis Amount"
 
-[node name="AddLapisButton" type="Button" parent="CanvasLayer/GameUI/TopHeader/DebugWalletContainer"]
+[node name="AddLapisButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
 layout_mode = 2
 text = "Add Lapis"
 
-[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer/GameUI" unique_id=360065264]
+[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer" unique_id=360065264]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -359,6 +375,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -457,20 +474,16 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI" unique_id=1428925648]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UnitsUI"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -495,6 +508,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1020,6 +1034,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1057,35 +1072,84 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ShopUI"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "Shop"
 horizontal_alignment = 1
 
 [node name="ShopFeedbackLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.8, 0.8, 0.2, 1)
 
-[node name="AddPotionButton" type="Button" parent="CanvasLayer/ShopUI/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/ShopUI/VBoxContainer"]
 layout_mode = 2
-text = "Buy Potion (100 Gil)"
+size_flags_vertical = 3
+
+[node name="ShopListContainer" type="VBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="PotionItem" type="PanelContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="IconRect" type="TextureRect" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Potion"
+
+[node name="DescLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "Restore a small amount of HP to one ally"
+autowrap_mode = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="PriceLabel" type="Label" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+text = "100 Gil"
+horizontal_alignment = 1
+
+[node name="AddPotionButton" type="Button" parent="CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "Buy"
 
 [node name="SummonUI" type="Control" parent="CanvasLayer" unique_id=1843260387]
 visible = false
@@ -1093,6 +1157,7 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 

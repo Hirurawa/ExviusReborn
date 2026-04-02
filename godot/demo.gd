@@ -29,28 +29,31 @@ extends Node2D
 @onready var edit_cancel_button := $CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer/CancelButton
 
 
-@onready var stats_rank_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer/RankLabel
-@onready var stats_xp_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar/XPLabel
-@onready var stats_xp_bar := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar
-@onready var stats_xp_input := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/XPInput
-@onready var stats_add_xp_button := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/AddXPButton
-@onready var stats_energy_bar := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar
-@onready var stats_energy_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar/EnergyText
+@onready var stats_rank_label := $CanvasLayer/TopHeader/BottomRow/HBox/RankContainer/RankLabel
+@onready var stats_xp_label := $CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar/XPLabel
+@onready var stats_xp_bar := $CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar
+@onready var stats_xp_input := $CanvasLayer/TopHeader/DebugXPContainer/XPInput
+@onready var stats_add_xp_button := $CanvasLayer/TopHeader/DebugXPContainer/AddXPButton
+@onready var stats_energy_bar := $CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar
+@onready var stats_energy_label := $CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar/EnergyText
 
-@onready var stats_gil_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/GilLabel
-@onready var stats_lapis_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/LapisLabel
-@onready var debug_gil_input := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/GilInput
-@onready var debug_add_gil_button := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/AddGilButton
-@onready var debug_lapis_input := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/LapisInput
-@onready var debug_add_lapis_button := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/AddLapisButton
+@onready var stats_gil_label := $CanvasLayer/TopHeader/TopRow/HBox/GilLabel
+@onready var stats_lapis_label := $CanvasLayer/TopHeader/TopRow/HBox/LapisLabel
+@onready var debug_gil_input := $CanvasLayer/TopHeader/DebugWalletContainer/GilInput
+@onready var debug_add_gil_button := $CanvasLayer/TopHeader/DebugWalletContainer/AddGilButton
+@onready var debug_lapis_input := $CanvasLayer/TopHeader/DebugWalletContainer/LapisInput
+@onready var debug_add_lapis_button := $CanvasLayer/TopHeader/DebugWalletContainer/AddLapisButton
 
 var current_rank: int = 1
 var current_xp: int = 0
-var current_energy: int = 0
-var max_energy: int = 0
-@onready var user_info_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/UserInfoLabel
-@onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
+var current_nrg: int = 0
+var max_nrg: int = 0
+var nrg_regen_rate_seconds: int = 300
+var seconds_until_next_nrg: float = 0.0
+@onready var user_info_label := $CanvasLayer/TopHeader/TopRow/HBox/UserInfoLabel
+@onready var user_menu_button := $CanvasLayer/UserMenuButton
 
+@onready var top_header := $CanvasLayer/TopHeader
 @onready var bottom_nav := $CanvasLayer/BottomNav
 @onready var home_button := $CanvasLayer/BottomNav/HBox/HomeButton
 @onready var friends_button := $CanvasLayer/BottomNav/HBox/FriendsButton
@@ -82,7 +85,10 @@ var max_energy: int = 0
 
 @onready var items_ui := $CanvasLayer/ItemsUI
 @onready var items_list_container := $CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer/ItemsListContainer
-@onready var add_potion_button := $CanvasLayer/ShopUI/VBoxContainer/AddPotionButton
+@onready var add_potion_button := $CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2/AddPotionButton
+@onready var shop_potion_icon := $CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/IconRect
+@onready var shop_potion_name := $CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer/NameLabel
+@onready var shop_potion_desc := $CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer/DescLabel
 
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
@@ -104,6 +110,8 @@ var owned_items: Array = []
 @onready var summon_close_overlay_button := $CanvasLayer/SummonUI/SummonOverlay/VBoxContainer/CloseOverlayButton
 
 func _ready() -> void:
+	top_header.hide()
+	user_menu_button.hide()
 
 	stats_add_xp_button.pressed.connect(_on_add_xp_button_pressed)
 	debug_add_gil_button.pressed.connect(_on_add_gil_button_pressed)
@@ -136,6 +144,27 @@ func _ready() -> void:
 
 	unit_detail_back_button.pressed.connect(_on_unit_detail_back_button_pressed)
 
+func _process(delta: float) -> void:
+	if not game_ui.visible and not bottom_nav.visible:
+		return # Only process if the user is in a state where UI might be visible
+
+	if max_nrg > 0 and current_nrg < max_nrg:
+		seconds_until_next_nrg -= delta
+		if seconds_until_next_nrg <= 0:
+			current_nrg += 1
+			seconds_until_next_nrg = nrg_regen_rate_seconds
+			_update_stats_ui()
+
+		var time_node = stats_energy_bar.get_parent().get_parent().get_node_or_null("NRGTimeLabel")
+		if time_node:
+			var minutes = int(seconds_until_next_nrg) / 60
+			var seconds = int(seconds_until_next_nrg) % 60
+			time_node.text = "%02d:%02d" % [minutes, seconds]
+	else:
+		var time_node = stats_energy_bar.get_parent().get_parent().get_node_or_null("NRGTimeLabel")
+		if time_node:
+			time_node.text = "Fully Charged"
+
 func _update_stats_ui() -> void:
 	var required_xp = current_rank * 100
 	stats_rank_label.text = "%d" % current_rank
@@ -146,12 +175,12 @@ func _update_stats_ui() -> void:
 
 	stats_xp_label.text = "%d / %d" % [current_xp, required_xp]
 
-	if max_energy > 0:
-		stats_energy_bar.max_value = max_energy
+	if max_nrg > 0:
+		stats_energy_bar.max_value = max_nrg
 		# Prevent bar from overflowing UI, though text will show overflow
-		stats_energy_bar.value = min(current_energy, max_energy)
+		stats_energy_bar.value = min(current_nrg, max_nrg)
 
-	stats_energy_label.text = "%d/%d" % [current_energy, max_energy]
+	stats_energy_label.text = "%d/%d" % [current_nrg, max_nrg]
 
 func _on_add_xp_button_pressed() -> void:
 	var xp_to_add: int = stats_xp_input.text.to_int()
@@ -164,8 +193,10 @@ func _on_add_xp_button_pressed() -> void:
 	if not result.is_empty():
 		current_rank = int(result.get("rank", current_rank))
 		current_xp = int(result.get("xp", current_xp))
-		current_energy = int(result.get("energy", current_energy))
-		max_energy = int(result.get("max_energy", max_energy))
+		current_nrg = int(result.get("current_nrg", current_nrg))
+		max_nrg = int(result.get("max_nrg", max_nrg))
+		nrg_regen_rate_seconds = int(result.get("nrg_regen_rate_seconds", nrg_regen_rate_seconds))
+		seconds_until_next_nrg = float(result.get("seconds_until_next_nrg", seconds_until_next_nrg))
 		_update_stats_ui()
 
 func _on_user_menu_id_pressed(id: int) -> void:
@@ -282,10 +313,24 @@ func _refresh_items_list() -> void:
 		var item_id = item.get("item_id", "")
 		var item_data: Dictionary = game_data_items.get(item_id, {})
 
+		var hbox := HBoxContainer.new()
+		items_list_container.add_child(hbox)
+
+		var icon_name = item_data.get("icon", "")
+		if icon_name != "":
+			var tex_rect := TextureRect.new()
+			var tex = load("res://assets/items/" + icon_name)
+			if tex:
+				tex_rect.texture = tex
+				tex_rect.custom_minimum_size = Vector2(40, 40)
+				tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			hbox.add_child(tex_rect)
+
 		var label := Label.new()
 		label.text = "%s x%d" % [item_data.get("name", "Unknown Item"), item.get("quantity", 0)]
 		label.add_theme_font_size_override("font_size", 18)
-		items_list_container.add_child(label)
+		hbox.add_child(label)
 
 func _on_summon_button_pressed() -> void:
 	_hide_all_ui()
@@ -391,13 +436,33 @@ func _refresh_units_list() -> void:
 		var unit_id = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = game_data_units.get(unit_id, {})
 
-		var grid_item := Button.new()
-		grid_item.custom_minimum_size = Vector2(0, 80)
-		grid_item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid_item.text = unit_data.get("name", "Unknown")
-		grid_item.pressed.connect(_show_unit_detail.bind(unit_inst))
+		var container = VBoxContainer.new()
+		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		container.alignment = BoxContainer.ALIGNMENT_CENTER
 
-		units_list_container.add_child(grid_item)
+		var tex_btn = TextureButton.new()
+		var img_path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+		var tex = load(img_path)
+		if tex:
+			tex_btn.texture_normal = tex
+
+		# Set size properties
+		tex_btn.custom_minimum_size = Vector2(80, 80)
+		tex_btn.ignore_texture_size = true
+		tex_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		tex_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		tex_btn.pressed.connect(_show_unit_detail.bind(unit_inst))
+		container.add_child(tex_btn)
+
+		var name_label = Label.new()
+		name_label.text = unit_data.get("name", "Unknown")
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_label.add_theme_font_size_override("font_size", 12)
+		container.add_child(name_label)
+
+		units_list_container.add_child(container)
 
 func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_hide_all_ui()
@@ -720,12 +785,16 @@ func _transition_to_game(email: String) -> void:
 	register_ui.hide()
 	game_ui.show()
 	bottom_nav.show()
+	top_header.show()
+	user_menu_button.show()
 
 	var stats = await server_connection.read_player_stats_async()
 	current_rank = int(stats.get("rank", 1))
 	current_xp = int(stats.get("xp", 0))
-	current_energy = int(stats.get("energy", 41))
-	max_energy = int(stats.get("max_energy", 41))
+	current_nrg = int(stats.get("current_nrg", 41))
+	max_nrg = int(stats.get("max_nrg", 41))
+	nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", 300))
+	seconds_until_next_nrg = float(stats.get("seconds_until_next_nrg", 0.0))
 	_update_stats_ui()
 
 	owned_units_ids = await server_connection.read_player_units_async()
@@ -735,6 +804,20 @@ func _transition_to_game(email: String) -> void:
 	if game_data:
 		game_data_units = game_data.get("units", {})
 		game_data_items = game_data.get("items", {})
+
+		# Update shop potion UI dynamically
+		var potion_data = game_data_items.get("101000100", {})
+		if potion_data:
+			shop_potion_name.text = potion_data.get("name", "Potion")
+			var strings = potion_data.get("strings", {})
+			var desc_short_list = strings.get("desc_short", [])
+			if desc_short_list and desc_short_list.size() > 0:
+				shop_potion_desc.text = desc_short_list[0]
+			var icon_name = potion_data.get("icon", "")
+			if icon_name != "":
+				var tex = load("res://assets/items/" + icon_name)
+				if tex:
+					shop_potion_icon.texture = tex
 		game_data_weapons = game_data.get("weapons", {})
 
 	user_info_label.text = "Fetching profile..."

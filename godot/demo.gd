@@ -29,11 +29,13 @@ extends Node2D
 @onready var edit_cancel_button := $CanvasLayer/EditProfileUI/VBoxContainer/HBoxContainer/CancelButton
 
 
-@onready var stats_level_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer/LevelLabel
+@onready var stats_rank_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer/RankLabel
 @onready var stats_xp_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar/XPLabel
 @onready var stats_xp_bar := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar
 @onready var stats_xp_input := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/XPInput
 @onready var stats_add_xp_button := $CanvasLayer/GameUI/TopHeader/DebugXPContainer/AddXPButton
+@onready var stats_energy_bar := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar
+@onready var stats_energy_label := $CanvasLayer/GameUI/TopHeader/BottomRow/HBox/EnergyContainer/ProgressBar/EnergyText
 
 @onready var stats_gil_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/GilLabel
 @onready var stats_lapis_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/LapisLabel
@@ -42,8 +44,10 @@ extends Node2D
 @onready var debug_lapis_input := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/LapisInput
 @onready var debug_add_lapis_button := $CanvasLayer/GameUI/TopHeader/DebugWalletContainer/AddLapisButton
 
-var current_level: int = 1
+var current_rank: int = 1
 var current_xp: int = 0
+var current_energy: int = 0
+var max_energy: int = 0
 @onready var user_info_label := $CanvasLayer/GameUI/TopHeader/TopRow/HBox/UserInfoLabel
 @onready var user_menu_button := $CanvasLayer/GameUI/UserMenuButton
 
@@ -133,8 +137,8 @@ func _ready() -> void:
 	unit_detail_back_button.pressed.connect(_on_unit_detail_back_button_pressed)
 
 func _update_stats_ui() -> void:
-	var required_xp = current_level * 100
-	stats_level_label.text = "%d" % current_level
+	var required_xp = current_rank * 100
+	stats_rank_label.text = "%d" % current_rank
 
 	if required_xp > 0:
 		stats_xp_bar.max_value = required_xp
@@ -142,23 +146,27 @@ func _update_stats_ui() -> void:
 
 	stats_xp_label.text = "%d / %d" % [current_xp, required_xp]
 
+	if max_energy > 0:
+		stats_energy_bar.max_value = max_energy
+		# Prevent bar from overflowing UI, though text will show overflow
+		stats_energy_bar.value = min(current_energy, max_energy)
+
+	stats_energy_label.text = "%d/%d" % [current_energy, max_energy]
+
 func _on_add_xp_button_pressed() -> void:
 	var xp_to_add: int = stats_xp_input.text.to_int()
 	if xp_to_add <= 0:
 		return
 
-	current_xp += xp_to_add
-
-	var required_xp = current_level * 100
-	while current_xp >= required_xp:
-		current_xp -= required_xp
-		current_level += 1
-		required_xp = current_level * 100
-
-	_update_stats_ui()
 	stats_xp_input.text = ""
 
-	await server_connection.write_player_stats_async(current_level, current_xp)
+	var result = await server_connection.add_rank_xp_async(xp_to_add)
+	if not result.is_empty():
+		current_rank = int(result.get("rank", current_rank))
+		current_xp = int(result.get("xp", current_xp))
+		current_energy = int(result.get("energy", current_energy))
+		max_energy = int(result.get("max_energy", max_energy))
+		_update_stats_ui()
 
 func _on_user_menu_id_pressed(id: int) -> void:
 	if id == 0:
@@ -714,8 +722,10 @@ func _transition_to_game(email: String) -> void:
 	bottom_nav.show()
 
 	var stats = await server_connection.read_player_stats_async()
-	current_level = int(stats.get("level", 1))
+	current_rank = int(stats.get("rank", 1))
 	current_xp = int(stats.get("xp", 0))
+	current_energy = int(stats.get("energy", 41))
+	max_energy = int(stats.get("max_energy", 41))
 	_update_stats_ui()
 
 	owned_units_ids = await server_connection.read_player_units_async()

@@ -245,11 +245,11 @@ text = "150/178"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox" unique_id=476669917]
+[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox"]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer" unique_id=615858744]
+[node name="Label" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -259,7 +259,7 @@ text = "RANK"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LevelLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer" unique_id=1783661534]
+[node name="RankLabel" type="Label" parent="CanvasLayer/GameUI/TopHeader/BottomRow/HBox/RankContainer"]
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5

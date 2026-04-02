@@ -327,6 +327,149 @@ end
 
 nk.register_rpc(add_currency, "add_currency")
 
+local function get_player_stats(context, payload)
+    local object_ids = {
+        {collection = "stats", key = "player_stats", user_id = context.user_id}
+    }
+    local objects = nk.storage_read(object_ids)
+
+    local stats = {
+        rank = 1,
+        xp = 0,
+        energy = 41,
+        last_energy_update_time = nk.time() / 1000
+    }
+
+    if #objects > 0 then
+        local data = objects[1].value
+        if data then
+            stats.rank = data.rank or stats.rank
+            stats.xp = data.xp or stats.xp
+            stats.energy = data.energy or stats.energy
+            stats.last_energy_update_time = data.last_energy_update_time or stats.last_energy_update_time
+        end
+    end
+
+    local max_energy
+    if stats.rank <= 100 then
+        max_energy = stats.rank + 40
+    else
+        max_energy = 140 + math.floor((stats.rank - 100) / 2)
+    end
+    if max_energy > 240 then max_energy = 240 end
+
+    local current_time = nk.time() / 1000
+    local elapsed_seconds = current_time - stats.last_energy_update_time
+    local energy_to_add = math.floor(elapsed_seconds / 300)
+
+    local stats_changed = false
+
+    if stats.energy >= max_energy then
+        -- Player is at or above max energy (overflow).
+        -- Don't add passive energy, just keep last_energy_update_time current
+        -- so they don't accrue a massive elapsed time bank.
+        -- Update it to current time or advance it cleanly.
+        if elapsed_seconds > 0 then
+            stats.last_energy_update_time = current_time
+            stats_changed = true
+        end
+    elseif energy_to_add > 0 then
+        -- Player is under max energy and should gain some.
+        stats.energy = stats.energy + energy_to_add
+        if stats.energy > max_energy then
+            stats.energy = max_energy
+        end
+        stats.last_energy_update_time = stats.last_energy_update_time + (energy_to_add * 300)
+        stats_changed = true
+    end
+
+    if stats_changed then
+        -- Save updated stats
+        local write_objects = {
+            {
+                collection = "stats",
+                key = "player_stats",
+                user_id = context.user_id,
+                value = stats,
+                permission_read = 1,
+                permission_write = 1
+            }
+        }
+        nk.storage_write(write_objects)
+    end
+
+    stats.max_energy = max_energy
+    return nk.json_encode(stats)
+end
+
+nk.register_rpc(get_player_stats, "get_player_stats")
+
+local function add_rank_xp(context, payload)
+    local request = nk.json_decode(payload)
+    local xp_amount = request.xp_amount or 0
+
+    if xp_amount <= 0 then
+        return nk.json_encode({error = "Invalid xp amount"})
+    end
+
+    -- First sync current energy
+    local stats_str = get_player_stats(context, "")
+    local stats = nk.json_decode(stats_str)
+
+    stats.xp = stats.xp + xp_amount
+
+    local rank_up_occurred = false
+    while stats.xp >= stats.rank * 100 and stats.rank < 300 do
+        stats.xp = stats.xp - (stats.rank * 100)
+        stats.rank = stats.rank + 1
+
+        local new_max_energy
+        if stats.rank <= 100 then
+            new_max_energy = stats.rank + 40
+        else
+            new_max_energy = 140 + math.floor((stats.rank - 100) / 2)
+        end
+        if new_max_energy > 240 then new_max_energy = 240 end
+
+        stats.energy = stats.energy + new_max_energy
+        rank_up_occurred = true
+    end
+
+    if rank_up_occurred then
+        -- Recalculate final max energy to return it properly
+        local final_max_energy
+        if stats.rank <= 100 then
+            final_max_energy = stats.rank + 40
+        else
+            final_max_energy = 140 + math.floor((stats.rank - 100) / 2)
+        end
+        if final_max_energy > 240 then final_max_energy = 240 end
+        stats.max_energy = final_max_energy
+    end
+
+    local write_objects = {
+        {
+            collection = "stats",
+            key = "player_stats",
+            user_id = context.user_id,
+            value = {
+                rank = stats.rank,
+                xp = stats.xp,
+                energy = stats.energy,
+                last_energy_update_time = stats.last_energy_update_time
+            },
+            permission_read = 1,
+            permission_write = 1
+        }
+    }
+    nk.storage_write(write_objects)
+
+    return nk.json_encode(stats)
+end
+
+nk.register_rpc(add_rank_xp, "add_rank_xp")
+
+
 local function buy_potion(context, payload)
     local account = nk.account_get_id(context.user_id)
     local wallet = {}

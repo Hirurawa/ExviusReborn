@@ -81,6 +81,7 @@ var seconds_until_next_nrg: float = 0.0
 @onready var units_list_container := $CanvasLayer/UnitsUI/VBoxContainer/ScrollContainer/UnitsListContainer
 
 @onready var unit_detail_ui := $CanvasLayer/UnitDetailUI
+@onready var unit_detail_sprite := $CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox/SpritePlaceholder
 @onready var unit_detail_back_button := $CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/BackButton
 @onready var unit_detail_name_label := $CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox/NameLabel
 @onready var unit_detail_rarity_label := $CanvasLayer/UnitDetailUI/VBoxContainer/TopBar/TitleBox/InfoHBox/RarityLabel
@@ -654,58 +655,12 @@ func _on_summon_perform_button_pressed() -> void:
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		var name_label := Label.new()
-		name_label.text = "Name: %s" % unit_data.get("name", "Unknown")
-		name_label.add_theme_font_size_override("font_size", 18)
-		vbox.add_child(name_label)
-
-		var level_label := Label.new()
-		level_label.text = "Level: %d (XP: %d) | Rarity: %d★" % [
-			unit_inst.get("level", 1),
-			unit_inst.get("xp", 0),
+		name_label.text = "%s (Rarity: %d★)" % [
+			unit_data.get("name", "Unknown"),
 			unit_inst.get("current_rarity", 1)
 		]
-		vbox.add_child(level_label)
-
-		var stats_label := Label.new()
-
-		var rarity = unit_inst.get("current_rarity", 1)
-		var level = unit_inst.get("level", 1)
-		var entries = unit_data.get("entries", {})
-		var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
-
-		# In some json the key in entries is the unit id, or just find entry by checking rarity inside entries
-		for key in entries.keys():
-			if entries[key].get("rarity") == rarity:
-				entry = entries[key]
-				break
-
-		var hp = "?"
-		var mp = "?"
-		var atk = "?"
-		var def = "?"
-
-		var stats = entry.get("stats", {})
-		if not stats.is_empty():
-			var max_levels = {1: 15, 2: 30, 3: 40, 4: 60, 5: 80, 6: 100, 7: 120}
-			var max_level = max_levels.get(int(rarity), 15)
-
-			for stat_name in ["HP", "MP", "ATK", "DEF"]:
-				var stat_arr = stats.get(stat_name, [0, 0])
-				if stat_arr.size() >= 2:
-					var min_stat = stat_arr[0]
-					var max_stat = stat_arr[1]
-					var current_stat = min_stat
-					if max_level > 1:
-						current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
-
-					if stat_name == "HP": hp = str(round(current_stat))
-					elif stat_name == "MP": mp = str(round(current_stat))
-					elif stat_name == "ATK": atk = str(round(current_stat))
-					elif stat_name == "DEF": def = str(round(current_stat))
-
-		var stats_text = "HP: %s | MP: %s | ATK: %s | DEF: %s" % [hp, mp, atk, def]
-		stats_label.text = stats_text
-		vbox.add_child(stats_label)
+		name_label.add_theme_font_size_override("font_size", 18)
+		vbox.add_child(name_label)
 
 		var separator := HSeparator.new()
 		vbox.add_child(separator)
@@ -770,10 +725,20 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	
 	unit_detail_name_label.text = unit_data.get("name", "Unknown")
 
+	var img_path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+	var tex = load(img_path)
+	if tex:
+		unit_detail_sprite.texture = tex
+	else:
+		unit_detail_sprite.texture = null
+
 	var rarity = unit_inst.get("current_rarity", 1)
+	var max_rarity = unit_data.get("rarity_max", 5)
 	var stars = ""
 	for i in range(rarity):
 		stars += "★"
+	for i in range(max_rarity - rarity):
+		stars += "☆"
 	unit_detail_rarity_label.text = stars
 
 	var rarity_max_levels = {
@@ -1122,7 +1087,7 @@ func _transition_to_game(email: String) -> void:
 		game_data_worlds = map_data.get("worlds", {})
 		game_data_dungeons = map_data.get("dungeons", {})
 
-	user_info_label.text = "Fetching profile..."
+	user_info_label.text = "Loading..."
 
 	var account = await(server_connection.get_account_async())
 	if account:
@@ -1139,5 +1104,4 @@ func _transition_to_game(email: String) -> void:
 		else:
 			_update_wallet_ui({})
 	else:
-		user_info_label.text = "Welcome!"
 		_update_wallet_ui({})

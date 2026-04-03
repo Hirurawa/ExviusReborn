@@ -187,7 +187,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 24
-text = "Player"
+text = "Loading..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -576,10 +576,11 @@ text = "Details"
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="SpritePlaceholder" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox"]
+[node name="SpritePlaceholder" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox"]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
-color = Color(0.1, 0.3, 0.4, 1)
+expand_mode = 1
+stretch_mode = 5
 
 [node name="StatsVBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/CharInfoHBox"]
 layout_mode = 2

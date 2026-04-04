@@ -4,7 +4,7 @@ local RankData = {}
 local MaxRank = 1
 
 local function parse_rank_exp_csv()
-    local file_path = "modules/data/rank-exp.csv"
+    local file_path = "data/rank-exp.csv"
     local success, content = pcall(nk.file_read, file_path)
     if not success or not content then
         nk.logger_warn("Could not open file: " .. file_path)

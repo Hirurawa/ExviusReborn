@@ -562,6 +562,13 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 				
 		var sep = HSeparator.new()
 		vbox.add_child(sep)
+
+		var actions_hbox = HBoxContainer.new()
+		var btn_start = Button.new()
+		btn_start.text = "Start"
+		btn_start.pressed.connect(_on_start_mission_pressed.bind(str(mission_id)))
+		actions_hbox.add_child(btn_start)
+		vbox.add_child(actions_hbox)
 		
 		missions_list_container.add_child(vbox)
 
@@ -611,8 +618,40 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 				
 		var sep = HSeparator.new()
 		vbox.add_child(sep)
+
+		var actions_hbox = HBoxContainer.new()
+		var btn_start = Button.new()
+		btn_start.text = "Start"
+		btn_start.pressed.connect(_on_start_mission_pressed.bind(str(mission_id)))
+		actions_hbox.add_child(btn_start)
+		vbox.add_child(actions_hbox)
 		
 		missions_list_container.add_child(vbox)
+
+
+func _on_start_mission_pressed(mission_id: String) -> void:
+	var result = await server_connection.perform_mission_async(mission_id)
+	if result.has("error"):
+		print("Failed to start mission: ", result.error)
+		# Optional: we could show an error label if we add one to the popup
+	else:
+		if result.has("stats"):
+			var stats = result.stats
+			current_rank = int(stats.get("rank", current_rank))
+			current_xp = int(stats.get("xp", current_xp))
+			current_nrg = int(stats.get("current_nrg", current_nrg))
+			max_nrg = int(stats.get("max_nrg", max_nrg))
+			nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", nrg_regen_rate_seconds))
+			seconds_until_next_nrg = float(stats.get("seconds_until_next_nrg", seconds_until_next_nrg))
+			_update_stats_ui()
+		
+		if result.has("wallet"):
+			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
+			_update_wallet_ui(wallet)
+		
+		print("Mission started successfully!")
+		# Optionally close the popup
+		# mission_details_popup.hide()
 
 func _on_add_potion_button_pressed() -> void:
 	var result = await server_connection.buy_item_async("101000100", 1)

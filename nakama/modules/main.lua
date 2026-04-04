@@ -492,9 +492,15 @@ local function get_player_stats(context, payload)
         nk.storage_write(write_objects)
     end
 
+    local next_rank_xp = 0
+    if stats.rank < MaxRank then
+        next_rank_xp = RankData[stats.rank + 1].exp
+    end
+
     local payload_out = {
         rank = stats.rank,
         xp = stats.xp,
+        next_rank_xp = next_rank_xp,
         current_nrg = stats.current_nrg,
         max_nrg = max_energy,
         nrg_regen_rate_seconds = nrg_regen_rate_seconds,
@@ -529,17 +535,8 @@ local function add_rank_xp(context, payload)
         if required_exp <= 0 then
             break -- Should not happen, but safe guard
         end
-        -- Since the user said the CSV contains total cumulative exp (e.g. 20, 40, 70), we just compare stats.xp with RankData[stats.rank+1].exp.
-        -- BUT WAIT: If `exp` in CSV is the total cumulative exp to reach that rank, then we don't subtract required_exp from stats.xp.
-        -- We simply let stats.xp grow indefinitely.
-        -- Let me double check if stats.xp is total cumulative or remaining.
-        -- Actually, the old code subtracted `stats.rank * 100` from `stats.xp`. This implies `stats.xp` was storing "current level exp" not "cumulative total exp".
-        -- If we change to cumulative, we need to adapt it. Wait, the user said "Yes. Your assumption is correct" to my question "Does the Exp column mean total cumulative exp required to reach that rank... so rank 1 to 2 is 20, 2 to 3 is 20, 3 to 4 is 30, etc...".
-        -- Wait, my question had an error. "rank 1 to 2 is 20, 2 to 3 is 20, 3 to 4 is 30, etc" means the CSV value is TOTAL CUMULATIVE EXP, meaning Rank 2 needs 20 total, Rank 3 needs 40 total, Rank 4 needs 70 total.
-        -- Let's change the logic to use TOTAL CUMULATIVE EXP.
-        -- Wait, if it is total cumulative exp, `add_rank_xp` adds `xp_amount` to `stats.xp`.
-        -- So `stats.xp` is the player's total lifetime rank exp.
-        -- In this case, `while stats.rank < MaxRank and stats.xp >= RankData[stats.rank + 1].exp` is exactly correct.
+
+        stats.xp = stats.xp - required_exp
         stats.rank = stats.rank + 1
 
         local new_max_energy = RankData[stats.rank].energy
@@ -554,6 +551,12 @@ local function add_rank_xp(context, payload)
         stats.max_energy = final_max_energy
         stats.max_nrg = final_max_energy
     end
+
+    local next_rank_xp = 0
+    if stats.rank < MaxRank then
+        next_rank_xp = RankData[stats.rank + 1].exp
+    end
+    stats.next_rank_xp = next_rank_xp
 
     -- Re-fetch the real raw storage object to properly update the DB with current_nrg and timestamp
     local object_ids = {

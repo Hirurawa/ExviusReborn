@@ -155,220 +155,6 @@ offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer" unique_id=1024202790]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 120.0
-grow_horizontal = 2
-theme_override_constants/separation = 0
-
-[node name="TopRow" type="PanelContainer" parent="CanvasLayer/TopHeader" unique_id=1819523158]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_1")
-
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/TopRow" unique_id=1051034379]
-layout_mode = 2
-
-[node name="GilLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=97691349]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
-text = "Gil: 0"
-vertical_alignment = 1
-
-[node name="UserInfoLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=1858613764]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 24
-text = "Loading..."
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="LapisLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=593576035]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
-text = "Lapis: 0"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="BottomRow" type="PanelContainer" parent="CanvasLayer/TopHeader" unique_id=1199200510]
-custom_minimum_size = Vector2(0, 60)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_2")
-
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow" unique_id=636958855]
-layout_mode = 2
-
-[node name="EnergyContainer" type="VBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-alignment = 1
-
-[node name="NRGTopHBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
-text = "NRG"
-vertical_alignment = 1
-
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_nrg")
-value = 100.0
-show_percentage = false
-
-[node name="EnergyText" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
-text = "0/0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="NRGTimeLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 14
-text = "Fully Charged"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox"]
-layout_mode = 2
-alignment = 1
-
-[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/RankContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 14
-text = "RANK"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="RankLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/RankContainer"]
-layout_mode = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 32
-text = "177"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="EXPContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox" unique_id=1561870244]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer" unique_id=1025262147]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_exp")
-value = 50.0
-show_percentage = false
-
-[node name="XPLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar" unique_id=1533892609]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
-text = "50%"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer" unique_id=2004385761]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
-text = "EXP"
-vertical_alignment = 1
-
-[node name="DebugXPContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader" unique_id=549850879]
-layout_mode = 2
-alignment = 1
-
-[node name="XPInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugXPContainer" unique_id=76692353]
-layout_mode = 2
-placeholder_text = "XP Amount"
-
-[node name="AddXPButton" type="Button" parent="CanvasLayer/TopHeader/DebugXPContainer" unique_id=2098501005]
-layout_mode = 2
-text = "Add XP"
-
-[node name="DebugWalletContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader"]
-layout_mode = 2
-alignment = 1
-
-[node name="GilInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
-layout_mode = 2
-placeholder_text = "Gil Amount"
-
-[node name="AddGilButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
-layout_mode = 2
-text = "Add Gil"
-
-[node name="LapisInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
-layout_mode = 2
-placeholder_text = "Lapis Amount"
-
-[node name="AddLapisButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
-layout_mode = 2
-text = "Add Lapis"
-
-[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer" unique_id=360065264]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -120.0
-offset_top = 130.0
-offset_right = -10.0
-offset_bottom = 161.0
-grow_horizontal = 0
-text = "User Options"
-item_count = 2
-popup/item_0/text = "Edit Profile"
-popup/item_0/id = 0
-popup/item_1/text = "Logout"
-popup/item_1/id = 1
-
 [node name="FriendsUI" type="Control" parent="CanvasLayer" unique_id=602361321]
 visible = false
 layout_mode = 3
@@ -1241,6 +1027,325 @@ grow_horizontal = 2
 grow_vertical = 0
 text = "World map"
 
+[node name="MapUI" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/MapUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.12, 0.12, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MapUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopSpacer" type="Control" parent="CanvasLayer/MapUI/VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="CanvasLayer/MapUI/VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="CanvasLayer/MapUI/VBoxContainer/TopBar"]
+layout_mode = 2
+text = "< Back"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MapUI/VBoxContainer"]
+layout_mode = 2
+
+[node name="WorldOptionButton" type="OptionButton" parent="CanvasLayer/MapUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+clip_text = true
+fit_to_longest_item = false
+
+[node name="RegionOptionButton" type="OptionButton" parent="CanvasLayer/MapUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+clip_text = true
+fit_to_longest_item = false
+
+[node name="SubregionOptionButton" type="OptionButton" parent="CanvasLayer/MapUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+clip_text = true
+fit_to_longest_item = false
+
+[node name="MapScrollContainer" type="ScrollContainer" parent="CanvasLayer/MapUI/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MapSizer" type="Control" parent="CanvasLayer/MapUI/VBoxContainer/MapScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(2000, 2000)
+mouse_filter = 1
+
+[node name="MapContent" type="Control" parent="CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapSizer"]
+layout_mode = 0
+anchors_preset = 0
+mouse_filter = 1
+
+[node name="MapImage" type="TextureRect" parent="CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapSizer/MapContent"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+
+[node name="MissionDetailsPopup" type="PopupPanel" parent="CanvasLayer/MapUI"]
+size = Vector2i(400, 400)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MapUI/MissionDetailsPopup"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 396.0
+offset_bottom = 396.0
+
+[node name="DungeonNameLabel" type="Label" parent="CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer"]
+layout_mode = 2
+text = "Dungeon Name"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MissionsListContainer" type="VBoxContainer" parent="CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+[node name="TopHeader" type="VBoxContainer" parent="CanvasLayer" unique_id=1024202790]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 120.0
+grow_horizontal = 2
+theme_override_constants/separation = 0
+
+[node name="TopRow" type="PanelContainer" parent="CanvasLayer/TopHeader" unique_id=1819523158]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/TopRow" unique_id=1051034379]
+layout_mode = 2
+
+[node name="GilLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=97691349]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "Gil: 0"
+vertical_alignment = 1
+
+[node name="UserInfoLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=1858613764]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+text = "Player"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LapisLabel" type="Label" parent="CanvasLayer/TopHeader/TopRow/HBox" unique_id=593576035]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "Lapis: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BottomRow" type="PanelContainer" parent="CanvasLayer/TopHeader" unique_id=1199200510]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2")
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow" unique_id=636958855]
+layout_mode = 2
+
+[node name="EnergyContainer" type="VBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="NRGTopHBox" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "NRG"
+vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_nrg")
+value = 100.0
+show_percentage = false
+
+[node name="EnergyText" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NRGTimeLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EnergyContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "Fully Charged"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RankContainer" type="VBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/RankContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "RANK"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RankLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/RankContainer"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 32
+text = "177"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EXPContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader/BottomRow/HBox" unique_id=1561870244]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer" unique_id=1025262147]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_exp")
+value = 50.0
+show_percentage = false
+
+[node name="XPLabel" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer/ProgressBar" unique_id=1533892609]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "50%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label" type="Label" parent="CanvasLayer/TopHeader/BottomRow/HBox/EXPContainer" unique_id=2004385761]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "EXP"
+vertical_alignment = 1
+
+[node name="DebugXPContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader" unique_id=549850879]
+layout_mode = 2
+alignment = 1
+
+[node name="XPInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugXPContainer" unique_id=76692353]
+layout_mode = 2
+placeholder_text = "XP Amount"
+
+[node name="AddXPButton" type="Button" parent="CanvasLayer/TopHeader/DebugXPContainer" unique_id=2098501005]
+layout_mode = 2
+text = "Add XP"
+
+[node name="DebugWalletContainer" type="HBoxContainer" parent="CanvasLayer/TopHeader"]
+layout_mode = 2
+alignment = 1
+
+[node name="GilInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
+layout_mode = 2
+placeholder_text = "Gil Amount"
+
+[node name="AddGilButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
+layout_mode = 2
+text = "Add Gil"
+
+[node name="LapisInput" type="LineEdit" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
+layout_mode = 2
+placeholder_text = "Lapis Amount"
+
+[node name="AddLapisButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer"]
+layout_mode = 2
+text = "Add Lapis"
+
+[node name="UserMenuButton" type="MenuButton" parent="CanvasLayer" unique_id=360065264]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 130.0
+offset_right = -10.0
+offset_bottom = 161.0
+grow_horizontal = 0
+text = "User Options"
+item_count = 2
+popup/item_0/text = "Edit Profile"
+popup/item_0/id = 0
+popup/item_1/text = "Logout"
+popup/item_1/id = 1
+
 [node name="BottomNav" type="PanelContainer" parent="CanvasLayer"]
 visible = false
 anchors_preset = 12
@@ -1293,82 +1398,3 @@ size_flags_horizontal = 3
 text = "Friends"
 
 
-[node name="MapUI" type="Control" parent="CanvasLayer"]
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/MapUI"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.12, 0.12, 0.12, 1)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MapUI"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MapUI/VBoxContainer"]
-layout_mode = 2
-
-[node name="WorldOptionButton" type="OptionButton" parent="CanvasLayer/MapUI/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="RegionOptionButton" type="OptionButton" parent="CanvasLayer/MapUI/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="SubregionOptionButton" type="OptionButton" parent="CanvasLayer/MapUI/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MapScrollContainer" type="ScrollContainer" parent="CanvasLayer/MapUI/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MapContent" type="Control" parent="CanvasLayer/MapUI/VBoxContainer/MapScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-custom_minimum_size = Vector2(2000, 2000)
-
-[node name="MapImage" type="TextureRect" parent="CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapContent"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-mouse_filter = 2
-
-
-[node name="MissionDetailsPopup" type="PopupPanel" parent="CanvasLayer/MapUI"]
-size = Vector2i(400, 400)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MapUI/MissionDetailsPopup"]
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 396.0
-offset_bottom = 396.0
-
-[node name="DungeonNameLabel" type="Label" parent="CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer"]
-layout_mode = 2
-text = "Dungeon Name"
-horizontal_alignment = 1
-
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MissionsListContainer" type="VBoxContainer" parent="CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3

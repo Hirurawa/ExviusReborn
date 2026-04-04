@@ -1,5 +1,41 @@
 local nk = require("nakama")
 
+local RankData = {}
+local MaxRank = 1
+
+local function parse_rank_exp_csv()
+    local file_path = "modules/data/rank-exp.csv"
+    local success, content = pcall(nk.file_read, file_path)
+    if not success or not content then
+        nk.logger_warn("Could not open file: " .. file_path)
+        return
+    end
+
+    local is_header = true
+    for line in string.gmatch(content, "([^\n\r]+)") do
+        if is_header then
+            is_header = false
+        else
+            local rank, exp, energy, friend_slot = string.match(line, "^(%d+),([%d%-]+),(%d+),(%d+)$")
+            if rank then
+                local exp_val = exp == "-" and 0 or tonumber(exp)
+                local r = tonumber(rank)
+                RankData[r] = {
+                    exp = exp_val,
+                    energy = tonumber(energy),
+                    friend_slot = tonumber(friend_slot)
+                }
+                if r > MaxRank then
+                    MaxRank = r
+                end
+            end
+        end
+    end
+end
+
+-- Parse CSV globally at module load
+parse_rank_exp_csv()
+
 local function read_json_file(file_path)
     local success, content = pcall(nk.file_read, file_path)
     if not success or not content then
@@ -395,12 +431,11 @@ local function get_player_stats(context, payload)
     end
 
     local max_energy
-    if stats.rank <= 100 then
-        max_energy = stats.rank + 40
+    if stats.rank > MaxRank then
+        max_energy = RankData[MaxRank].energy
     else
-        max_energy = 140 + math.floor((stats.rank - 100) / 2)
+        max_energy = RankData[stats.rank].energy
     end
-    if max_energy > 240 then max_energy = 240 end
 
     local current_time = math.floor(nk.time() / 1000)
     local elapsed_seconds = current_time - stats.last_nrg_update_time
@@ -489,18 +524,25 @@ local function add_rank_xp(context, payload)
     stats.xp = stats.xp + xp_amount
 
     local rank_up_occurred = false
-    while stats.xp >= stats.rank * 100 and stats.rank < 300 do
-        stats.xp = stats.xp - (stats.rank * 100)
+    while stats.rank < MaxRank and stats.xp >= RankData[stats.rank + 1].exp do
+        local required_exp = RankData[stats.rank + 1].exp
+        if required_exp <= 0 then
+            break -- Should not happen, but safe guard
+        end
+        -- Since the user said the CSV contains total cumulative exp (e.g. 20, 40, 70), we just compare stats.xp with RankData[stats.rank+1].exp.
+        -- BUT WAIT: If `exp` in CSV is the total cumulative exp to reach that rank, then we don't subtract required_exp from stats.xp.
+        -- We simply let stats.xp grow indefinitely.
+        -- Let me double check if stats.xp is total cumulative or remaining.
+        -- Actually, the old code subtracted `stats.rank * 100` from `stats.xp`. This implies `stats.xp` was storing "current level exp" not "cumulative total exp".
+        -- If we change to cumulative, we need to adapt it. Wait, the user said "Yes. Your assumption is correct" to my question "Does the Exp column mean total cumulative exp required to reach that rank... so rank 1 to 2 is 20, 2 to 3 is 20, 3 to 4 is 30, etc...".
+        -- Wait, my question had an error. "rank 1 to 2 is 20, 2 to 3 is 20, 3 to 4 is 30, etc" means the CSV value is TOTAL CUMULATIVE EXP, meaning Rank 2 needs 20 total, Rank 3 needs 40 total, Rank 4 needs 70 total.
+        -- Let's change the logic to use TOTAL CUMULATIVE EXP.
+        -- Wait, if it is total cumulative exp, `add_rank_xp` adds `xp_amount` to `stats.xp`.
+        -- So `stats.xp` is the player's total lifetime rank exp.
+        -- In this case, `while stats.rank < MaxRank and stats.xp >= RankData[stats.rank + 1].exp` is exactly correct.
         stats.rank = stats.rank + 1
 
-        local new_max_energy
-        if stats.rank <= 100 then
-            new_max_energy = stats.rank + 40
-        else
-            new_max_energy = 140 + math.floor((stats.rank - 100) / 2)
-        end
-        if new_max_energy > 240 then new_max_energy = 240 end
-
+        local new_max_energy = RankData[stats.rank].energy
         stats.current_nrg = stats.current_nrg + new_max_energy
         stats.energy = stats.current_nrg -- keep backward compatibility in this table before saving
         rank_up_occurred = true
@@ -508,13 +550,7 @@ local function add_rank_xp(context, payload)
 
     if rank_up_occurred then
         -- Recalculate final max energy to return it properly
-        local final_max_energy
-        if stats.rank <= 100 then
-            final_max_energy = stats.rank + 40
-        else
-            final_max_energy = 140 + math.floor((stats.rank - 100) / 2)
-        end
-        if final_max_energy > 240 then final_max_energy = 240 end
+        local final_max_energy = RankData[stats.rank].energy
         stats.max_energy = final_max_energy
         stats.max_nrg = final_max_energy
     end

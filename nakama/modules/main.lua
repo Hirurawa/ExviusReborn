@@ -602,7 +602,15 @@ end
 nk.register_rpc(add_rank_xp, "add_rank_xp")
 
 
-local function buy_potion(context, payload)
+local function buy_item(context, payload)
+    local request = nk.json_decode(payload)
+    local item_id = request.item_id
+    local quantity = request.quantity or 1
+
+    if not item_id or quantity <= 0 then
+        return nk.json_encode({error = "Invalid parameters"})
+    end
+
     local account = nk.account_get_id(context.user_id)
     local wallet = {}
     if account.wallet then
@@ -615,20 +623,23 @@ local function buy_potion(context, payload)
 
     local current_gil = wallet.gil or 0
 
-    local item_id = "101000100"
     local item_data = items_data[item_id]
     if not item_data then
         return nk.json_encode({error = "Item data not found"})
     end
 
-    local cost = item_data.price_buy or 100
-
-    if current_gil < cost then
-        return nk.json_encode({error = "Insufficient gil. Need " .. tostring(cost) .. ", have " .. tostring(current_gil)})
+    if not item_data.price_buy then
+        return nk.json_encode({error = "Item cannot be purchased"})
     end
 
-    local changeset = { gil = -cost }
-    local metadata = { source = "buy_potion" }
+    local total_cost = item_data.price_buy * quantity
+
+    if current_gil < total_cost then
+        return nk.json_encode({error = "Insufficient gil. Need " .. tostring(total_cost) .. ", have " .. tostring(current_gil)})
+    end
+
+    local changeset = { gil = -total_cost }
+    local metadata = { source = "buy_item", item_id = item_id, quantity = quantity }
 
     local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
 
@@ -637,8 +648,6 @@ local function buy_potion(context, payload)
     end
 
     -- Add the item
-    local quantity = 1
-
     local player_items = get_player_items(context.user_id)
     local item_found = false
 
@@ -664,4 +673,4 @@ local function buy_potion(context, payload)
     return nk.json_encode({success = true, wallet = account.wallet, items = player_items})
 end
 
-nk.register_rpc(buy_potion, "buy_potion")
+nk.register_rpc(buy_item, "buy_item")

@@ -615,7 +615,7 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 		missions_list_container.add_child(vbox)
 
 func _on_add_potion_button_pressed() -> void:
-	var result = await server_connection.buy_potion_async()
+	var result = await server_connection.buy_item_async("101000100", 1)
 	if result.has("error"):
 		print("Failed to buy potion: ", result.error)
 		shop_feedback_label.text = result.error

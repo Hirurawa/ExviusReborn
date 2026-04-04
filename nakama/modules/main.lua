@@ -16,7 +16,7 @@ local function parse_rank_exp_csv()
         if is_header then
             is_header = false
         else
-            local rank, exp, energy, friend_slot = string.match(line, "^(%d+),([%d%-]+),(%d+),(%d+)$")
+            local rank, exp, energy, friend_slot = string.match(line, "^%s*(%d+)%s*,%s*([%d%-]+)%s*,%s*(%d+)%s*,%s*(%d+)%s*$")
             if rank then
                 local exp_val = exp == "-" and 0 or tonumber(exp)
                 local r = tonumber(rank)
@@ -431,10 +431,15 @@ local function get_player_stats(context, payload)
     end
 
     local max_energy
-    if stats.rank > MaxRank then
+    if not RankData[1] then
+        -- Fallback if CSV is missing or empty
+        max_energy = 41
+    elseif stats.rank > MaxRank then
         max_energy = RankData[MaxRank].energy
-    else
+    elseif RankData[stats.rank] then
         max_energy = RankData[stats.rank].energy
+    else
+        max_energy = 41
     end
 
     local current_time = math.floor(nk.time() / 1000)
@@ -530,22 +535,27 @@ local function add_rank_xp(context, payload)
     stats.xp = stats.xp + xp_amount
 
     local rank_up_occurred = false
-    while stats.rank < MaxRank and stats.xp >= RankData[stats.rank + 1].exp do
-        local required_exp = RankData[stats.rank + 1].exp
-        if required_exp <= 0 then
-            break -- Should not happen, but safe guard
+
+    if RankData[1] then
+        while stats.rank < MaxRank and RankData[stats.rank + 1] and stats.xp >= RankData[stats.rank + 1].exp do
+            local required_exp = RankData[stats.rank + 1].exp
+            if required_exp <= 0 then
+                break -- Should not happen, but safe guard
+            end
+
+            stats.xp = stats.xp - required_exp
+            stats.rank = stats.rank + 1
+
+            if RankData[stats.rank] then
+                local new_max_energy = RankData[stats.rank].energy
+                stats.current_nrg = stats.current_nrg + new_max_energy
+                stats.energy = stats.current_nrg -- keep backward compatibility in this table before saving
+            end
+            rank_up_occurred = true
         end
-
-        stats.xp = stats.xp - required_exp
-        stats.rank = stats.rank + 1
-
-        local new_max_energy = RankData[stats.rank].energy
-        stats.current_nrg = stats.current_nrg + new_max_energy
-        stats.energy = stats.current_nrg -- keep backward compatibility in this table before saving
-        rank_up_occurred = true
     end
 
-    if rank_up_occurred then
+    if rank_up_occurred and RankData[stats.rank] then
         -- Recalculate final max energy to return it properly
         local final_max_energy = RankData[stats.rank].energy
         stats.max_energy = final_max_energy
@@ -553,7 +563,7 @@ local function add_rank_xp(context, payload)
     end
 
     local next_rank_xp = 0
-    if stats.rank < MaxRank then
+    if stats.rank < MaxRank and RankData[stats.rank + 1] then
         next_rank_xp = RankData[stats.rank + 1].exp
     end
     stats.next_rank_xp = next_rank_xp

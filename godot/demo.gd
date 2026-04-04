@@ -46,6 +46,7 @@ extends Node2D
 
 var current_rank: int = 1
 var current_xp: int = 0
+var next_rank_xp: int = 100
 var current_nrg: int = 0
 var max_nrg: int = 0
 var nrg_regen_rate_seconds: int = 300
@@ -202,7 +203,7 @@ func _process(delta: float) -> void:
 			time_node.text = "Fully Charged"
 
 func _update_stats_ui() -> void:
-	var required_xp = current_rank * 100
+	var required_xp = next_rank_xp
 	stats_rank_label.text = "%d" % current_rank
 
 	if required_xp > 0:
@@ -229,6 +230,7 @@ func _on_add_xp_button_pressed() -> void:
 	if not result.is_empty():
 		current_rank = int(result.get("rank", current_rank))
 		current_xp = int(result.get("xp", current_xp))
+		next_rank_xp = int(result.get("next_rank_xp", next_rank_xp))
 		current_nrg = int(result.get("current_nrg", current_nrg))
 		max_nrg = int(result.get("max_nrg", max_nrg))
 		nrg_regen_rate_seconds = int(result.get("nrg_regen_rate_seconds", nrg_regen_rate_seconds))
@@ -1085,6 +1087,7 @@ func _transition_to_game(email: String) -> void:
 	var stats = await server_connection.read_player_stats_async()
 	current_rank = int(stats.get("rank", 1))
 	current_xp = int(stats.get("xp", 0))
+	next_rank_xp = int(stats.get("next_rank_xp", 100))
 	current_nrg = int(stats.get("current_nrg", 41))
 	max_nrg = int(stats.get("max_nrg", 41))
 	nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", 300))

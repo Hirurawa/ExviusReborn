@@ -1,5 +1,41 @@
 local nk = require("nakama")
 
+local RankData = {}
+local MaxRank = 1
+
+local function parse_rank_exp_csv()
+    local file_path = "data/rank-exp.csv"
+    local success, content = pcall(nk.file_read, file_path)
+    if not success or not content then
+        nk.logger_warn("Could not open file: " .. file_path)
+        return
+    end
+
+    local is_header = true
+    for line in string.gmatch(content, "([^\n\r]+)") do
+        if is_header then
+            is_header = false
+        else
+            local rank, exp, energy, friend_slot = string.match(line, "^%s*(%d+)%s*,%s*([%d%-]+)%s*,%s*(%d+)%s*,%s*(%d+)%s*$")
+            if rank then
+                local exp_val = exp == "-" and 0 or tonumber(exp)
+                local r = tonumber(rank)
+                RankData[r] = {
+                    exp = exp_val,
+                    energy = tonumber(energy),
+                    friend_slot = tonumber(friend_slot)
+                }
+                if r > MaxRank then
+                    MaxRank = r
+                end
+            end
+        end
+    end
+end
+
+-- Parse CSV globally at module load
+parse_rank_exp_csv()
+
 local function read_json_file(file_path)
     local success, content = pcall(nk.file_read, file_path)
     if not success or not content then
@@ -395,12 +431,16 @@ local function get_player_stats(context, payload)
     end
 
     local max_energy
-    if stats.rank <= 100 then
-        max_energy = stats.rank + 40
+    if not RankData[1] then
+        -- Fallback if CSV is missing or empty
+        max_energy = 41
+    elseif stats.rank > MaxRank then
+        max_energy = RankData[MaxRank].energy
+    elseif RankData[stats.rank] then
+        max_energy = RankData[stats.rank].energy
     else
-        max_energy = 140 + math.floor((stats.rank - 100) / 2)
+        max_energy = 41
     end
-    if max_energy > 240 then max_energy = 240 end
 
     local current_time = math.floor(nk.time() / 1000)
     local elapsed_seconds = current_time - stats.last_nrg_update_time
@@ -457,9 +497,15 @@ local function get_player_stats(context, payload)
         nk.storage_write(write_objects)
     end
 
+    local next_rank_xp = 0
+    if stats.rank < MaxRank then
+        next_rank_xp = RankData[stats.rank + 1].exp
+    end
+
     local payload_out = {
         rank = stats.rank,
         xp = stats.xp,
+        next_rank_xp = next_rank_xp,
         current_nrg = stats.current_nrg,
         max_nrg = max_energy,
         nrg_regen_rate_seconds = nrg_regen_rate_seconds,
@@ -489,42 +535,49 @@ local function add_rank_xp(context, payload)
     stats.xp = stats.xp + xp_amount
 
     local rank_up_occurred = false
-    while stats.xp >= stats.rank * 100 and stats.rank < 300 do
-        stats.xp = stats.xp - (stats.rank * 100)
-        stats.rank = stats.rank + 1
 
-        local new_max_energy
-        if stats.rank <= 100 then
-            new_max_energy = stats.rank + 40
-        else
-            new_max_energy = 140 + math.floor((stats.rank - 100) / 2)
+    if RankData[1] then
+        while stats.rank < MaxRank and RankData[stats.rank + 1] and stats.xp >= RankData[stats.rank + 1].exp do
+            local required_exp = RankData[stats.rank + 1].exp
+            if required_exp <= 0 then
+                break -- Should not happen, but safe guard
+            end
+
+            stats.xp = stats.xp - required_exp
+            stats.rank = stats.rank + 1
+
+            if RankData[stats.rank] then
+                local new_max_energy = RankData[stats.rank].energy
+                stats.current_nrg = stats.current_nrg + new_max_energy
+                stats.energy = stats.current_nrg -- keep backward compatibility in this table before saving
+            end
+            rank_up_occurred = true
         end
-        if new_max_energy > 240 then new_max_energy = 240 end
-
-        stats.current_nrg = stats.current_nrg + new_max_energy
-        stats.energy = stats.current_nrg -- keep backward compatibility in this table before saving
-        rank_up_occurred = true
     end
 
-    if rank_up_occurred then
+    if rank_up_occurred and RankData[stats.rank] then
         -- Recalculate final max energy to return it properly
-        local final_max_energy
-        if stats.rank <= 100 then
-            final_max_energy = stats.rank + 40
-        else
-            final_max_energy = 140 + math.floor((stats.rank - 100) / 2)
-        end
-        if final_max_energy > 240 then final_max_energy = 240 end
+        local final_max_energy = RankData[stats.rank].energy
         stats.max_energy = final_max_energy
         stats.max_nrg = final_max_energy
     end
+
+    local next_rank_xp = 0
+    if stats.rank < MaxRank and RankData[stats.rank + 1] then
+        next_rank_xp = RankData[stats.rank + 1].exp
+    end
+    stats.next_rank_xp = next_rank_xp
 
     -- Re-fetch the real raw storage object to properly update the DB with current_nrg and timestamp
     local object_ids = {
         {collection = "stats", key = "player_stats", user_id = context.user_id}
     }
     local objects = nk.storage_read(object_ids)
-    local raw_stats = objects[1].value
+
+    local raw_stats = {}
+    if #objects > 0 then
+        raw_stats = objects[1].value
+    end
 
     local write_objects = {
         {

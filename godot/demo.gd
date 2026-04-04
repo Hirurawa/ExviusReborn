@@ -71,8 +71,10 @@ var seconds_until_next_nrg: float = 0.0
 @onready var map_region_option := $CanvasLayer/MapUI/VBoxContainer/HBoxContainer/RegionOptionButton
 @onready var map_subregion_option := $CanvasLayer/MapUI/VBoxContainer/HBoxContainer/SubregionOptionButton
 @onready var map_scroll := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer
-@onready var map_content := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapContent
-@onready var map_image := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapContent/MapImage
+@onready var map_back_button := $CanvasLayer/MapUI/VBoxContainer/TopBar/BackButton
+@onready var map_sizer := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapSizer
+@onready var map_content := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapSizer/MapContent
+@onready var map_image := $CanvasLayer/MapUI/VBoxContainer/MapScrollContainer/MapSizer/MapContent/MapImage
 @onready var mission_details_popup := $CanvasLayer/MapUI/MissionDetailsPopup
 @onready var mission_dungeon_name := $CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer/DungeonNameLabel
 @onready var missions_list_container := $CanvasLayer/MapUI/MissionDetailsPopup/VBoxContainer/ScrollContainer/MissionsListContainer
@@ -114,7 +116,10 @@ var current_selected_world: String = ""
 var current_selected_region: String = ""
 var current_selected_subregion: String = ""
 
+
 var map_zoom_level: float = 1.0
+var _is_panning_map: bool = false
+var _last_mouse_pos: Vector2 = Vector2.ZERO
 
 var owned_units_ids: Array = []
 var owned_items: Array = []
@@ -134,6 +139,7 @@ var owned_items: Array = []
 func _ready() -> void:
 	top_header.hide()
 	user_menu_button.hide()
+	world_map_button.hide()
 
 	stats_add_xp_button.pressed.connect(_on_add_xp_button_pressed)
 	debug_add_gil_button.pressed.connect(_on_add_gil_button_pressed)
@@ -167,6 +173,7 @@ func _ready() -> void:
 	unit_detail_back_button.pressed.connect(_on_unit_detail_back_button_pressed)
 	
 	world_map_button.pressed.connect(_on_world_map_button_pressed)
+	map_back_button.pressed.connect(_on_map_back_button_pressed)
 	map_world_option.item_selected.connect(_on_map_world_selected)
 	map_region_option.item_selected.connect(_on_map_region_selected)
 	map_subregion_option.item_selected.connect(_on_map_subregion_selected)
@@ -272,6 +279,7 @@ func _hide_all_ui() -> void:
 	edit_profile_ui.hide()
 	unit_detail_ui.hide()
 	map_ui.hide()
+	world_map_button.hide()
 
 func _on_shop_button_pressed() -> void:
 	_hide_all_ui()
@@ -282,6 +290,7 @@ func _on_home_button_pressed() -> void:
 	_hide_all_ui()
 	game_ui.show()
 	bottom_nav.show()
+	world_map_button.show()
 
 func _on_edit_profile_pressed() -> void:
 	_hide_all_ui()
@@ -294,6 +303,7 @@ func _on_edit_cancel_button_pressed() -> void:
 	edit_profile_ui.hide()
 	game_ui.show()
 	bottom_nav.show()
+	world_map_button.show()
 
 func _on_friends_button_pressed() -> void:
 	_hide_all_ui()
@@ -314,22 +324,44 @@ func _on_items_button_pressed() -> void:
 
 func _on_world_map_button_pressed() -> void:
 	_hide_all_ui()
+	bottom_nav.hide()
 	map_ui.show()
+	top_header.show()
 	_populate_world_options()
 	map_zoom_level = 1.0
 	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+	map_sizer.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
 
 func _on_map_scroll_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		var old_zoom = map_zoom_level
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			map_zoom_level = clamp(map_zoom_level + 0.1, 0.5, 3.0)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			map_zoom_level = clamp(map_zoom_level - 0.1, 0.5, 3.0)
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				_is_panning_map = true
+				_last_mouse_pos = event.global_position
+			else:
+				_is_panning_map = false
+		elif event.pressed and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+			var old_zoom = map_zoom_level
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				map_zoom_level = clamp(map_zoom_level + 0.1, 0.5, 3.0)
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				map_zoom_level = clamp(map_zoom_level - 0.1, 0.5, 3.0)
 			
-		if old_zoom != map_zoom_level:
-			map_content.scale = Vector2(map_zoom_level, map_zoom_level)
-			map_content.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
+			if old_zoom != map_zoom_level:
+				map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+				map_sizer.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
+			# Accept the event to stop ScrollContainer from scrolling up/down with wheel
+			map_scroll.accept_event()
+
+	elif event is InputEventMouseMotion and _is_panning_map:
+		map_scroll.scroll_horizontal -= int(event.relative.x)
+		map_scroll.scroll_vertical -= int(event.relative.y)
+
+func _on_map_back_button_pressed() -> void:
+	_hide_all_ui()
+	game_ui.show()
+	bottom_nav.show()
+	world_map_button.show()
 
 func _populate_world_options() -> void:
 	map_world_option.clear()

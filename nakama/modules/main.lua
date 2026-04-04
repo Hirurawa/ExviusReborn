@@ -563,7 +563,11 @@ local function add_rank_xp(context, payload)
         {collection = "stats", key = "player_stats", user_id = context.user_id}
     }
     local objects = nk.storage_read(object_ids)
-    local raw_stats = objects[1].value
+
+    local raw_stats = {}
+    if #objects > 0 then
+        raw_stats = objects[1].value
+    end
 
     local write_objects = {
         {

@@ -335,3 +335,22 @@ func buy_item_async(item_id: String, quantity: int = 1) -> Dictionary:
 		return dict
 
 	return {}
+
+func perform_mission_async(mission_id: String) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({
+		"mission_id": mission_id
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "perform_mission", payload)
+
+	if result.is_exception():
+		push_error("Failed to perform mission: %s" % result.get_exception().message)
+		return {"error": result.get_exception().message}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}

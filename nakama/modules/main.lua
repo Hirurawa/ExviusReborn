@@ -674,3 +674,116 @@ local function buy_item(context, payload)
 end
 
 nk.register_rpc(buy_item, "buy_item")
+
+
+local function perform_mission(context, payload)
+    local request = nk.json_decode(payload)
+    local mission_id = request.mission_id
+
+    if not mission_id then
+        return nk.json_encode({error = "Invalid mission_id"})
+    end
+
+    local mission_data = missions_data[tostring(mission_id)]
+    if not mission_data then
+        return nk.json_encode({error = "Mission not found"})
+    end
+
+    local cost_type = mission_data.cost_type or "NRG"
+    local cost = mission_data.cost or 0
+    local gil_reward = mission_data.gil or 0
+    local exp_reward = mission_data.exp or 0
+
+    -- First sync current stats
+    local stats_str = get_player_stats(context, "")
+    local stats = nk.json_decode(stats_str)
+
+    if cost_type == "NRG" then
+        if stats.current_nrg < cost then
+            return nk.json_encode({error = "Not enough NRG"})
+        end
+        stats.current_nrg = stats.current_nrg - cost
+        stats.energy = stats.current_nrg -- keep backward compatibility
+    else
+        -- If other costs are introduced later
+    end
+
+    -- Add exp
+    if exp_reward > 0 then
+        stats.xp = stats.xp + exp_reward
+
+        local rank_up_occurred = false
+        while stats.xp >= stats.rank * 100 and stats.rank < 300 do
+            stats.xp = stats.xp - (stats.rank * 100)
+            stats.rank = stats.rank + 1
+
+            local new_max_energy
+            if stats.rank <= 100 then
+                new_max_energy = stats.rank + 40
+            else
+                new_max_energy = 140 + math.floor((stats.rank - 100) / 2)
+            end
+            if new_max_energy > 240 then new_max_energy = 240 end
+
+            stats.current_nrg = stats.current_nrg + new_max_energy
+            stats.energy = stats.current_nrg
+            rank_up_occurred = true
+        end
+
+        if rank_up_occurred then
+            local final_max_energy
+            if stats.rank <= 100 then
+                final_max_energy = stats.rank + 40
+            else
+                final_max_energy = 140 + math.floor((stats.rank - 100) / 2)
+            end
+            if final_max_energy > 240 then final_max_energy = 240 end
+            stats.max_energy = final_max_energy
+            stats.max_nrg = final_max_energy
+        end
+    end
+
+    -- Save stats
+    local object_ids = {
+        {collection = "stats", key = "player_stats", user_id = context.user_id}
+    }
+    local objects = nk.storage_read(object_ids)
+    local raw_stats = objects[1].value
+
+    local write_objects = {
+        {
+            collection = "stats",
+            key = "player_stats",
+            user_id = context.user_id,
+            value = {
+                rank = stats.rank,
+                xp = stats.xp,
+                current_nrg = stats.current_nrg,
+                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000)
+            },
+            permission_read = 1,
+            permission_write = 1
+        }
+    }
+    nk.storage_write(write_objects)
+
+    -- Add gil
+    local wallet_out = {}
+    if gil_reward > 0 then
+        local changeset = { gil = gil_reward }
+        local metadata = { source = "perform_mission", mission_id = mission_id }
+        local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
+        if not status then
+            return nk.json_encode({error = "Failed to update wallet: " .. tostring(result)})
+        end
+    end
+
+    local account = nk.account_get_id(context.user_id)
+    return nk.json_encode({
+        success = true,
+        stats = stats,
+        wallet = account.wallet
+    })
+end
+
+nk.register_rpc(perform_mission, "perform_mission")

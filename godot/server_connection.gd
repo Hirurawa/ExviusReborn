@@ -150,17 +150,12 @@ func read_player_units_async() -> Array:
 	if _session == null or _session.is_expired():
 		return []
 
-	var object_id := NakamaStorageObjectId.new("units", "player_units", _session.user_id)
-	var result: NakamaAPI.ApiStorageObjects = await(_client.read_storage_objects_async(_session, [object_id]))
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_player_units", "{}")
 
 	if result.is_exception():
 		return []
 
-	if result.objects.is_empty():
-		return []
-
-	var obj: NakamaAPI.ApiStorageObject = result.objects[0]
-	var dict = JSON.parse_string(obj.value)
+	var dict = JSON.parse_string(result.payload)
 
 	if dict and dict is Dictionary and dict.has("units") and dict["units"] is Array:
 		return dict["units"]

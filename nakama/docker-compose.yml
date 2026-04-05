@@ -49,5 +49,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    volumes:
+      - ./modules/data:/usr/share/nginx/html:ro
+    ports:
+      - "8081:80"
+    restart: always
+
 volumes:
   data:

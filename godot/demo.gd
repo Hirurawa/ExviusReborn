@@ -828,11 +828,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var max_level = rarity_max_levels.get(int(rarity), 15)
 	unit_detail_level_label.text = "Lvl %d/%d" % [level, max_level]
 
-	var xp = unit_inst.get("xp", 0)
-	var required_xp = level * 1000 # placeholder required xp logic
-	var next_xp = required_xp - xp
-	if next_xp < 0:
-		next_xp = 0
+	var next_xp = unit_inst.get("next_xp", 0)
 	unit_detail_next_xp_label.text = "next %d" % next_xp
 
 	var entries = unit_data.get("entries", {})
@@ -1136,30 +1132,37 @@ func _transition_to_game(email: String) -> void:
 	owned_units_ids = await server_connection.read_player_units_async()
 	owned_items = await server_connection.read_player_items_async()
 
-	var core_data = await server_connection.get_game_data_async("core")
-	if core_data:
-		game_data_units = core_data.get("units", {})
-		game_data_items = core_data.get("items", {})
-		game_data_weapons = core_data.get("weapons", {})
+	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
+		AssetPatcher.patch_progress.connect(func(file_name, status):
+			print("Patching ", file_name, ": ", status)
+		)
+		AssetPatcher.patch_complete.connect(_on_patch_complete.bind(email))
+		
+	AssetPatcher.start_patching()
+	await AssetPatcher.patch_complete
 
-		# Update shop potion UI dynamically
-		var potion_data = game_data_items.get("101000100", {})
-		if potion_data:
-			shop_potion_name.text = potion_data.get("name", "Potion")
-			var strings = potion_data.get("strings", {})
-			var desc_short_list = strings.get("desc_short", [])
-			if desc_short_list and desc_short_list.size() > 0:
-				shop_potion_desc.text = desc_short_list[0]
-			var icon_name = potion_data.get("icon", "")
-			if icon_name != "":
-				var tex = load("res://assets/items/" + icon_name)
-				if tex:
-					shop_potion_icon.texture = tex
-
-	var map_data = await server_connection.get_game_data_async("map")
-	if map_data:
-		game_data_worlds = map_data.get("worlds", {})
-		game_data_dungeons = map_data.get("dungeons", {})
+func _on_patch_complete(email: String = ""):
+	print("Patching complete!")
+	game_data_units = AssetPatcher.get_data("units")
+	game_data_items = AssetPatcher.get_data("items")
+	game_data_weapons = AssetPatcher.get_data("weapons")
+	game_data_worlds = AssetPatcher.get_data("worlds")
+	game_data_dungeons = AssetPatcher.get_data("dungeons")
+	
+	
+	# Update shop potion UI dynamically
+	var potion_data = game_data_items.get("101000100", {})
+	if potion_data:
+		shop_potion_name.text = potion_data.get("name", "Potion")
+		var strings = potion_data.get("strings", {})
+		var desc_short_list = strings.get("desc_short", [])
+		if desc_short_list and desc_short_list.size() > 0:
+			shop_potion_desc.text = desc_short_list[0]
+		var icon_name = potion_data.get("icon", "")
+		if icon_name != "":
+			var tex = load("res://assets/items/" + icon_name)
+			if tex:
+				shop_potion_icon.texture = tex
 
 	user_info_label.text = "Loading..."
 

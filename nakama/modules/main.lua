@@ -58,6 +58,71 @@ local weapons_data = read_json_file("data/weapons.json") or {}
 local worlds_data = read_json_file("data/worlds.json") or {}
 local dungeons_data = read_json_file("data/dungeons.json") or {}
 local missions_data = read_json_file("data/missions.json") or {}
+local versions_data = read_json_file("data/versions.json") or {}
+
+local function read_csv_file(file_path)
+    local success, content = pcall(nk.file_read, file_path)
+    if not success or not content then
+        nk.logger_warn("Could not open file: " .. file_path)
+        return nil
+    end
+
+    local lines = {}
+    for str in string.gmatch(content, "([^\r\n]+)") do
+        table.insert(lines, str)
+    end
+    
+    if #lines == 0 then return nil end
+
+    local headers = {}
+    for str in string.gmatch(lines[1], "([^,]+)") do
+        table.insert(headers, str)
+    end
+
+    local data = {}
+    local col_map = {}
+    for i, header in ipairs(headers) do
+        local gr = header:match("Gr (%d+)")
+        if gr then
+            col_map[i] = tonumber(gr)
+            data[col_map[i]] = {}
+        end
+    end
+
+    for i = 2, #lines do
+        local line = lines[i]
+        local cols = {}
+        -- Need a custom split to handle empty fields like "-,-"
+        local col_idx = 1
+        local current_col = ""
+        for char_idx = 1, #line do
+            local char = line:sub(char_idx, char_idx)
+            if char == "," then
+                table.insert(cols, current_col)
+                current_col = ""
+                col_idx = col_idx + 1
+            else
+                current_col = current_col .. char
+            end
+        end
+        table.insert(cols, current_col)
+        
+        local level = tonumber(cols[1])
+        if level then
+            for idx, col_val in ipairs(cols) do
+                local gr = col_map[idx]
+                if gr then
+                    local val = tonumber(col_val) or 0
+                    data[gr][level] = val
+                end
+            end
+        end
+    end
+
+    return data
+end
+
+local unit_exp_patterns = read_csv_file("data/unit-exp-pattern.csv") or {}
 
 local cached_game_data = {
     units = units_data,
@@ -67,6 +132,34 @@ local cached_game_data = {
     dungeons = dungeons_data,
     missions = missions_data
 }
+
+
+local function get_data_version(context, payload)
+    local request = {}
+    if payload and payload ~= "" then
+        pcall(function() request = nk.json_decode(payload) end)
+    end
+
+    local data_type = request.type
+    if not data_type then
+        return nk.json_encode({error = "No type provided"})
+    end
+
+    local version = versions_data[data_type]
+    if not version then
+        return nk.json_encode({error = "Version not found for type: " .. tostring(data_type)})
+    end
+
+    local response = {
+        version = version,
+        download_url = "http://127.0.0.1:8081/" .. data_type .. ".json"
+    }
+
+    return nk.json_encode(response)
+end
+
+nk.register_rpc(get_data_version, "get_data_version")
+
 
 local function get_game_data(context, payload)
     local request = {}
@@ -121,20 +214,27 @@ local rarity_max_levels = {
     [7] = 120
 }
 
-local function calculate_xp_for_level(level, growth_factor)
+local function calculate_xp_for_level(level, exp_pattern)
     if level <= 1 then return 0 end
-    local xp = growth_factor * 500000 * (math.pow(level / 99, 2.5) - math.pow((level - 1) / 99, 2.5))
-    return math.floor(xp + 0.5)
+    if unit_exp_patterns[exp_pattern] and unit_exp_patterns[exp_pattern][level] then
+        return unit_exp_patterns[exp_pattern][level]
+    end
+    return 0
 end
 
-local function calculate_level_from_xp(xp, growth_factor, max_level)
+local function calculate_level_from_xp(xp, exp_pattern, max_level)
     if xp <= 0 then return 1 end
 
     local level = 1
     local total_xp_needed = 0
+    
+    if not unit_exp_patterns[exp_pattern] then
+        return level
+    end
 
     for i = 2, max_level do
-        total_xp_needed = total_xp_needed + calculate_xp_for_level(i, growth_factor)
+        local xp_needed = unit_exp_patterns[exp_pattern][i] or 0
+        total_xp_needed = total_xp_needed + xp_needed
         if xp >= total_xp_needed then
             level = i
         else
@@ -143,6 +243,15 @@ local function calculate_level_from_xp(xp, growth_factor, max_level)
     end
 
     return level
+end
+
+local function calculate_total_xp_for_level(target_level, exp_pattern)
+    local total = 0
+    if not unit_exp_patterns[exp_pattern] then return 0 end
+    for i = 2, target_level do
+        total = total + (unit_exp_patterns[exp_pattern][i] or 0)
+    end
+    return total
 end
 
 local function get_player_units(user_id)
@@ -154,12 +263,37 @@ local function get_player_units(user_id)
     if #objects > 0 then
         local data = objects[1].value
         if data and data.units then
+            -- Inject next_xp if it's missing or needs recalculation based on up-to-date data
+            for _, unit in ipairs(data.units) do
+                local unit_data = units_data[unit.unit_id]
+                if unit_data then
+                    local exp_pattern = unit_data.exp_pattern or 5
+                    local max_level = rarity_max_levels[unit.current_rarity] or 15
+                    if unit.level < max_level then
+                        local base_xp = calculate_total_xp_for_level(unit.level, exp_pattern)
+                        local xp_into_level = unit.xp - base_xp
+                        local required_marginal_xp = calculate_xp_for_level(unit.level + 1, exp_pattern)
+                        unit.next_xp = required_marginal_xp - xp_into_level
+                        if unit.next_xp < 0 then unit.next_xp = 0 end
+                    else
+                        unit.next_xp = 0
+                    end
+                end
+            end
             return data.units
         end
     end
 
     return {}
 end
+
+local function get_player_units_rpc(context, payload)
+    local units = get_player_units(context.user_id)
+    return nk.json_encode({units = units})
+end
+
+nk.register_rpc(get_player_units_rpc, "get_player_units")
+
 
 local function save_player_units(user_id, units)
     local objects = {
@@ -196,12 +330,16 @@ local function summon_units(context, payload)
         local unit_id = available_unit_ids[random_index]
         local unit_data = units_data[unit_id]
 
+        local exp_pattern = unit_data.exp_pattern or 5
+        local next_xp = calculate_xp_for_level(2, exp_pattern)
+
         local new_unit = {
             instance_id = nk.uuid_v4(),
             unit_id = unit_id,
             level = 1,
             xp = 0,
-            current_rarity = unit_data.rarity_min or 1
+            current_rarity = unit_data.rarity_min or 1,
+            next_xp = next_xp
         }
 
         table.insert(player_units, new_unit)
@@ -236,11 +374,21 @@ local function add_unit_xp(context, payload)
                 return nk.json_encode({error = "Unit data not found"})
             end
 
-            local growth_factor = unit_data.growth_factor or 1.0
+            local exp_pattern = unit_data.exp_pattern or 5
             local max_level = rarity_max_levels[unit.current_rarity] or 15
 
             unit.xp = unit.xp + xp_amount
-            unit.level = calculate_level_from_xp(unit.xp, growth_factor, max_level)
+            unit.level = calculate_level_from_xp(unit.xp, exp_pattern, max_level)
+            
+            if unit.level < max_level then
+                local base_xp = calculate_total_xp_for_level(unit.level, exp_pattern)
+                local xp_into_level = unit.xp - base_xp
+                local required_marginal_xp = calculate_xp_for_level(unit.level + 1, exp_pattern)
+                unit.next_xp = required_marginal_xp - xp_into_level
+                if unit.next_xp < 0 then unit.next_xp = 0 end
+            else
+                unit.next_xp = 0
+            end
 
             updated_unit = unit
             break
@@ -292,6 +440,10 @@ local function awaken_unit(context, payload)
             unit.current_rarity = unit.current_rarity + 1
             unit.level = 1
             unit.xp = 0 -- Optionally reset XP too, or just level
+
+            local exp_pattern = unit_data.exp_pattern or 5
+            local next_xp = calculate_xp_for_level(2, exp_pattern)
+            unit.next_xp = next_xp
 
             updated_unit = unit
             break

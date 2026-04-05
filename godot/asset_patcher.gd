@@ -3,7 +3,7 @@ extends Node
 signal patch_progress(file_name: String, status: String)
 signal patch_complete
 
-var files_to_patch = ["units", "items", "weapons", "worlds", "dungeons", "missions"]
+var files_to_patch = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive"]
 var current_patch_index = 0
 
 var cached_data = {}

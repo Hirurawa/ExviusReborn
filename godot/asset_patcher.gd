@@ -3,7 +3,7 @@ extends Node
 signal patch_progress(file_name: String, status: String)
 signal patch_complete
 
-var files_to_patch = ["units", "items", "weapons", "worlds", "dungeons", "missions"]
+var files_to_patch = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive"]
 var current_patch_index = 0
 
 var cached_data = {}
@@ -14,8 +14,6 @@ func _ready():
 	_http_request = HTTPRequest.new()
 	add_child(_http_request)
 	_http_request.request_completed.connect(_on_request_completed)
-	
-	server_connection = get_node_or_null("/root/Nakama")
 	
 	# Create data dir if it doesn't exist
 	var dir = DirAccess.open("user://")

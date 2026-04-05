@@ -1138,6 +1138,7 @@ func _transition_to_game(email: String) -> void:
 		)
 		AssetPatcher.patch_complete.connect(_on_patch_complete.bind(email))
 		
+	AssetPatcher.server_connection = server_connection
 	AssetPatcher.start_patching()
 	await AssetPatcher.patch_complete
 

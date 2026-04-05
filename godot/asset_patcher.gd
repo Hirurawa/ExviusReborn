@@ -15,8 +15,6 @@ func _ready():
 	add_child(_http_request)
 	_http_request.request_completed.connect(_on_request_completed)
 	
-	server_connection = get_node_or_null("/root/Nakama")
-	
 	# Create data dir if it doesn't exist
 	var dir = DirAccess.open("user://")
 	print(dir)

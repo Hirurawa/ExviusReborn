@@ -99,7 +99,7 @@ var seconds_until_next_nrg: float = 0.0
 @onready var unit_detail_add_xp_button := $CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox/AddXPButton
 @onready var unit_detail_awaken_button := $CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox/AwakenButton
 
-@onready var unit_detail_traits_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/TraitsButton
+@onready var unit_detail_traits_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/TraitButton
 @onready var unit_detail_magic_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/MagicButton
 @onready var unit_detail_special_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/SpecialButton
 @onready var unit_detail_trait_content := $CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent
@@ -922,7 +922,7 @@ func _create_skill_panel(skill_data: Dictionary) -> PanelContainer:
 	icon_rect.custom_minimum_size = Vector2(40, 40)
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var icon_path = "res://assets/skill_icons/" + skill_data.get("icon", "ability_1.png")
+	var icon_path = "res://assets/abilities/" + skill_data.get("icon", "ability_1.png")
 	var tex = load(icon_path)
 	if tex:
 		icon_rect.texture = tex
@@ -955,7 +955,7 @@ func _create_skill_panel(skill_data: Dictionary) -> PanelContainer:
 	var cost = skill_data.get("cost", {})
 	if cost.has("MP") and cost["MP"] > 0:
 		var mp_lbl = Label.new()
-		mp_lbl.text = "MP " + str(cost["MP"])
+		mp_lbl.text = "MP " + str(int(cost["MP"]))
 		mp_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0))
 		top_hbox.add_child(mp_lbl)
 
@@ -992,8 +992,8 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		var req_rarity = sk.get("rarity", 99)
 		var req_level = sk.get("level", 99)
 
-		if rarity > req_rarity or (rarity == req_rarity and level >= req_level):
-			var sk_id = str(sk.get("id", ""))
+		if int(rarity) > int(req_rarity) or (rarity == req_rarity and level >= req_level):
+			var sk_id = str(int(sk.get("id", "")))
 			var sk_type = sk.get("type", "")
 
 			if sk_type == "MAGIC":
@@ -1274,6 +1274,7 @@ func _transition_to_game(email: String) -> void:
 		)
 		AssetPatcher.patch_complete.connect(_on_patch_complete.bind(email))
 		
+	AssetPatcher.server_connection = server_connection
 	AssetPatcher.start_patching()
 	await AssetPatcher.patch_complete
 
@@ -1286,7 +1287,6 @@ func _on_patch_complete(email: String = ""):
 	game_data_dungeons = AssetPatcher.get_data("dungeons")
 	game_data_skills_magic = AssetPatcher.get_data("skills_magic")
 	game_data_skills_ability = AssetPatcher.get_data("skills_ability")
-	
 	
 	# Update shop potion UI dynamically
 	var potion_data = game_data_items.get("101000100", {})

@@ -753,72 +753,70 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-
-[node name="MagicContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MagicGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/MagicContent"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
-columns = 2
-
-[node name="SpecialContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="SpecialGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/SpecialContent"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
-columns = 2
-
-[node name="LimitBurstHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=1060832517]
+[node name="LimitBurstHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent" unique_id=1060832517]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="LBTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/LimitBurstHBox" unique_id=1653847143]
+[node name="LBTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/LimitBurstHBox" unique_id=1653847143]
 layout_mode = 2
 text = "Limit Burst"
 
-[node name="LBName" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/LimitBurstHBox" unique_id=293031247]
+[node name="LBName" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/LimitBurstHBox" unique_id=293031247]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Skill Name"
 
-[node name="LBLvl" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/LimitBurstHBox" unique_id=1985492514]
+[node name="LBLvl" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/LimitBurstHBox" unique_id=1985492514]
 layout_mode = 2
 text = "Lvl 1/20"
 
-[node name="TrustMasterHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=1212703151]
+[node name="TrustMasterHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent" unique_id=1212703151]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="TMTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox" unique_id=1385914972]
+[node name="TMTitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/TrustMasterHBox" unique_id=1385914972]
 layout_mode = 2
 text = "0.0%"
 
-[node name="TMIcon" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox" unique_id=568969509]
+[node name="TMIcon" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/TrustMasterHBox" unique_id=568969509]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 color = Color(0.4, 0.6, 0.8, 1)
 
-[node name="TMInfoVBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox" unique_id=308892604]
+[node name="TMInfoVBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/TrustMasterHBox" unique_id=308892604]
 layout_mode = 2
 
-[node name="TMSubtitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox/TMInfoVBox" unique_id=452682330]
+[node name="TMSubtitle" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox" unique_id=452682330]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 0.8, 1)
 text = "Trust Master Reward"
 
-[node name="TMName" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TrustMasterHBox/TMInfoVBox" unique_id=339046512]
+[node name="TMName" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox" unique_id=339046512]
 layout_mode = 2
 text = "Reward Name"
+
+[node name="MagicContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=81555987]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MagicGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/MagicContent" unique_id=1531759489]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="SpecialContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=420473170]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SpecialGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/SpecialContent" unique_id=1250807397]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=1699874576]
 layout_mode = 2

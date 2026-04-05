@@ -753,6 +753,31 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+
+[node name="MagicContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MagicGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/MagicContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="SpecialContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SpecialGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/SpecialContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
 [node name="LimitBurstHBox" type="HBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=1060832517]
 layout_mode = 2
 theme_override_constants/separation = 20

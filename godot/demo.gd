@@ -99,6 +99,15 @@ var seconds_until_next_nrg: float = 0.0
 @onready var unit_detail_add_xp_button := $CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox/AddXPButton
 @onready var unit_detail_awaken_button := $CanvasLayer/UnitDetailUI/VBoxContainer/ActionsHBox/AwakenButton
 
+@onready var unit_detail_traits_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/TraitsButton
+@onready var unit_detail_magic_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/MagicButton
+@onready var unit_detail_special_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/SpecialButton
+@onready var unit_detail_trait_content := $CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent
+@onready var unit_detail_magic_content := $CanvasLayer/UnitDetailUI/VBoxContainer/MagicContent
+@onready var unit_detail_special_content := $CanvasLayer/UnitDetailUI/VBoxContainer/SpecialContent
+@onready var unit_detail_magic_grid := $CanvasLayer/UnitDetailUI/VBoxContainer/MagicContent/MagicGrid
+@onready var unit_detail_special_grid := $CanvasLayer/UnitDetailUI/VBoxContainer/SpecialContent/SpecialGrid
+
 @onready var items_ui := $CanvasLayer/ItemsUI
 @onready var items_list_container := $CanvasLayer/ItemsUI/VBoxContainer/ScrollContainer/ItemsListContainer
 @onready var add_potion_button := $CanvasLayer/ShopUI/VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2/AddPotionButton
@@ -112,6 +121,8 @@ var game_data_weapons: Dictionary = {}
 var game_data_worlds: Dictionary = {}
 var game_data_dungeons: Dictionary = {}
 var game_data_missions: Dictionary = {}
+var game_data_skills_magic: Dictionary = {}
+var game_data_skills_ability: Dictionary = {}
 
 var current_selected_world: String = ""
 var current_selected_region: String = ""
@@ -173,6 +184,10 @@ func _ready() -> void:
 
 	unit_detail_back_button.pressed.connect(_on_unit_detail_back_button_pressed)
 	
+	unit_detail_traits_btn.pressed.connect(_on_unit_detail_traits_btn_pressed)
+	unit_detail_magic_btn.pressed.connect(_on_unit_detail_magic_btn_pressed)
+	unit_detail_special_btn.pressed.connect(_on_unit_detail_special_btn_pressed)
+
 	world_map_button.pressed.connect(_on_world_map_button_pressed)
 	map_back_button.pressed.connect(_on_map_back_button_pressed)
 	map_world_option.item_selected.connect(_on_map_world_selected)
@@ -884,6 +899,127 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	unit_detail_add_xp_button.pressed.connect(_on_unit_add_xp_pressed.bind(instance_id))
 	unit_detail_awaken_button.pressed.connect(_on_unit_awaken_pressed.bind(instance_id))
 
+	_populate_skills(unit_inst, unit_data)
+	_on_unit_detail_traits_btn_pressed()
+
+func _create_skill_panel(skill_data: Dictionary) -> PanelContainer:
+	var panel = PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 5)
+	margin.add_theme_constant_override("margin_right", 5)
+	margin.add_theme_constant_override("margin_top", 5)
+	margin.add_theme_constant_override("margin_bottom", 5)
+	panel.add_child(margin)
+
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	margin.add_child(hbox)
+
+	# Icon
+	var icon_rect = TextureRect.new()
+	icon_rect.custom_minimum_size = Vector2(40, 40)
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var icon_path = "res://assets/skill_icons/" + skill_data.get("icon", "ability_1.png")
+	var tex = load(icon_path)
+	if tex:
+		icon_rect.texture = tex
+	else:
+		# Fallback if no icon
+		var color_rect = ColorRect.new()
+		color_rect.custom_minimum_size = Vector2(40, 40)
+		color_rect.color = Color(0.3, 0.3, 0.3)
+		icon_rect.add_child(color_rect)
+	hbox.add_child(icon_rect)
+
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+
+	var top_hbox = HBoxContainer.new()
+	vbox.add_child(top_hbox)
+
+	var trait_lbl = Label.new()
+	trait_lbl.text = "Trait"
+	trait_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	trait_lbl.add_theme_font_size_override("font_size", 12)
+	top_hbox.add_child(trait_lbl)
+
+	var name_lbl = Label.new()
+	name_lbl.text = skill_data.get("name", "Unknown Skill")
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_hbox.add_child(name_lbl)
+
+	var cost = skill_data.get("cost", {})
+	if cost.has("MP") and cost["MP"] > 0:
+		var mp_lbl = Label.new()
+		mp_lbl.text = "MP " + str(cost["MP"])
+		mp_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0))
+		top_hbox.add_child(mp_lbl)
+
+	var desc_lbl = Label.new()
+	var effects = skill_data.get("effects", [])
+	if typeof(effects) == TYPE_ARRAY and effects.size() > 0:
+		var first_eff = effects[0]
+		if typeof(first_eff) == TYPE_ARRAY and first_eff.size() > 0:
+			desc_lbl.text = str(first_eff[0])
+		elif typeof(first_eff) == TYPE_STRING:
+			desc_lbl.text = str(first_eff)
+		else:
+			desc_lbl.text = "No description."
+	else:
+		desc_lbl.text = "No description."
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_font_size_override("font_size", 12)
+	desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+	vbox.add_child(desc_lbl)
+
+	return panel
+
+func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
+	for child in unit_detail_magic_grid.get_children():
+		child.queue_free()
+	for child in unit_detail_special_grid.get_children():
+		child.queue_free()
+
+	var rarity = unit_inst.get("current_rarity", 1)
+	var level = unit_inst.get("level", 1)
+	var skills = unit_data.get("skills", [])
+
+	for sk in skills:
+		var req_rarity = sk.get("rarity", 99)
+		var req_level = sk.get("level", 99)
+
+		if rarity > req_rarity or (rarity == req_rarity and level >= req_level):
+			var sk_id = str(sk.get("id", ""))
+			var sk_type = sk.get("type", "")
+
+			if sk_type == "MAGIC":
+				if game_data_skills_magic.has(sk_id):
+					var panel = _create_skill_panel(game_data_skills_magic[sk_id])
+					unit_detail_magic_grid.add_child(panel)
+			elif sk_type == "ABILITY":
+				if game_data_skills_ability.has(sk_id):
+					var panel = _create_skill_panel(game_data_skills_ability[sk_id])
+					unit_detail_special_grid.add_child(panel)
+
+func _on_unit_detail_traits_btn_pressed() -> void:
+	unit_detail_trait_content.show()
+	unit_detail_magic_content.hide()
+	unit_detail_special_content.hide()
+
+func _on_unit_detail_magic_btn_pressed() -> void:
+	unit_detail_trait_content.hide()
+	unit_detail_magic_content.show()
+	unit_detail_special_content.hide()
+
+func _on_unit_detail_special_btn_pressed() -> void:
+	unit_detail_trait_content.hide()
+	unit_detail_magic_content.hide()
+	unit_detail_special_content.show()
+
 func _on_unit_detail_back_button_pressed() -> void:
 	unit_detail_ui.hide()
 	units_ui.show()
@@ -1148,6 +1284,8 @@ func _on_patch_complete(email: String = ""):
 	game_data_weapons = AssetPatcher.get_data("weapons")
 	game_data_worlds = AssetPatcher.get_data("worlds")
 	game_data_dungeons = AssetPatcher.get_data("dungeons")
+	game_data_skills_magic = AssetPatcher.get_data("skills_magic")
+	game_data_skills_ability = AssetPatcher.get_data("skills_ability")
 	
 	
 	# Update shop potion UI dynamically

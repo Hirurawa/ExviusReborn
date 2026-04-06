@@ -55,6 +55,7 @@ end
 local units_data = read_json_file("data/units.json") or {}
 local items_data = read_json_file("data/items.json") or {}
 local weapons_data = read_json_file("data/weapons.json") or {}
+local equipment_data = read_json_file("data/equipment.json") or {}
 local worlds_data = read_json_file("data/worlds.json") or {}
 local dungeons_data = read_json_file("data/dungeons.json") or {}
 local missions_data = read_json_file("data/missions.json") or {}
@@ -339,7 +340,8 @@ local function summon_units(context, payload)
             level = 1,
             xp = 0,
             current_rarity = unit_data.rarity_min or 1,
-            next_xp = next_xp
+            next_xp = next_xp,
+            equipment = {}
         }
 
         table.insert(player_units, new_unit)
@@ -939,3 +941,135 @@ local function perform_mission(context, payload)
 end
 
 nk.register_rpc(perform_mission, "perform_mission")
+
+local function rpc_equip_item(context, payload)
+    local request = nk.json_decode(payload)
+    local unit_id = request.unit_id
+    local slot = request.slot
+    local item_id = request.item_id -- nil or empty string implies unequip
+
+    if not unit_id or not slot then
+        return nk.json_encode({error = "Missing unit_id or slot"})
+    end
+
+    local valid_slots = {
+        r_hand = true, l_hand = true, head = true,
+        body = true, accessory1 = true, accessory2 = true
+    }
+
+    if not valid_slots[slot] then
+        return nk.json_encode({error = "Invalid slot: " .. tostring(slot)})
+    end
+
+    local is_unequipping = (not item_id or item_id == "")
+
+    local player_units = get_player_units(context.user_id)
+    local player_items = get_player_items(context.user_id)
+
+    -- Find target unit
+    local target_unit = nil
+    for _, u in ipairs(player_units) do
+        if u.instance_id == unit_id then
+            target_unit = u
+            break
+        end
+    end
+
+    if not target_unit then
+        return nk.json_encode({error = "Unit not found"})
+    end
+
+    -- Ensure equipment table exists (backward compatibility)
+    if not target_unit.equipment then
+        target_unit.equipment = {}
+    end
+
+    if is_unequipping then
+        target_unit.equipment[slot] = nil
+    else
+        -- Equipping validation
+        local eq_data = equipment_data[item_id]
+        if not eq_data then
+            return nk.json_encode({error = "Invalid equipment item_id: " .. tostring(item_id)})
+        end
+
+        local unit_base_data = units_data[target_unit.unit_id]
+        if not unit_base_data then
+            return nk.json_encode({error = "Base unit data not found"})
+        end
+
+        -- Check if unit can equip this type
+        local can_equip = false
+        if type(unit_base_data.equip) == "table" then
+            for _, type_id in ipairs(unit_base_data.equip) do
+                if type_id == eq_data.type_id then
+                    can_equip = true
+                    break
+                end
+            end
+        end
+
+        if not can_equip then
+            return nk.json_encode({error = "Unit cannot equip this item type"})
+        end
+
+        -- Check ownership and quantity
+        local owned_quantity = 0
+        for _, item in ipairs(player_items) do
+            if item.item_id == item_id then
+                owned_quantity = item.quantity or 0
+                break
+            end
+        end
+
+        if owned_quantity <= 0 then
+            return nk.json_encode({error = "Player does not own this item"})
+        end
+
+        -- Count how many of this item are currently equipped across ALL units
+        local equipped_count = 0
+        local first_found_unit_with_item = nil
+        local first_found_slot = nil
+
+        for _, u in ipairs(player_units) do
+            if u.equipment then
+                for s, eq_id in pairs(u.equipment) do
+                    if eq_id == item_id then
+                        equipped_count = equipped_count + 1
+                        if not first_found_unit_with_item then
+                            first_found_unit_with_item = u
+                            first_found_slot = s
+                        end
+                    end
+                end
+            end
+        end
+
+        -- If we don't have enough spare items, unequip from another unit
+        if equipped_count >= owned_quantity then
+            if first_found_unit_with_item and first_found_slot then
+                first_found_unit_with_item.equipment[first_found_slot] = nil
+            else
+                -- Failsafe: technically shouldn't happen unless data corruption
+                return nk.json_encode({error = "Not enough items and failed to auto-unequip"})
+            end
+        end
+
+        -- Apply the equipment
+        target_unit.equipment[slot] = item_id
+
+        -- Two-handed rule
+        if eq_data.is_two_handed or eq_data.is_twohanded then
+            if slot == "r_hand" then
+                target_unit.equipment.l_hand = nil
+            elseif slot == "l_hand" then
+                target_unit.equipment.r_hand = nil
+            end
+        end
+    end
+
+    save_player_units(context.user_id, player_units)
+
+    return nk.json_encode({success = true, units = player_units})
+end
+nk.register_rpc(rpc_equip_item, "equip_item")

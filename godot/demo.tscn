@@ -818,6 +818,27 @@ theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 2
 
+[node name="EquipmentContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EquipmentGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/EquipmentContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="AbilityContent" type="ScrollContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AbilityGrid" type="GridContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/AbilityContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+
 [node name="Spacer" type="Control" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=1699874576]
 layout_mode = 2
 size_flags_vertical = 3
@@ -1349,6 +1370,56 @@ placeholder_text = "Lapis Amount"
 [node name="AddLapisButton" type="Button" parent="CanvasLayer/TopHeader/DebugWalletContainer" unique_id=1796634634]
 layout_mode = 2
 text = "Add Lapis"
+
+[node name="EquipSelectionPopup" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/EquipSelectionPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.9)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/EquipSelectionPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="CanvasLayer/EquipSelectionPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Select Equipment"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="CanvasLayer/EquipSelectionPopup/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Close"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/EquipSelectionPopup/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EquipListContainer" type="GridContainer" parent="CanvasLayer/EquipSelectionPopup/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
 
 [node name="UserMenuButton" type="MenuButton" parent="CanvasLayer" unique_id=360065264]
 anchors_preset = 1

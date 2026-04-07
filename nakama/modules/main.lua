@@ -893,12 +893,14 @@ local function perform_mission(context, payload)
             stats.max_nrg = final_max_energy
         end
 
-        local next_rank_xp = 0
-        if stats.rank < MaxRank and RankData[stats.rank + 1] then
-            next_rank_xp = RankData[stats.rank + 1].exp
-        end
-        stats.next_rank_xp = next_rank_xp
     end
+
+    -- Always ensure next_rank_xp is populated in the returned stats
+    local next_rank_xp = 0
+    if stats.rank < MaxRank and RankData[stats.rank + 1] then
+        next_rank_xp = RankData[stats.rank + 1].exp
+    end
+    stats.next_rank_xp = next_rank_xp
 
     -- Save stats
     local object_ids = {

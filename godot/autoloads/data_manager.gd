@@ -38,6 +38,8 @@ var game_data_dungeons: Dictionary = {}
 var game_data_missions: Dictionary = {}
 var game_data_skills_magic: Dictionary = {}
 var game_data_skills_ability: Dictionary = {}
+var game_data_limitbursts: Dictionary = {}
+var game_data_materia: Dictionary = {}
 
 var account_info: Object = null
 
@@ -132,6 +134,8 @@ func _on_patch_complete():
 	game_data_dungeons = AssetPatcher.get_data("dungeons")
 	game_data_skills_magic = AssetPatcher.get_data("skills_magic")
 	game_data_skills_ability = AssetPatcher.get_data("skills_ability")
+	game_data_limitbursts = AssetPatcher.get_data("limitbursts")
+	game_data_materia = AssetPatcher.get_data("materia")
 
 func _update_wallet_data(wallet: Dictionary):
 	gil = int(wallet.get("gil", 0))

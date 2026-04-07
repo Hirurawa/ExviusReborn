@@ -2,18 +2,6 @@
 
 [ext_resource type="Script" path="res://ui/shop_ui.gd" id="1_script"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
-bg_color = Color(0.02, 0.1, 0.3, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.3, 0.5, 0.8, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
 [node name="ShopUI" type="Control"]
 script = ExtResource("1_script")
 visible = false
@@ -49,53 +37,31 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ShopListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
-
-[node name="PotionItem" type="PanelContainer" parent="VBoxContainer/ScrollContainer/ShopListContainer"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_2")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem"]
-layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="IconRect" type="TextureRect" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
-custom_minimum_size = Vector2(64, 64)
+[node name="ItemsLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Items"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+[node name="ItemsContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
-alignment = 1
+theme_override_constants/separation = 10
 
-[node name="NameLabel" type="Label" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Potion"
 
-[node name="DescLabel" type="Label" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer"]
+[node name="EquipmentLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 14
-text = "Restore a small amount of HP to one ally"
-autowrap_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Equipment"
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer"]
+[node name="EquipmentContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-alignment = 1
-
-[node name="PriceLabel" type="Label" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2"]
-layout_mode = 2
-text = "100 Gil"
-horizontal_alignment = 1
-
-[node name="AddPotionButton" type="Button" parent="VBoxContainer/ScrollContainer/ShopListContainer/PotionItem/HBoxContainer/VBoxContainer2"]
-custom_minimum_size = Vector2(80, 40)
-layout_mode = 2
-text = "Buy"
+theme_override_constants/separation = 10

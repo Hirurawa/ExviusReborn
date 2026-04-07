@@ -18,3 +18,5 @@ mono_crash.*.json
 *.import
 
 **/.gdignore
+
+.vscode

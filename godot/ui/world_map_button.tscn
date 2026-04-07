@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[node name="WorldMapButton" type="Button"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -110.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 60.0
+grow_horizontal = 0
+text = "World Map"

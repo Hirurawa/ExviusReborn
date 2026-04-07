@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://ui/units_ui.gd" id="1_script"]
+
+[node name="UnitsUI" type="Control"]
+script = ExtResource("1_script")
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Units"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="UnitsListContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 5

@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://ui/bottom_nav.gd" id="1_script"]
+
+[node name="BottomNav" type="PanelContainer"]
+script = ExtResource("1_script")
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HBox" type="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="HomeButton" type="Button" parent="HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Home"
+
+[node name="UnitsButton" type="Button" parent="HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Units"
+
+[node name="ItemsButton" type="Button" parent="HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Items"
+
+[node name="ShopButton" type="Button" parent="HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Shop"
+
+[node name="SummonButton" type="Button" parent="HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Summon"
+
+[node name="FriendsButton" type="Button" parent="HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Friends"

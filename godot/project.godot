@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 Nakama="*uid://c4wa1wmbnm2fm"
 AssetPatcher="*res://asset_patcher.gd"
+DataManager="*res://autoloads/data_manager.gd"
+UIManager="*res://autoloads/ui_manager.gd"
 
 [display]
 

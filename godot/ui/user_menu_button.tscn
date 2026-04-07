@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[node name="UserMenuButton" type="MenuButton"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 110.0
+offset_bottom = 60.0
+text = "Menu"
+item_count = 2
+popup/item_0/text = "Edit Profile"
+popup/item_0/id = 0
+popup/item_1/text = "Logout"
+popup/item_1/id = 1

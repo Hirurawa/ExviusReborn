@@ -1,0 +1,833 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/icons/elements/fire.png" id="elem_fire"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/sleep.png" id="ailm_sleep"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/petrification.png" id="ailm_petrification"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/earth.png" id="elem_earth"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/ice.png" id="elem_ice"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/lightning.png" id="elem_lightning"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/dark.png" id="elem_dark"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/silence.png" id="ailm_silence"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/confuse.png" id="ailm_confuse"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/paralysis.png" id="ailm_paralysis"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/poison.png" id="ailm_poison"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/light.png" id="elem_light"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/disease.png" id="ailm_disease"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/water.png" id="elem_water"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/blind.png" id="ailm_blind"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/wind.png" id="elem_wind"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_TraitVal"]
+bg_color = Color(0.1, 0.1, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.3, 0.5, 1)
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_TraitPanel"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.4, 0.6, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[ext_resource type="Script" path="res://ui/unit_detail_ui.gd" id="1_script"]
+
+[node name="UnitDetailUI" type="Control"]
+script = ExtResource("1_script")
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.05, 0.2, 1)
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BackButton" type="Button" parent="VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "Back"
+
+[node name="TitleBox" type="VBoxContainer" parent="VBoxContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="InfoHBox" type="HBoxContainer" parent="VBoxContainer/TopBar/TitleBox"]
+layout_mode = 2
+
+[node name="NumberLabel" type="Label" parent="VBoxContainer/TopBar/TitleBox/InfoHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "No. ???"
+
+[node name="RarityLabel" type="Label" parent="VBoxContainer/TopBar/TitleBox/InfoHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "★★★★★"
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/TopBar/TitleBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Unit Name"
+
+[node name="LockIcon" type="ColorRect" parent="VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.2, 0.6, 0.2, 1)
+
+[node name="DetailsButton" type="Button" parent="VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "Details"
+
+[node name="CharInfoHBox" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SpritePlaceholder" type="TextureRect" parent="VBoxContainer/CharInfoHBox"]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StatsVBox" type="VBoxContainer" parent="VBoxContainer/CharInfoHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LevelHBox" type="HBoxContainer" parent="VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Lvl 1/80"
+
+[node name="NextXPLabel" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox"]
+layout_mode = 2
+text = "next 0"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+columns = 4
+
+[node name="HPTitle" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "HP"
+
+[node name="HPValue" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="MPTitle" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "MP"
+
+[node name="MPValue" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="ATKTitle" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "ATK"
+
+[node name="ATKValue" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="DEFTitle" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "DEF"
+
+[node name="DEFValue" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="MAGTitle" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "MAG"
+
+[node name="MAGValue" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="SPRTitle" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "SPR"
+
+[node name="SPRValue" type="Label" parent="VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="TabsHBox" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="EquipButton" type="Button" parent="VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Equip"
+
+[node name="TraitButton" type="Button" parent="VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Trait"
+
+[node name="MagicButton" type="Button" parent="VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Magic"
+
+[node name="SpecialButton" type="Button" parent="VBoxContainer/TabsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Special"
+[node name="EquipmentTabButton" type="Button" parent="VBoxContainer/TabsHBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Equipment"
+
+[node name="AbilityTabButton" type="Button" parent="VBoxContainer/TabsHBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Abilities"
+
+
+[node name="TraitContent" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ElementResistLabel" type="Label" parent="VBoxContainer/TraitContent"]
+layout_mode = 2
+text = "Element Resistance"
+
+[node name="ElementResistGrid" type="GridContainer" parent="VBoxContainer/TraitContent"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+columns = 8
+
+[node name="Resist1" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_fire")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist2" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_ice")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist3" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_lightning")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist4" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_water")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist5" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_wind")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist6" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_earth")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist7" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_light")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist8" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_dark")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusResistLabel" type="Label" parent="VBoxContainer/TraitContent"]
+layout_mode = 2
+text = "Status Resistance"
+
+[node name="StatusResistGrid" type="GridContainer" parent="VBoxContainer/TraitContent"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+columns = 8
+
+[node name="Resist1" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_poison")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist2" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_blind")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist3" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_sleep")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist4" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_silence")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist5" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_paralysis")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist6" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_confuse")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist7" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_disease")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resist8" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_petrification")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LimitBurstHBox" type="HBoxContainer" parent="VBoxContainer/TraitContent"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="LBTitle" type="Label" parent="VBoxContainer/TraitContent/LimitBurstHBox"]
+layout_mode = 2
+text = "Limit Burst"
+
+[node name="LBName" type="Label" parent="VBoxContainer/TraitContent/LimitBurstHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Skill Name"
+
+[node name="LBLvl" type="Label" parent="VBoxContainer/TraitContent/LimitBurstHBox"]
+layout_mode = 2
+text = "Lvl 1/20"
+
+[node name="TrustMasterHBox" type="HBoxContainer" parent="VBoxContainer/TraitContent"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TMTitle" type="Label" parent="VBoxContainer/TraitContent/TrustMasterHBox"]
+layout_mode = 2
+text = "0.0%"
+
+[node name="TMIcon" type="ColorRect" parent="VBoxContainer/TraitContent/TrustMasterHBox"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+color = Color(0.4, 0.6, 0.8, 1)
+
+[node name="TMInfoVBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/TrustMasterHBox"]
+layout_mode = 2
+
+[node name="TMSubtitle" type="Label" parent="VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 0.8, 1)
+text = "Trust Master Reward"
+
+[node name="TMName" type="Label" parent="VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox"]
+layout_mode = 2
+text = "Reward Name"
+
+[node name="MagicContent" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MagicGrid" type="GridContainer" parent="VBoxContainer/MagicContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="SpecialContent" type="ScrollContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SpecialGrid" type="GridContainer" parent="VBoxContainer/SpecialContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="EquipmentContent" type="ScrollContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EquipmentGrid" type="GridContainer" parent="VBoxContainer/EquipmentContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="AbilityContent" type="ScrollContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AbilityGrid" type="GridContainer" parent="VBoxContainer/AbilityContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+
+[node name="Spacer" type="Control" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ActionsHBox" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="AddXPButton" type="Button" parent="VBoxContainer/ActionsHBox"]
+layout_mode = 2
+text = "Add 1000 XP"
+
+[node name="AwakenButton" type="Button" parent="VBoxContainer/ActionsHBox"]
+layout_mode = 2
+text = "Awaken"
+
+[node name="BottomSpacer" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2

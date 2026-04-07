@@ -1,0 +1,78 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://ui/summon_ui.gd" id="1_script"]
+
+[node name="SummonUI" type="Control"]
+script = ExtResource("1_script")
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Summon"
+horizontal_alignment = 1
+
+[node name="PerformSummonButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Summon 3 Units"
+
+[node name="SummonOverlay" type="ColorRect"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SummonOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -150.0
+offset_right = 150.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="SummonOverlay/VBoxContainer"]
+layout_mode = 2
+text = "Summon Results"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="SummonOverlay/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ResultsListContainer" type="VBoxContainer" parent="SummonOverlay/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CloseOverlayButton" type="Button" parent="SummonOverlay/VBoxContainer"]
+layout_mode = 2
+text = "Close"

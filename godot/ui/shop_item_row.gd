@@ -19,7 +19,7 @@ func setup(id: String, data: Dictionary, type: String):
 	_type = type
 	
 	name_label.text = data.get("name", "Unknown")
-	price_label.text = str(data.get("price_buy", 0)) + " Gil"
+	price_label.text = str(int(data.get("price_buy", 0))) + " Gil"
 	
 	var strings = data.get("strings", {})
 	var desc_short_list = strings.get("desc_short", [])
@@ -36,7 +36,7 @@ func setup(id: String, data: Dictionary, type: String):
 			icon_rect.texture = item_tex
 		else:
 			# It might be in equipment, or global_equip, etc.
-			var equip_tex = ResourceLoader.load("res://assets/equipments/" + icon_name) if ResourceLoader.exists("res://assets/equipments/" + icon_name) else null
+			var equip_tex = ResourceLoader.load("res://assets/equip/" + icon_name) if ResourceLoader.exists("res://assets/equip/" + icon_name) else null
 			if equip_tex:
 				icon_rect.texture = equip_tex
 

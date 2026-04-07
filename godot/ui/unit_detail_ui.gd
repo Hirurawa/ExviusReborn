@@ -186,7 +186,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		var resist_panel = elem_resist_grid.get_node("Resist" + str(i+1))
 		var label = resist_panel.get_node("VBox/ValPanel/Label")
 		if element_resist.size() > i and element_resist[i] != 0:
-			label.text = str(element_resist[i]) + "%"
+			label.text = str(int(element_resist[i])) + "%"
 		else:
 			label.text = "-"
 
@@ -195,11 +195,11 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		var resist_panel = status_resist_grid.get_node("Resist" + str(i+1))
 		var label = resist_panel.get_node("VBox/ValPanel/Label")
 		if status_resist.size() > i and status_resist[i] != 0:
-			label.text = str(status_resist[i]) + "%"
+			label.text = str(int(status_resist[i])) + "%"
 		else:
 			label.text = "-"
 
-	var lb_id = str(entry.get("limitburst_id", ""))
+	var lb_id = str(int(entry.get("limitburst_id", "")))
 	if lb_id != "" and DataManager.game_data_limitbursts.has(lb_id):
 		lb_name_label.text = DataManager.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
 	else:
@@ -216,18 +216,18 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 			if DataManager.game_data_equipment.has(tmr_id):
 				var eq_data = DataManager.game_data_equipment[tmr_id]
 				tmr_name = eq_data.get("name", tmr_name)
-				icon_path = "res://assets/icons/equip/" + eq_data.get("icon", "0.png")
+				icon_path = "res://assets/equip/" + eq_data.get("icon", "0.png")
 		elif tmr_type == "MATERIA":
 			if DataManager.game_data_materia.has(tmr_id):
 				var mat_data = DataManager.game_data_materia[tmr_id]
 				tmr_name = mat_data.get("name", tmr_name)
-				icon_path = "res://assets/icons/materia/" + mat_data.get("icon", "0.png")
+				icon_path = "res://assets/materia/" + mat_data.get("icon", "0.png")
 
 		tm_name_label.text = tmr_name
 		if icon_path != "":
-			var tex = load(icon_path)
-			if tex:
-				tm_icon_rect.texture = tex
+			var icon_tex = load(icon_path)
+			if icon_tex:
+				tm_icon_rect.texture = icon_tex
 			else:
 				tm_icon_rect.texture = null
 	else:

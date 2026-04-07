@@ -65,7 +65,7 @@ func _refresh_items_list(owned_items: Array) -> void:
 			if is_item:
 				tex = ResourceLoader.load("res://assets/items/" + icon_name) if ResourceLoader.exists("res://assets/items/" + icon_name) else null
 			elif is_equipment:
-				tex = ResourceLoader.load("res://assets/equipments/" + icon_name) if ResourceLoader.exists("res://assets/equipments/" + icon_name) else null
+				tex = ResourceLoader.load("res://assets/equip/" + icon_name) if ResourceLoader.exists("res://assets/equip/" + icon_name) else null
 				
 			if tex:
 				tex_rect.texture = tex

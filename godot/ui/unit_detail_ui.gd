@@ -31,6 +31,12 @@ extends Control
 @onready var unit_detail_ability_content = $VBoxContainer/AbilityContent
 @onready var unit_detail_ability_grid = $VBoxContainer/AbilityContent/AbilityGrid
 
+@onready var elem_resist_grid = $VBoxContainer/TraitContent/ElementResistGrid
+@onready var status_resist_grid = $VBoxContainer/TraitContent/StatusResistGrid
+@onready var lb_name_label = $VBoxContainer/TraitContent/LimitBurstHBox/LBName
+@onready var tm_name_label = $VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox/TMName
+@onready var tm_icon_rect = $VBoxContainer/TraitContent/TrustMasterHBox/TMIcon
+
 var current_unit_inst: Dictionary = {}
 
 var _current_major_mode: String = "Equip"
@@ -174,6 +180,60 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_populate_skills(unit_inst, unit_data)
 	_populate_equipment_slots(unit_inst, unit_data)
 	
+	# Fetch and display the traits
+	var element_resist = entry.get("element_resist", [0,0,0,0,0,0,0,0])
+	for i in range(8):
+		var resist_panel = elem_resist_grid.get_node("Resist" + str(i+1))
+		var label = resist_panel.get_node("VBox/ValPanel/Label")
+		if element_resist.size() > i and element_resist[i] != 0:
+			label.text = str(int(element_resist[i])) + "%"
+		else:
+			label.text = "-"
+
+	var status_resist = entry.get("status_resist", [0,0,0,0,0,0,0,0])
+	for i in range(8):
+		var resist_panel = status_resist_grid.get_node("Resist" + str(i+1))
+		var label = resist_panel.get_node("VBox/ValPanel/Label")
+		if status_resist.size() > i and status_resist[i] != 0:
+			label.text = str(int(status_resist[i])) + "%"
+		else:
+			label.text = "-"
+
+	var lb_id = str(int(entry.get("limitburst_id", "")))
+	if lb_id != "" and DataManager.game_data_limitbursts.has(lb_id):
+		lb_name_label.text = DataManager.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
+	else:
+		lb_name_label.text = "None"
+
+	var tmr_data = unit_data.get("TMR")
+	if tmr_data != null and typeof(tmr_data) == TYPE_ARRAY and tmr_data.size() >= 2:
+		var tmr_type = tmr_data[0]
+		var tmr_id = str(int(tmr_data[1]))
+		var tmr_name = "Unknown Reward"
+		var icon_path = ""
+
+		if tmr_type == "EQUIP":
+			if DataManager.game_data_equipment.has(tmr_id):
+				var eq_data = DataManager.game_data_equipment[tmr_id]
+				tmr_name = eq_data.get("name", tmr_name)
+				icon_path = "res://assets/equip/" + eq_data.get("icon", "0.png")
+		elif tmr_type == "MATERIA":
+			if DataManager.game_data_materia.has(tmr_id):
+				var mat_data = DataManager.game_data_materia[tmr_id]
+				tmr_name = mat_data.get("name", tmr_name)
+				icon_path = "res://assets/materia/" + mat_data.get("icon", "0.png")
+
+		tm_name_label.text = tmr_name
+		if icon_path != "":
+			var icon_tex = load(icon_path)
+			if icon_tex:
+				tm_icon_rect.texture = icon_tex
+			else:
+				tm_icon_rect.texture = null
+	else:
+		tm_name_label.text = "None"
+		tm_icon_rect.texture = null
+
 	if _current_major_mode == "Equip":
 		if _current_equip_sub_tab == "Traits":
 			_on_unit_detail_traits_btn_pressed()

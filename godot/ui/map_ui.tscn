@@ -1,0 +1,108 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/map_ui.gd" id="1_script"]
+
+[node name="MapUI" type="Control"]
+script = ExtResource("1_script")
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.12, 0.12, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopSpacer" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="VBoxContainer/TopBar"]
+layout_mode = 2
+text = "< Back"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="WorldOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+clip_text = true
+fit_to_longest_item = false
+
+[node name="RegionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+clip_text = true
+fit_to_longest_item = false
+
+[node name="SubregionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+clip_text = true
+fit_to_longest_item = false
+
+[node name="MapScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MapSizer" type="Control" parent="VBoxContainer/MapScrollContainer"]
+custom_minimum_size = Vector2(2000, 2000)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+
+[node name="MapContent" type="Control" parent="VBoxContainer/MapScrollContainer/MapSizer"]
+anchors_preset = 0
+mouse_filter = 1
+
+[node name="MapImage" type="TextureRect" parent="VBoxContainer/MapScrollContainer/MapSizer/MapContent"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="MissionDetailsPopup" type="PopupPanel" parent="."]
+size = Vector2i(400, 400)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MissionDetailsPopup"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 396.0
+offset_bottom = 396.0
+
+[node name="DungeonNameLabel" type="Label" parent="MissionDetailsPopup/VBoxContainer"]
+layout_mode = 2
+text = "Dungeon Name"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MissionDetailsPopup/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MissionsListContainer" type="VBoxContainer" parent="MissionDetailsPopup/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

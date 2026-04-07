@@ -349,3 +349,18 @@ func perform_mission_async(mission_id: String) -> Dictionary:
 		return dict
 
 	return {}
+
+
+func equip_item_async(unit_id: String, slot: String, item_id: String) -> Dictionary:
+	var payload = JSON.stringify({"unit_id": unit_id, "slot": slot, "item_id": item_id})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "equip_item", payload)
+	if result.is_exception():
+		var ex = result.get_exception()
+		return {"error": ex.message}
+	
+	var json = JSON.new()
+	var parse_result = json.parse(result.payload)
+	if parse_result == OK:
+		return json.get_data()
+	else:
+		return {"error": "Failed to parse JSON response"}

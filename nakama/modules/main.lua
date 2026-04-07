@@ -867,34 +867,37 @@ local function perform_mission(context, payload)
         stats.xp = stats.xp + exp_reward
 
         local rank_up_occurred = false
-        while stats.xp >= stats.rank * 100 and stats.rank < 300 do
-            stats.xp = stats.xp - (stats.rank * 100)
-            stats.rank = stats.rank + 1
 
-            local new_max_energy
-            if stats.rank <= 100 then
-                new_max_energy = stats.rank + 40
-            else
-                new_max_energy = 140 + math.floor((stats.rank - 100) / 2)
+        if RankData[1] then
+            while stats.rank < MaxRank and RankData[stats.rank + 1] and stats.xp >= RankData[stats.rank + 1].exp do
+                local required_exp = RankData[stats.rank + 1].exp
+                if required_exp <= 0 then
+                    break -- Should not happen, but safe guard
+                end
+
+                stats.xp = stats.xp - required_exp
+                stats.rank = stats.rank + 1
+
+                if RankData[stats.rank] then
+                    local new_max_energy = RankData[stats.rank].energy
+                    stats.current_nrg = stats.current_nrg + new_max_energy
+                    stats.energy = stats.current_nrg -- keep backward compatibility in this table before saving
+                end
+                rank_up_occurred = true
             end
-            if new_max_energy > 240 then new_max_energy = 240 end
-
-            stats.current_nrg = stats.current_nrg + new_max_energy
-            stats.energy = stats.current_nrg
-            rank_up_occurred = true
         end
 
-        if rank_up_occurred then
-            local final_max_energy
-            if stats.rank <= 100 then
-                final_max_energy = stats.rank + 40
-            else
-                final_max_energy = 140 + math.floor((stats.rank - 100) / 2)
-            end
-            if final_max_energy > 240 then final_max_energy = 240 end
+        if rank_up_occurred and RankData[stats.rank] then
+            local final_max_energy = RankData[stats.rank].energy
             stats.max_energy = final_max_energy
             stats.max_nrg = final_max_energy
         end
+
+        local next_rank_xp = 0
+        if stats.rank < MaxRank and RankData[stats.rank + 1] then
+            next_rank_xp = RankData[stats.rank + 1].exp
+        end
+        stats.next_rank_xp = next_rank_xp
     end
 
     -- Save stats

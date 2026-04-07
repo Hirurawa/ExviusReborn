@@ -810,10 +810,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 columns = 2
 
-[node name="Spacer" type="Control" parent="VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
 [node name="ActionsHBox" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 alignment = 1

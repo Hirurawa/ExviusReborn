@@ -36,6 +36,7 @@ bg_color = Color(0.2, 0.6, 1, 1)
 bg_color = Color(0.4, 0.8, 0.2, 1)
 
 [node name="TopHeader" type="VBoxContainer" unique_id=637241948]
+visible = false
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 120.0

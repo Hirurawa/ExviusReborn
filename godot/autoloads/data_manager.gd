@@ -33,7 +33,6 @@ var owned_items: Array = []
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
 var game_data_equipment: Dictionary = {}
-var game_data_weapons: Dictionary = {}
 var game_data_worlds: Dictionary = {}
 var game_data_dungeons: Dictionary = {}
 var game_data_missions: Dictionary = {}
@@ -129,7 +128,6 @@ func _on_patch_complete():
 	game_data_units = AssetPatcher.get_data("units")
 	game_data_items = AssetPatcher.get_data("items")
 	game_data_equipment = AssetPatcher.get_data("equipment")
-	game_data_weapons = AssetPatcher.get_data("weapons")
 	game_data_worlds = AssetPatcher.get_data("worlds")
 	game_data_dungeons = AssetPatcher.get_data("dungeons")
 	game_data_skills_magic = AssetPatcher.get_data("skills_magic")

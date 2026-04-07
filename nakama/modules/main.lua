@@ -54,7 +54,6 @@ end
 
 local units_data = read_json_file("data/units.json") or {}
 local items_data = read_json_file("data/items.json") or {}
-local weapons_data = read_json_file("data/weapons.json") or {}
 local equipment_data = read_json_file("data/equipment.json") or {}
 local worlds_data = read_json_file("data/worlds.json") or {}
 local dungeons_data = read_json_file("data/dungeons.json") or {}
@@ -128,7 +127,6 @@ local unit_exp_patterns = read_csv_file("data/unit-exp-pattern.csv") or {}
 local cached_game_data = {
     units = units_data,
     items = items_data,
-    weapons = weapons_data,
     worlds = worlds_data,
     dungeons = dungeons_data,
     missions = missions_data
@@ -173,8 +171,7 @@ local function get_game_data(context, payload)
     if data_type == "core" then
         return nk.json_encode({
             units = units_data,
-            items = items_data,
-            weapons = weapons_data
+            items = items_data
         })
     elseif data_type == "map" then
         return nk.json_encode({
@@ -778,6 +775,9 @@ local function buy_item(context, payload)
     local current_gil = wallet.gil or 0
 
     local item_data = items_data[item_id]
+    if not item_data then
+        item_data = equipment_data[item_id]
+    end
     if not item_data then
         return nk.json_encode({error = "Item data not found"})
     end

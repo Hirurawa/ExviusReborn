@@ -43,7 +43,7 @@ offset_bottom = 120.0
 grow_horizontal = 2
 theme_override_constants/separation = 0
 
-[node name="TopRow" type="PanelContainer"]
+[node name="TopRow" type="PanelContainer" parent="."]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
@@ -82,7 +82,7 @@ text = "Lapis: 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BottomRow" type="PanelContainer"]
+[node name="BottomRow" type="PanelContainer" parent="."]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_2")
@@ -200,7 +200,7 @@ theme_override_font_sizes/font_size = 18
 text = "EXP"
 vertical_alignment = 1
 
-[node name="DebugXPContainer" type="HBoxContainer"]
+[node name="DebugXPContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 alignment = 1
 
@@ -212,7 +212,7 @@ placeholder_text = "XP Amount"
 layout_mode = 2
 text = "Add XP"
 
-[node name="DebugWalletContainer" type="HBoxContainer"]
+[node name="DebugWalletContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 alignment = 1
 

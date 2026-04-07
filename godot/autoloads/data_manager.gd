@@ -223,6 +223,7 @@ func perform_mission(mission_id: String) -> Dictionary:
 			var stats = result.stats
 			current_rank = int(stats.get("rank", current_rank))
 			current_xp = int(stats.get("xp", current_xp))
+			next_rank_xp = int(stats.get("next_rank_xp", next_rank_xp))
 			current_nrg = int(stats.get("current_nrg", current_nrg))
 			max_nrg = int(stats.get("max_nrg", max_nrg))
 			nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", nrg_regen_rate_seconds))

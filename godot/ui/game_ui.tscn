@@ -1,9 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://ditkrev5tgerl"]
 
-[ext_resource type="Script" path="res://ui/game_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bxxc7pktal8rf" path="res://ui/game_ui.gd" id="1_script"]
 
-[node name="GameUI" type="Control"]
-script = ExtResource("1_script")
+[node name="GameUI" type="Control" unique_id=323836925]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -12,3 +11,4 @@ anchor_bottom = 1.0
 offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")

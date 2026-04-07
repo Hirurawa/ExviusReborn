@@ -507,8 +507,9 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 		var tex_rect = TextureRect.new()
 		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tex_rect.custom_minimum_size = Vector2(20, 20)
+		tex_rect.custom_minimum_size = Vector2(16, 16)
 		tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tex_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 		var tex_path = "res://assets/icons/equipments/%s" % icon_name
 		if ResourceLoader.exists(tex_path):

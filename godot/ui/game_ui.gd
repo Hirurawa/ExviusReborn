@@ -2,7 +2,7 @@ extends Control
 
 
 func _ready():
-	# If any buttons exist in this UI, bind them to UIManager pushes
+	pass
 
 func _on_world_map_pressed():
 	UIManager.push("map_ui")

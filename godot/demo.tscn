@@ -474,6 +474,18 @@ text = "Magic"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Special"
+[node name="EquipmentTabButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Equipment"
+
+[node name="AbilityTabButton" type="Button" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Abilities"
+
 
 [node name="TraitContent" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer" unique_id=2060097757]
 layout_mode = 2

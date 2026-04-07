@@ -357,7 +357,7 @@ func equip_item_async(unit_id: String, slot: String, item_id: String) -> Diction
 	if result.is_exception():
 		var ex = result.get_exception()
 		return {"error": ex.message}
-
+	
 	var json = JSON.new()
 	var parse_result = json.parse(result.payload)
 	if parse_result == OK:

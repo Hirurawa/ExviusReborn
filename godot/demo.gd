@@ -102,6 +102,8 @@ var seconds_until_next_nrg: float = 0.0
 @onready var unit_detail_traits_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/TraitButton
 @onready var unit_detail_magic_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/MagicButton
 @onready var unit_detail_special_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/SpecialButton
+@onready var unit_detail_equipment_tab_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/EquipmentTabButton
+@onready var unit_detail_ability_tab_btn := $CanvasLayer/UnitDetailUI/VBoxContainer/TabsHBox/AbilityTabButton
 @onready var unit_detail_trait_content := $CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent
 @onready var unit_detail_magic_content := $CanvasLayer/UnitDetailUI/VBoxContainer/MagicContent
 @onready var unit_detail_special_content := $CanvasLayer/UnitDetailUI/VBoxContainer/SpecialContent
@@ -196,6 +198,8 @@ func _ready() -> void:
 	
 	var close_equip_btn = $CanvasLayer/EquipSelectionPopup/VBoxContainer/CloseButton
 	close_equip_btn.pressed.connect(func(): equip_selection_popup.hide())
+	unit_detail_equipment_tab_btn.pressed.connect(_on_unit_detail_equipment_tab_btn_pressed)
+	unit_detail_ability_tab_btn.pressed.connect(_on_unit_detail_ability_tab_btn_pressed)
 	unit_detail_equip_btn.pressed.connect(_on_unit_detail_equip_btn_pressed)
 	unit_detail_traits_btn.pressed.connect(_on_unit_detail_traits_btn_pressed)
 	unit_detail_magic_btn.pressed.connect(_on_unit_detail_magic_btn_pressed)
@@ -824,9 +828,9 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		child.queue_free()
 	for child in unit_detail_ability_grid.get_children():
 		child.queue_free()
-
+	
 	var equipment = unit_inst.get("equipment", {})
-
+	
 	var equip_slots = [
 		{"id": "r_hand", "name": "R. Hand", "types": ["Weapon", "Shield"]},
 		{"id": "l_hand", "name": "L. Hand", "types": ["Weapon", "Shield"]},
@@ -835,7 +839,7 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		{"id": "acc_1", "name": "Acc 1", "types": ["Accessory"]},
 		{"id": "acc_2", "name": "Acc 2", "types": ["Accessory"]}
 	]
-
+	
 	for slot_info in equip_slots:
 		var btn = Button.new()
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -846,7 +850,7 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			btn.text = slot_info.name + ": " + item_data.get("name", "Unknown")
 		else:
 			btn.text = slot_info.name + ": Empty"
-
+		
 		# Handle two-handed lock visually
 		var other_hand = "l_hand" if slot_info.id == "r_hand" else "r_hand"
 		if slot_info.id in ["r_hand", "l_hand"]:
@@ -856,10 +860,10 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 				if other_item_data.get("is_twohanded", false):
 					btn.text = slot_info.name + ": Locked"
 					btn.disabled = true
-
+		
 		btn.pressed.connect(_on_equip_slot_clicked.bind(unit_inst, slot_info.id, slot_info.types))
 		unit_detail_equipment_grid.add_child(btn)
-
+	
 	var ability_slots = unit_data.get("ability_slots", 1) # Note: this should be fetched properly if it depends on rarity
 	var entries = unit_data.get("entries", {})
 	var rarity = unit_inst.get("current_rarity", 1)
@@ -870,7 +874,7 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			break
 	if entry.has("ability_slots"):
 		ability_slots = entry.get("ability_slots")
-
+	
 	for i in range(ability_slots):
 		var slot_id = "ability_" + str(i + 1)
 		var btn = Button.new()
@@ -882,40 +886,40 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			btn.text = "Ability " + str(i+1) + ": " + item_data.get("name", "Unknown")
 		else:
 			btn.text = "Ability " + str(i+1) + ": Empty"
-
+		
 		btn.pressed.connect(_on_equip_slot_clicked.bind(unit_inst, slot_id, ["Materia"])) # Assuming Ability == Materia or similar
 		unit_detail_ability_grid.add_child(btn)
 
 func _on_equip_slot_clicked(unit_inst: Dictionary, slot_id: String, allowed_types: Array) -> void:
 	current_equip_unit_inst = unit_inst
 	current_equip_slot = slot_id
-
+	
 	owned_items = await server_connection.read_player_items_async()
 	equip_selection_popup.show()
-
+	
 	for child in equip_selection_list.get_children():
 		child.queue_free()
-
+	
 	var remove_btn = Button.new()
 	remove_btn.text = "Remove"
 	remove_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	remove_btn.custom_minimum_size = Vector2(0, 60)
 	remove_btn.pressed.connect(_on_equip_item_selected.bind(""))
 	equip_selection_list.add_child(remove_btn)
-
+	
 	var unit_data = game_data_units.get(unit_inst.get("unit_id", ""), {})
 	var allowed_equips = unit_data.get("equip", [])
-
+	
 	for item in owned_items:
 		if not item is Dictionary: continue
 		var item_id = item.get("item_id", "")
 		var item_data = game_data_equipment.get(item_id)
 		if not item_data: continue
-
+		
 		var item_type = item_data.get("type", "")
 		var item_type_id = item_data.get("type_id", -1)
 		var is_valid_slot = false
-
+		
 		# Validate slot
 		var item_slot = item_data.get("slot", "")
 		if "hand" in slot_id and (item_slot == "Weapon" or item_slot == "Shield"):
@@ -928,10 +932,10 @@ func _on_equip_slot_clicked(unit_inst: Dictionary, slot_id: String, allowed_type
 			is_valid_slot = true
 		elif "ability_" in slot_id and item_slot == "Materia":
 			is_valid_slot = true
-
+		
 		if not is_valid_slot: continue
 		if item_type_id not in allowed_equips and item_type_id != -1: continue # Check if unit can equip this type
-
+		
 		var btn = Button.new()
 		btn.text = item_data.get("name", "Unknown")
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -942,18 +946,18 @@ func _on_equip_slot_clicked(unit_inst: Dictionary, slot_id: String, allowed_type
 func _on_equip_item_selected(item_id: String) -> void:
 	equip_selection_popup.hide()
 	var instance_id = current_equip_unit_inst.get("instance_id", "")
-
+	
 	if item_id != "" and current_equip_slot in ["r_hand", "l_hand"]:
 		var item_data = game_data_equipment.get(item_id, {})
 		if item_data.get("is_twohanded", false):
 			var other_hand = "l_hand" if current_equip_slot == "r_hand" else "r_hand"
 			await server_connection.equip_item_async(instance_id, other_hand, "")
-
+	
 	var result = await server_connection.equip_item_async(instance_id, current_equip_slot, item_id)
 	if result.has("error"):
 		print("Equip error: ", result.error)
 		return
-
+	
 	# Refresh player units
 	owned_units_ids = await server_connection.read_player_units_async()
 	# Find the updated unit
@@ -961,7 +965,7 @@ func _on_equip_item_selected(item_id: String) -> void:
 		if u.get("instance_id") == instance_id:
 			current_equip_unit_inst = u
 			break
-
+	
 	_show_unit_detail(current_equip_unit_inst)
 
 
@@ -1046,19 +1050,19 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var equip_def = 0
 	var equip_mag = 0
 	var equip_spr = 0
-
+	
 	var equipment = unit_inst.get("equipment", {})
 	for slot_id in equipment:
 		var item_id = equipment[slot_id]
 		if item_id != "":
 			var item_data = game_data_equipment.get(item_id, {})
-			var stats = item_data.get("stats", {})
-			equip_hp += stats.get("HP", 0)
-			equip_mp += stats.get("MP", 0)
-			equip_atk += stats.get("ATK", 0)
-			equip_def += stats.get("DEF", 0)
-			equip_mag += stats.get("MAG", 0)
-			equip_spr += stats.get("SPR", 0)
+			var item_stats = item_data.get("stats", {})
+			equip_hp += item_stats.get("HP", 0)
+			equip_mp += item_stats.get("MP", 0)
+			equip_atk += item_stats.get("ATK", 0)
+			equip_def += item_stats.get("DEF", 0)
+			equip_mag += item_stats.get("MAG", 0)
+			equip_spr += item_stats.get("SPR", 0)
 
 	unit_detail_hp_value.text = str(int(hp + equip_hp))
 	unit_detail_mp_value.text = str(int(mp + equip_mp))
@@ -1192,16 +1196,34 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 func _on_unit_detail_equip_btn_pressed() -> void:
 	if unit_detail_equip_btn.text == "Stats":
 		unit_detail_equip_btn.text = "Equip"
+		unit_detail_equipment_tab_btn.hide()
+		unit_detail_ability_tab_btn.hide()
+		unit_detail_traits_btn.show()
+		unit_detail_magic_btn.show()
+		unit_detail_special_btn.show()
 		unit_detail_equipment_content.hide()
 		unit_detail_ability_content.hide()
 		_on_unit_detail_traits_btn_pressed()
 	else:
 		unit_detail_equip_btn.text = "Stats"
+		unit_detail_traits_btn.hide()
+		unit_detail_magic_btn.hide()
+		unit_detail_special_btn.hide()
+		unit_detail_equipment_tab_btn.show()
+		unit_detail_ability_tab_btn.show()
 		unit_detail_trait_content.hide()
 		unit_detail_magic_content.hide()
 		unit_detail_special_content.hide()
-		unit_detail_equipment_content.show()
-		unit_detail_ability_content.show()
+		_on_unit_detail_equipment_tab_btn_pressed()
+
+
+func _on_unit_detail_equipment_tab_btn_pressed() -> void:
+	unit_detail_equipment_content.show()
+	unit_detail_ability_content.hide()
+
+func _on_unit_detail_ability_tab_btn_pressed() -> void:
+	unit_detail_equipment_content.hide()
+	unit_detail_ability_content.show()
 
 func _on_unit_detail_traits_btn_pressed() -> void:
 	unit_detail_trait_content.show()
@@ -1209,7 +1231,7 @@ func _on_unit_detail_traits_btn_pressed() -> void:
 	unit_detail_special_content.hide()
 	unit_detail_equipment_content.hide()
 	unit_detail_ability_content.hide()
-	unit_detail_equip_btn.text = "Equip"
+	unit_detail_equip_btn.text = "Equip" 
 
 func _on_unit_detail_magic_btn_pressed() -> void:
 	unit_detail_trait_content.hide()
@@ -1217,7 +1239,7 @@ func _on_unit_detail_magic_btn_pressed() -> void:
 	unit_detail_special_content.hide()
 	unit_detail_equipment_content.hide()
 	unit_detail_ability_content.hide()
-	unit_detail_equip_btn.text = "Equip"
+	unit_detail_equip_btn.text = "Equip" 
 
 func _on_unit_detail_special_btn_pressed() -> void:
 	unit_detail_trait_content.hide()
@@ -1225,7 +1247,7 @@ func _on_unit_detail_special_btn_pressed() -> void:
 	unit_detail_special_content.show()
 	unit_detail_equipment_content.hide()
 	unit_detail_ability_content.hide()
-	unit_detail_equip_btn.text = "Equip"
+	unit_detail_equip_btn.text = "Equip" 
 
 func _on_unit_detail_back_button_pressed() -> void:
 	unit_detail_ui.hide()

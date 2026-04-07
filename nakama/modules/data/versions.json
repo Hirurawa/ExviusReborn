@@ -1,8 +1,10 @@
 {
-    "units": "v1.0.0",
-    "items": "v1.0.0",
-    "weapons": "v1.0.0",
-    "worlds": "v1.0.0",
-    "dungeons": "v1.0.0",
-    "missions": "v1.0.0"
+    "units":"v1.0.0",
+    "worlds":"v1.0.0",
+    "dungeons":"v1.0.0",
+    "missions":"v1.0.0",
+    "skills_ability":"v1.0.0",
+    "skills_magic":"v1.0.0",
+    "skills_passive":"v1.0.0",
+    "equipment":"v1.0.0"
 }

@@ -140,6 +140,9 @@ func push(scene_name_key: String, params: Dictionary = {}) -> void:
 	_menu_stack.append(instance)
 	canvas_layer.add_child(instance)
 
+	# Explicitly show the new instance in case the saved .tscn has visible = false
+	instance.show()
+
 	# Pass any parameters if the scene has an init function
 	if params and instance.has_method("init_scene"):
 		instance.init_scene(params)

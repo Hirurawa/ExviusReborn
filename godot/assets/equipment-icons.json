@@ -1,0 +1,127 @@
+{
+  "1": {
+    "type_id": 1,
+    "type": "Short Sword",
+    "icon": "dagger.png"
+  },
+  "2": {
+    "type_id": 2,
+    "type": "Sword",
+    "icon": "sword.png"
+  },
+  "3": {
+    "type_id": 3,
+    "type": "Great Sword",
+    "icon": "greatSword.png"
+  },
+  "4": {
+    "type_id": 4,
+    "type": "Katana",
+    "icon": "katana.png"
+  },
+  "5": {
+    "type_id": 5,
+    "type": "Staff",
+    "icon": "staff.png"
+  },
+  "6": {
+    "type_id": 6,
+    "type": "Rod",
+    "icon": "rod.png"
+  },
+  "7": {
+    "type_id": 7,
+    "type": "Bow",
+    "icon": "bow.png"
+  },
+  "8": {
+    "type_id": 8,
+    "type": "Axe",
+    "icon": "axe.png"
+  },
+  "9": {
+    "type_id": 9,
+    "type": "Hammer",
+    "icon": "hammer.png"
+  },
+  "10": {
+    "type_id": 10,
+    "type": "Spear",
+    "icon": "spear.png"
+  },
+  "11": {
+    "type_id": 11,
+    "type": "Instrument",
+    "icon": "harp.png"
+  },
+  "12": {
+    "type_id": 12,
+    "type": "Whip",
+    "icon": "whip.png"
+  },
+  "13": {
+    "type_id": 13,
+    "type": "Throwing Weapon",
+    "icon": "throwing.png"
+  },
+  "14": {
+    "type_id": 14,
+    "type": "Gun",
+    "icon": "gun.png"
+  },
+  "15": {
+    "type_id": 15,
+    "type": "Mace",
+    "icon": "mace.png"
+  },
+  "16": {
+    "type_id": 16,
+    "type": "Fist Weapon",
+    "icon": "fist.png"
+  },
+  "30": {
+    "type_id": 30,
+    "type": "Light Shield",
+    "icon": "lightShield.png"
+  },
+  "31": {
+    "type_id": 31,
+    "type": "Heavy Shield",
+    "icon": "heavyShield.png"
+  },
+  "40": {
+    "type_id": 40,
+    "type": "Hat",
+    "icon": "hat.png"
+  },
+  "41": {
+    "type_id": 41,
+    "type": "Helm",
+    "icon": "helm.png"
+  },
+  "50": {
+    "type_id": 50,
+    "type": "Cloth Armor",
+    "icon": "clothes.png"
+  },
+  "51": {
+    "type_id": 51,
+    "type": "Light Armor",
+    "icon": "lightArmor.png"
+  },
+  "52": {
+    "type_id": 52,
+    "type": "Heavy Armor",
+    "icon": "heavyArmor.png"
+  },
+  "53": {
+    "type_id": 53,
+    "type": "Robe",
+    "icon": "robe.png"
+  },
+  "60": {
+    "type_id": 60,
+    "type": "Accessory",
+    "icon": "accessory.png"
+  }
+}

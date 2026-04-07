@@ -2,6 +2,44 @@
 
 [ext_resource type="Script" uid="uid://bs520eu2basck" path="res://demo.gd" id="1_0bhed"]
 [ext_resource type="Script" uid="uid://dpryy3vvrydce" path="res://server_connection.gd" id="2_m0rpm"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/fire.png" id="elem_fire"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/ice.png" id="elem_ice"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/lightning.png" id="elem_lightning"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/water.png" id="elem_water"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/wind.png" id="elem_wind"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/earth.png" id="elem_earth"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/light.png" id="elem_light"]
+[ext_resource type="Texture2D" path="res://assets/icons/elements/dark.png" id="elem_dark"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/poison.png" id="ailm_poison"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/blind.png" id="ailm_blind"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/sleep.png" id="ailm_sleep"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/silence.png" id="ailm_silence"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/paralysis.png" id="ailm_paralysis"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/confuse.png" id="ailm_confuse"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/disease.png" id="ailm_disease"]
+[ext_resource type="Texture2D" path="res://assets/icons/ailments/petrification.png" id="ailm_petrification"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_TraitPanel"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.4, 0.6, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_TraitVal"]
+bg_color = Color(0.1, 0.1, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.3, 0.5, 1)
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
 bg_color = Color(0.02, 0.1, 0.3, 1)
@@ -500,130 +538,234 @@ layout_mode = 2
 theme_override_constants/h_separation = 5
 columns = 8
 
-[node name="Resist1" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=1353380742]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist1" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.8, 0.2, 0.2, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist1" unique_id=1933714840]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist1"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_fire")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist2" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=237981971]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist2" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.2, 0.2, 0.8, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist2" unique_id=1554590514]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist2"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_ice")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist3" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=1166928157]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist3" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.8, 0.8, 0.2, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist3" unique_id=739357277]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist3"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_lightning")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist4" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=1752899881]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist4" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.2, 0.6, 0.8, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist4" unique_id=135154851]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist4"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_water")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist5" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=803039852]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist5" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.2, 0.8, 0.2, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist5" unique_id=1809662560]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist5"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_wind")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist6" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=1150171891]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist6" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.6, 0.4, 0.2, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist6" unique_id=611290583]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist6"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_earth")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist7" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=137051967]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist7" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.8, 0.8, 0.8, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist7" unique_id=1714011259]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist7"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_light")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist8" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid" unique_id=717680359]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist8" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.4, 0.2, 0.6, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist8" unique_id=1088286957]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist8"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("elem_dark")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -637,130 +779,234 @@ layout_mode = 2
 theme_override_constants/h_separation = 5
 columns = 8
 
-[node name="Resist1" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=1954636816]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist1" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist1" unique_id=1664053043]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist1"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_poison")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist2" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=1581938953]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist2" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist2" unique_id=1354568478]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist2"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_blind")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist3" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=330362489]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist3" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist3" unique_id=988353614]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist3"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_sleep")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist4" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=809835709]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist4" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist4" unique_id=1259372316]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist4"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_silence")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist5" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=419559733]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist5" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist5" unique_id=939869225]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist5"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_paralysis")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist6" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=54878682]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist6" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist6" unique_id=1251482279]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist6"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_confuse")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist7" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=309028445]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist7" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist7" unique_id=219292556]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist7"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_disease")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist8" type="ColorRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid" unique_id=236905497]
-custom_minimum_size = Vector2(40, 40)
+[node name="Resist8" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid"]
+custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist8" unique_id=1359751842]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist8"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("ailm_petrification")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
+
+[node name="Label" type="Label" parent="CanvasLayer/UnitDetailUI/VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox/ValPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1

@@ -1,5 +1,7 @@
 [gd_scene load_steps=2 format=3]
 
+[ext_resource type="Script" path="res://ui/shop_ui.gd" id="1_script"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
 bg_color = Color(0.02, 0.1, 0.3, 1)
 border_width_left = 2
@@ -11,8 +13,6 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
-
-[ext_resource type="Script" path="res://ui/shop_ui.gd" id="1_script"]
 
 [node name="ShopUI" type="Control"]
 script = ExtResource("1_script")

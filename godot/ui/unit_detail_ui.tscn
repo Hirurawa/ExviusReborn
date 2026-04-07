@@ -750,10 +750,11 @@ theme_override_constants/separation = 20
 layout_mode = 2
 text = "0.0%"
 
-[node name="TMIcon" type="ColorRect" parent="VBoxContainer/TraitContent/TrustMasterHBox"]
+[node name="TMIcon" type="TextureRect" parent="VBoxContainer/TraitContent/TrustMasterHBox"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-color = Color(0.4, 0.6, 0.8, 1)
+expand_mode = 1
+stretch_mode = 5
 
 [node name="TMInfoVBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/TrustMasterHBox"]
 layout_mode = 2

@@ -204,6 +204,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "0"
 
+[node name="EquipIconsGrid" type="GridContainer" parent="VBoxContainer/CharInfoHBox/StatsVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+columns = 12
+
 [node name="TabsHBox" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 5

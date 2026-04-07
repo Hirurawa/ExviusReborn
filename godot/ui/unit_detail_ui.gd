@@ -33,6 +33,10 @@ extends Control
 
 var current_unit_inst: Dictionary = {}
 
+var _current_major_mode: String = "Equip"
+var _current_stats_sub_tab: String = "Equipment"
+var _current_equip_sub_tab: String = "Traits"
+
 func _ready():
 	unit_detail_back_button.pressed.connect(func(): UIManager.pop())
 
@@ -169,7 +173,28 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 
 	_populate_skills(unit_inst, unit_data)
 	_populate_equipment_slots(unit_inst, unit_data)
-	_on_unit_detail_traits_btn_pressed()
+	
+	if _current_major_mode == "Equip":
+		if _current_equip_sub_tab == "Traits":
+			_on_unit_detail_traits_btn_pressed()
+		elif _current_equip_sub_tab == "Magic":
+			_on_unit_detail_magic_btn_pressed()
+		elif _current_equip_sub_tab == "Special":
+			_on_unit_detail_special_btn_pressed()
+	else:
+		if _current_stats_sub_tab == "Equipment":
+			_on_unit_detail_equipment_tab_btn_pressed()
+		elif _current_stats_sub_tab == "Ability":
+			_on_unit_detail_ability_tab_btn_pressed()
+			
+		# Ensure the correct main buttons are visible
+		unit_detail_equip_btn.text = "Stats"
+		unit_detail_traits_btn.hide()
+		unit_detail_magic_btn.hide()
+		unit_detail_special_btn.hide()
+		unit_detail_equipment_tab_btn.show()
+		unit_detail_ability_tab_btn.show()
+
 
 func _create_skill_panel(skill_data: Dictionary) -> PanelContainer:
 	var panel = PanelContainer.new()
@@ -347,6 +372,7 @@ func _on_equip_slot_clicked(unit_inst: Dictionary, slot_id: String, allowed_type
 
 func _on_unit_detail_equip_btn_pressed() -> void:
 	if unit_detail_equip_btn.text == "Stats":
+		_current_major_mode = "Equip"
 		unit_detail_equip_btn.text = "Equip"
 		unit_detail_equipment_tab_btn.hide()
 		unit_detail_ability_tab_btn.hide()
@@ -355,8 +381,14 @@ func _on_unit_detail_equip_btn_pressed() -> void:
 		unit_detail_special_btn.show()
 		unit_detail_equipment_content.hide()
 		unit_detail_ability_content.hide()
-		_on_unit_detail_traits_btn_pressed()
+		if _current_equip_sub_tab == "Traits":
+			_on_unit_detail_traits_btn_pressed()
+		elif _current_equip_sub_tab == "Magic":
+			_on_unit_detail_magic_btn_pressed()
+		elif _current_equip_sub_tab == "Special":
+			_on_unit_detail_special_btn_pressed()
 	else:
+		_current_major_mode = "Stats"
 		unit_detail_equip_btn.text = "Stats"
 		unit_detail_traits_btn.hide()
 		unit_detail_magic_btn.hide()
@@ -366,17 +398,23 @@ func _on_unit_detail_equip_btn_pressed() -> void:
 		unit_detail_trait_content.hide()
 		unit_detail_magic_content.hide()
 		unit_detail_special_content.hide()
-		_on_unit_detail_equipment_tab_btn_pressed()
+		if _current_stats_sub_tab == "Equipment":
+			_on_unit_detail_equipment_tab_btn_pressed()
+		elif _current_stats_sub_tab == "Ability":
+			_on_unit_detail_ability_tab_btn_pressed()
 
 func _on_unit_detail_equipment_tab_btn_pressed() -> void:
+	_current_stats_sub_tab = "Equipment"
 	unit_detail_equipment_content.show()
 	unit_detail_ability_content.hide()
 
 func _on_unit_detail_ability_tab_btn_pressed() -> void:
+	_current_stats_sub_tab = "Ability"
 	unit_detail_equipment_content.hide()
 	unit_detail_ability_content.show()
 
 func _on_unit_detail_traits_btn_pressed() -> void:
+	_current_equip_sub_tab = "Traits"
 	unit_detail_trait_content.show()
 	unit_detail_magic_content.hide()
 	unit_detail_special_content.hide()
@@ -385,6 +423,7 @@ func _on_unit_detail_traits_btn_pressed() -> void:
 	unit_detail_equip_btn.text = "Equip"
 
 func _on_unit_detail_magic_btn_pressed() -> void:
+	_current_equip_sub_tab = "Magic"
 	unit_detail_trait_content.hide()
 	unit_detail_magic_content.show()
 	unit_detail_special_content.hide()
@@ -393,6 +432,7 @@ func _on_unit_detail_magic_btn_pressed() -> void:
 	unit_detail_equip_btn.text = "Equip"
 
 func _on_unit_detail_special_btn_pressed() -> void:
+	_current_equip_sub_tab = "Special"
 	unit_detail_trait_content.hide()
 	unit_detail_magic_content.hide()
 	unit_detail_special_content.show()

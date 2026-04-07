@@ -44,9 +44,9 @@ func _populate_list():
 		var item_slot = item_data.get("slot", "")
 		if "hand" in current_slot_id and (item_slot == "Weapon" or item_slot == "Shield"):
 			is_valid_slot = true
-		elif "head" in current_slot_id and item_slot == "Head":
+		elif "head" in current_slot_id and item_slot == "Headgear":
 			is_valid_slot = true
-		elif "body" in current_slot_id and item_slot == "Body":
+		elif "body" in current_slot_id and item_slot == "Chest":
 			is_valid_slot = true
 		elif "acc_" in current_slot_id and item_slot == "Accessory":
 			is_valid_slot = true

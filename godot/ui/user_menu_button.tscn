@@ -1,11 +1,15 @@
 [gd_scene format=3]
 
 [node name="UserMenuButton" type="MenuButton"]
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 110.0
-offset_bottom = 60.0
-text = "Menu"
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 130.0
+offset_right = -10.0
+offset_bottom = 161.0
+grow_horizontal = 0
+text = "User Options"
 item_count = 2
 popup/item_0/text = "Edit Profile"
 popup/item_0/id = 0

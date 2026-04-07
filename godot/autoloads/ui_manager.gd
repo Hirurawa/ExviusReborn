@@ -92,7 +92,7 @@ func _update_overlays() -> void:
 			bottom_nav.show()
 
 	if world_map_button:
-		if current_scene_name in hide_top_and_bottom or current_scene_name in hide_bottom:
+		if current_scene_name in hide_top_and_bottom or current_scene_name in hide_bottom or current_scene_name != "gameui":
 			world_map_button.hide()
 		else:
 			world_map_button.show()
@@ -117,6 +117,13 @@ func push(scene_name_key: String, params: Dictionary = {}) -> void:
 	if not _scenes_map.has(scene_name_key):
 		push_error("UIManager: Unknown scene key %s" % scene_name_key)
 		return
+
+	# Check if the scene is already at the top of the stack
+	if not _menu_stack.is_empty():
+		var current_top = _menu_stack.back().name.to_lower()
+		var requested = scene_name_key.replace("_", "").to_lower()
+		if current_top == requested:
+			return # Already on this menu
 
 	var scene_path = _scenes_map[scene_name_key]
 	var packed_scene = load(scene_path)

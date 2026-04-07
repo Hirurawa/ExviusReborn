@@ -9,8 +9,8 @@ extends PanelContainer
 
 func _ready():
 	home_button.pressed.connect(func(): UIManager.set_root("game_ui"))
-	units_button.pressed.connect(func(): UIManager.push("units_ui"))
-	items_button.pressed.connect(func(): UIManager.push("items_ui"))
-	shop_button.pressed.connect(func(): UIManager.push("shop_ui"))
-	summon_button.pressed.connect(func(): UIManager.push("summon_ui"))
-	friends_button.pressed.connect(func(): UIManager.push("friends_ui"))
+	units_button.pressed.connect(func(): UIManager.set_root("units_ui"))
+	items_button.pressed.connect(func(): UIManager.set_root("items_ui"))
+	shop_button.pressed.connect(func(): UIManager.set_root("shop_ui"))
+	summon_button.pressed.connect(func(): UIManager.set_root("summon_ui"))
+	friends_button.pressed.connect(func(): UIManager.set_root("friends_ui"))

@@ -115,11 +115,25 @@ text = "Details"
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="SpritePlaceholder" type="TextureRect" parent="VBoxContainer/CharInfoHBox"]
+[node name="IllustrationButton" type="TextureButton" parent="VBoxContainer/CharInfoHBox"]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="SpritePlaceholder" type="TextureRect" parent="VBoxContainer/CharInfoHBox/IllustrationButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="AnimSprite" type="Sprite2D" parent="VBoxContainer/CharInfoHBox/IllustrationButton"]
+visible = false
+centered = false
 
 [node name="StatsVBox" type="VBoxContainer" parent="VBoxContainer/CharInfoHBox"]
 layout_mode = 2

@@ -559,7 +559,7 @@ func _on_illustration_pressed() -> void:
 	var png_path = "res://assets/unit_spritesheets/%s-atk.png" % unit_id
 	var json_path = "res://assets/unit_spritesheets/%s-atk.json" % unit_id
 
-	if not ResourceLoader.exists(png_path) or not FileAccess.file_exists(json_path):
+	if not FileAccess.file_exists(png_path) or not FileAccess.file_exists(json_path):
 		return
 
 	var file = FileAccess.open(json_path, FileAccess.READ)
@@ -571,10 +571,6 @@ func _on_illustration_pressed() -> void:
 	if typeof(json_data) != TYPE_DICTIONARY:
 		return
 
-	var tex = load(png_path)
-	if not tex:
-		return
-
 	var frame_rect = json_data.get("frameRect", {})
 	var image_width = json_data.get("imageWidth", 0)
 	var frame_width = frame_rect.get("width", 0)
@@ -583,13 +579,27 @@ func _on_illustration_pressed() -> void:
 	if frame_width <= 0 or image_width <= 0:
 		return
 
+	# Load the file as an Image (CPU) instead of Texture (GPU) to bypass Vulkan maximum dimension limits on ultra-wide spritesheets
+	var file_bytes = FileAccess.get_file_as_bytes(png_path)
+	var image = Image.new()
+	var err = image.load_png_from_buffer(file_bytes)
+	if err != OK:
+		return
+
+	var num_frames = image_width / frame_width
+	var frames: Array[Texture2D] = []
+
+	for i in range(num_frames):
+		var x = i * frame_width
+		var region = image.get_region(Rect2i(x, 0, frame_width, frame_height))
+		frames.append(ImageTexture.create_from_image(region))
+
 	_is_animating = true
 	unit_detail_sprite.hide()
 
-	# Set hframes BEFORE setting texture to avoid Godot trying to render a massive single frame
-	anim_sprite.hframes = image_width / frame_width
+	anim_sprite.hframes = 1
 	anim_sprite.vframes = 1
-	anim_sprite.texture = tex
+	anim_sprite.texture = frames[0] if frames.size() > 0 else null
 	anim_sprite.show()
 
 	# Scale to fit the 150x150 container roughly, maintaining aspect
@@ -602,15 +612,16 @@ func _on_illustration_pressed() -> void:
 	anim_sprite.position = Vector2((150.0 - scaled_width) / 2.0, (150.0 - scaled_height) / 2.0)
 
 	var frame_delays = json_data.get("frameDelays", [])
-	var num_frames = anim_sprite.hframes
 
 	for i in range(num_frames):
-		anim_sprite.frame = i
+		anim_sprite.texture = frames[i]
 		var delay = 0.05 # default
 		if i < frame_delays.size():
 			delay = float(frame_delays[i]) / 60.0 # Assuming 60 fps base
 
 		await get_tree().create_timer(delay).timeout
+		if not is_instance_valid(self):
+			return
 
 	anim_sprite.hide()
 	unit_detail_sprite.show()

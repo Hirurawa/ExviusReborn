@@ -1,6 +1,8 @@
 extends Control
 
-@onready var unit_detail_sprite = $VBoxContainer/CharInfoHBox/SpritePlaceholder
+@onready var illustration_button = $VBoxContainer/CharInfoHBox/IllustrationButton
+@onready var unit_detail_sprite = $VBoxContainer/CharInfoHBox/IllustrationButton/SpritePlaceholder
+@onready var anim_sprite = $VBoxContainer/CharInfoHBox/IllustrationButton/AnimSprite
 @onready var unit_detail_back_button = $VBoxContainer/TopBar/BackButton
 @onready var unit_detail_name_label = $VBoxContainer/TopBar/TitleBox/NameLabel
 @onready var unit_detail_rarity_label = $VBoxContainer/TopBar/TitleBox/InfoHBox/RarityLabel
@@ -43,9 +45,11 @@ var current_unit_inst: Dictionary = {}
 var _current_major_mode: String = "Equip"
 var _current_stats_sub_tab: String = "Equipment"
 var _current_equip_sub_tab: String = "Traits"
+var _is_animating: bool = false
 
 func _ready():
 	unit_detail_back_button.pressed.connect(func(): UIManager.pop())
+	illustration_button.pressed.connect(_on_illustration_pressed)
 
 	unit_detail_equipment_tab_btn.pressed.connect(_on_unit_detail_equipment_tab_btn_pressed)
 	unit_detail_ability_tab_btn.pressed.connect(_on_unit_detail_ability_tab_btn_pressed)
@@ -543,3 +547,70 @@ func _on_unit_add_xp_pressed(instance_id: String) -> void:
 
 func _on_unit_awaken_pressed(instance_id: String) -> void:
 	DataManager.awaken_unit(instance_id)
+
+func _on_illustration_pressed() -> void:
+	if _is_animating or current_unit_inst.is_empty():
+		return
+
+	var unit_id = current_unit_inst.get("unit_id", "")
+	if unit_id == "":
+		return
+
+	var png_path = "res://assets/unit_spritesheets/%s-atk.png" % unit_id
+	var json_path = "res://assets/unit_spritesheets/%s-atk.json" % unit_id
+
+	if not ResourceLoader.exists(png_path) or not FileAccess.file_exists(json_path):
+		return
+
+	var file = FileAccess.open(json_path, FileAccess.READ)
+	if not file:
+		return
+
+	var json_text = file.get_as_text()
+	var json_data = JSON.parse_string(json_text)
+	if typeof(json_data) != TYPE_DICTIONARY:
+		return
+
+	var tex = load(png_path)
+	if not tex:
+		return
+
+	_is_animating = true
+	unit_detail_sprite.hide()
+	anim_sprite.show()
+	anim_sprite.texture = tex
+
+	var frame_rect = json_data.get("frameRect", {})
+	var image_width = json_data.get("imageWidth", 0)
+	var frame_width = frame_rect.get("width", 0)
+	var frame_height = frame_rect.get("height", 0)
+
+	if frame_width > 0 and image_width > 0:
+		anim_sprite.hframes = image_width / frame_width
+		# Scale to fit the 150x150 container roughly, maintaining aspect
+		var scale_factor = min(150.0 / frame_width, 150.0 / frame_height)
+		anim_sprite.scale = Vector2(scale_factor, scale_factor)
+
+		# Center the sprite
+		var scaled_width = frame_width * scale_factor
+		var scaled_height = frame_height * scale_factor
+		anim_sprite.position = Vector2((150.0 - scaled_width) / 2.0, (150.0 - scaled_height) / 2.0)
+	else:
+		anim_sprite.hframes = 1
+		anim_sprite.scale = Vector2(1, 1)
+		anim_sprite.position = Vector2(0, 0)
+
+	var frame_delays = json_data.get("frameDelays", [])
+	var num_frames = anim_sprite.hframes
+
+	for i in range(num_frames):
+		anim_sprite.frame = i
+		var delay = 0.05 # default
+		if i < frame_delays.size():
+			delay = float(frame_delays[i]) / 60.0 # Assuming 60 fps base
+
+		await get_tree().create_timer(delay).timeout
+
+	anim_sprite.hide()
+	unit_detail_sprite.show()
+	_is_animating = false

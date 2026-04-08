@@ -575,30 +575,31 @@ func _on_illustration_pressed() -> void:
 	if not tex:
 		return
 
-	_is_animating = true
-	unit_detail_sprite.hide()
-	anim_sprite.show()
-	anim_sprite.texture = tex
-
 	var frame_rect = json_data.get("frameRect", {})
 	var image_width = json_data.get("imageWidth", 0)
 	var frame_width = frame_rect.get("width", 0)
 	var frame_height = frame_rect.get("height", 0)
 
-	if frame_width > 0 and image_width > 0:
-		anim_sprite.hframes = image_width / frame_width
-		# Scale to fit the 150x150 container roughly, maintaining aspect
-		var scale_factor = min(150.0 / frame_width, 150.0 / frame_height)
-		anim_sprite.scale = Vector2(scale_factor, scale_factor)
+	if frame_width <= 0 or image_width <= 0:
+		return
 
-		# Center the sprite
-		var scaled_width = frame_width * scale_factor
-		var scaled_height = frame_height * scale_factor
-		anim_sprite.position = Vector2((150.0 - scaled_width) / 2.0, (150.0 - scaled_height) / 2.0)
-	else:
-		anim_sprite.hframes = 1
-		anim_sprite.scale = Vector2(1, 1)
-		anim_sprite.position = Vector2(0, 0)
+	_is_animating = true
+	unit_detail_sprite.hide()
+
+	# Set hframes BEFORE setting texture to avoid Godot trying to render a massive single frame
+	anim_sprite.hframes = image_width / frame_width
+	anim_sprite.vframes = 1
+	anim_sprite.texture = tex
+	anim_sprite.show()
+
+	# Scale to fit the 150x150 container roughly, maintaining aspect
+	var scale_factor = min(150.0 / frame_width, 150.0 / frame_height)
+	anim_sprite.scale = Vector2(scale_factor, scale_factor)
+
+	# Center the sprite
+	var scaled_width = frame_width * scale_factor
+	var scaled_height = frame_height * scale_factor
+	anim_sprite.position = Vector2((150.0 - scaled_width) / 2.0, (150.0 - scaled_height) / 2.0)
 
 	var frame_delays = json_data.get("frameDelays", [])
 	var num_frames = anim_sprite.hframes

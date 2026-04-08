@@ -556,7 +556,7 @@ func _on_illustration_pressed() -> void:
 	if unit_id == "":
 		return
 
-	var png_path = "res://assets/unit_spritesheets/%s-atk.png" % unit_id
+	var png_path = "res://assets/unit_spritesheets/%s-atk.rawpng" % unit_id
 	var json_path = "res://assets/unit_spritesheets/%s-atk.json" % unit_id
 
 	if not FileAccess.file_exists(png_path) or not FileAccess.file_exists(json_path):

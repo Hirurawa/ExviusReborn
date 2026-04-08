@@ -12,6 +12,7 @@ extends Control
 @onready var unit_detail_def_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/DEFValue
 @onready var unit_detail_mag_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MAGValue
 @onready var unit_detail_spr_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/SPRValue
+@onready var unit_detail_equip_icons_grid = $VBoxContainer/CharInfoHBox/StatsVBox/EquipIconsGrid
 @onready var unit_detail_add_xp_button = $VBoxContainer/ActionsHBox/AddXPButton
 @onready var unit_detail_awaken_button = $VBoxContainer/ActionsHBox/AwakenButton
 
@@ -166,6 +167,8 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	unit_detail_def_value.text = str(int(def_stat + equip_def))
 	unit_detail_mag_value.text = str(int(mag + equip_mag))
 	unit_detail_spr_value.text = str(int(spr + equip_spr))
+
+	_populate_equip_icons_grid(unit_data)
 
 	for connection in unit_detail_add_xp_button.pressed.get_connections():
 		unit_detail_add_xp_button.pressed.disconnect(connection["callable"])
@@ -481,6 +484,41 @@ func _on_unit_detail_traits_btn_pressed() -> void:
 	unit_detail_equipment_content.hide()
 	unit_detail_ability_content.hide()
 	unit_detail_equip_btn.text = "Equip"
+
+func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
+	for child in unit_detail_equip_icons_grid.get_children():
+		child.queue_free()
+
+	var allowed_equip = unit_data.get("equip", [])
+	var equip_icons_data = DataManager.game_data_equipment_icons
+
+	var valid_keys = []
+	for key in equip_icons_data.keys():
+		var type_id = equip_icons_data[key].get("type_id", 0)
+		if type_id < 60:
+			valid_keys.append(key)
+
+	valid_keys.sort_custom(func(a, b): return int(a) < int(b))
+
+	for key in valid_keys:
+		var item = equip_icons_data[key]
+		var type_id = item.get("type_id", 0)
+		var icon_name = item.get("icon", "")
+		var tex_rect = TextureRect.new()
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex_rect.custom_minimum_size = Vector2(16, 16)
+		tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tex_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+		var tex_path = "res://assets/icons/equipments/%s" % icon_name
+		if ResourceLoader.exists(tex_path):
+			tex_rect.texture = load(tex_path)
+
+		if not (type_id in allowed_equip or float(type_id) in allowed_equip):
+			tex_rect.modulate = Color(0.3, 0.3, 0.3, 1.0)
+
+		unit_detail_equip_icons_grid.add_child(tex_rect)
 
 func _on_unit_detail_magic_btn_pressed() -> void:
 	_current_equip_sub_tab = "Magic"

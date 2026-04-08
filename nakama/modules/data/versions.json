@@ -6,5 +6,9 @@
     "skills_ability":"v1.0.0",
     "skills_magic":"v1.0.0",
     "skills_passive":"v1.0.0",
-    "equipment":"v1.0.0"
+    "equipment":"v1.0.0",
+    "equipment-icons":"v1.0.0",
+    "items":"v1.0.0",
+    "limitbursts":"v1.0.0",
+    "materia":"v1.0.0"
 }

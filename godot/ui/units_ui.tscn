@@ -1,38 +1,290 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://cx6i8f9a0x1"]
 
 [ext_resource type="Script" path="res://ui/units_ui.gd" id="1_script"]
 
 [node name="UnitsUI" type="Control"]
-script = ExtResource("1_script")
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 120.0
+offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+[node name="ManagePartyLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Units"
-horizontal_alignment = 1
+text = "Manage Party"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+[node name="PartyHeaderHBox" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
+alignment = 1
 
-[node name="UnitsListContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer"]
+[node name="PrevPartyButton" type="Button" parent="VBoxContainer/PartyHeaderHBox"]
+layout_mode = 2
+text = "<"
+
+[node name="PartyNameLabel" type="Label" parent="VBoxContainer/PartyHeaderHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "PARTY 1"
+horizontal_alignment = 1
+
+[node name="NextPartyButton" type="Button" parent="VBoxContainer/PartyHeaderHBox"]
+layout_mode = 2
+text = ">"
+
+[node name="PaginationHBox" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Dot1" type="Label" parent="VBoxContainer/PaginationHBox"]
+layout_mode = 2
+text = "●"
+
+[node name="Dot2" type="Label" parent="VBoxContainer/PaginationHBox"]
+layout_mode = 2
+text = "○"
+
+[node name="Dot3" type="Label" parent="VBoxContainer/PaginationHBox"]
+layout_mode = 2
+text = "○"
+
+[node name="Dot4" type="Label" parent="VBoxContainer/PaginationHBox"]
+layout_mode = 2
+text = "○"
+
+[node name="Dot5" type="Label" parent="VBoxContainer/PaginationHBox"]
+layout_mode = 2
+text = "○"
+
+[node name="PartySlotsHBox" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
 size_flags_vertical = 3
-columns = 5
+alignment = 1
+
+[node name="Slot1" type="Button" parent="VBoxContainer/PartySlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot1"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot1"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot2" type="Button" parent="VBoxContainer/PartySlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot2"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot2"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot3" type="Button" parent="VBoxContainer/PartySlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot3"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot3"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot4" type="Button" parent="VBoxContainer/PartySlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot4"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot4"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot5" type="Button" parent="VBoxContainer/PartySlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot5"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot5"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BottomButtonsGrid" type="GridContainer" parent="VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="ViewUnitsButton" type="Button" parent="VBoxContainer/BottomButtonsGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "View Units"
+
+[node name="AwakenAbilitiesButton" type="Button" parent="VBoxContainer/BottomButtonsGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Awaken Abilities (Placeholder)"
+
+[node name="EnhanceUnitsButton" type="Button" parent="VBoxContainer/BottomButtonsGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enhance Units (Placeholder)"
+
+[node name="AwakenUnitsButton" type="Button" parent="VBoxContainer/BottomButtonsGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Awaken Units (Placeholder)"

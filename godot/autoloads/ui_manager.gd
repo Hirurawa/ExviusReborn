@@ -17,6 +17,8 @@ var _scenes_map: Dictionary = {
 	"shop_ui": "res://ui/shop_ui.tscn",
 	"map_ui": "res://ui/map_ui.tscn",
 	"units_ui": "res://ui/units_ui.tscn",
+	"unit_selector_ui": "res://ui/unit_selector_ui.tscn",
+	"unit_stats_popup": "res://ui/unit_stats_popup.tscn",
 	"unit_detail_ui": "res://ui/unit_detail_ui.tscn",
 	"items_ui": "res://ui/items_ui.tscn",
 	"friends_ui": "res://ui/friends_ui.tscn",

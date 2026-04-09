@@ -13,6 +13,8 @@ signal units_updated(units: Array)
 signal items_updated(items: Array)
 signal friends_updated(friends: Object)
 signal friend_action_result(success: bool, message: String)
+signal parties_updated(parties: Array)
+signal party_save_requested(new_parties: Array)
 
 var server_connection: Node
 
@@ -29,6 +31,7 @@ var lapis: int = 0
 
 var owned_units_ids: Array = []
 var owned_items: Array = []
+var parties: Array = []
 
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
@@ -50,6 +53,8 @@ func _ready():
 	server_connection = server_script.new()
 	server_connection.name = "ServerConnection"
 	add_child(server_connection)
+
+	party_save_requested.connect(save_parties)
 
 func _process(delta: float) -> void:
 	if max_nrg > 0 and current_nrg < max_nrg:
@@ -107,6 +112,9 @@ func _load_initial_data(email: String):
 
 	owned_items = await server_connection.read_player_items_async()
 	items_updated.emit(owned_items)
+
+	parties = await server_connection.get_parties_async()
+	parties_updated.emit(parties)
 
 	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
 		AssetPatcher.patch_progress.connect(func(file_name, status):
@@ -174,6 +182,13 @@ func buy_item(item_id: String, quantity: int) -> Dictionary:
 		if result.has("wallet"):
 			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 			_update_wallet_data(wallet)
+	return result
+
+func save_parties(new_parties: Array) -> Dictionary:
+	var result = await server_connection.save_parties_async(new_parties)
+	if not result.has("error"):
+		parties = new_parties
+		parties_updated.emit(parties)
 	return result
 
 func summon_units(amount: int) -> Array:

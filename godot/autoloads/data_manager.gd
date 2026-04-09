@@ -41,6 +41,7 @@ var game_data_skills_ability: Dictionary = {}
 var game_data_limitbursts: Dictionary = {}
 var game_data_materia: Dictionary = {}
 var game_data_equipment_icons: Dictionary = {}
+var game_data_monsters = []
 
 var account_info: Object = null
 
@@ -138,6 +139,7 @@ func _on_patch_complete():
 	game_data_limitbursts = AssetPatcher.get_data("limitbursts")
 	game_data_materia = AssetPatcher.get_data("materia")
 	game_data_equipment_icons = AssetPatcher.get_data("equipment-icons")
+	game_data_monsters = AssetPatcher.get_data("monsters")
 
 func _update_wallet_data(wallet: Dictionary):
 	gil = int(wallet.get("gil", 0))

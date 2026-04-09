@@ -3,7 +3,7 @@ extends Node
 signal patch_progress(file_name: String, status: String)
 signal patch_complete
 
-var files_to_patch = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons"]
+var files_to_patch = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons", "monsters"]
 var current_patch_index = 0
 
 var cached_data = {}
@@ -167,7 +167,7 @@ func _load_from_cache(file_type: String):
 	push_warning("Failed to load %s from cache, using empty dictionary." % file_type)
 	cached_data[file_type] = {}
 
-func get_data(file_type: String) -> Dictionary:
+func get_data(file_type: String):
 	if cached_data.has(file_type):
 		return cached_data[file_type]
 	return {}

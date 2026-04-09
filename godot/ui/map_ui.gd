@@ -21,6 +21,7 @@ var _last_mouse_pos: Vector2 = Vector2.ZERO
 var current_selected_world: String = ""
 var current_selected_region: String = ""
 var current_selected_subregion: String = ""
+var current_selected_dungeon_id: String = ""
 
 func _ready():
 	map_back_button.pressed.connect(func(): UIManager.pop())
@@ -200,6 +201,7 @@ func _on_map_subregion_selected(index: int) -> void:
 			map_content.add_child(btn)
 
 func _on_dungeon_clicked(dungeon_id: String) -> void:
+	current_selected_dungeon_id = dungeon_id
 	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
 	var d_names = dungeon_data.get("names", [])
 	if d_names.size() > 0 and d_names[0]:
@@ -305,8 +307,5 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 
 
 func _on_start_mission_pressed(mission_id: String) -> void:
-	var result = await DataManager.perform_mission(mission_id)
-	if result.has("error"):
-		print("Failed to start mission: ", result.error)
-	else:
-		print("Mission started successfully!")
+	mission_details_popup.hide()
+	UIManager.push("combat_ui", {"mission_id": mission_id, "dungeon_id": current_selected_dungeon_id})

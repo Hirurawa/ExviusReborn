@@ -44,7 +44,7 @@ func _populate_monsters(dungeon_id: String) -> void:
 					break
 		elif typeof(monsters_array) == TYPE_DICTIONARY:
 			# fallback just in case
-			extra_details = monsters_array.get(m_name, {})
+			extra_details = monsters_array.get(m_name)
 
 		var vbox = VBoxContainer.new()
 		var pnl = PanelContainer.new()
@@ -61,20 +61,27 @@ func _populate_monsters(dungeon_id: String) -> void:
 
 		var stats_lbl = Label.new()
 		stats_lbl.text = "Lv: %s | HP: %s | MP: %s | EXP: %s | Gil: %s" % [
-			str(dungeon_monster.get("level", "?")),
-			str(dungeon_monster.get("hp", "?")),
-			str(dungeon_monster.get("mp", "?")),
-			str(dungeon_monster.get("exp", "?")),
-			str(dungeon_monster.get("gil", "?"))
+			str(int(dungeon_monster.get("level", "?"))),
+			str(int(dungeon_monster.get("hp", "?"))),
+			str(int(dungeon_monster.get("mp", "?"))),
+			str(int(dungeon_monster.get("exp", "?"))),
+			str(int(dungeon_monster.get("gil", "?")))
 		]
 		inner_vbox.add_child(stats_lbl)
 
-		if extra_details.has("description"):
-			var desc_lbl = Label.new()
-			desc_lbl.text = str(extra_details.get("description", ""))
-			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			desc_lbl.add_theme_font_size_override("font_size", 12)
-			inner_vbox.add_child(desc_lbl)
+		#if extra_details.has("description"):
+			#var desc_lbl = Label.new()
+			#desc_lbl.text = str(extra_details.get("description", ""))
+			#desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			#desc_lbl.add_theme_font_size_override("font_size", 12)
+			#inner_vbox.add_child(desc_lbl)
+
+		if extra_details.has("resistances"):
+			var res_lbl = Label.new()
+			res_lbl.text = str(extra_details.get("resistances", ""))
+			res_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			res_lbl.add_theme_font_size_override("font_size", 12)
+			inner_vbox.add_child(res_lbl)
 
 		vbox.add_child(pnl)
 
@@ -102,9 +109,9 @@ func _on_finish_pressed() -> void:
 		# Show Gil/Lapis rewards if any from wallet changes (simplified for placeholder)
 		var mission_data = DataManager.game_data_missions.get(current_mission_id, {})
 		if mission_data.has("gil"):
-			rewards_text += "Gil +%s\n" % str(mission_data.get("gil", 0))
+			rewards_text += "Gil +%s\n" % str(int(mission_data.get("gil", 0)))
 		if mission_data.has("exp"):
-			rewards_text += "Rank EXP +%s\n" % str(mission_data.get("exp", 0))
+			rewards_text += "Rank EXP +%s\n" % str(int(mission_data.get("exp", 0)))
 
 		rewards_popup.dialog_text += rewards_text
 		rewards_popup.popup_centered()

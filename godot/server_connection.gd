@@ -250,6 +250,41 @@ func awaken_unit_async(instance_id: String) -> Dictionary:
 
 	return {}
 
+func get_parties_async() -> Array:
+	if not _session:
+		return []
+
+	var rpc_id = "get_parties"
+	var payload = "{}"
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
+
+	if result.is_exception():
+		push_error("get_parties error: %s" % result.get_exception().message)
+		return []
+
+	var data = JSON.parse_string(result.payload)
+	if data and data.has("parties"):
+		return data.parties
+	return []
+
+func save_parties_async(parties: Array) -> Dictionary:
+	if not _session:
+		return {"error": "Not authenticated"}
+
+	var rpc_id = "save_parties"
+	var payload = JSON.stringify({"parties": parties})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
+
+	if result.is_exception():
+		var err_msg = result.get_exception().message
+		push_error("save_parties error: %s" % err_msg)
+		return {"error": err_msg}
+
+	var data = JSON.parse_string(result.payload)
+	if data:
+		return data
+	return {"error": "Failed to parse response"}
+
 func read_player_items_async() -> Array:
 	if _session == null or _session.is_expired():
 		return []

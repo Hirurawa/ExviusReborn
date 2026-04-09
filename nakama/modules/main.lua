@@ -1095,7 +1095,7 @@ local function rpc_get_parties(context, payload)
         for i = 1, 5 do
             table.insert(default_parties, {
                 name = "Party " .. i,
-                units = {nk.json_null(), nk.json_null(), nk.json_null(), nk.json_null(), nk.json_null()}
+                units = {"", "", "", "", ""}
             })
         end
 

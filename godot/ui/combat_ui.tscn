@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cx6m01qlyp86v"]
+[gd_scene load_steps=3 format=3 uid="uid://cx6m01qlyp86v"]
 
 [ext_resource type="Script" path="res://ui/combat_ui.gd" id="1_f7b2x"]
+[ext_resource type="Script" path="res://ui/battle_manager.gd" id="2_battle"]
 
 [node name="CombatUI" type="Control"]
 layout_mode = 3
@@ -11,6 +12,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_f7b2x")
 
+[node name="BattleManager" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_battle")
+
 [node name="ColorRect" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -20,41 +25,103 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.12549, 0.12549, 0.12549, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="MainLayout" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 156.0
-offset_right = -20.0
-offset_bottom = -127.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Combat Encounter"
-horizontal_alignment = 1
-
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+[node name="TopSection" type="HBoxContainer" parent="MainLayout"]
 layout_mode = 2
 size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
 
-[node name="MonstersList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
-unique_name_in_owner = true
+[node name="EnemyArea" type="VBoxContainer" parent="MainLayout/TopSection"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="FinishButton" type="Button" parent="VBoxContainer"]
+[node name="EnemyTexture" type="TextureRect" parent="MainLayout/TopSection/EnemyArea"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Finish"
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayerArea" type="VBoxContainer" parent="MainLayout/TopSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TurnLabel" type="Label" parent="MainLayout/TopSection/PlayerArea"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Turn 1"
+horizontal_alignment = 2
+
+[node name="PlayerSpritesGrid" type="GridContainer" parent="MainLayout/TopSection/PlayerArea"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+
+[node name="InfoBar" type="PanelContainer" parent="MainLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar"]
+layout_mode = 2
+
+[node name="EnemyInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FinishButton" type="Button" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Finish Battle (Debug)"
+
+[node name="EnemyNameLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enemy Name"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo"]
+layout_mode = 2
+
+[node name="EnemyHPBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="EnemyHPPctLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "100%"
+
+[node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo"]
+layout_mode = 2
+text = "Esper Gauge"
+
+[node name="EsperBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="BottomSection" type="GridContainer" parent="MainLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
 
 [node name="RewardsPopup" type="AcceptDialog" parent="."]
 unique_name_in_owner = true

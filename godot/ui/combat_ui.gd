@@ -1,94 +1,134 @@
 extends Control
 
 var current_mission_id: String = ""
+var UnitPanelScene = preload("res://ui/combat_unit_panel.tscn")
 
-@onready var monsters_list = %MonstersList
+@onready var battle_manager = %BattleManager
 @onready var finish_button = %FinishButton
 @onready var rewards_popup = %RewardsPopup
+
+@onready var enemy_texture = %EnemyTexture
+@onready var turn_label = %TurnLabel
+@onready var player_sprites_grid = %PlayerSpritesGrid
+@onready var enemy_name_label = %EnemyNameLabel
+@onready var enemy_hp_bar = %EnemyHPBar
+@onready var enemy_hp_pct_label = %EnemyHPPctLabel
+@onready var bottom_section = %BottomSection
 
 func _ready() -> void:
 	finish_button.pressed.connect(_on_finish_pressed)
 	rewards_popup.confirmed.connect(_on_rewards_confirmed)
 
+	battle_manager.battle_state_ready.connect(_on_battle_state_ready)
+	battle_manager.enemy_hp_changed.connect(_on_enemy_hp_changed)
+	battle_manager.turn_changed.connect(_on_turn_changed)
+
+	enemy_texture.gui_input.connect(_on_enemy_texture_gui_input)
+
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
 	var dungeon_id = params.get("dungeon_id", "")
 
-	_populate_monsters(dungeon_id)
+	battle_manager.initialize_battle(dungeon_id)
 
-func _populate_monsters(dungeon_id: String) -> void:
-	# Clear existing children
-	for child in monsters_list.get_children():
+func _on_battle_state_ready() -> void:
+	# Populate enemy details
+	enemy_name_label.text = battle_manager.enemy_data.get("name", "Unknown Monster")
+
+	var monster_id = str(battle_manager.enemy_data.get("monster_id", "5010010"))
+	var tex_path = "res://assets/monster_icon/monster_icon_" + monster_id + ".png"
+	if ResourceLoader.exists(tex_path):
+		enemy_texture.texture = load(tex_path)
+	else:
+		# Fallback placeholder
+		enemy_texture.texture = load("res://icon.svg")
+
+	# Populate enemy HP
+	_on_enemy_hp_changed(battle_manager.enemy_current_hp, battle_manager.enemy_max_hp)
+	_on_turn_changed(battle_manager.turn_count)
+
+	# Clear previous panels and sprites
+	for child in bottom_section.get_children():
+		child.queue_free()
+	for child in player_sprites_grid.get_children():
 		child.queue_free()
 
-	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
-	var monsters_in_dungeon = dungeon_data.get("monsters", [])
+	# Populate player units
+	# Order: Top Left, Bottom Left, Top Right, Middle Right.
+	# We can just iterate the party data and place them.
+	for unit in battle_manager.party_data:
+		# Add panel
+		var panel = UnitPanelScene.instantiate()
+		bottom_section.add_child(panel)
+		panel.setup(unit)
 
-	if monsters_in_dungeon.size() == 0:
-		var empty_lbl = Label.new()
-		empty_lbl.text = "No monsters encountered."
-		monsters_list.add_child(empty_lbl)
-		return
+		# Add sprite placeholder
+		var anim_sprite = AnimatedSprite2D.new()
+		var frames = SpriteFrames.new()
+		frames.add_frame("default", load("res://icon.svg"))
+		anim_sprite.sprite_frames = frames
 
-	for dungeon_monster in monsters_in_dungeon:
-		var m_name = dungeon_monster.get("name", "Unknown Monster")
+		# Put AnimatedSprite2D in a Control wrapper to work with GridContainer
+		var sprite_wrapper = Control.new()
+		sprite_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sprite_wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-		# Find the monster in the cached monsters array by name to get extra details
-		var extra_details = {}
-		# game_data_monsters is an Array of Dictionaries
-		var monsters_array = DataManager.game_data_monsters
-		if typeof(monsters_array) == TYPE_ARRAY:
-			for m in monsters_array:
-				if typeof(m) == TYPE_DICTIONARY and m.get("name") == m_name:
-					extra_details = m
-					break
-		elif typeof(monsters_array) == TYPE_DICTIONARY:
-			# fallback just in case
-			extra_details = monsters_array.get(m_name)
+		# Position sprite at center of wrapper
+		anim_sprite.position = Vector2(40, 40) # Approximate center for default icon
+		sprite_wrapper.add_child(anim_sprite)
+		player_sprites_grid.add_child(sprite_wrapper)
 
-		var vbox = VBoxContainer.new()
-		var pnl = PanelContainer.new()
+	# Reorder panels to match "Top Left -> Bottom Left -> Top Right -> Middle Right"
+	# GridContainer places items:
+	# 0 (Row 1 Col 1) - Top Left
+	# 1 (Row 1 Col 2) - Top Right
+	# 2 (Row 2 Col 1) - Mid Left
+	# 3 (Row 2 Col 2) - Mid Right
+	# 4 (Row 3 Col 1) - Bot Left
+	# 5 (Row 3 Col 2) - Bot Right
+	#
+	# User wants: Top Left (0), Bottom Left (4), Top Right (1), Middle Right (3)
 
-		var inner_vbox = VBoxContainer.new()
-		pnl.add_child(inner_vbox)
+	# Add empty slots to make exactly 6 items first
+	while bottom_section.get_child_count() < 6:
+		var empty_panel = Control.new()
+		empty_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bottom_section.add_child(empty_panel)
+	while player_sprites_grid.get_child_count() < 6:
+		var empty_sprite = Control.new()
+		empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		player_sprites_grid.add_child(empty_sprite)
 
-		var name_lbl = Label.new()
-		name_lbl.text = m_name
-		if extra_details.has("race"):
-			name_lbl.text += " (%s)" % extra_details.get("race", "Unknown")
-		name_lbl.add_theme_font_size_override("font_size", 20)
-		inner_vbox.add_child(name_lbl)
+	var panels = bottom_section.get_children()
+	var sprites = player_sprites_grid.get_children()
 
-		var stats_lbl = Label.new()
-		stats_lbl.text = "Lv: %s | HP: %s | MP: %s | EXP: %s | Gil: %s" % [
-			str(int(dungeon_monster.get("level", "?"))),
-			str(int(dungeon_monster.get("hp", "?"))),
-			str(int(dungeon_monster.get("mp", "?"))),
-			str(int(dungeon_monster.get("exp", "?"))),
-			str(int(dungeon_monster.get("gil", "?")))
-		]
-		inner_vbox.add_child(stats_lbl)
+	# Mapping from logical Party index to Grid index
+	# Index 0: Top Left -> Grid pos 0
+	# Index 1: Bottom Left -> Grid pos 4
+	# Index 2: Top Right -> Grid pos 1
+	# Index 3: Middle Right -> Grid pos 3
+	var expected_positions = [0, 4, 1, 3, 2, 5]
 
-		#if extra_details.has("description"):
-			#var desc_lbl = Label.new()
-			#desc_lbl.text = str(extra_details.get("description", ""))
-			#desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			#desc_lbl.add_theme_font_size_override("font_size", 12)
-			#inner_vbox.add_child(desc_lbl)
+	for i in range(panels.size()):
+		if i < expected_positions.size():
+			bottom_section.move_child(panels[i], expected_positions[i])
+			player_sprites_grid.move_child(sprites[i], expected_positions[i])
 
-		if extra_details.has("resistances"):
-			var res_lbl = Label.new()
-			res_lbl.text = str(extra_details.get("resistances", ""))
-			res_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			res_lbl.add_theme_font_size_override("font_size", 12)
-			inner_vbox.add_child(res_lbl)
+func _on_enemy_hp_changed(new_hp: int, max_hp: int) -> void:
+	enemy_hp_bar.max_value = max_hp
+	enemy_hp_bar.value = new_hp
 
-		vbox.add_child(pnl)
+	var pct = 0
+	if max_hp > 0:
+		pct = int((float(new_hp) / float(max_hp)) * 100.0)
+	enemy_hp_pct_label.text = "%d%%" % pct
 
-		var sep = HSeparator.new()
-		vbox.add_child(sep)
+func _on_enemy_texture_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		print("Enemy tapped! Target set.")
 
-		monsters_list.add_child(vbox)
+func _on_turn_changed(new_turn: int) -> void:
+	turn_label.text = "Turn %d" % new_turn
 
 func _on_finish_pressed() -> void:
 	if current_mission_id == "":

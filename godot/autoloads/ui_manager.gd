@@ -21,7 +21,8 @@ var _scenes_map: Dictionary = {
 	"items_ui": "res://ui/items_ui.tscn",
 	"friends_ui": "res://ui/friends_ui.tscn",
 	"summon_ui": "res://ui/summon_ui.tscn",
-	"equip_selection_popup": "res://ui/equip_selection_popup.tscn"
+	"equip_selection_popup": "res://ui/equip_selection_popup.tscn",
+	"combat_ui": "res://ui/combat_ui.tscn"
 }
 
 func _ready() -> void:

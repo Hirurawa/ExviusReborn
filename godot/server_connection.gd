@@ -256,7 +256,7 @@ func get_parties_async() -> Array:
 
 	var rpc_id = "get_parties"
 	var payload = "{}"
-	var result: NakamaAPI.ApiRpc = await client.rpc_async(_session, rpc_id, payload)
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
 
 	if result.is_exception():
 		push_error("get_parties error: %s" % result.get_exception().message)
@@ -273,7 +273,7 @@ func save_parties_async(parties: Array) -> Dictionary:
 
 	var rpc_id = "save_parties"
 	var payload = JSON.stringify({"parties": parties})
-	var result: NakamaAPI.ApiRpc = await client.rpc_async(_session, rpc_id, payload)
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
 
 	if result.is_exception():
 		var err_msg = result.get_exception().message

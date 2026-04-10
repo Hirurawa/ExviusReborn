@@ -92,7 +92,7 @@ function Economy.buy_item(context, payload)
             table.insert(new_equips, {
                 instance_id = nk.uuid_v4(),
                 template_id = item_id,
-                equipped_to = nk.json_null()
+                equipped_to = ""
             })
         end
         Inventory.save_equipment(context.user_id, new_equips)

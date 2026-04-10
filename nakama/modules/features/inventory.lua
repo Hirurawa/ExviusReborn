@@ -86,7 +86,7 @@ function Inventory.add_item(context, payload)
             table.insert(new_equips, {
                 instance_id = nk.uuid_v4(),
                 template_id = item_id,
-                equipped_to = nk.json_null()
+                equipped_to = ""
             })
         end
         Inventory.save_equipment(context.user_id, new_equips)
@@ -143,7 +143,7 @@ function Inventory.rpc_equip_item(context, payload)
             local objects = nk.storage_read({obj_id})
             if #objects > 0 then
                 local eq_obj = objects[1].value
-                eq_obj.equipped_to = nk.json_null()
+                eq_obj.equipped_to = ""
                 updated_equips[eq_obj.instance_id] = eq_obj
             end
         end
@@ -181,8 +181,15 @@ function Inventory.rpc_equip_item(context, payload)
             return nk.json_encode({error = "Unit cannot equip this item type"})
         end
 
+        -- Prevent equipping the exact same item instance to multiple slots on the same unit
+        for s, inst_id in pairs(target_unit.equipment) do
+            if inst_id == item_instance_id and s ~= slot then
+                target_unit.equipment[s] = nil
+            end
+        end
+
         -- Check if it's already equipped to another unit
-        if eq_obj.equipped_to and eq_obj.equipped_to ~= nk.json_null() and eq_obj.equipped_to ~= target_unit.instance_id then
+        if eq_obj.equipped_to and eq_obj.equipped_to ~= "" and eq_obj.equipped_to ~= target_unit.instance_id then
             local other_unit_id = eq_obj.equipped_to
             local other_unit = Units.get_unit(context.user_id, other_unit_id)
             if other_unit and other_unit.equipment then
@@ -203,7 +210,7 @@ function Inventory.rpc_equip_item(context, payload)
             local old_objects = nk.storage_read({old_obj_id})
             if #old_objects > 0 then
                 local old_eq_obj = old_objects[1].value
-                old_eq_obj.equipped_to = nk.json_null()
+                old_eq_obj.equipped_to = ""
                 updated_equips[old_eq_obj.instance_id] = old_eq_obj
             end
         end
@@ -222,7 +229,7 @@ function Inventory.rpc_equip_item(context, payload)
                 local off_objects = nk.storage_read({off_obj_id})
                 if #off_objects > 0 then
                     local off_eq_obj = off_objects[1].value
-                    off_eq_obj.equipped_to = nk.json_null()
+                    off_eq_obj.equipped_to = ""
                     updated_equips[off_eq_obj.instance_id] = off_eq_obj
                 end
             end

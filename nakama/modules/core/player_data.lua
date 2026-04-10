@@ -25,6 +25,18 @@ function PlayerData.get_player_stats(context, payload)
             stats.current_nrg = data.current_nrg or data.energy or stats.current_nrg
             stats.last_nrg_update_time = data.last_nrg_update_time or data.last_energy_update_time or stats.last_nrg_update_time
         end
+    else
+        -- Brand new account: lazy initialization
+        nk.storage_write({
+            {
+                collection = "stats",
+                key = "player_stats",
+                user_id = context.user_id,
+                value = stats,
+                permission_read = 1,
+                permission_write = 1
+            }
+        })
     end
 
     local max_energy

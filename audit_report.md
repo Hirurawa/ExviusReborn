@@ -122,3 +122,9 @@ This audit evaluates the Godot frontend codebase against the established rules i
    - Hidden overlays: The `UIManager` preloads and hides things like `top_header`, `bottom_nav`, which is actually mentioned as standard in `AGENTS.md` memory context, but `MissionDetailsPopup` and `RewardsPopup` are sitting hidden in scene trees rather than instantiated dynamically.
 
 *(End of Report)*
+
+EXECUTION GUARDRAIL FOR AI: Refactor the UI in distinct passes, strictly adhering to AGENTS.md.
+
+Pass 1 (Typing & Loops): Go through all files and add strict Godot 4 static typing. Replace load() inside loops with preload() at the top of the script.
+
+Pass 2 (Dumb UI): Strip out business logic (math, JSON parsing) from scripts like combat_ui.gd and unit_detail_ui.gd. Route them through DataManager via signals. Do not attempt Pass 2 until Pass 1 is fully complete and functional.

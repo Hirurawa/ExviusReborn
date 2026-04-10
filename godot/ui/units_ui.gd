@@ -118,4 +118,3 @@ func _on_slot_clicked(slot_index: int, unit_inst: Dictionary):
 
 func _on_view_units():
 	UIManager.push("unit_selector_ui", {"mode": "view"})
-

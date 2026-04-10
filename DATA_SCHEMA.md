@@ -121,7 +121,7 @@ Player stats (including rank, xp, and nrg) is saved globally as an object in the
 
 ```json
 {
-  "xp": 8309,
+  "xp": 8309, // The xp needed to reach the next rank
   "rank": 34,
   "current_nrg": 284,
   "last_nrg_update_time": 1775824657
@@ -138,7 +138,7 @@ Player's parties are saved globally as an object in the `user_data` collection.
     {
       "name": "Party 1",
       "units": [
-        "b019e4b9-96a5-4f2a-a664-b746b885fd26",
+        "b019e4b9-96a5-4f2a-a664-b746b885fd26", // Unique UUID for the player's specific unit
         "03d04f22-4a0d-48ff-b93f-62a1f2210365",
         "10a17f72-ef1a-40e8-abad-902fd7126b85",
         "",

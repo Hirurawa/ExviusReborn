@@ -30,3 +30,11 @@ This report outlines security vulnerabilities, database inefficiencies, error ha
   end
   ```
 - **Equip Item UX/Edge Case:** In `equip_item`, if a user tries to equip an item but doesn't have enough spare copies, the server silently unequips it from the first unit it finds holding one. This could lead to a confusing UX where equipment seemingly vanishes from other units. It may be better to return an error (`{error = "Item currently equipped by another unit"}`) and let the client explicitly prompt the user to unequip it first.
+
+EXECUTION GUARDRAIL FOR AI: This is a major data migration. Do not attempt to fix all vulnerabilities at once.
+
+Phase A: Fix the "Monolithic Storage Objects" first. Update the schema so units/items use their instance_id as the storage key. Update add_unit, equip_item, etc., to use this new schema.
+
+Phase B: Once storage is granular, implement the parse_payload helper and fix the unsafe JSON decoding.
+
+Phase C: Finally, patch the debug RPCs (add validation/costs).

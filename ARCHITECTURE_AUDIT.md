@@ -94,3 +94,5 @@ nakama/
 │   │   └── combat.lua        # Dungeon completion, rewards
 ```
 *Note: In `init.lua`, you will use Lua's `require("core.utilities")` etc. to load and register the functions.*
+
+EXECUTION GUARDRAIL FOR AI: When moving or renaming .tscn or .gd files, you MUST also scan the codebase (using grep or search) and update all string references to those files. This includes preload("res://...") paths in scripts, and the [ext_resource path="res://..."] headers inside the raw .tscn text files. Do not move files without fixing their dependencies.

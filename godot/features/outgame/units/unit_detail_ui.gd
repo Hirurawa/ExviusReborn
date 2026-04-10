@@ -1,6 +1,6 @@
 extends Control
 
-@onready var illustration_button: Button = $VBoxContainer/CharInfoHBox/IllustrationButton
+@onready var illustration_button: TextureButton = $VBoxContainer/CharInfoHBox/IllustrationButton
 @onready var unit_detail_sprite: TextureRect = $VBoxContainer/CharInfoHBox/IllustrationButton/SpritePlaceholder
 @onready var anim_sprite: Sprite2D = $VBoxContainer/CharInfoHBox/IllustrationButton/AnimSprite
 @onready var unit_detail_back_button: Button = $VBoxContainer/TopBar/BackButton

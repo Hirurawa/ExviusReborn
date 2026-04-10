@@ -1,6 +1,6 @@
 extends Control
 
-@onready var equip_selection_list: VBoxContainer = $VBoxContainer/ScrollContainer/EquipListContainer
+@onready var equip_selection_list: GridContainer = $VBoxContainer/ScrollContainer/EquipListContainer
 @onready var close_btn: Button = $VBoxContainer/CloseButton
 
 var current_unit_inst: Dictionary = {}

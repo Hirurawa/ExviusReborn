@@ -4,50 +4,68 @@ local StaticData = require("core.static_data")
 local Units = {}
 
 function Units.get_player_units(user_id)
-    local object_ids = {
-        {collection = "units", key = "player_units", user_id = user_id}
-    }
-    local objects = nk.storage_read(object_ids)
+    local units = {}
+    local cursor = nil
 
-    if #objects > 0 then
-        local data = objects[1].value
-        if data and data.units then
+    repeat
+        local objects, next_cursor = nk.storage_list(user_id, "unit", 100, cursor)
+        for _, obj in ipairs(objects) do
+            local unit = obj.value
+
             -- Inject next_xp if it's missing or needs recalculation based on up-to-date data
-            for _, unit in ipairs(data.units) do
-                local unit_data = StaticData.units_data[unit.unit_id]
-                if unit_data then
-                    local exp_pattern = unit_data.exp_pattern or 5
-                    local max_level = StaticData.rarity_max_levels[unit.current_rarity] or 15
-                    if unit.level < max_level then
-                        local base_xp = StaticData.calculate_total_xp_for_level(unit.level, exp_pattern)
-                        local xp_into_level = unit.xp - base_xp
-                        local required_marginal_xp = StaticData.calculate_xp_for_level(unit.level + 1, exp_pattern)
-                        unit.next_xp = required_marginal_xp - xp_into_level
-                        if unit.next_xp < 0 then unit.next_xp = 0 end
-                    else
-                        unit.next_xp = 0
-                    end
+            local unit_data = StaticData.units_data[unit.unit_id]
+            if unit_data then
+                local exp_pattern = unit_data.exp_pattern or 5
+                local max_level = StaticData.rarity_max_levels[unit.current_rarity] or 15
+                if unit.level < max_level then
+                    local base_xp = StaticData.calculate_total_xp_for_level(unit.level, exp_pattern)
+                    local xp_into_level = unit.xp - base_xp
+                    local required_marginal_xp = StaticData.calculate_xp_for_level(unit.level + 1, exp_pattern)
+                    unit.next_xp = required_marginal_xp - xp_into_level
+                    if unit.next_xp < 0 then unit.next_xp = 0 end
+                else
+                    unit.next_xp = 0
                 end
             end
-            return data.units
-        end
-    end
 
-    return {}
+            table.insert(units, unit)
+        end
+        cursor = next_cursor
+    until not cursor
+
+    return units
 end
 
-function Units.save_player_units(user_id, units)
-    local objects = {
-        {
-            collection = "units",
-            key = "player_units",
+function Units.get_unit(user_id, instance_id)
+    local object_ids = {
+        {collection = "unit", key = instance_id, user_id = user_id}
+    }
+    local objects = nk.storage_read(object_ids)
+    if #objects > 0 then
+        return objects[1].value
+    end
+    return nil
+end
+
+function Units.save_unit(user_id, unit)
+    Units.save_units(user_id, {unit})
+end
+
+function Units.save_units(user_id, units)
+    local writes = {}
+    for _, unit in ipairs(units) do
+        table.insert(writes, {
+            collection = "unit",
+            key = unit.instance_id,
             user_id = user_id,
-            value = {units = units},
+            value = unit,
             permission_read = 1,
             permission_write = 1
-        }
-    }
-    nk.storage_write(objects)
+        })
+    end
+    if #writes > 0 then
+        nk.storage_write(writes)
+    end
 end
 
 function Units.get_player_units_rpc(context, payload)
@@ -68,7 +86,6 @@ function Units.summon_units(context, payload)
         return nk.json_encode({error = "No units available"})
     end
 
-    local player_units = Units.get_player_units(context.user_id)
     local summoned_units = {}
 
     for i = 1, amount do
@@ -89,11 +106,10 @@ function Units.summon_units(context, payload)
             equipment = {}
         }
 
-        table.insert(player_units, new_unit)
         table.insert(summoned_units, new_unit)
     end
 
-    Units.save_player_units(context.user_id, player_units)
+    Units.save_units(context.user_id, summoned_units)
 
     return nk.json_encode({summoned = summoned_units})
 end
@@ -107,46 +123,35 @@ function Units.add_unit_xp(context, payload)
         return nk.json_encode({error = "Invalid parameters"})
     end
 
-    local player_units = Units.get_player_units(context.user_id)
-    local unit_found = false
-    local updated_unit = nil
-
-    for i, unit in ipairs(player_units) do
-        if unit.instance_id == instance_id then
-            unit_found = true
-            local unit_data = StaticData.units_data[unit.unit_id]
-            if not unit_data then
-                return nk.json_encode({error = "Unit data not found"})
-            end
-
-            local exp_pattern = unit_data.exp_pattern or 5
-            local max_level = StaticData.rarity_max_levels[unit.current_rarity] or 15
-
-            unit.xp = unit.xp + xp_amount
-            unit.level = StaticData.calculate_level_from_xp(unit.xp, exp_pattern, max_level)
-
-            if unit.level < max_level then
-                local base_xp = StaticData.calculate_total_xp_for_level(unit.level, exp_pattern)
-                local xp_into_level = unit.xp - base_xp
-                local required_marginal_xp = StaticData.calculate_xp_for_level(unit.level + 1, exp_pattern)
-                unit.next_xp = required_marginal_xp - xp_into_level
-                if unit.next_xp < 0 then unit.next_xp = 0 end
-            else
-                unit.next_xp = 0
-            end
-
-            updated_unit = unit
-            break
-        end
-    end
-
-    if not unit_found then
+    local unit = Units.get_unit(context.user_id, instance_id)
+    if not unit then
         return nk.json_encode({error = "Unit instance not found"})
     end
 
-    Units.save_player_units(context.user_id, player_units)
+    local unit_data = StaticData.units_data[unit.unit_id]
+    if not unit_data then
+        return nk.json_encode({error = "Unit data not found"})
+    end
 
-    return nk.json_encode({unit = updated_unit})
+    local exp_pattern = unit_data.exp_pattern or 5
+    local max_level = StaticData.rarity_max_levels[unit.current_rarity] or 15
+
+    unit.xp = unit.xp + xp_amount
+    unit.level = StaticData.calculate_level_from_xp(unit.xp, exp_pattern, max_level)
+
+    if unit.level < max_level then
+        local base_xp = StaticData.calculate_total_xp_for_level(unit.level, exp_pattern)
+        local xp_into_level = unit.xp - base_xp
+        local required_marginal_xp = StaticData.calculate_xp_for_level(unit.level + 1, exp_pattern)
+        unit.next_xp = required_marginal_xp - xp_into_level
+        if unit.next_xp < 0 then unit.next_xp = 0 end
+    else
+        unit.next_xp = 0
+    end
+
+    Units.save_unit(context.user_id, unit)
+
+    return nk.json_encode({unit = unit})
 end
 
 function Units.awaken_unit(context, payload)
@@ -157,49 +162,38 @@ function Units.awaken_unit(context, payload)
         return nk.json_encode({error = "Invalid parameters"})
     end
 
-    local player_units = Units.get_player_units(context.user_id)
-    local unit_found = false
-    local updated_unit = nil
-
-    for i, unit in ipairs(player_units) do
-        if unit.instance_id == instance_id then
-            unit_found = true
-            local unit_data = StaticData.units_data[unit.unit_id]
-            if not unit_data then
-                return nk.json_encode({error = "Unit data not found"})
-            end
-
-            local max_level = StaticData.rarity_max_levels[unit.current_rarity] or 15
-            local max_rarity = unit_data.rarity_max or 1
-
-            if unit.level < max_level then
-                return nk.json_encode({error = "Unit is not at max level for current rarity"})
-            end
-
-            if unit.current_rarity >= max_rarity then
-                return nk.json_encode({error = "Unit is already at max rarity"})
-            end
-
-            unit.current_rarity = unit.current_rarity + 1
-            unit.level = 1
-            unit.xp = 0 -- Optionally reset XP too, or just level
-
-            local exp_pattern = unit_data.exp_pattern or 5
-            local next_xp = StaticData.calculate_xp_for_level(2, exp_pattern)
-            unit.next_xp = next_xp
-
-            updated_unit = unit
-            break
-        end
-    end
-
-    if not unit_found then
+    local unit = Units.get_unit(context.user_id, instance_id)
+    if not unit then
         return nk.json_encode({error = "Unit instance not found"})
     end
 
-    Units.save_player_units(context.user_id, player_units)
+    local unit_data = StaticData.units_data[unit.unit_id]
+    if not unit_data then
+        return nk.json_encode({error = "Unit data not found"})
+    end
 
-    return nk.json_encode({unit = updated_unit})
+    local max_level = StaticData.rarity_max_levels[unit.current_rarity] or 15
+    local max_rarity = unit_data.rarity_max or 1
+
+    if unit.level < max_level then
+        return nk.json_encode({error = "Unit is not at max level for current rarity"})
+    end
+
+    if unit.current_rarity >= max_rarity then
+        return nk.json_encode({error = "Unit is already at max rarity"})
+    end
+
+    unit.current_rarity = unit.current_rarity + 1
+    unit.level = 1
+    unit.xp = 0
+
+    local exp_pattern = unit_data.exp_pattern or 5
+    local next_xp = StaticData.calculate_xp_for_level(2, exp_pattern)
+    unit.next_xp = next_xp
+
+    Units.save_unit(context.user_id, unit)
+
+    return nk.json_encode({unit = unit})
 end
 
 return Units

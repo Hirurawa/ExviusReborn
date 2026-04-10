@@ -285,26 +285,21 @@ func save_parties_async(parties: Array) -> Dictionary:
 		return data
 	return {"error": "Failed to parse response"}
 
-func read_player_items_async() -> Array:
+func read_player_items_async() -> Dictionary:
 	if _session == null or _session.is_expired():
-		return []
+		return {"stackables": {}, "equipment": []}
 
-	var object_id := NakamaStorageObjectId.new("items", "player_items", _session.user_id)
-	var result: NakamaAPI.ApiStorageObjects = await(_client.read_storage_objects_async(_session, [object_id]))
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_player_items", "{}")
 
 	if result.is_exception():
-		return []
+		return {"stackables": {}, "equipment": []}
 
-	if result.objects.is_empty():
-		return []
+	var dict = JSON.parse_string(result.payload)
 
-	var obj: NakamaAPI.ApiStorageObject = result.objects[0]
-	var dict = JSON.parse_string(obj.value)
+	if dict and dict is Dictionary:
+		return dict
 
-	if dict and dict is Dictionary and dict.has("items") and dict["items"] is Array:
-		return dict["items"]
-
-	return []
+	return {"stackables": {}, "equipment": []}
 
 func add_item_async(item_id: String, quantity: int = 1) -> Dictionary:
 	if _session == null or _session.is_expired():
@@ -386,8 +381,8 @@ func perform_mission_async(mission_id: String) -> Dictionary:
 	return {}
 
 
-func equip_item_async(unit_id: String, slot: String, item_id: String) -> Dictionary:
-	var payload = JSON.stringify({"unit_id": unit_id, "slot": slot, "item_id": item_id})
+func equip_item_async(unit_instance_id: String, slot: String, item_instance_id: String) -> Dictionary:
+	var payload = JSON.stringify({"unit_instance_id": unit_instance_id, "slot": slot, "item_instance_id": item_instance_id})
 	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "equip_item", payload)
 	if result.is_exception():
 		var ex = result.get_exception()

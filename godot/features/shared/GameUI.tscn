@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ditkrev5tgerl"]
 
-[ext_resource type="Script" uid="uid://bxxc7pktal8rf" path="res://ui/game_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bxxc7pktal8rf" path="res://features/shared/game_ui.gd" id="1_script"]
 
 [node name="GameUI" type="Control" unique_id=323836925]
 visible = false

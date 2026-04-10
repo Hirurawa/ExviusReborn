@@ -18,10 +18,10 @@ config/icon="res://icon.svg"
 [autoload]
 
 Nakama="*uid://c4wa1wmbnm2fm"
-AssetPatcher="*res://asset_patcher.gd"
-DataManager="*res://autoloads/data_manager.gd"
-UIManager="*res://autoloads/ui_manager.gd"
-StatCalculator="*res://autoloads/stat_calculator.gd"
+AssetPatcher="*res://core/asset_patcher.gd"
+DataManager="*res://core/data_manager.gd"
+UIManager="*res://core/ui_manager.gd"
+StatCalculator="*res://core/stat_calculator.gd"
 
 [display]
 

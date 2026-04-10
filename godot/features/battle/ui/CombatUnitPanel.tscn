@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dj3x33r6a9n1n"]
 
-[ext_resource type="Script" path="res://ui/combat_unit_panel.gd" id="1_panel"]
+[ext_resource type="Script" path="res://features/battle/ui/combat_unit_panel.gd" id="1_panel"]
 
 [node name="CombatUnitPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 80)

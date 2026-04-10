@@ -1,7 +1,7 @@
 extends Control
 
 var current_mission_id: String = ""
-var UnitPanelScene = preload("res://ui/combat_unit_panel.tscn")
+var UnitPanelScene = preload("res://features/battle/ui/CombatUnitPanel.tscn")
 
 @onready var battle_manager = %BattleManager
 @onready var finish_button = %FinishButton

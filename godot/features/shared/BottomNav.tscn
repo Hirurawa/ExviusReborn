@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://ui/bottom_nav.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/shared/bottom_nav.gd" id="1_script"]
 
 [node name="BottomNav" type="PanelContainer"]
 script = ExtResource("1_script")

@@ -16,8 +16,16 @@ func _ready() -> void:
 
 func initialize_battle(dungeon_id: String) -> void:
 	# Load party data
+	# Note: DataManager.parties could be structured as an array of Party Dictionaries
+	# If DataManager.parties[0] is a Dictionary (like { "units": [...] }), extract the array.
 	if DataManager.parties.size() > 0:
-		party_data = DataManager.parties[0].duplicate()
+		var first_party = DataManager.parties[0]
+		if typeof(first_party) == TYPE_DICTIONARY:
+			party_data = first_party.get("units", []).duplicate()
+		elif typeof(first_party) == TYPE_ARRAY:
+			party_data = first_party.duplicate()
+		else:
+			party_data = []
 	else:
 		party_data = []
 

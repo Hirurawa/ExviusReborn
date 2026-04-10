@@ -89,8 +89,5 @@ func _on_unit_clicked(unit_inst: Dictionary) -> void:
 		UIManager.push("unit_detail_ui", {"unit_inst": unit_inst})
 	elif mode == "select":
 		unit_selected.emit(unit_inst)
-		var parties: Array = DataManager.parties.duplicate(true)
-		if target_party_index >= 0 and target_party_index < parties.size():
-			parties[target_party_index]["units"][target_slot_index] = unit_inst.instance_id
-			DataManager.party_save_requested.emit(parties)
+		DataManager.assign_unit_to_party(target_party_index, target_slot_index, unit_inst.instance_id)
 		UIManager.pop()

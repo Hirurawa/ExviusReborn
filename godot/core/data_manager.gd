@@ -195,6 +195,12 @@ func save_parties(new_parties: Array) -> Dictionary:
 		parties_updated.emit(parties)
 	return result
 
+func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String) -> void:
+	if party_index >= 0 and party_index < parties.size():
+		var new_parties: Array = parties.duplicate(true)
+		new_parties[party_index]["units"][slot_index] = instance_id
+		party_save_requested.emit(new_parties)
+
 func summon_units(amount: int) -> Array:
 	var summoned_units: Array = await server_connection.summon_units_async(amount)
 	owned_units_ids.append_array(summoned_units)

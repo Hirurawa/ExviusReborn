@@ -40,15 +40,14 @@ func _populate_data() -> void:
 	name_label.text = unit_data.get("name", "Unknown")
 	level_label.text = "Level: %s" % current_unit_inst.get("level", 1)
 
-	# Fetch stats similarly to unit detail (simplification here)
-	# Proper stat calc requires reading equip, base, and rarity
-	# For popup we can fetch pre-calc or defaults
-	hp_label.text = "HP: ???"
-	mp_label.text = "MP: ???"
-	atk_label.text = "ATK: ???"
-	def_label.text = "DEF: ???"
-	mag_label.text = "MAG: ???"
-	spr_label.text = "SPR: ???"
+	var final_stats: Dictionary = StatCalculator.calculate_final_stats(current_unit_inst)
+
+	hp_label.text = "HP: " + str(final_stats.get("HP", 0))
+	mp_label.text = "MP: " + str(final_stats.get("MP", 0))
+	atk_label.text = "ATK: " + str(final_stats.get("ATK", 0))
+	def_label.text = "DEF: " + str(final_stats.get("DEF", 0))
+	mag_label.text = "MAG: " + str(final_stats.get("MAG", 0))
+	spr_label.text = "SPR: " + str(final_stats.get("SPR", 0))
 
 func _on_close_pressed() -> void:
 	UIManager.pop()

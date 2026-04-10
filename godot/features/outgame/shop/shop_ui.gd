@@ -3,7 +3,7 @@ extends Control
 @onready var shop_feedback_label = $VBoxContainer/ShopFeedbackLabel
 @onready var items_container = $VBoxContainer/ScrollContainer/VBoxContainer/ItemsContainer
 @onready var equipment_container = $VBoxContainer/ScrollContainer/VBoxContainer/EquipmentContainer
-@onready var item_row_template = preload("res://ui/shop_item_row.tscn")
+@onready var item_row_template = preload("res://features/outgame/shop/ShopItemRow.tscn")
 
 var shop_items = ["101000100", "101001100"]
 var shop_equipments = ["301000200", "403043300", "405000200"]

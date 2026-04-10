@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://ui/items_ui.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/outgame/inventory/items_ui.gd" id="1_script"]
 
 [node name="ItemsUI" type="Control"]
 script = ExtResource("1_script")

@@ -1,10 +1,9 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://ui/edit_profile_ui.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/auth/login_ui.gd" id="1_script"]
 
-[node name="EditProfileUI" type="Control"]
+[node name="LoginUI" type="Control"]
 script = ExtResource("1_script")
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,21 +27,28 @@ grow_vertical = 2
 
 [node name="FeedbackLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Edit Profile"
+text = "Please Login"
 horizontal_alignment = 1
 
-[node name="NewUsernameInput" type="LineEdit" parent="VBoxContainer"]
+[node name="EmailInput" type="LineEdit" parent="VBoxContainer"]
 layout_mode = 2
-placeholder_text = "New Username"
+text = "qwe@qwe.com"
+placeholder_text = "Email"
+
+[node name="PasswordInput" type="LineEdit" parent="VBoxContainer"]
+layout_mode = 2
+text = "Qweqweqwe"
+placeholder_text = "Password"
+secret = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 alignment = 1
 
-[node name="UpdateButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="LoginButton" type="Button" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
-text = "Update"
+text = "Login"
 
-[node name="CancelButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="GoToRegisterButton" type="Button" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
-text = "Cancel"
+text = "Go to Register"

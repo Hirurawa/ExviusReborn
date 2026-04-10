@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cyw1b0w1v5v3c"]
 
-[ext_resource type="Script" path="res://ui/shop_item_row.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/outgame/shop/shop_item_row.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
 bg_color = Color(0.02, 0.1, 0.3, 1)

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bdwrpu1nt1gjg"]
 
-[ext_resource type="Script" uid="uid://cutdt8w2g6dem" path="res://ui/equip_selection_popup.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cutdt8w2g6dem" path="res://features/outgame/equipment/equip_selection_popup.gd" id="1_script"]
 
 [node name="EquipSelectionPopup" type="Control" unique_id=1438624353]
 layout_mode = 3

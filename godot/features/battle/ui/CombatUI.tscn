@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cx6m01qlyp86v"]
 
-[ext_resource type="Script" path="res://ui/combat_ui.gd" id="1_f7b2x"]
-[ext_resource type="Script" path="res://ui/battle_manager.gd" id="2_battle"]
+[ext_resource type="Script" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
+[ext_resource type="Script" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
 
 [node name="CombatUI" type="Control"]
 layout_mode = 3

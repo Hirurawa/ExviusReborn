@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://ui/map_ui.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/outgame/map/map_ui.gd" id="1_script"]
 
 [node name="MapUI" type="Control"]
 script = ExtResource("1_script")

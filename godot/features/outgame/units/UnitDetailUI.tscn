@@ -16,7 +16,7 @@
 [ext_resource type="Texture2D" path="res://assets/icons/elements/water.png" id="elem_water"]
 [ext_resource type="Texture2D" path="res://assets/icons/ailments/blind.png" id="ailm_blind"]
 [ext_resource type="Texture2D" path="res://assets/icons/elements/wind.png" id="elem_wind"]
-[ext_resource type="Script" path="res://ui/unit_detail_ui.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/outgame/units/unit_detail_ui.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_TraitVal"]
 bg_color = Color(0.1, 0.1, 0.2, 1)

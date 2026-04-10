@@ -49,7 +49,7 @@ var game_data_monsters = []
 var account_info: Object = null
 
 func _ready():
-	var server_script = load("res://server_connection.gd")
+	var server_script = load("res://core/server_connection.gd")
 	server_connection = server_script.new()
 	server_connection.name = "ServerConnection"
 	add_child(server_connection)

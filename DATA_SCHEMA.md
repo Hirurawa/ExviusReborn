@@ -75,47 +75,76 @@ Provides the static properties of equippable items (weapons, armor, accessories)
 }
 ```
 
-## 3. Saved Unit Instance (Player Owned)
 
-When a player summons or acquires a unit, it is instantiated and saved to the `player_units` collection in the Nakama storage backend.
+## Terminology
+* `template_id`: A static string ID from the datamine JSONs (e.g., "10001" for Iron Sword, "101" for Rain).
+* `instance_id`: A unique UUID v4 assigned to a player's specific owned entity (e.g., "abc-123").
 
+## 3. Player Units (Granular Storage)
+* **Collection:** `"unit"`
+* **Key:** `<instance_id>`
+* **Description:** Each unit is saved as its own individual row in the database.
 ```json
 {
-    "instance_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", // Unique UUID for the player's specific unit
-    "unit_id": "100000102", // References the static Unit Template ID
-    "level": 1,
-    "xp": 0,
-    "current_rarity": 2,
-    "next_xp": 100, // Marginal experience required for the next level
-    "equipment": { // Maps equipment slots to the item ID currently equipped
-        "r_hand": "301000200", 
-        "l_hand": null,
-        "head": null,
-        "body": null,
-        "acc_1": null,
-        "acc_2": null
-    }
+  "instance_id": "b019e4b9-...",
+  "template_id": "401006905",
+  "level": 13,
+  "current_rarity": 6,
+  "equipment": {
+    "r_hand": "uuid-of-equipment-1", 
+    "head": "",
+    "body": ""
+  }
 }
 ```
 
-## 4. Saved Equipment Instance (Player Inventory)
 
-Player inventory (including equipment, materials, and consumables) is saved globally as a stackable list of objects in the `player_items` collection.
 
+## 4. Player Inventory (Hybrid Storage)
+The get_player_items_rpc returns a combined Dictionary containing both stackable items and unique equipment.
+### A. Stackables (Fungible)
+* **Collection**: "inventory"
+* **Key**: "stackables"
+* **Description**: A single dictionary mapping the static template_id to an integer quantity.
+### B. Equipment (Non-Fungible)
+* **Collection**: "equipment"
+* **Key**: <instance_id>
+* **Description**: Each piece of equipment is its own unique instance. It contains an equipped_to field which is either null or the instance_id of the unit holding it.
+Example Payload from get_player_items_rpc:
 ```json
-[
-    {
-        "item_id": "301000200", // References the static Equipment/Item ID
-        "quantity": 5 // Total amount of this item the player owns
+{
+  "stackables": {
+    "item_potion_01": 5,
+    "mat_iron": 99
+  },
+  "equipment": [
+    { 
+      "instance_id": "uuid-1", 
+      "template_id": "301000200", 
+      "equipped_to": null 
     },
-    {
-        "item_id": "200000500",
-        "quantity": 12
+    { 
+      "instance_id": "uuid-2", 
+      "template_id": "301000200", 
+      "equipped_to": "unit-uuid-5" 
     }
-]
+  ]
+}
 ```
 
-## 5. Saved Player Stats (Player Stats)
+## 5. Critical RPC Payloads
+Equipping an Item (rpc_equip_item)
+Godot must pass the unique instance IDs, not the template IDs.
+```json
+
+{
+  "unit_instance_id": "unit-uuid-5",
+  "slot": "r_hand",
+  "item_instance_id": "uuid-2"
+}
+```
+
+## 6. Saved Player Stats (Player Stats)
 
 Player stats (including rank, xp, and nrg) is saved globally as an object in the `player_stats` collection.
 
@@ -128,7 +157,7 @@ Player stats (including rank, xp, and nrg) is saved globally as an object in the
 }
 ```
 
-## 6. Saved Player Parties (Parties)
+## 7. Saved Player Parties (Parties)
 
 Player's parties are saved globally as an object in the `user_data` collection.
 

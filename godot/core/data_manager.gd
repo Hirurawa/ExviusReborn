@@ -46,10 +46,10 @@ var game_data_materia: Dictionary = {}
 var game_data_equipment_icons: Dictionary = {}
 var game_data_monsters = []
 
-var account_info: Object = null
+var account_info: NakamaAPI.ApiAccount = null
 
-func _ready():
-	var server_script = load("res://core/server_connection.gd")
+func _ready() -> void:
+	var server_script: GDScript = preload("res://core/server_connection.gd")
 	server_connection = server_script.new()
 	server_connection.name = "ServerConnection"
 	add_child(server_connection)
@@ -67,36 +67,36 @@ func _process(delta: float) -> void:
 			# Still ticking, UI might want to know for the timer
 			nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
-func authenticate(email: String, password: String):
-	var result = await server_connection.authenticate_async(email, password)
+func authenticate(email: String, password: String) -> void:
+	var result: int = await server_connection.authenticate_async(email, password)
 	if result == OK:
 		await _load_initial_data(email)
 		login_success.emit()
 	else:
 		login_failed.emit(result)
 
-func register(email: String, password: String, username: String):
-	var result = await server_connection.register_async(email, password, username)
+func register(email: String, password: String, username: String) -> void:
+	var result: int = await server_connection.register_async(email, password, username)
 	if result == OK:
 		await _load_initial_data(email)
 		register_success.emit()
 	else:
 		register_failed.emit(result)
 
-func logout():
+func logout() -> void:
 	server_connection.logout()
 	account_info = null
 
-func update_account(new_username: String):
-	var result = await server_connection.update_account_async(new_username)
+func update_account(new_username: String) -> bool:
+	var result: int = await server_connection.update_account_async(new_username)
 	if result == OK:
 		account_info = await server_connection.get_account_async()
 		account_updated.emit(account_info.user.username)
 		return true
 	return false
 
-func _load_initial_data(email: String):
-	var stats = await server_connection.read_player_stats_async()
+func _load_initial_data(email: String) -> void:
+	var stats: Dictionary = await server_connection.read_player_stats_async()
 	current_rank = int(stats.get("rank", 1))
 	current_xp = int(stats.get("xp", 0))
 	next_rank_xp = int(stats.get("next_rank_xp", 100))
@@ -128,15 +128,15 @@ func _load_initial_data(email: String):
 
 	account_info = await server_connection.get_account_async()
 	if account_info:
-		var wallet_str = account_info.wallet
+		var wallet_str: String = account_info.wallet
 		if wallet_str and wallet_str != "":
-			var wallet = JSON.parse_string(wallet_str)
+			var wallet: Variant = JSON.parse_string(wallet_str)
 			if wallet and wallet is Dictionary:
 				_update_wallet_data(wallet)
 
 	data_loaded.emit()
 
-func _on_patch_complete():
+func _on_patch_complete() -> void:
 	game_data_units = AssetPatcher.get_data("units")
 	game_data_items = AssetPatcher.get_data("items")
 	game_data_equipment = AssetPatcher.get_data("equipment")
@@ -149,13 +149,13 @@ func _on_patch_complete():
 	game_data_equipment_icons = AssetPatcher.get_data("equipment-icons")
 	game_data_monsters = AssetPatcher.get_data("monsters")
 
-func _update_wallet_data(wallet: Dictionary):
+func _update_wallet_data(wallet: Dictionary) -> void:
 	gil = int(wallet.get("gil", 0))
 	lapis = int(wallet.get("lapis", 0))
 	currency_updated.emit(gil, lapis)
 
-func add_rank_xp(xp_to_add: int):
-	var result = await server_connection.add_rank_xp_async(xp_to_add)
+func add_rank_xp(xp_to_add: int) -> void:
+	var result: Dictionary = await server_connection.add_rank_xp_async(xp_to_add)
 	if not result.is_empty():
 		current_rank = int(result.get("rank", current_rank))
 		current_xp = int(result.get("xp", current_xp))
@@ -167,14 +167,14 @@ func add_rank_xp(xp_to_add: int):
 		rank_updated.emit(current_rank, current_xp, next_rank_xp)
 		nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
-func add_currency(gil_to_add: int, lapis_to_add: int):
-	var result = await server_connection.add_currency_async(gil_to_add, lapis_to_add)
+func add_currency(gil_to_add: int, lapis_to_add: int) -> void:
+	var result: Dictionary = await server_connection.add_currency_async(gil_to_add, lapis_to_add)
 	if result.has("wallet"):
-		var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
+		var wallet: Variant = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 		_update_wallet_data(wallet)
 
 func buy_item(item_id: String, quantity: int) -> Dictionary:
-	var result = await server_connection.buy_item_async(item_id, quantity)
+	var result: Dictionary = await server_connection.buy_item_async(item_id, quantity)
 	if not result.has("error"):
 		if result.has("added_equipment"):
 			if typeof(owned_items.get("equipment")) == TYPE_ARRAY:
@@ -184,59 +184,59 @@ func buy_item(item_id: String, quantity: int) -> Dictionary:
 			owned_items["stackables"] = result.stackables
 			items_updated.emit(owned_items)
 		if result.has("wallet"):
-			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
+			var wallet: Variant = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 			_update_wallet_data(wallet)
 	return result
 
 func save_parties(new_parties: Array) -> Dictionary:
-	var result = await server_connection.save_parties_async(new_parties)
+	var result: Dictionary = await server_connection.save_parties_async(new_parties)
 	if not result.has("error"):
 		parties = new_parties
 		parties_updated.emit(parties)
 	return result
 
 func summon_units(amount: int) -> Array:
-	var summoned_units = await server_connection.summon_units_async(amount)
+	var summoned_units: Array = await server_connection.summon_units_async(amount)
 	owned_units_ids.append_array(summoned_units)
 	units_updated.emit(owned_units_ids)
 	return summoned_units
 
 func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
-	var result = await server_connection.add_unit_xp_async(instance_id, xp_amount)
+	var result: Dictionary = await server_connection.add_unit_xp_async(instance_id, xp_amount)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
 		units_updated.emit(owned_units_ids)
 	return result
 
 func awaken_unit(instance_id: String) -> Dictionary:
-	var result = await server_connection.awaken_unit_async(instance_id)
+	var result: Dictionary = await server_connection.awaken_unit_async(instance_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
 		units_updated.emit(owned_units_ids)
 	return result
 
 func equip_item(instance_id: String, slot_id: String, item_id: String) -> Dictionary:
-	var result = await server_connection.equip_item_async(instance_id, slot_id, item_id)
+	var result: Dictionary = await server_connection.equip_item_async(instance_id, slot_id, item_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
 		units_updated.emit(owned_units_ids)
 	return result
 
-func list_friends():
-	var friends_list = await server_connection.list_friends_async()
+func list_friends() -> NakamaAPI.ApiFriendList:
+	var friends_list: NakamaAPI.ApiFriendList = await server_connection.list_friends_async()
 	friends_updated.emit(friends_list)
 	return friends_list
 
-func add_friend(username: String):
-	var result = await server_connection.add_friends_async(username)
+func add_friend(username: String) -> void:
+	var result: int = await server_connection.add_friends_async(username)
 	if result == OK:
 		friend_action_result.emit(true, "Success")
 		list_friends()
 	else:
 		friend_action_result.emit(false, "Error code: %d" % result)
 
-func delete_friend(username: String):
-	var result = await server_connection.delete_friends_async(username)
+func delete_friend(username: String) -> void:
+	var result: int = await server_connection.delete_friends_async(username)
 	if result == OK:
 		friend_action_result.emit(true, "Success")
 		list_friends()
@@ -244,7 +244,7 @@ func delete_friend(username: String):
 		friend_action_result.emit(false, "Error code: %d" % result)
 
 func perform_mission(mission_id: String) -> Dictionary:
-	var result = await server_connection.perform_mission_async(mission_id)
+	var result: Dictionary = await server_connection.perform_mission_async(mission_id)
 	if not result.has("error"):
 		if result.has("stats"):
 			var stats = result.stats

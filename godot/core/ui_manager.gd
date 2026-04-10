@@ -37,26 +37,26 @@ func _ready() -> void:
 func _load_persistent_overlays() -> void:
 	# These will be created in step 2. We'll instance them and set visibility.
 	if ResourceLoader.exists("res://features/shared/TopHeader.tscn"):
-		var top_scene = load("res://features/shared/TopHeader.tscn")
+		var top_scene: PackedScene = preload("res://features/shared/TopHeader.tscn")
 		top_header = top_scene.instantiate()
 		top_header.hide()
 		canvas_layer.add_child(top_header)
 
 	if ResourceLoader.exists("res://features/shared/BottomNav.tscn"):
-		var bottom_scene = load("res://features/shared/BottomNav.tscn")
+		var bottom_scene: PackedScene = preload("res://features/shared/BottomNav.tscn")
 		bottom_nav = bottom_scene.instantiate()
 		bottom_nav.hide()
 		canvas_layer.add_child(bottom_nav)
 
 	if ResourceLoader.exists("res://features/shared/WorldMapButton.tscn"):
-		var map_btn_scene = load("res://features/shared/WorldMapButton.tscn")
+		var map_btn_scene: PackedScene = preload("res://features/shared/WorldMapButton.tscn")
 		world_map_button = map_btn_scene.instantiate()
 		world_map_button.hide()
 		world_map_button.pressed.connect(_on_world_map_pressed)
 		canvas_layer.add_child(world_map_button)
 
 	if ResourceLoader.exists("res://features/shared/UserMenuButton.tscn"):
-		var user_menu_scene = load("res://features/shared/UserMenuButton.tscn")
+		var user_menu_scene: PackedScene = preload("res://features/shared/UserMenuButton.tscn")
 		user_menu_button = user_menu_scene.instantiate()
 		user_menu_button.hide()
 		user_menu_button.get_popup().id_pressed.connect(_on_user_menu_pressed)
@@ -76,11 +76,11 @@ func _update_overlays() -> void:
 	if _menu_stack.is_empty():
 		return
 
-	var current_scene_name = _menu_stack.back().name.to_lower()
+	var current_scene_name: String = _menu_stack.back().name.to_lower()
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom = ["loginui", "registerui"]
-	var hide_bottom = ["mapui", "editprofileui"]
+	var hide_top_and_bottom: Array[String] = ["loginui", "registerui"]
+	var hide_bottom: Array[String] = ["mapui", "editprofileui"]
 
 	if top_header:
 		if current_scene_name in hide_top_and_bottom:
@@ -123,18 +123,18 @@ func push(scene_name_key: String, params: Dictionary = {}) -> void:
 
 	# Check if the scene is already at the top of the stack
 	if not _menu_stack.is_empty():
-		var current_top = _menu_stack.back().name.to_lower()
-		var requested = scene_name_key.replace("_", "").to_lower()
+		var current_top: String = _menu_stack.back().name.to_lower()
+		var requested: String = scene_name_key.replace("_", "").to_lower()
 		if current_top == requested:
 			return # Already on this menu
 
-	var scene_path = _scenes_map[scene_name_key]
-	var packed_scene = load(scene_path)
+	var scene_path: String = _scenes_map[scene_name_key]
+	var packed_scene: PackedScene = load(scene_path)
 	if not packed_scene:
 		push_error("UIManager: Failed to load scene %s" % scene_path)
 		return
 
-	var instance = packed_scene.instantiate()
+	var instance: Node = packed_scene.instantiate()
 
 	# If there's an existing scene, hide it
 	if not _menu_stack.is_empty():
@@ -157,10 +157,10 @@ func pop() -> void:
 		push_warning("UIManager: Cannot pop the last scene in the stack.")
 		return
 
-	var top_scene = _menu_stack.pop_back()
+	var top_scene: Node = _menu_stack.pop_back()
 	top_scene.queue_free()
 
-	var new_top = _menu_stack.back()
+	var new_top: Node = _menu_stack.back()
 	new_top.show()
 
 	_update_overlays()
@@ -170,10 +170,10 @@ func pop_to_root() -> void:
 		return
 
 	while _menu_stack.size() > 1:
-		var scene = _menu_stack.pop_back()
+		var scene: Node = _menu_stack.pop_back()
 		scene.queue_free()
 
-	var root_scene = _menu_stack.back()
+	var root_scene: Node = _menu_stack.back()
 	root_scene.show()
 
 	_update_overlays()

@@ -51,10 +51,15 @@ function Economy.buy_item(context, payload)
 
     local current_gil = wallet.gil or 0
 
-    local item_data = StaticData.items_data[item_id]
-    if not item_data then
-        item_data = StaticData.equipment_data[item_id]
+    local is_equipment = false
+    local item_data = StaticData.equipment_data[item_id]
+
+    if item_data then
+        is_equipment = true
+    else
+        item_data = StaticData.items_data[item_id]
     end
+
     if not item_data then
         return nk.json_encode({error = "Item data not found"})
     end
@@ -79,29 +84,31 @@ function Economy.buy_item(context, payload)
     end
 
     -- Add the item
-    local player_items = Inventory.get_player_items(context.user_id)
-    local item_found = false
+    local response_payload = {success = true}
 
-    for i, item in ipairs(player_items) do
-        if item.item_id == item_id then
-            item.quantity = item.quantity + quantity
-            item_found = true
-            break
+    if is_equipment then
+        local new_equips = {}
+        for i = 1, quantity do
+            table.insert(new_equips, {
+                instance_id = nk.uuid_v4(),
+                template_id = item_id,
+                equipped_to = nk.json_null()
+            })
         end
+        Inventory.save_equipment(context.user_id, new_equips)
+        response_payload.added_equipment = new_equips
+    else
+        local stackables = Inventory.get_stackables(context.user_id)
+        stackables[item_id] = (stackables[item_id] or 0) + quantity
+        Inventory.save_stackables(context.user_id, stackables)
+        response_payload.stackables = stackables
     end
-
-    if not item_found then
-        table.insert(player_items, {
-            item_id = item_id,
-            quantity = quantity
-        })
-    end
-
-    Inventory.save_player_items(context.user_id, player_items)
 
     -- Return the updated wallet to the client
     account = nk.account_get_id(context.user_id)
-    return nk.json_encode({success = true, wallet = account.wallet, items = player_items})
+    response_payload.wallet = account.wallet
+
+    return nk.json_encode(response_payload)
 end
 
 return Economy

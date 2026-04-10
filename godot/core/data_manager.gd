@@ -10,7 +10,7 @@ signal rank_updated(rank: int, xp: int, next_rank_xp: int)
 signal nrg_updated(current_nrg: int, max_nrg: int, time_until_next: float)
 signal currency_updated(gil: int, lapis: int)
 signal units_updated(units: Array)
-signal items_updated(items: Array)
+signal items_updated(items: Dictionary)
 signal friends_updated(friends: Object)
 signal friend_action_result(success: bool, message: String)
 signal parties_updated(parties: Array)
@@ -30,7 +30,7 @@ var gil: int = 0
 var lapis: int = 0
 
 var owned_units_ids: Array = []
-var owned_items: Array = []
+var owned_items: Dictionary = {"stackables": {}, "equipment": []}
 var parties: Array = []
 
 var game_data_units: Dictionary = {}
@@ -176,8 +176,12 @@ func add_currency(gil_to_add: int, lapis_to_add: int):
 func buy_item(item_id: String, quantity: int) -> Dictionary:
 	var result = await server_connection.buy_item_async(item_id, quantity)
 	if not result.has("error"):
-		if result.has("items"):
-			owned_items = result.items
+		if result.has("added_equipment"):
+			if typeof(owned_items.get("equipment")) == TYPE_ARRAY:
+				owned_items["equipment"].append_array(result.added_equipment)
+			items_updated.emit(owned_items)
+		if result.has("stackables"):
+			owned_items["stackables"] = result.stackables
 			items_updated.emit(owned_items)
 		if result.has("wallet"):
 			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet

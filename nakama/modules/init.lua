@@ -22,6 +22,7 @@ nk.register_rpc(Units.summon_units, "summon_units")
 nk.register_rpc(Units.add_unit_xp, "add_unit_xp")
 nk.register_rpc(Units.awaken_unit, "awaken_unit")
 
+nk.register_rpc(Inventory.get_player_items_rpc, "get_player_items")
 nk.register_rpc(Inventory.add_item, "add_item")
 nk.register_rpc(Inventory.rpc_equip_item, "equip_item")
 

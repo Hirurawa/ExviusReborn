@@ -4,34 +4,70 @@ local Units = require("features.units")
 
 local Inventory = {}
 
-function Inventory.get_player_items(user_id)
+function Inventory.get_stackables(user_id)
     local object_ids = {
-        {collection = "items", key = "player_items", user_id = user_id}
+        {collection = "inventory", key = "stackables", user_id = user_id}
     }
     local objects = nk.storage_read(object_ids)
-
     if #objects > 0 then
-        local data = objects[1].value
-        if data and data.items then
-            return data.items
-        end
+        return objects[1].value
     end
-
     return {}
 end
 
-function Inventory.save_player_items(user_id, items)
-    local objects = {
+function Inventory.save_stackables(user_id, stackables)
+    nk.storage_write({
         {
-            collection = "items",
-            key = "player_items",
+            collection = "inventory",
+            key = "stackables",
             user_id = user_id,
-            value = {items = items},
+            value = stackables,
             permission_read = 1,
             permission_write = 1
         }
-    }
-    nk.storage_write(objects)
+    })
+end
+
+function Inventory.get_equipment(user_id)
+    local equipment = {}
+    local cursor = nil
+
+    repeat
+        local objects, next_cursor = nk.storage_list(user_id, "equipment", 100, cursor)
+        for _, obj in ipairs(objects) do
+            table.insert(equipment, obj.value)
+        end
+        cursor = next_cursor
+    until not cursor
+
+    return equipment
+end
+
+function Inventory.save_equipment(user_id, equips)
+    local writes = {}
+    for _, eq in ipairs(equips) do
+        table.insert(writes, {
+            collection = "equipment",
+            key = eq.instance_id,
+            user_id = user_id,
+            value = eq,
+            permission_read = 1,
+            permission_write = 1
+        })
+    end
+    if #writes > 0 then
+        nk.storage_write(writes)
+    end
+end
+
+function Inventory.get_player_items_rpc(context, payload)
+    local stackables = Inventory.get_stackables(context.user_id)
+    local equipment = Inventory.get_equipment(context.user_id)
+
+    return nk.json_encode({
+        stackables = stackables,
+        equipment = equipment
+    })
 end
 
 function Inventory.add_item(context, payload)
@@ -43,42 +79,37 @@ function Inventory.add_item(context, payload)
         return nk.json_encode({error = "Invalid parameters"})
     end
 
-    local item_data = StaticData.items_data[item_id]
-    if not item_data then
+    if StaticData.equipment_data and StaticData.equipment_data[item_id] then
+        -- It's an equipment
+        local new_equips = {}
+        for i = 1, quantity do
+            table.insert(new_equips, {
+                instance_id = nk.uuid_v4(),
+                template_id = item_id,
+                equipped_to = nk.json_null()
+            })
+        end
+        Inventory.save_equipment(context.user_id, new_equips)
+        return nk.json_encode({success = true, added_equipment = new_equips})
+    elseif StaticData.items_data and StaticData.items_data[item_id] then
+        -- It's a stackable
+        local stackables = Inventory.get_stackables(context.user_id)
+        stackables[item_id] = (stackables[item_id] or 0) + quantity
+        Inventory.save_stackables(context.user_id, stackables)
+        return nk.json_encode({success = true, stackables = stackables})
+    else
         return nk.json_encode({error = "Item data not found"})
     end
-
-    local player_items = Inventory.get_player_items(context.user_id)
-    local item_found = false
-
-    for i, item in ipairs(player_items) do
-        if item.item_id == item_id then
-            item.quantity = item.quantity + quantity
-            item_found = true
-            break
-        end
-    end
-
-    if not item_found then
-        table.insert(player_items, {
-            item_id = item_id,
-            quantity = quantity
-        })
-    end
-
-    Inventory.save_player_items(context.user_id, player_items)
-
-    return nk.json_encode({success = true, items = player_items})
 end
 
 function Inventory.rpc_equip_item(context, payload)
     local request = nk.json_decode(payload)
-    local unit_id = request.unit_id
+    local unit_id = request.unit_instance_id
     local slot = request.slot
-    local item_id = request.item_id -- nil or empty string implies unequip
+    local item_instance_id = request.item_instance_id -- nil or empty string implies unequip
 
     if not unit_id or not slot then
-        return nk.json_encode({error = "Missing unit_id or slot"})
+        return nk.json_encode({error = "Missing unit_instance_id or slot"})
     end
 
     local valid_slots = {
@@ -90,36 +121,45 @@ function Inventory.rpc_equip_item(context, payload)
         return nk.json_encode({error = "Invalid slot: " .. tostring(slot)})
     end
 
-    local is_unequipping = (not item_id or item_id == "")
-
-    local player_units = Units.get_player_units(context.user_id)
-    local player_items = Inventory.get_player_items(context.user_id)
-
-    -- Find target unit
-    local target_unit = nil
-    for _, u in ipairs(player_units) do
-        if u.instance_id == unit_id then
-            target_unit = u
-            break
-        end
-    end
-
+    local target_unit = Units.get_unit(context.user_id, unit_id)
     if not target_unit then
         return nk.json_encode({error = "Unit not found"})
     end
 
-    -- Ensure equipment table exists (backward compatibility)
     if not target_unit.equipment then
         target_unit.equipment = {}
     end
 
+    local is_unequipping = (not item_instance_id or item_instance_id == "")
+    local updated_units = {[target_unit.instance_id] = target_unit}
+    local updated_equips = {}
+
     if is_unequipping then
+        local old_item_instance_id = target_unit.equipment[slot]
         target_unit.equipment[slot] = nil
+
+        if old_item_instance_id then
+            local obj_id = {collection = "equipment", key = old_item_instance_id, user_id = context.user_id}
+            local objects = nk.storage_read({obj_id})
+            if #objects > 0 then
+                local eq_obj = objects[1].value
+                eq_obj.equipped_to = nk.json_null()
+                updated_equips[eq_obj.instance_id] = eq_obj
+            end
+        end
     else
         -- Equipping validation
-        local eq_data = StaticData.equipment_data[item_id]
+        local obj_id = {collection = "equipment", key = item_instance_id, user_id = context.user_id}
+        local objects = nk.storage_read({obj_id})
+        if #objects == 0 then
+            return nk.json_encode({error = "Equipment instance not found or not owned"})
+        end
+        local eq_obj = objects[1].value
+
+        local template_id = eq_obj.template_id
+        local eq_data = StaticData.equipment_data[template_id]
         if not eq_data then
-            return nk.json_encode({error = "Invalid equipment item_id: " .. tostring(item_id)})
+            return nk.json_encode({error = "Invalid equipment template_id: " .. tostring(template_id)})
         end
 
         local unit_base_data = StaticData.units_data[target_unit.unit_id]
@@ -127,7 +167,6 @@ function Inventory.rpc_equip_item(context, payload)
             return nk.json_encode({error = "Base unit data not found"})
         end
 
-        -- Check if unit can equip this type
         local can_equip = false
         if type(unit_base_data.equip) == "table" then
             for _, type_id in ipairs(unit_base_data.equip) do
@@ -142,64 +181,63 @@ function Inventory.rpc_equip_item(context, payload)
             return nk.json_encode({error = "Unit cannot equip this item type"})
         end
 
-        -- Check ownership and quantity
-        local owned_quantity = 0
-        for _, item in ipairs(player_items) do
-            if item.item_id == item_id then
-                owned_quantity = item.quantity or 0
-                break
-            end
-        end
-
-        if owned_quantity <= 0 then
-            return nk.json_encode({error = "Player does not own this item"})
-        end
-
-        -- Count how many of this item are currently equipped across ALL units
-        local equipped_count = 0
-        local first_found_unit_with_item = nil
-        local first_found_slot = nil
-
-        for _, u in ipairs(player_units) do
-            if u.equipment then
-                for s, eq_id in pairs(u.equipment) do
-                    if eq_id == item_id then
-                        equipped_count = equipped_count + 1
-                        if not first_found_unit_with_item then
-                            first_found_unit_with_item = u
-                            first_found_slot = s
-                        end
+        -- Check if it's already equipped to another unit
+        if eq_obj.equipped_to and eq_obj.equipped_to ~= nk.json_null() and eq_obj.equipped_to ~= target_unit.instance_id then
+            local other_unit_id = eq_obj.equipped_to
+            local other_unit = Units.get_unit(context.user_id, other_unit_id)
+            if other_unit and other_unit.equipment then
+                for s, inst_id in pairs(other_unit.equipment) do
+                    if inst_id == item_instance_id then
+                        other_unit.equipment[s] = nil
+                        break
                     end
                 end
+                updated_units[other_unit.instance_id] = other_unit
             end
         end
 
-        -- If we don't have enough spare items, unequip from another unit
-        if equipped_count >= owned_quantity then
-            if first_found_unit_with_item and first_found_slot then
-                first_found_unit_with_item.equipment[first_found_slot] = nil
-            else
-                -- Failsafe: technically shouldn't happen unless data corruption
-                return nk.json_encode({error = "Not enough items and failed to auto-unequip"})
+        -- If replacing an item, mark the old item as unequipped
+        local old_item_instance_id = target_unit.equipment[slot]
+        if old_item_instance_id and old_item_instance_id ~= item_instance_id then
+            local old_obj_id = {collection = "equipment", key = old_item_instance_id, user_id = context.user_id}
+            local old_objects = nk.storage_read({old_obj_id})
+            if #old_objects > 0 then
+                local old_eq_obj = old_objects[1].value
+                old_eq_obj.equipped_to = nk.json_null()
+                updated_equips[old_eq_obj.instance_id] = old_eq_obj
             end
         end
 
-        -- Apply the equipment
-        target_unit.equipment[slot] = item_id
+        eq_obj.equipped_to = target_unit.instance_id
+        target_unit.equipment[slot] = item_instance_id
+        updated_equips[eq_obj.instance_id] = eq_obj
 
         -- Two-handed rule
         if eq_data.is_two_handed or eq_data.is_twohanded then
-            if slot == "r_hand" then
-                target_unit.equipment.l_hand = nil
-            elseif slot == "l_hand" then
-                target_unit.equipment.r_hand = nil
+            local off_slot = (slot == "r_hand") and "l_hand" or "r_hand"
+            local off_item_instance_id = target_unit.equipment[off_slot]
+            if off_item_instance_id then
+                target_unit.equipment[off_slot] = nil
+                local off_obj_id = {collection = "equipment", key = off_item_instance_id, user_id = context.user_id}
+                local off_objects = nk.storage_read({off_obj_id})
+                if #off_objects > 0 then
+                    local off_eq_obj = off_objects[1].value
+                    off_eq_obj.equipped_to = nk.json_null()
+                    updated_equips[off_eq_obj.instance_id] = off_eq_obj
+                end
             end
         end
     end
 
-    Units.save_player_units(context.user_id, player_units)
+    local units_to_save = {}
+    for _, u in pairs(updated_units) do table.insert(units_to_save, u) end
+    Units.save_units(context.user_id, units_to_save)
 
-    return nk.json_encode({success = true, units = player_units})
+    local equips_to_save = {}
+    for _, e in pairs(updated_equips) do table.insert(equips_to_save, e) end
+    Inventory.save_equipment(context.user_id, equips_to_save)
+
+    return nk.json_encode({success = true, units_updated = units_to_save, equips_updated = equips_to_save})
 end
 
 return Inventory

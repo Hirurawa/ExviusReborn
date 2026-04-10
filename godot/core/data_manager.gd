@@ -222,8 +222,8 @@ func equip_item(instance_id: String, slot_id: String, item_id: String) -> Dictio
 		units_updated.emit(owned_units_ids)
 	return result
 
-func list_friends() -> NakamaAPI.ApiFriends:
-	var friends_list: NakamaAPI.ApiFriends = await server_connection.list_friends_async()
+func list_friends() -> NakamaAPI.ApiFriendList:
+	var friends_list: NakamaAPI.ApiFriendList = await server_connection.list_friends_async()
 	friends_updated.emit(friends_list)
 	return friends_list
 

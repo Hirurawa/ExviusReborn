@@ -1,18 +1,18 @@
 extends Control
 
-@onready var map_scroll = $VBoxContainer/MapScrollContainer
-@onready var map_sizer = $VBoxContainer/MapScrollContainer/MapSizer
-@onready var map_content = $VBoxContainer/MapScrollContainer/MapSizer/MapContent
-@onready var map_image = $VBoxContainer/MapScrollContainer/MapSizer/MapContent/MapImage
+@onready var map_scroll: ScrollContainer = $VBoxContainer/MapScrollContainer
+@onready var map_sizer: Control = $VBoxContainer/MapScrollContainer/MapSizer
+@onready var map_content: Control = $VBoxContainer/MapScrollContainer/MapSizer/MapContent
+@onready var map_image: TextureRect = $VBoxContainer/MapScrollContainer/MapSizer/MapContent/MapImage
 
-@onready var map_world_option = $VBoxContainer/HBoxContainer/WorldOptionButton
-@onready var map_region_option = $VBoxContainer/HBoxContainer/RegionOptionButton
-@onready var map_subregion_option = $VBoxContainer/HBoxContainer/SubregionOptionButton
-@onready var map_back_button = $VBoxContainer/TopBar/BackButton
+@onready var map_world_option: OptionButton = $VBoxContainer/HBoxContainer/WorldOptionButton
+@onready var map_region_option: OptionButton = $VBoxContainer/HBoxContainer/RegionOptionButton
+@onready var map_subregion_option: OptionButton = $VBoxContainer/HBoxContainer/SubregionOptionButton
+@onready var map_back_button: Button = $VBoxContainer/TopBar/BackButton
 
-@onready var mission_details_popup = $MissionDetailsPopup
-@onready var mission_dungeon_name = $MissionDetailsPopup/VBoxContainer/DungeonNameLabel
-@onready var missions_list_container = $MissionDetailsPopup/VBoxContainer/ScrollContainer/MissionsListContainer
+@onready var mission_details_popup: PopupPanel = $MissionDetailsPopup
+@onready var mission_dungeon_name: Label = $MissionDetailsPopup/VBoxContainer/DungeonNameLabel
+@onready var missions_list_container: VBoxContainer = $MissionDetailsPopup/VBoxContainer/ScrollContainer/MissionsListContainer
 
 var map_zoom_level: float = 1.0
 var _is_panning_map: bool = false
@@ -23,7 +23,16 @@ var current_selected_region: String = ""
 var current_selected_subregion: String = ""
 var current_selected_dungeon_id: String = ""
 
-func _ready():
+var _texture_cache: Dictionary = {}
+
+func _get_dynamic_texture(path: String) -> Texture2D:
+	if _texture_cache.has(path):
+		return _texture_cache[path]
+	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
+	_texture_cache[path] = tex
+	return tex
+
+func _ready() -> void:
 	map_back_button.pressed.connect(func(): UIManager.pop())
 	map_world_option.item_selected.connect(_on_map_world_selected)
 	map_region_option.item_selected.connect(_on_map_region_selected)
@@ -168,17 +177,17 @@ func _on_map_subregion_selected(index: int) -> void:
 		if dungeon_data.is_empty():
 			continue
 
-		var pos = dungeon_data.get("position", [0, 0])
-		var x = pos[0]
-		var y = pos[1]
+		var pos: Array = dungeon_data.get("position", [0, 0])
+		var x: int = pos[0]
+		var y: int = pos[1]
 
-		var icon_name = dungeon_data.get("icon", "")
-		var icon_path = "res://assets/map_icons/" + icon_name
+		var icon_name: String = dungeon_data.get("icon", "")
+		var icon_path: String = "res://assets/map_icons/" + icon_name
 
-		var btn = TextureButton.new()
-		var tex = load(icon_path)
+		var btn: TextureButton = TextureButton.new()
+		var tex: Texture2D = _get_dynamic_texture(icon_path)
 		if not tex:
-			tex = load("res://icon.svg") # Fallback
+			tex = _get_dynamic_texture("res://icon.svg") # Fallback
 
 		if tex:
 			btn.texture_normal = tex

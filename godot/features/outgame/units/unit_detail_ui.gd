@@ -1,44 +1,44 @@
 extends Control
 
-@onready var illustration_button = $VBoxContainer/CharInfoHBox/IllustrationButton
-@onready var unit_detail_sprite = $VBoxContainer/CharInfoHBox/IllustrationButton/SpritePlaceholder
-@onready var anim_sprite = $VBoxContainer/CharInfoHBox/IllustrationButton/AnimSprite
-@onready var unit_detail_back_button = $VBoxContainer/TopBar/BackButton
-@onready var unit_detail_name_label = $VBoxContainer/TopBar/TitleBox/NameLabel
-@onready var unit_detail_rarity_label = $VBoxContainer/TopBar/TitleBox/InfoHBox/RarityLabel
-@onready var unit_detail_level_label = $VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox/LevelLabel
-@onready var unit_detail_next_xp_label = $VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox/NextXPLabel
-@onready var unit_detail_hp_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/HPValue
-@onready var unit_detail_mp_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MPValue
-@onready var unit_detail_atk_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/ATKValue
-@onready var unit_detail_def_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/DEFValue
-@onready var unit_detail_mag_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MAGValue
-@onready var unit_detail_spr_value = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/SPRValue
-@onready var unit_detail_equip_icons_grid = $VBoxContainer/CharInfoHBox/StatsVBox/EquipIconsGrid
-@onready var unit_detail_add_xp_button = $VBoxContainer/ActionsHBox/AddXPButton
-@onready var unit_detail_awaken_button = $VBoxContainer/ActionsHBox/AwakenButton
+@onready var illustration_button: Button = $VBoxContainer/CharInfoHBox/IllustrationButton
+@onready var unit_detail_sprite: TextureRect = $VBoxContainer/CharInfoHBox/IllustrationButton/SpritePlaceholder
+@onready var anim_sprite: Sprite2D = $VBoxContainer/CharInfoHBox/IllustrationButton/AnimSprite
+@onready var unit_detail_back_button: Button = $VBoxContainer/TopBar/BackButton
+@onready var unit_detail_name_label: Label = $VBoxContainer/TopBar/TitleBox/NameLabel
+@onready var unit_detail_rarity_label: Label = $VBoxContainer/TopBar/TitleBox/InfoHBox/RarityLabel
+@onready var unit_detail_level_label: Label = $VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox/LevelLabel
+@onready var unit_detail_next_xp_label: Label = $VBoxContainer/CharInfoHBox/StatsVBox/LevelHBox/NextXPLabel
+@onready var unit_detail_hp_value: Label = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/HPValue
+@onready var unit_detail_mp_value: Label = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MPValue
+@onready var unit_detail_atk_value: Label = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/ATKValue
+@onready var unit_detail_def_value: Label = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/DEFValue
+@onready var unit_detail_mag_value: Label = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/MAGValue
+@onready var unit_detail_spr_value: Label = $VBoxContainer/CharInfoHBox/StatsVBox/StatsGrid/SPRValue
+@onready var unit_detail_equip_icons_grid: GridContainer = $VBoxContainer/CharInfoHBox/StatsVBox/EquipIconsGrid
+@onready var unit_detail_add_xp_button: Button = $VBoxContainer/ActionsHBox/AddXPButton
+@onready var unit_detail_awaken_button: Button = $VBoxContainer/ActionsHBox/AwakenButton
 
-@onready var unit_detail_traits_btn = $VBoxContainer/TabsHBox/TraitButton
-@onready var unit_detail_magic_btn = $VBoxContainer/TabsHBox/MagicButton
-@onready var unit_detail_special_btn = $VBoxContainer/TabsHBox/SpecialButton
-@onready var unit_detail_equipment_tab_btn = $VBoxContainer/TabsHBox/EquipmentTabButton
-@onready var unit_detail_ability_tab_btn = $VBoxContainer/TabsHBox/AbilityTabButton
-@onready var unit_detail_trait_content = $VBoxContainer/TraitContent
-@onready var unit_detail_magic_content = $VBoxContainer/MagicContent
-@onready var unit_detail_special_content = $VBoxContainer/SpecialContent
-@onready var unit_detail_magic_grid = $VBoxContainer/MagicContent/MagicGrid
-@onready var unit_detail_special_grid = $VBoxContainer/SpecialContent/SpecialGrid
-@onready var unit_detail_equip_btn = $VBoxContainer/TabsHBox/EquipButton
-@onready var unit_detail_equipment_content = $VBoxContainer/EquipmentContent
-@onready var unit_detail_equipment_grid = $VBoxContainer/EquipmentContent/EquipmentGrid
-@onready var unit_detail_ability_content = $VBoxContainer/AbilityContent
-@onready var unit_detail_ability_grid = $VBoxContainer/AbilityContent/AbilityGrid
+@onready var unit_detail_traits_btn: Button = $VBoxContainer/TabsHBox/TraitButton
+@onready var unit_detail_magic_btn: Button = $VBoxContainer/TabsHBox/MagicButton
+@onready var unit_detail_special_btn: Button = $VBoxContainer/TabsHBox/SpecialButton
+@onready var unit_detail_equipment_tab_btn: Button = $VBoxContainer/TabsHBox/EquipmentTabButton
+@onready var unit_detail_ability_tab_btn: Button = $VBoxContainer/TabsHBox/AbilityTabButton
+@onready var unit_detail_trait_content: VBoxContainer = $VBoxContainer/TraitContent
+@onready var unit_detail_magic_content: ScrollContainer = $VBoxContainer/MagicContent
+@onready var unit_detail_special_content: ScrollContainer = $VBoxContainer/SpecialContent
+@onready var unit_detail_magic_grid: GridContainer = $VBoxContainer/MagicContent/MagicGrid
+@onready var unit_detail_special_grid: GridContainer = $VBoxContainer/SpecialContent/SpecialGrid
+@onready var unit_detail_equip_btn: Button = $VBoxContainer/TabsHBox/EquipButton
+@onready var unit_detail_equipment_content: ScrollContainer = $VBoxContainer/EquipmentContent
+@onready var unit_detail_equipment_grid: GridContainer = $VBoxContainer/EquipmentContent/EquipmentGrid
+@onready var unit_detail_ability_content: ScrollContainer = $VBoxContainer/AbilityContent
+@onready var unit_detail_ability_grid: GridContainer = $VBoxContainer/AbilityContent/AbilityGrid
 
-@onready var elem_resist_grid = $VBoxContainer/TraitContent/ElementResistGrid
-@onready var status_resist_grid = $VBoxContainer/TraitContent/StatusResistGrid
-@onready var lb_name_label = $VBoxContainer/TraitContent/LimitBurstHBox/LBName
-@onready var tm_name_label = $VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox/TMName
-@onready var tm_icon_rect = $VBoxContainer/TraitContent/TrustMasterHBox/TMIcon
+@onready var elem_resist_grid: GridContainer = $VBoxContainer/TraitContent/ElementResistGrid
+@onready var status_resist_grid: GridContainer = $VBoxContainer/TraitContent/StatusResistGrid
+@onready var lb_name_label: Label = $VBoxContainer/TraitContent/LimitBurstHBox/LBName
+@onready var tm_name_label: Label = $VBoxContainer/TraitContent/TrustMasterHBox/TMInfoVBox/TMName
+@onready var tm_icon_rect: TextureRect = $VBoxContainer/TraitContent/TrustMasterHBox/TMIcon
 
 var current_unit_inst: Dictionary = {}
 
@@ -47,7 +47,16 @@ var _current_stats_sub_tab: String = "Equipment"
 var _current_equip_sub_tab: String = "Traits"
 var _is_animating: bool = false
 
-func _ready():
+var _texture_cache: Dictionary = {}
+
+func _get_dynamic_texture(path: String) -> Texture2D:
+	if _texture_cache.has(path):
+		return _texture_cache[path]
+	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
+	_texture_cache[path] = tex
+	return tex
+
+func _ready() -> void:
 	unit_detail_back_button.pressed.connect(func(): UIManager.pop())
 	illustration_button.pressed.connect(_on_illustration_pressed)
 
@@ -440,31 +449,31 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 	for child in unit_detail_equip_icons_grid.get_children():
 		child.queue_free()
 
-	var allowed_equip = unit_data.get("equip", [])
-	var equip_icons_data = DataManager.game_data_equipment_icons
+	var allowed_equip: Array = unit_data.get("equip", [])
+	var equip_icons_data: Dictionary = DataManager.game_data_equipment_icons
 
-	var valid_keys = []
+	var valid_keys: Array = []
 	for key in equip_icons_data.keys():
-		var type_id = equip_icons_data[key].get("type_id", 0)
+		var type_id: int = equip_icons_data[key].get("type_id", 0)
 		if type_id < 60:
 			valid_keys.append(key)
 
 	valid_keys.sort_custom(func(a, b): return int(a) < int(b))
 
 	for key in valid_keys:
-		var item = equip_icons_data[key]
-		var type_id = item.get("type_id", 0)
-		var icon_name = item.get("icon", "")
-		var tex_rect = TextureRect.new()
+		var item: Dictionary = equip_icons_data[key]
+		var type_id: int = item.get("type_id", 0)
+		var icon_name: String = item.get("icon", "")
+		var tex_rect: TextureRect = TextureRect.new()
 		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex_rect.custom_minimum_size = Vector2(16, 16)
 		tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tex_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-		var tex_path = "res://assets/icons/equipments/%s" % icon_name
+		var tex_path: String = "res://assets/icons/equipments/%s" % icon_name
 		if ResourceLoader.exists(tex_path):
-			tex_rect.texture = load(tex_path)
+			tex_rect.texture = _get_dynamic_texture(tex_path)
 
 		if not (type_id in allowed_equip or float(type_id) in allowed_equip):
 			tex_rect.modulate = Color(0.3, 0.3, 0.3, 1.0)

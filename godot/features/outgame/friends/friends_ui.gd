@@ -1,11 +1,11 @@
 extends Control
 
-@onready var add_friend_input = $VBoxContainer/AddFriendHBox/AddFriendInput
-@onready var add_friend_button = $VBoxContainer/AddFriendHBox/AddFriendButton
-@onready var friends_feedback_label = $VBoxContainer/FeedbackLabel
-@onready var friends_list_container = $VBoxContainer/ScrollContainer/FriendsListContainer
+@onready var add_friend_input: LineEdit = $VBoxContainer/AddFriendHBox/AddFriendInput
+@onready var add_friend_button: Button = $VBoxContainer/AddFriendHBox/AddFriendButton
+@onready var friends_feedback_label: Label = $VBoxContainer/FeedbackLabel
+@onready var friends_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/FriendsListContainer
 
-func _ready():
+func _ready() -> void:
 	add_friend_button.pressed.connect(_on_add_friend_button_pressed)
 	DataManager.friends_updated.connect(_on_friends_updated)
 	DataManager.friend_action_result.connect(_on_friend_action_result)
@@ -21,7 +21,7 @@ func _on_add_friend_button_pressed() -> void:
 	friends_feedback_label.text = "Sending friend request..."
 	DataManager.add_friend(username)
 
-func _on_friend_action_result(success: bool, message: String):
+func _on_friend_action_result(success: bool, message: String) -> void:
 	if success:
 		friends_feedback_label.text = "Action successful!"
 		add_friend_input.text = ""
@@ -45,7 +45,7 @@ func _on_friends_updated(friends_list) -> void:
 		return
 
 	for friend_obj in friends_list.friends:
-		var friend = friend_obj
+		var friend: NakamaAPI.ApiFriend = friend_obj
 		var hbox := HBoxContainer.new()
 		var label := Label.new()
 		var state_str := "Unknown"

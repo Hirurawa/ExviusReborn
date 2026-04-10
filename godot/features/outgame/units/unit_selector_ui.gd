@@ -1,12 +1,21 @@
 extends Control
 
-@onready var units_list_container = $VBoxContainer/ScrollContainer/UnitsListContainer
+@onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
 
 var mode: String = "view"
 var target_party_index: int = 0
 var target_slot_index: int = 0
 
 signal unit_selected(unit_inst: Dictionary)
+
+var _texture_cache: Dictionary = {}
+
+func _get_dynamic_texture(path: String) -> Texture2D:
+	if _texture_cache.has(path):
+		return _texture_cache[path]
+	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
+	_texture_cache[path] = tex
+	return tex
 
 func init_scene(params: Dictionary) -> void:
 	if params.has("mode"):
@@ -16,11 +25,11 @@ func init_scene(params: Dictionary) -> void:
 	if params.has("slot_index"):
 		target_slot_index = params.slot_index
 
-func _ready():
+func _ready() -> void:
 	DataManager.units_updated.connect(_on_units_updated)
 	_refresh_units_list(DataManager.owned_units_ids)
 
-func _on_units_updated(units: Array):
+func _on_units_updated(units: Array) -> void:
 	_refresh_units_list(units)
 
 func _refresh_units_list(owned_units_ids: Array) -> void:
@@ -29,7 +38,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 	# Back button if in select mode (should be added before early return)
 	if mode == "select":
-		var back_btn = Button.new()
+		var back_btn: Button = Button.new()
 		back_btn.text = "Back"
 		back_btn.pressed.connect(func(): UIManager.pop())
 		units_list_container.add_child(back_btn)
@@ -44,18 +53,19 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		if not unit_inst is Dictionary:
 			continue
 
-		var unit_id = unit_inst.get("unit_id", "")
+		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 
-		var container = VBoxContainer.new()
+		var container: VBoxContainer = VBoxContainer.new()
 		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		container.alignment = BoxContainer.ALIGNMENT_CENTER
 
-		var tex_btn = TextureButton.new()
-		var img_path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
-		var tex = load(img_path)
-		if tex:
-			tex_btn.texture_normal = tex
+		var tex_btn: TextureButton = TextureButton.new()
+		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+		if ResourceLoader.exists(img_path):
+			var tex: Texture2D = _get_dynamic_texture(img_path)
+			if tex:
+				tex_btn.texture_normal = tex
 
 		tex_btn.custom_minimum_size = Vector2(80, 80)
 		tex_btn.ignore_texture_size = true
@@ -65,7 +75,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		tex_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))
 		container.add_child(tex_btn)
 
-		var name_label = Label.new()
+		var name_label: Label = Label.new()
 		name_label.text = unit_data.get("name", "Unknown")
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -79,7 +89,7 @@ func _on_unit_clicked(unit_inst: Dictionary) -> void:
 		UIManager.push("unit_detail_ui", {"unit_inst": unit_inst})
 	elif mode == "select":
 		unit_selected.emit(unit_inst)
-		var parties = DataManager.parties.duplicate(true)
+		var parties: Array = DataManager.parties.duplicate(true)
 		if target_party_index >= 0 and target_party_index < parties.size():
 			parties[target_party_index]["units"][target_slot_index] = unit_inst.instance_id
 			DataManager.party_save_requested.emit(parties)

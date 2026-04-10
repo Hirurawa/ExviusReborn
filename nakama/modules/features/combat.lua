@@ -1,11 +1,15 @@
 local nk = require("nakama")
 local StaticData = require("core.static_data")
 local PlayerData = require("core.player_data")
+local Utilities = require("core.utilities")
 
 local Combat = {}
 
 function Combat.perform_mission(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local mission_id = request.mission_id
 
     if not mission_id then
@@ -24,7 +28,10 @@ function Combat.perform_mission(context, payload)
 
     -- First sync current stats
     local stats_str = PlayerData.get_player_stats(context, "")
-    local stats = nk.json_decode(stats_str)
+    local stats = Utilities.parse_payload(stats_str)
+    if not stats then
+        return nk.json_encode({error = "Failed to parse player stats"})
+    end
 
     if cost_type == "NRG" then
         if stats.current_nrg < cost then

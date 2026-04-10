@@ -1,13 +1,21 @@
 local nk = require("nakama")
 local StaticData = require("core.static_data")
 local Inventory = require("features.inventory")
+local Utilities = require("core.utilities")
 
 local Economy = {}
 
 function Economy.add_currency(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local gil = request.gil or 0
     local lapis = request.lapis or 0
+
+    if gil > 10000 or lapis > 10000 then
+        return nk.json_encode({error = "Amount exceeds debug limits"})
+    end
 
     if gil == 0 and lapis == 0 then
         return nk.json_encode({error = "No currency to add"})
@@ -31,7 +39,10 @@ function Economy.add_currency(context, payload)
 end
 
 function Economy.buy_item(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local item_id = request.item_id
     local quantity = request.quantity or 1
 
@@ -45,7 +56,7 @@ function Economy.buy_item(context, payload)
         if type(account.wallet) == "table" then
             wallet = account.wallet
         elseif type(account.wallet) == "string" and account.wallet ~= "" then
-            wallet = nk.json_decode(account.wallet)
+            wallet = Utilities.parse_payload(account.wallet) or {}
         end
     end
 

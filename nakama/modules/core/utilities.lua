@@ -2,6 +2,13 @@ local nk = require("nakama")
 
 local Utilities = {}
 
+function Utilities.parse_payload(payload)
+    if not payload or payload == "" then return {} end
+    local success, decoded = pcall(nk.json_decode, payload)
+    if not success then return nil end
+    return decoded
+end
+
 function Utilities.read_json_file(file_path)
     local success, content = pcall(nk.file_read, file_path)
     if not success or not content then

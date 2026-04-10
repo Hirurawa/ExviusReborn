@@ -95,82 +95,21 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		stars += "☆"
 	unit_detail_rarity_label.text = stars
 
-	var rarity_max_levels = {
-		1: 15,
-		2: 30,
-		3: 40,
-		4: 60,
-		5: 80,
-		6: 100,
-		7: 120
-	}
-
 	var level = unit_inst.get("level", 1)
-	var max_level = rarity_max_levels.get(int(rarity), 15)
+	var max_level = StatCalculator.RARITY_MAX_LEVELS.get(int(rarity), 15)
 	unit_detail_level_label.text = "Lvl %d/%d" % [level, max_level]
 
 	var next_xp = unit_inst.get("next_xp", 0)
 	unit_detail_next_xp_label.text = "next %d" % next_xp
 
-	var entries = unit_data.get("entries", {})
-	var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
+	var final_stats = StatCalculator.calculate_final_stats(unit_inst)
 
-	for key in entries.keys():
-		if entries[key].get("rarity") == rarity:
-			entry = entries[key]
-			break
-
-	var stats = entry.get("stats", {})
-	var hp = 0
-	var mp = 0
-	var atk = 0
-	var def_stat = 0
-	var mag = 0
-	var spr = 0
-
-	if not stats.is_empty():
-		for stat_name in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
-			var stat_arr = stats.get(stat_name, [0, 0])
-			if stat_arr.size() >= 2:
-				var min_stat = stat_arr[0]
-				var max_stat = stat_arr[1]
-				var current_stat = min_stat
-				if max_level > 1:
-					current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
-
-				if stat_name == "HP": hp = round(current_stat)
-				elif stat_name == "MP": mp = round(current_stat)
-				elif stat_name == "ATK": atk = round(current_stat)
-				elif stat_name == "DEF": def_stat = round(current_stat)
-				elif stat_name == "MAG": mag = round(current_stat)
-				elif stat_name == "SPR": spr = round(current_stat)
-
-	var equip_hp = 0
-	var equip_mp = 0
-	var equip_atk = 0
-	var equip_def = 0
-	var equip_mag = 0
-	var equip_spr = 0
-
-	var equipment = unit_inst.get("equipment", {})
-	for slot_id in equipment:
-		var item_id = equipment[slot_id]
-		if item_id != "":
-			var item_data = DataManager.game_data_equipment.get(item_id, {})
-			var item_stats = item_data.get("stats", {})
-			equip_hp += item_stats.get("HP", 0)
-			equip_mp += item_stats.get("MP", 0)
-			equip_atk += item_stats.get("ATK", 0)
-			equip_def += item_stats.get("DEF", 0)
-			equip_mag += item_stats.get("MAG", 0)
-			equip_spr += item_stats.get("SPR", 0)
-
-	unit_detail_hp_value.text = str(int(hp + equip_hp))
-	unit_detail_mp_value.text = str(int(mp + equip_mp))
-	unit_detail_atk_value.text = str(int(atk + equip_atk))
-	unit_detail_def_value.text = str(int(def_stat + equip_def))
-	unit_detail_mag_value.text = str(int(mag + equip_mag))
-	unit_detail_spr_value.text = str(int(spr + equip_spr))
+	unit_detail_hp_value.text = str(final_stats.get("HP", 0))
+	unit_detail_mp_value.text = str(final_stats.get("MP", 0))
+	unit_detail_atk_value.text = str(final_stats.get("ATK", 0))
+	unit_detail_def_value.text = str(final_stats.get("DEF", 0))
+	unit_detail_mag_value.text = str(final_stats.get("MAG", 0))
+	unit_detail_spr_value.text = str(final_stats.get("SPR", 0))
 
 	_populate_equip_icons_grid(unit_data)
 
@@ -187,6 +126,14 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_populate_skills(unit_inst, unit_data)
 	_populate_equipment_slots(unit_inst, unit_data)
 	
+	var entries = unit_data.get("entries", {})
+	var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
+
+	for key in entries.keys():
+		if entries[key].get("rarity") == rarity:
+			entry = entries[key]
+			break
+
 	# Fetch and display the traits
 	var element_resist = entry.get("element_resist", [0,0,0,0,0,0,0,0])
 	for i in range(8):

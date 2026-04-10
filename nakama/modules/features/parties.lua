@@ -1,4 +1,5 @@
 local nk = require("nakama")
+local Utilities = require("core.utilities")
 
 local Parties = {}
 
@@ -41,7 +42,10 @@ function Parties.rpc_get_parties(context, payload)
 end
 
 function Parties.rpc_save_parties(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
 
     if not request.parties then
         return nk.json_encode({error = "Missing 'parties' field in payload"})

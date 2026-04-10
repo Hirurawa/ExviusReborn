@@ -1,6 +1,7 @@
 local nk = require("nakama")
 local StaticData = require("core.static_data")
 local Units = require("features.units")
+local Utilities = require("core.utilities")
 
 local Inventory = {}
 
@@ -71,9 +72,16 @@ function Inventory.get_player_items_rpc(context, payload)
 end
 
 function Inventory.add_item(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local item_id = request.item_id
     local quantity = request.quantity or 1
+
+    if quantity > 10000 then
+        return nk.json_encode({error = "Amount exceeds debug limits"})
+    end
 
     if not item_id or quantity <= 0 then
         return nk.json_encode({error = "Invalid parameters"})
@@ -103,7 +111,10 @@ function Inventory.add_item(context, payload)
 end
 
 function Inventory.rpc_equip_item(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local unit_id = request.unit_instance_id
     local slot = request.slot
     local item_instance_id = request.item_instance_id -- nil or empty string implies unequip

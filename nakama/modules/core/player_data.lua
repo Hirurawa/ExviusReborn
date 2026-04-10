@@ -1,5 +1,6 @@
 local nk = require("nakama")
 local StaticData = require("core.static_data")
+local Utilities = require("core.utilities")
 
 local PlayerData = {}
 
@@ -128,8 +129,15 @@ function PlayerData.get_player_stats(context, payload)
 end
 
 function PlayerData.add_rank_xp(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local xp_amount = request.xp_amount or 0
+
+    if xp_amount > 10000 then
+        return nk.json_encode({error = "Amount exceeds debug limits"})
+    end
 
     if xp_amount <= 0 then
         return nk.json_encode({error = "Invalid xp amount"})
@@ -137,7 +145,10 @@ function PlayerData.add_rank_xp(context, payload)
 
     -- First sync current energy
     local stats_str = PlayerData.get_player_stats(context, "")
-    local stats = nk.json_decode(stats_str)
+    local stats = Utilities.parse_payload(stats_str)
+    if not stats then
+        return nk.json_encode({error = "Failed to parse player stats"})
+    end
 
     stats.xp = stats.xp + xp_amount
 

@@ -1,5 +1,6 @@
 local nk = require("nakama")
 local StaticData = require("core.static_data")
+local Utilities = require("core.utilities")
 
 local Units = {}
 
@@ -74,8 +75,13 @@ function Units.get_player_units_rpc(context, payload)
 end
 
 function Units.summon_units(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local amount = request.amount or 1
+
+    -- TODO: Add currency/ticket deduction logic here before summoning
 
     local available_unit_ids = {}
     for id, _ in pairs(StaticData.units_data) do
@@ -115,9 +121,16 @@ function Units.summon_units(context, payload)
 end
 
 function Units.add_unit_xp(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local instance_id = request.instance_id
     local xp_amount = request.xp_amount
+
+    if xp_amount and xp_amount > 10000 then
+        return nk.json_encode({error = "Amount exceeds debug limits"})
+    end
 
     if not instance_id or not xp_amount or xp_amount <= 0 then
         return nk.json_encode({error = "Invalid parameters"})
@@ -155,7 +168,10 @@ function Units.add_unit_xp(context, payload)
 end
 
 function Units.awaken_unit(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local instance_id = request.instance_id
 
     if not instance_id then
@@ -182,6 +198,8 @@ function Units.awaken_unit(context, payload)
     if unit.current_rarity >= max_rarity then
         return nk.json_encode({error = "Unit is already at max rarity"})
     end
+
+    -- TODO: Add material and currency deduction logic here before awakening
 
     unit.current_rarity = unit.current_rarity + 1
     unit.level = 1

@@ -1,12 +1,13 @@
 local nk = require("nakama")
 local StaticData = require("core.static_data")
+local Utilities = require("core.utilities")
 
 local ClientData = {}
 
 function ClientData.get_data_version(context, payload)
-    local request = {}
-    if payload and payload ~= "" then
-        pcall(function() request = nk.json_decode(payload) end)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
     end
 
     local data_type = request.type
@@ -28,9 +29,9 @@ function ClientData.get_data_version(context, payload)
 end
 
 function ClientData.get_game_data(context, payload)
-    local request = {}
-    if payload and payload ~= "" then
-        pcall(function() request = nk.json_decode(payload) end)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
     end
 
     local data_type = request.type or "all"
@@ -52,7 +53,10 @@ function ClientData.get_game_data(context, payload)
 end
 
 function ClientData.get_dungeon_missions(context, payload)
-    local request = nk.json_decode(payload)
+    local request = Utilities.parse_payload(payload)
+    if not request then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
     local mission_ids = request.mission_ids or {}
 
     local result = {}

@@ -21,6 +21,7 @@ Nakama="*uid://c4wa1wmbnm2fm"
 AssetPatcher="*res://asset_patcher.gd"
 DataManager="*res://autoloads/data_manager.gd"
 UIManager="*res://autoloads/ui_manager.gd"
+StatCalculator="*res://autoloads/stat_calculator.gd"
 
 [display]
 

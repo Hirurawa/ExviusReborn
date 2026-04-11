@@ -9,6 +9,8 @@ var shop_items: Array[String] = ["101000100", "101001100"]
 var shop_equipments: Array[String] = ["301000200", "403043300", "405000200"]
 
 func _ready() -> void:
+	DataManager.purchase_successful.connect(_on_purchase_successful)
+	DataManager.purchase_failed.connect(_on_purchase_failed)
 	_populate_shop(shop_items, items_container, "items")
 	_populate_shop(shop_equipments, equipment_container, "equipments")
 
@@ -30,8 +32,10 @@ func _populate_shop(ids: Array, container: Control, type: String) -> void:
 			row.buy_requested.connect(_on_buy_requested)
 
 func _on_buy_requested(id: String, type: String) -> void:
-	var result: Dictionary = await DataManager.buy_item(id, 1)
-	if result.has("error"):
-		shop_feedback_label.text = result.error
-	else:
-		shop_feedback_label.text = "Item purchased successfully!"
+	DataManager.request_buy_item(id, 1)
+
+func _on_purchase_successful() -> void:
+	shop_feedback_label.text = "Item purchased successfully!"
+
+func _on_purchase_failed(error_message: String) -> void:
+	shop_feedback_label.text = error_message

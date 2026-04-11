@@ -15,6 +15,10 @@ signal friends_updated(friends: Object)
 signal friend_action_result(success: bool, message: String)
 signal parties_updated(parties: Array)
 signal party_save_requested(new_parties: Array)
+signal purchase_successful()
+signal purchase_failed(error_message: String)
+signal equip_successful()
+signal equip_failed(error_message: String)
 
 var server_connection: Node
 
@@ -136,18 +140,34 @@ func _load_initial_data(email: String) -> void:
 
 	data_loaded.emit()
 
+func _sanitize_floats_to_ints(data: Variant) -> Variant:
+	if typeof(data) == TYPE_DICTIONARY:
+		var new_dict: Dictionary = {}
+		for key in data:
+			new_dict[key] = _sanitize_floats_to_ints(data[key])
+		return new_dict
+	elif typeof(data) == TYPE_ARRAY:
+		var new_array: Array = []
+		for item in data:
+			new_array.append(_sanitize_floats_to_ints(item))
+		return new_array
+	elif typeof(data) == TYPE_FLOAT:
+		if fmod(data, 1.0) == 0.0:
+			return int(data)
+	return data
+
 func _on_patch_complete() -> void:
-	game_data_units = AssetPatcher.get_data("units")
-	game_data_items = AssetPatcher.get_data("items")
-	game_data_equipment = AssetPatcher.get_data("equipment")
-	game_data_worlds = AssetPatcher.get_data("worlds")
-	game_data_dungeons = AssetPatcher.get_data("dungeons")
-	game_data_skills_magic = AssetPatcher.get_data("skills_magic")
-	game_data_skills_ability = AssetPatcher.get_data("skills_ability")
-	game_data_limitbursts = AssetPatcher.get_data("limitbursts")
-	game_data_materia = AssetPatcher.get_data("materia")
-	game_data_equipment_icons = AssetPatcher.get_data("equipment-icons")
-	game_data_monsters = AssetPatcher.get_data("monsters")
+	game_data_units = _sanitize_floats_to_ints(AssetPatcher.get_data("units"))
+	game_data_items = _sanitize_floats_to_ints(AssetPatcher.get_data("items"))
+	game_data_equipment = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment"))
+	game_data_worlds = _sanitize_floats_to_ints(AssetPatcher.get_data("worlds"))
+	game_data_dungeons = _sanitize_floats_to_ints(AssetPatcher.get_data("dungeons"))
+	game_data_skills_magic = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_magic"))
+	game_data_skills_ability = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_ability"))
+	game_data_limitbursts = _sanitize_floats_to_ints(AssetPatcher.get_data("limitbursts"))
+	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
+	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))
+	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
 
 func _update_wallet_data(wallet: Dictionary) -> void:
 	gil = int(wallet.get("gil", 0))
@@ -173,7 +193,7 @@ func add_currency(gil_to_add: int, lapis_to_add: int) -> void:
 		var wallet: Variant = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 		_update_wallet_data(wallet)
 
-func buy_item(item_id: String, quantity: int) -> Dictionary:
+func request_buy_item(item_id: String, quantity: int) -> void:
 	var result: Dictionary = await server_connection.buy_item_async(item_id, quantity)
 	if not result.has("error"):
 		if result.has("added_equipment"):
@@ -186,7 +206,9 @@ func buy_item(item_id: String, quantity: int) -> Dictionary:
 		if result.has("wallet"):
 			var wallet: Variant = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 			_update_wallet_data(wallet)
-	return result
+		purchase_successful.emit()
+	else:
+		purchase_failed.emit(result.get("error", "Unknown error"))
 
 func save_parties(new_parties: Array) -> Dictionary:
 	var result: Dictionary = await server_connection.save_parties_async(new_parties)
@@ -221,12 +243,27 @@ func awaken_unit(instance_id: String) -> Dictionary:
 		units_updated.emit(owned_units_ids)
 	return result
 
-func equip_item(instance_id: String, slot_id: String, item_id: String) -> Dictionary:
+func request_equip_item(instance_id: String, slot_id: String, item_id: String) -> void:
+	if item_id != "" and slot_id in ["r_hand", "l_hand"]:
+		var item_data_dict: Dictionary = {}
+		for item in owned_items.get("equipment", []):
+			if item is Dictionary and item.get("instance_id", "") == item_id:
+				var template_id: String = item.get("template_id", "")
+				if game_data_equipment.has(template_id):
+					item_data_dict = game_data_equipment[template_id]
+				break
+
+		if item_data_dict.get("is_twohanded", false):
+			var other_hand: String = "l_hand" if slot_id == "r_hand" else "r_hand"
+			await server_connection.equip_item_async(instance_id, other_hand, "")
+
 	var result: Dictionary = await server_connection.equip_item_async(instance_id, slot_id, item_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
 		units_updated.emit(owned_units_ids)
-	return result
+		equip_successful.emit()
+	else:
+		equip_failed.emit(result.get("error", "Unknown error"))
 
 func list_friends() -> NakamaAPI.ApiFriendList:
 	var friends_list: NakamaAPI.ApiFriendList = await server_connection.list_friends_async()
@@ -267,3 +304,44 @@ func perform_mission(mission_id: String) -> Dictionary:
 			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 			_update_wallet_data(wallet)
 	return result
+
+
+func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) -> Array:
+	var available_items: Array = []
+	for item in owned_items.get("equipment", []):
+		if not item is Dictionary: continue
+		var instance_id: String = item.get("instance_id", "")
+		var template_id: String = item.get("template_id", "")
+
+		var item_data: Variant = game_data_equipment.get(template_id)
+		if not item_data: continue
+
+		var item_data_dict: Dictionary = item_data as Dictionary
+
+		var item_type_id: int = item_data_dict.get("type_id", -1)
+		var is_valid_slot: bool = false
+
+		var item_slot: String = item_data_dict.get("slot", "")
+		if "hand" in slot_id and (item_slot == "Weapon" or item_slot == "Shield"):
+			is_valid_slot = true
+		elif "head" in slot_id and item_slot == "Headgear":
+			is_valid_slot = true
+		elif "body" in slot_id and item_slot == "Chest":
+			is_valid_slot = true
+		elif "acc_" in slot_id and item_slot == "Accessory":
+			is_valid_slot = true
+		elif "ability_" in slot_id and item_slot == "Materia":
+			is_valid_slot = true
+
+		if not is_valid_slot: continue
+		if item_type_id not in allowed_equips and item_type_id != -1: continue
+
+		# Combine the instance wrapper data with static stats for the UI
+		var combined_item: Dictionary = item_data_dict.duplicate()
+		combined_item["instance_id"] = instance_id
+		combined_item["template_id"] = template_id
+		combined_item["equipped_to"] = item.get("equipped_to", null)
+
+		available_items.append(combined_item)
+
+	return available_items

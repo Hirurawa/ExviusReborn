@@ -114,19 +114,36 @@ func _load_initial_data(email: String) -> void:
 	AssetPatcher.start_patching()
 	await AssetPatcher.patch_complete
 	var stats: Dictionary = await server_connection.read_player_stats_async()
-	current_rank = int(stats.get("rank", 1))
-	current_xp = int(stats.get("xp", 0))
-	next_rank_xp = int(stats.get("next_rank_xp", 100))
-	current_nrg = int(stats.get("current_nrg", 41))
-	max_nrg = int(stats.get("max_nrg", 41))
-	nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", 300))
-	seconds_until_next_nrg = float(stats.get("seconds_until_next_nrg", 0.0))
+	assert(stats.has("rank"), "CRITICAL ERROR: stats is missing rank!")
+	if not stats.has("rank"): push_error("CRITICAL ERROR: stats is missing rank!")
+	current_rank = int(stats["rank"])
+	assert(stats.has("xp"), "CRITICAL ERROR: stats is missing xp!")
+	if not stats.has("xp"): push_error("CRITICAL ERROR: stats is missing xp!")
+	current_xp = int(stats["xp"])
+	assert(stats.has("next_rank_xp"), "CRITICAL ERROR: stats is missing next_rank_xp!")
+	if not stats.has("next_rank_xp"): push_error("CRITICAL ERROR: stats is missing next_rank_xp!")
+	next_rank_xp = int(stats["next_rank_xp"])
+	assert(stats.has("current_nrg"), "CRITICAL ERROR: stats is missing current_nrg!")
+	if not stats.has("current_nrg"): push_error("CRITICAL ERROR: stats is missing current_nrg!")
+	current_nrg = int(stats["current_nrg"])
+	assert(stats.has("max_nrg"), "CRITICAL ERROR: stats is missing max_nrg!")
+	if not stats.has("max_nrg"): push_error("CRITICAL ERROR: stats is missing max_nrg!")
+	max_nrg = int(stats["max_nrg"])
+	assert(stats.has("nrg_regen_rate_seconds"), "CRITICAL ERROR: stats is missing nrg_regen_rate_seconds!")
+	if not stats.has("nrg_regen_rate_seconds"): push_error("CRITICAL ERROR: stats is missing nrg_regen_rate_seconds!")
+	nrg_regen_rate_seconds = int(stats["nrg_regen_rate_seconds"])
+	assert(stats.has("seconds_until_next_nrg"), "CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
+	if not stats.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
+	seconds_until_next_nrg = float(stats["seconds_until_next_nrg"])
 	rank_updated.emit(current_rank, current_xp, next_rank_xp)
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
 	owned_units_ids = await server_connection.read_player_units_async()
 	_inject_final_stats(owned_units_ids)
 	units_updated.emit(owned_units_ids)
+	
+	owned_items = await server_connection.read_player_items_async()
+	items_updated.emit(owned_items)
 	
 	parties = await server_connection.get_parties_async()
 	parties_updated.emit(parties)
@@ -177,20 +194,38 @@ func _on_patch_complete() -> void:
 	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
 
 func _update_wallet_data(wallet: Dictionary) -> void:
-	gil = int(wallet.get("gil", 0))
-	lapis = int(wallet.get("lapis", 0))
+	assert(wallet.has("gil"), "CRITICAL ERROR: wallet is missing gil!")
+	if not wallet.has("gil"): push_error("CRITICAL ERROR: wallet is missing gil!")
+	gil = int(wallet["gil"])
+	assert(wallet.has("lapis"), "CRITICAL ERROR: wallet is missing lapis!")
+	if not wallet.has("lapis"): push_error("CRITICAL ERROR: wallet is missing lapis!")
+	lapis = int(wallet["lapis"])
 	currency_updated.emit(gil, lapis)
 
 func add_rank_xp(xp_to_add: int) -> void:
 	var result: Dictionary = await server_connection.add_rank_xp_async(xp_to_add)
 	if not result.is_empty():
-		current_rank = int(result.get("rank", current_rank))
-		current_xp = int(result.get("xp", current_xp))
-		next_rank_xp = int(result.get("next_rank_xp", next_rank_xp))
-		current_nrg = int(result.get("current_nrg", current_nrg))
-		max_nrg = int(result.get("max_nrg", max_nrg))
-		nrg_regen_rate_seconds = int(result.get("nrg_regen_rate_seconds", nrg_regen_rate_seconds))
-		seconds_until_next_nrg = float(result.get("seconds_until_next_nrg", seconds_until_next_nrg))
+		assert(result.has("rank"), "CRITICAL ERROR: result is missing rank!")
+		if not result.has("rank"): push_error("CRITICAL ERROR: result is missing rank!")
+		current_rank = int(result["rank"])
+		assert(result.has("xp"), "CRITICAL ERROR: result is missing xp!")
+		if not result.has("xp"): push_error("CRITICAL ERROR: result is missing xp!")
+		current_xp = int(result["xp"])
+		assert(result.has("next_rank_xp"), "CRITICAL ERROR: result is missing next_rank_xp!")
+		if not result.has("next_rank_xp"): push_error("CRITICAL ERROR: result is missing next_rank_xp!")
+		next_rank_xp = int(result["next_rank_xp"])
+		assert(result.has("current_nrg"), "CRITICAL ERROR: result is missing current_nrg!")
+		if not result.has("current_nrg"): push_error("CRITICAL ERROR: result is missing current_nrg!")
+		current_nrg = int(result["current_nrg"])
+		assert(result.has("max_nrg"), "CRITICAL ERROR: result is missing max_nrg!")
+		if not result.has("max_nrg"): push_error("CRITICAL ERROR: result is missing max_nrg!")
+		max_nrg = int(result["max_nrg"])
+		assert(result.has("nrg_regen_rate_seconds"), "CRITICAL ERROR: result is missing nrg_regen_rate_seconds!")
+		if not result.has("nrg_regen_rate_seconds"): push_error("CRITICAL ERROR: result is missing nrg_regen_rate_seconds!")
+		nrg_regen_rate_seconds = int(result["nrg_regen_rate_seconds"])
+		assert(result.has("seconds_until_next_nrg"), "CRITICAL ERROR: result is missing seconds_until_next_nrg!")
+		if not result.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: result is missing seconds_until_next_nrg!")
+		seconds_until_next_nrg = float(result["seconds_until_next_nrg"])
 		rank_updated.emit(current_rank, current_xp, next_rank_xp)
 		nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
@@ -204,7 +239,9 @@ func request_buy_item(item_id: String, quantity: int) -> void:
 	var result: Dictionary = await server_connection.buy_item_async(item_id, quantity)
 	if not result.has("error"):
 		if result.has("added_equipment"):
-			if typeof(owned_items.get("equipment")) == TYPE_ARRAY:
+			assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
+			if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")
+			if typeof(owned_items["equipment"]) == TYPE_ARRAY:
 				owned_items["equipment"].append_array(result.added_equipment)
 			items_updated.emit(owned_items)
 		if result.has("stackables"):
@@ -215,7 +252,7 @@ func request_buy_item(item_id: String, quantity: int) -> void:
 			_update_wallet_data(wallet)
 		purchase_successful.emit()
 	else:
-		purchase_failed.emit(result.get("error", "Unknown error"))
+		purchase_failed.emit(result.get("error", "ERR_MISSING_SERVER_ERROR_MSG"))
 
 func save_parties(new_parties: Array) -> Dictionary:
 	var result: Dictionary = await server_connection.save_parties_async(new_parties)
@@ -256,12 +293,20 @@ func awaken_unit(instance_id: String) -> Dictionary:
 func request_equip_item(instance_id: String, slot_id: String, item_id: String) -> void:
 	if item_id != "" and slot_id in ["r_hand", "l_hand"]:
 		var item_data_dict: Dictionary = {}
-		for item in owned_items.get("equipment", []):
-			if item is Dictionary and item.get("instance_id", "") == item_id:
-				var template_id: String = item.get("template_id", "")
-				if game_data_equipment.has(template_id):
-					item_data_dict = game_data_equipment[template_id]
-				break
+		assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
+		if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")
+		var equipment_list = owned_items["equipment"] if owned_items.has("equipment") else []
+		for item in equipment_list:
+			if item is Dictionary:
+				assert(item.has("instance_id"), "CRITICAL ERROR: item is missing instance_id!")
+				if not item.has("instance_id"): push_error("CRITICAL ERROR: item is missing instance_id!")
+				if item["instance_id"] == item_id:
+					assert(item.has("template_id"), "CRITICAL ERROR: item is missing template_id!")
+					if not item.has("template_id"): push_error("CRITICAL ERROR: item is missing template_id!")
+					var template_id: String = item["template_id"]
+					if game_data_equipment.has(template_id):
+						item_data_dict = game_data_equipment[template_id]
+					break
 
 		if item_data_dict.get("is_twohanded", false):
 			var other_hand: String = "l_hand" if slot_id == "r_hand" else "r_hand"
@@ -274,7 +319,7 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 		units_updated.emit(owned_units_ids)
 		equip_successful.emit()
 	else:
-		equip_failed.emit(result.get("error", "Unknown error"))
+		equip_failed.emit(result.get("error", "ERR_MISSING_SERVER_ERROR_MSG"))
 		
 func _inject_final_stats(units: Array) -> void:
 	for i in range(units.size()):
@@ -307,13 +352,27 @@ func perform_mission(mission_id: String) -> Dictionary:
 	if not result.has("error"):
 		if result.has("stats"):
 			var stats = result.stats
-			current_rank = int(stats.get("rank", current_rank))
-			current_xp = int(stats.get("xp", current_xp))
-			next_rank_xp = int(stats.get("next_rank_xp", next_rank_xp))
-			current_nrg = int(stats.get("current_nrg", current_nrg))
-			max_nrg = int(stats.get("max_nrg", max_nrg))
-			nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", nrg_regen_rate_seconds))
-			seconds_until_next_nrg = float(stats.get("seconds_until_next_nrg", seconds_until_next_nrg))
+			assert(stats.has("rank"), "CRITICAL ERROR: stats is missing rank!")
+			if not stats.has("rank"): push_error("CRITICAL ERROR: stats is missing rank!")
+			current_rank = int(stats["rank"])
+			assert(stats.has("xp"), "CRITICAL ERROR: stats is missing xp!")
+			if not stats.has("xp"): push_error("CRITICAL ERROR: stats is missing xp!")
+			current_xp = int(stats["xp"])
+			assert(stats.has("next_rank_xp"), "CRITICAL ERROR: stats is missing next_rank_xp!")
+			if not stats.has("next_rank_xp"): push_error("CRITICAL ERROR: stats is missing next_rank_xp!")
+			next_rank_xp = int(stats["next_rank_xp"])
+			assert(stats.has("current_nrg"), "CRITICAL ERROR: stats is missing current_nrg!")
+			if not stats.has("current_nrg"): push_error("CRITICAL ERROR: stats is missing current_nrg!")
+			current_nrg = int(stats["current_nrg"])
+			assert(stats.has("max_nrg"), "CRITICAL ERROR: stats is missing max_nrg!")
+			if not stats.has("max_nrg"): push_error("CRITICAL ERROR: stats is missing max_nrg!")
+			max_nrg = int(stats["max_nrg"])
+			assert(stats.has("nrg_regen_rate_seconds"), "CRITICAL ERROR: stats is missing nrg_regen_rate_seconds!")
+			if not stats.has("nrg_regen_rate_seconds"): push_error("CRITICAL ERROR: stats is missing nrg_regen_rate_seconds!")
+			nrg_regen_rate_seconds = int(stats["nrg_regen_rate_seconds"])
+			assert(stats.has("seconds_until_next_nrg"), "CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
+			if not stats.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
+			seconds_until_next_nrg = float(stats["seconds_until_next_nrg"])
 			rank_updated.emit(current_rank, current_xp, next_rank_xp)
 			nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 		if result.has("wallet"):
@@ -324,7 +383,9 @@ func perform_mission(mission_id: String) -> Dictionary:
 func request_dungeon_missions(mission_ids: Array) -> void:
 	var detailed_missions: Dictionary = await server_connection.get_dungeon_missions_async(mission_ids)
 	for mission_id in mission_ids:
-		var mission_data = detailed_missions.get(str(mission_id), {})
+		assert(detailed_missions.has(str(mission_id)), "CRITICAL ERROR: detailed_missions is missing mission_id: " + str(mission_id))
+		if not detailed_missions.has(str(mission_id)): push_error("CRITICAL ERROR: detailed_missions is missing mission_id: " + str(mission_id))
+		var mission_data = detailed_missions[str(mission_id)] if detailed_missions.has(str(mission_id)) else {}
 		if not mission_data.is_empty():
 			game_data_missions[str(mission_id)] = mission_data # Cache it
 	dungeon_missions_ready.emit(mission_ids)
@@ -336,39 +397,67 @@ func request_perform_mission(mission_id: String) -> void:
 		mission_failed.emit(str(result.error))
 	else:
 		var rewards_text: String = ""
-		var mission_data: Dictionary = game_data_missions.get(mission_id, {})
+		assert(game_data_missions.has(mission_id), "CRITICAL ERROR: game_data_missions is missing mission_id: " + mission_id)
+		if not game_data_missions.has(mission_id): push_error("CRITICAL ERROR: game_data_missions is missing mission_id: " + mission_id)
+		var mission_data: Dictionary = game_data_missions[mission_id] if game_data_missions.has(mission_id) else {}
 
 		if mission_data.has("gil"):
-			rewards_text += "Gil +%s\n" % str(int(mission_data.get("gil", 0)))
+			assert(mission_data.has("gil"), "CRITICAL ERROR: mission_data is missing gil!")
+			if not mission_data.has("gil"): push_error("CRITICAL ERROR: mission_data is missing gil!")
+			rewards_text += "Gil +%s\n" % str(int(mission_data["gil"]))
 		if mission_data.has("exp"):
-			rewards_text += "Rank EXP +%s\n" % str(int(mission_data.get("exp", 0)))
+			assert(mission_data.has("exp"), "CRITICAL ERROR: mission_data is missing exp!")
+			if not mission_data.has("exp"): push_error("CRITICAL ERROR: mission_data is missing exp!")
+			rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
 
 		mission_completed.emit(rewards_text)
 
 
 func get_equipment_template_id(instance_id: String) -> String:
-	for item in owned_items.get("equipment", []):
+	assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
+	if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")
+	var equipment_list = owned_items["equipment"] if owned_items.has("equipment") else []
+	for item in equipment_list:
 		if not item is Dictionary: continue
-		if item.get("instance_id", "") == instance_id:
-			return item.get("template_id", "")
+		assert(item.has("instance_id"), "CRITICAL ERROR: item is missing instance_id!")
+		if not item.has("instance_id"): push_error("CRITICAL ERROR: item is missing instance_id!")
+		if item["instance_id"] == instance_id:
+			assert(item.has("template_id"), "CRITICAL ERROR: item is missing template_id!")
+			if not item.has("template_id"): push_error("CRITICAL ERROR: item is missing template_id!")
+			return item["template_id"]
 	return ""
 
 func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) -> Array:
 	var available_items: Array = []
-	for item in owned_items.get("equipment", []):
+	assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
+	if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")
+	var equipment_list = owned_items["equipment"] if owned_items.has("equipment") else []
+	for item in equipment_list:
 		if not item is Dictionary: continue
-		var instance_id: String = item.get("instance_id", "")
-		var template_id: String = item.get("template_id", "")
+		assert(item.has("instance_id"), "CRITICAL ERROR: item is missing instance_id!")
+		if not item.has("instance_id"): push_error("CRITICAL ERROR: item is missing instance_id!")
+		var instance_id: String = item["instance_id"]
 
-		var item_data: Variant = game_data_equipment.get(template_id)
+		assert(item.has("template_id"), "CRITICAL ERROR: item is missing template_id!")
+		if not item.has("template_id"): push_error("CRITICAL ERROR: item is missing template_id!")
+		var template_id: String = item["template_id"]
+
+		assert(game_data_equipment.has(template_id), "CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
+		if not game_data_equipment.has(template_id): push_error("CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
+		var item_data: Variant = game_data_equipment[template_id] if game_data_equipment.has(template_id) else null
 		if not item_data: continue
 
 		var item_data_dict: Dictionary = item_data as Dictionary
 
-		var item_type_id: int = item_data_dict.get("type_id", -1)
+		assert(item_data_dict.has("type_id"), "CRITICAL ERROR: item_data_dict is missing type_id!")
+		if not item_data_dict.has("type_id"): push_error("CRITICAL ERROR: item_data_dict is missing type_id!")
+		var item_type_id: int = item_data_dict["type_id"]
+
 		var is_valid_slot: bool = false
 
-		var item_slot: String = item_data_dict.get("slot", "")
+		assert(item_data_dict.has("slot"), "CRITICAL ERROR: item_data_dict is missing slot!")
+		if not item_data_dict.has("slot"): push_error("CRITICAL ERROR: item_data_dict is missing slot!")
+		var item_slot: String = item_data_dict["slot"]
 		if "hand" in slot_id and (item_slot == "Weapon" or item_slot == "Shield"):
 			is_valid_slot = true
 		elif "head" in slot_id and item_slot == "Headgear":

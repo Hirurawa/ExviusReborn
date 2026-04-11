@@ -20,21 +20,46 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"SPR": 0
 	}
 	
-	var unit_id = str(unit_instance.get("unit_id", ""))
-	var unit_data = DataManager.game_data_units.get(unit_id, {})
-	var rarity = int(unit_instance.get("current_rarity", 1))
-	var level = int(unit_instance.get("level", 1))
-	var max_level = RARITY_MAX_LEVELS.get(rarity, 15)
+	assert(unit_instance.has("unit_id"), "CRITICAL ERROR: unit_instance is missing unit_id!")
+	if not unit_instance.has("unit_id"): push_error("CRITICAL ERROR: unit_instance is missing unit_id!")
+	var unit_id = str(unit_instance["unit_id"])
 	
-	var entries = unit_data.get("entries", {})
-	var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
+	assert(DataManager.game_data_units.has(unit_id), "CRITICAL ERROR: game_data_units is missing unit_id: " + str(unit_id))
+	if not DataManager.game_data_units.has(unit_id): push_error("CRITICAL ERROR: game_data_units is missing unit_id: " + str(unit_id))
+	var unit_data = DataManager.game_data_units[unit_id]
+
+	assert(unit_instance.has("current_rarity"), "CRITICAL ERROR: unit_instance is missing current_rarity!")
+	if not unit_instance.has("current_rarity"): push_error("CRITICAL ERROR: unit_instance is missing current_rarity!")
+	var rarity = int(unit_instance["current_rarity"])
+
+	assert(unit_instance.has("level"), "CRITICAL ERROR: unit_instance is missing level!")
+	if not unit_instance.has("level"): push_error("CRITICAL ERROR: unit_instance is missing level!")
+	var level = int(unit_instance["level"])
+
+	assert(RARITY_MAX_LEVELS.has(rarity), "CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
+	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
+	var max_level = RARITY_MAX_LEVELS[rarity]
+
+	assert(unit_data.has("entries"), "CRITICAL ERROR: unit_data is missing entries!")
+	if not unit_data.has("entries"): push_error("CRITICAL ERROR: unit_data is missing entries!")
+	var entries = unit_data["entries"]
+
+	var entry = {}
+	if entries.has(str(unit_id)):
+		entry = entries[str(unit_id)]
+	elif entries.has(str(rarity)):
+		entry = entries[str(rarity)]
 	
 	for key in entries.keys():
-		if entries[key].get("rarity") == rarity:
+		assert(entries[key].has("rarity"), "CRITICAL ERROR: entry in entries is missing rarity!")
+		if not entries[key].has("rarity"): push_error("CRITICAL ERROR: entry in entries is missing rarity!")
+		if entries[key]["rarity"] == rarity:
 			entry = entries[key]
 			break
 			
-	var base_stats = entry.get("stats", {})
+	assert(entry.has("stats"), "CRITICAL ERROR: entry is missing stats!")
+	if not entry.has("stats"): push_error("CRITICAL ERROR: entry is missing stats!")
+	var base_stats = entry["stats"]
 	
 	var base_calculated = {
 		"HP": 0.0,
@@ -47,7 +72,9 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	
 	if not base_stats.is_empty():
 		for stat_name in final_stats.keys():
-			var stat_arr = base_stats.get(stat_name, [0, 0])
+			assert(base_stats.has(stat_name), "CRITICAL ERROR: base_stats is missing " + stat_name + "!")
+			if not base_stats.has(stat_name): push_error("CRITICAL ERROR: base_stats is missing " + stat_name + "!")
+			var stat_arr = base_stats[stat_name]
 			if stat_arr.size() >= 2:
 				var min_stat = stat_arr[0]
 				var max_stat = stat_arr[1]
@@ -74,13 +101,20 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"SPR": 0
 	}
 	
-	var equipment = unit_instance.get("equipment", {})
+	assert(unit_instance.has("equipment"), "CRITICAL ERROR: unit_instance is missing equipment!")
+	if not unit_instance.has("equipment"): push_error("CRITICAL ERROR: unit_instance is missing equipment!")
+	var equipment = unit_instance["equipment"]
 	for slot_id in equipment:
 		var item_id = equipment[slot_id]
 		if item_id != null and item_id != "":
 			var template_id = DataManager.get_equipment_template_id(item_id)
-			var item_data = DataManager.game_data_equipment.get(template_id, {})
-			var item_stats = item_data.get("stats", {})
+			assert(DataManager.game_data_equipment.has(template_id), "CRITICAL ERROR: game_data_equipment is missing template_id: " + str(template_id))
+			if not DataManager.game_data_equipment.has(template_id): push_error("CRITICAL ERROR: game_data_equipment is missing template_id: " + str(template_id))
+			var item_data = DataManager.game_data_equipment[template_id]
+
+			assert(item_data.has("stats"), "CRITICAL ERROR: item_data is missing stats!")
+			if not item_data.has("stats"): push_error("CRITICAL ERROR: item_data is missing stats!")
+			var item_stats = item_data["stats"]
 			
 			for stat_name in final_stats.keys():
 				flat_mods[stat_name] += item_stats.get(stat_name, 0)

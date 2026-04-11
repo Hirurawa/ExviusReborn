@@ -512,7 +512,7 @@ func _on_illustration_pressed() -> void:
 	if unit_id == "":
 		return
 
-	var anim_data: Dictionary = AssetPatcher.load_unit_animation_data(unit_id)
+	var anim_data: Dictionary = TextureBuilder.load_unit_animation_data(unit_id)
 	if anim_data.is_empty():
 		return
 

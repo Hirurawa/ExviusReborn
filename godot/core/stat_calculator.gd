@@ -78,7 +78,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	for slot_id in equipment:
 		var item_id = equipment[slot_id]
 		if item_id != null and item_id != "":
-			var item_data = DataManager.game_data_equipment.get(item_id, {})
+			var template_id = DataManager.get_equipment_template_id(item_id)
+			var item_data = DataManager.game_data_equipment.get(template_id, {})
 			var item_stats = item_data.get("stats", {})
 			
 			for stat_name in final_stats.keys():

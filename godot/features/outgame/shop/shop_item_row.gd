@@ -11,7 +11,7 @@ signal buy_requested(item_id: String, type: String)
 var _item_id: String
 var _type: String
 
-var _texture_cache: Dictionary = {}
+static var _texture_cache: Dictionary = {}
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):

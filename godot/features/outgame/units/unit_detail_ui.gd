@@ -512,43 +512,15 @@ func _on_illustration_pressed() -> void:
 	if unit_id == "":
 		return
 
-	var png_path = "res://assets/unit_spritesheets/%s-atk.rawpng" % unit_id
-	var json_path = "res://assets/unit_spritesheets/%s-atk.json" % unit_id
-
-	if not FileAccess.file_exists(png_path) or not FileAccess.file_exists(json_path):
+	var anim_data: Dictionary = TextureBuilder.load_unit_animation_data(unit_id)
+	if anim_data.is_empty():
 		return
 
-	var file = FileAccess.open(json_path, FileAccess.READ)
-	if not file:
-		return
-
-	var json_text = file.get_as_text()
-	var json_data = JSON.parse_string(json_text)
-	if typeof(json_data) != TYPE_DICTIONARY:
-		return
-
-	var frame_rect = json_data.get("frameRect", {})
-	var image_width = json_data.get("imageWidth", 0)
-	var frame_width = frame_rect.get("width", 0)
-	var frame_height = frame_rect.get("height", 0)
-
-	if frame_width <= 0 or image_width <= 0:
-		return
-
-	# Load the file as an Image (CPU) instead of Texture (GPU) to bypass Vulkan maximum dimension limits on ultra-wide spritesheets
-	var file_bytes = FileAccess.get_file_as_bytes(png_path)
-	var image = Image.new()
-	var err = image.load_png_from_buffer(file_bytes)
-	if err != OK:
-		return
-
-	var num_frames = image_width / frame_width
-	var frames: Array[Texture2D] = []
-
-	for i in range(num_frames):
-		var x = i * frame_width
-		var region = image.get_region(Rect2i(x, 0, frame_width, frame_height))
-		frames.append(ImageTexture.create_from_image(region))
+	var frames: Array[Texture2D] = anim_data.get("frames", [])
+	var frame_delays: Array = anim_data.get("delays", [])
+	var frame_width: int = anim_data.get("frame_width", 0)
+	var frame_height: int = anim_data.get("frame_height", 0)
+	var num_frames: int = anim_data.get("num_frames", 0)
 
 	_is_animating = true
 	unit_detail_sprite.hide()
@@ -566,8 +538,6 @@ func _on_illustration_pressed() -> void:
 	var scaled_width = frame_width * scale_factor
 	var scaled_height = frame_height * scale_factor
 	anim_sprite.position = Vector2((150.0 - scaled_width) / 2.0, (150.0 - scaled_height) / 2.0)
-
-	var frame_delays = json_data.get("frameDelays", [])
 
 	for i in range(num_frames):
 		anim_sprite.texture = frames[i]

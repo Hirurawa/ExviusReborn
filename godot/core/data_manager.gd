@@ -142,6 +142,9 @@ func _load_initial_data(email: String) -> void:
 	_inject_final_stats(owned_units_ids)
 	units_updated.emit(owned_units_ids)
 	
+	owned_items = await server_connection.read_player_items_async()
+	items_updated.emit(owned_items)
+	
 	parties = await server_connection.get_parties_async()
 	parties_updated.emit(parties)
 	

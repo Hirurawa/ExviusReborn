@@ -20,7 +20,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"SPR": 0
 	}
 	
-	var unit_id = unit_instance.get("unit_id", "")
+	var unit_id = str(unit_instance.get("template_id", ""))
 	var unit_data = DataManager.game_data_units.get(unit_id, {})
 	var rarity = int(unit_instance.get("current_rarity", 1))
 	var level = int(unit_instance.get("level", 1))

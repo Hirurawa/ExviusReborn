@@ -104,6 +104,15 @@ func update_account(new_username: String) -> bool:
 	return false
 
 func _load_initial_data(email: String) -> void:
+	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
+		AssetPatcher.patch_progress.connect(func(file_name, status):
+			pass
+		)
+		AssetPatcher.patch_complete.connect(_on_patch_complete)
+
+	AssetPatcher.server_connection = server_connection
+	AssetPatcher.start_patching()
+	await AssetPatcher.patch_complete
 	var stats: Dictionary = await server_connection.read_player_stats_async()
 	current_rank = int(stats.get("rank", 1))
 	current_xp = int(stats.get("xp", 0))
@@ -116,24 +125,12 @@ func _load_initial_data(email: String) -> void:
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
 	owned_units_ids = await server_connection.read_player_units_async()
+	_inject_final_stats(owned_units_ids)
 	units_updated.emit(owned_units_ids)
-
-	owned_items = await server_connection.read_player_items_async()
-	items_updated.emit(owned_items)
-
+	
 	parties = await server_connection.get_parties_async()
 	parties_updated.emit(parties)
-
-	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
-		AssetPatcher.patch_progress.connect(func(file_name, status):
-			pass
-		)
-		AssetPatcher.patch_complete.connect(_on_patch_complete)
-
-	AssetPatcher.server_connection = server_connection
-	AssetPatcher.start_patching()
-	await AssetPatcher.patch_complete
-
+	
 	account_info = await server_connection.get_account_async()
 	if account_info:
 		var wallet_str: String = account_info.wallet
@@ -143,6 +140,12 @@ func _load_initial_data(email: String) -> void:
 				_update_wallet_data(wallet)
 
 	data_loaded.emit()
+
+#func _inject_final_stats(units: Array) -> Array:
+	#for unit in units:
+		#if typeof(unit) == TYPE_DICTIONARY:
+			#unit["final_stats"] = StatCalculator.calculate_final_stats(unit)
+	#return units
 
 func _sanitize_floats_to_ints(data: Variant) -> Variant:
 	if typeof(data) == TYPE_DICTIONARY:
@@ -229,6 +232,7 @@ func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String
 
 func summon_units(amount: int) -> Array:
 	var summoned_units: Array = await server_connection.summon_units_async(amount)
+	_inject_final_stats(summoned_units)
 	owned_units_ids.append_array(summoned_units)
 	units_updated.emit(owned_units_ids)
 	return summoned_units
@@ -237,6 +241,7 @@ func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	var result: Dictionary = await server_connection.add_unit_xp_async(instance_id, xp_amount)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
+		_inject_final_stats(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
 
@@ -244,6 +249,7 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var result: Dictionary = await server_connection.awaken_unit_async(instance_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
+		_inject_final_stats(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
 
@@ -264,10 +270,16 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 	var result: Dictionary = await server_connection.equip_item_async(instance_id, slot_id, item_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
+		_inject_final_stats(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 		equip_successful.emit()
 	else:
 		equip_failed.emit(result.get("error", "Unknown error"))
+		
+func _inject_final_stats(units: Array) -> void:
+	for i in range(units.size()):
+		if units[i] is Dictionary:
+			units[i]["final_stats"] = StatCalculator.calculate_final_stats(units[i])
 
 func list_friends() -> NakamaAPI.ApiFriendList:
 	var friends_list: NakamaAPI.ApiFriendList = await server_connection.list_friends_async()

@@ -7,23 +7,32 @@ extends PanelContainer
 @onready var mp_bar: ProgressBar = %MPBar
 @onready var limit_bar: ProgressBar = %LimitBar
 
-func setup(unit_data: Dictionary) -> void:
-	var template_id: String = str(unit_data.get("unit_id", ""))
-	var template: Dictionary = DataManager.game_data_units.get(template_id, {})
+var _my_index: int = -1
 
-	name_label.text = template.get("name", "Unknown")
+func _ready() -> void:
+	var battle_manager: Node = get_tree().root.find_child("BattleManager", true, false)
+	if battle_manager and not battle_manager.unit_stats_updated.is_connected(_on_unit_stats_updated):
+		battle_manager.unit_stats_updated.connect(_on_unit_stats_updated)
 
-	var cur_hp: int = unit_data.get("current_hp", 0)
-	var max_hp: int = unit_data.get("max_hp", 1)
+func setup(unit_index: int) -> void:
+	_my_index = unit_index
+	var battle_manager: Node = get_tree().root.find_child("BattleManager", true, false)
+	if battle_manager:
+		battle_manager.request_unit_stats(_my_index)
+
+func _on_unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int) -> void:
+	if index != _my_index:
+		return
+
+	name_label.text = unit_name
+
 	hp_label.text = "%d / %d" % [cur_hp, max_hp]
 	hp_bar.max_value = max_hp
 	hp_bar.value = cur_hp
 
-	var cur_mp: int = unit_data.get("current_mp", 0)
-	var max_mp: int = unit_data.get("max_mp", 1)
 	mp_label.text = "%d / %d" % [cur_mp, max_mp]
 	mp_bar.max_value = max_mp
 	mp_bar.value = cur_mp
 
-	limit_bar.max_value = unit_data.get("max_limit", 100)
-	limit_bar.value = unit_data.get("limit_gauge", 0)
+	limit_bar.max_value = max_limit
+	limit_bar.value = cur_limit

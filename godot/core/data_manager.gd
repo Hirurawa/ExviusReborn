@@ -17,6 +17,10 @@ signal parties_updated(parties: Array)
 signal party_save_requested(new_parties: Array)
 signal purchase_successful()
 signal purchase_failed(error_message: String)
+
+signal dungeon_missions_ready(mission_ids: Array)
+signal mission_completed(rewards_text: String)
+signal mission_failed(error_msg: String)
 signal equip_successful()
 signal equip_failed(error_message: String)
 
@@ -304,6 +308,30 @@ func perform_mission(mission_id: String) -> Dictionary:
 			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
 			_update_wallet_data(wallet)
 	return result
+
+func request_dungeon_missions(mission_ids: Array) -> void:
+	var detailed_missions: Dictionary = await server_connection.get_dungeon_missions_async(mission_ids)
+	for mission_id in mission_ids:
+		var mission_data = detailed_missions.get(str(mission_id), {})
+		if not mission_data.is_empty():
+			game_data_missions[str(mission_id)] = mission_data # Cache it
+	dungeon_missions_ready.emit(mission_ids)
+
+func request_perform_mission(mission_id: String) -> void:
+	var result: Dictionary = await perform_mission(mission_id)
+
+	if result.has("error"):
+		mission_failed.emit(str(result.error))
+	else:
+		var rewards_text: String = ""
+		var mission_data: Dictionary = game_data_missions.get(mission_id, {})
+
+		if mission_data.has("gil"):
+			rewards_text += "Gil +%s\n" % str(int(mission_data.get("gil", 0)))
+		if mission_data.has("exp"):
+			rewards_text += "Rank EXP +%s\n" % str(int(mission_data.get("exp", 0)))
+
+		mission_completed.emit(rewards_text)
 
 
 func get_equipment_template_id(instance_id: String) -> String:

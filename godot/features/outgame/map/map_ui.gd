@@ -38,6 +38,7 @@ func _ready() -> void:
 	map_region_option.item_selected.connect(_on_map_region_selected)
 	map_subregion_option.item_selected.connect(_on_map_subregion_selected)
 	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
+	DataManager.dungeon_missions_ready.connect(_on_dungeon_missions_ready)
 
 	_populate_world_options()
 	map_zoom_level = 1.0
@@ -262,7 +263,9 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 	mission_details_popup.popup_centered()
 
 	# Lazy load actual mission data
-	var detailed_missions = await DataManager.server_connection.get_dungeon_missions_async(mission_ids)
+	DataManager.request_dungeon_missions(mission_ids)
+
+func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 	if not mission_details_popup.visible:
 		return # Closed before loading
 
@@ -270,13 +273,9 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 		child.queue_free()
 
 	for mission_id in mission_ids:
-		var mission_data = detailed_missions.get(str(mission_id), {})
+		var mission_data = DataManager.game_data_missions.get(str(mission_id), {})
 		if mission_data.is_empty():
-			mission_data = DataManager.game_data_missions.get(str(mission_id), {})
-			if mission_data.is_empty():
-				continue
-		else:
-			DataManager.game_data_missions[str(mission_id)] = mission_data # Cache it
+			continue
 
 		var vbox = VBoxContainer.new()
 

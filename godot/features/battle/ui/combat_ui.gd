@@ -32,6 +32,9 @@ func _ready() -> void:
 	battle_manager.enemy_hp_changed.connect(_on_enemy_hp_changed)
 	battle_manager.turn_changed.connect(_on_turn_changed)
 
+	DataManager.mission_completed.connect(_on_mission_completed)
+	DataManager.mission_failed.connect(_on_mission_failed)
+
 	enemy_texture.gui_input.connect(_on_enemy_texture_gui_input)
 
 func init_scene(params: Dictionary) -> void:
@@ -53,7 +56,7 @@ func _on_battle_state_ready() -> void:
 		enemy_texture.texture = _get_dynamic_texture("res://icon.svg")
 
 	# Populate enemy HP
-	_on_enemy_hp_changed(battle_manager.enemy_current_hp, battle_manager.enemy_max_hp)
+	battle_manager.set_enemy_hp(battle_manager.enemy_current_hp)
 	_on_turn_changed(battle_manager.turn_count)
 
 	# Clear previous panels and sprites
@@ -65,11 +68,11 @@ func _on_battle_state_ready() -> void:
 	# Populate player units
 	# Order: Top Left, Bottom Left, Top Right, Middle Right.
 	# We can just iterate the party data and place them.
-	for unit in battle_manager.party_data:
+	for i in range(battle_manager.party_data.size()):
 		# Add panel
 		var panel: Node = UnitPanelScene.instantiate()
 		bottom_section.add_child(panel)
-		panel.setup(unit)
+		panel.setup(i)
 
 		# Add sprite placeholder
 		var anim_sprite: AnimatedSprite2D = AnimatedSprite2D.new()
@@ -123,14 +126,10 @@ func _on_battle_state_ready() -> void:
 			bottom_section.move_child(panels[i], expected_positions[i])
 			player_sprites_grid.move_child(sprites[i], expected_positions[i])
 
-func _on_enemy_hp_changed(new_hp: int, max_hp: int) -> void:
+func _on_enemy_hp_changed(new_hp: int, max_hp: int, hp_percent: int) -> void:
 	enemy_hp_bar.max_value = max_hp
 	enemy_hp_bar.value = new_hp
-
-	var pct: int = 0
-	if max_hp > 0:
-		pct = int((float(new_hp) / float(max_hp)) * 100.0)
-	enemy_hp_pct_label.text = "%d%%" % pct
+	enemy_hp_pct_label.text = "%d%%" % hp_percent
 
 func _on_enemy_texture_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -144,26 +143,15 @@ func _on_finish_pressed() -> void:
 		return
 
 	finish_button.disabled = true
-	var result: Dictionary = await DataManager.perform_mission(current_mission_id)
+	DataManager.request_perform_mission(current_mission_id)
 
-	if result.has("error"):
-		print("Failed to complete mission: ", result.error)
-		finish_button.disabled = false
-	else:
-		# Success! Show rewards popup
-		rewards_popup.dialog_text = "Mission completed successfully!\n"
+func _on_mission_completed(rewards_text: String) -> void:
+	rewards_popup.dialog_text = "Mission completed successfully!\n" + rewards_text
+	rewards_popup.popup_centered()
 
-		var rewards_text: String = ""
-
-		# Show Gil/Lapis rewards if any from wallet changes (simplified for placeholder)
-		var mission_data: Dictionary = DataManager.game_data_missions.get(current_mission_id, {})
-		if mission_data.has("gil"):
-			rewards_text += "Gil +%s\n" % str(int(mission_data.get("gil", 0)))
-		if mission_data.has("exp"):
-			rewards_text += "Rank EXP +%s\n" % str(int(mission_data.get("exp", 0)))
-
-		rewards_popup.dialog_text += rewards_text
-		rewards_popup.popup_centered()
+func _on_mission_failed(error_msg: String) -> void:
+	print("Failed to complete mission: ", error_msg)
+	finish_button.disabled = false
 
 func _on_rewards_confirmed() -> void:
 	UIManager.pop()

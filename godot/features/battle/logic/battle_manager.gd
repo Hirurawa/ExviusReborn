@@ -41,20 +41,18 @@ func initialize_battle(dungeon_id: String) -> void:
 				var template_id = str(battle_unit.get("unit_id", ""))
 				var template = DataManager.game_data_units.get(template_id, {})
 
-				# Set placeholder max HP/MP logic since actual calculation is complex
-				var entries = template.get("entries", {})
-				var max_rarity = 1
-				for k in entries.keys():
-					max_rarity = max(max_rarity, int(k))
+				# Use StatCalculator to get accurate max HP and MP
+				var final_stats = battle_unit.get("final_stats", {})
+				if final_stats.is_empty():
+					final_stats = StatCalculator.calculate_final_stats(battle_unit)
 
-				var stats = entries.get(str(battle_unit.get("current_rarity", max_rarity)), {}).get("stats", {})
-				var base_hp = stats.get("HP", [100])[0] if typeof(stats.get("HP")) == TYPE_ARRAY else 100
-				var base_mp = stats.get("MP", [10])[0] if typeof(stats.get("MP")) == TYPE_ARRAY else 10
+				var max_hp = final_stats.get("HP", 100)
+				var max_mp = final_stats.get("MP", 10)
 
-				battle_unit["max_hp"] = base_hp
-				battle_unit["current_hp"] = base_hp
-				battle_unit["max_mp"] = base_mp
-				battle_unit["current_mp"] = base_mp
+				battle_unit["max_hp"] = max_hp
+				battle_unit["current_hp"] = max_hp
+				battle_unit["max_mp"] = max_mp
+				battle_unit["current_mp"] = max_mp
 				battle_unit["limit_gauge"] = 0
 				battle_unit["max_limit"] = 100 # arbitrary placeholder
 

@@ -111,7 +111,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var next_xp = unit_inst.get("next_xp", 0)
 	unit_detail_next_xp_label.text = "next %d" % next_xp
 
-	var final_stats = StatCalculator.calculate_final_stats(unit_inst)
+	var final_stats = unit_inst.get("final_stats", {})
 
 	unit_detail_hp_value.text = str(final_stats.get("HP", 0))
 	unit_detail_mp_value.text = str(final_stats.get("MP", 0))

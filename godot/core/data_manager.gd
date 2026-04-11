@@ -116,6 +116,7 @@ func _load_initial_data(email: String) -> void:
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
 	owned_units_ids = await server_connection.read_player_units_async()
+	owned_units_ids = _inject_final_stats(owned_units_ids)
 	units_updated.emit(owned_units_ids)
 
 	owned_items = await server_connection.read_player_items_async()
@@ -143,6 +144,12 @@ func _load_initial_data(email: String) -> void:
 				_update_wallet_data(wallet)
 
 	data_loaded.emit()
+
+func _inject_final_stats(units: Array) -> Array:
+	for unit in units:
+		if typeof(unit) == TYPE_DICTIONARY:
+			unit["final_stats"] = StatCalculator.calculate_final_stats(unit)
+	return units
 
 func _sanitize_floats_to_ints(data: Variant) -> Variant:
 	if typeof(data) == TYPE_DICTIONARY:
@@ -229,6 +236,7 @@ func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String
 
 func summon_units(amount: int) -> Array:
 	var summoned_units: Array = await server_connection.summon_units_async(amount)
+	summoned_units = _inject_final_stats(summoned_units)
 	owned_units_ids.append_array(summoned_units)
 	units_updated.emit(owned_units_ids)
 	return summoned_units
@@ -237,6 +245,7 @@ func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	var result: Dictionary = await server_connection.add_unit_xp_async(instance_id, xp_amount)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
+		owned_units_ids = _inject_final_stats(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
 
@@ -244,6 +253,7 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var result: Dictionary = await server_connection.awaken_unit_async(instance_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
+		owned_units_ids = _inject_final_stats(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
 
@@ -264,6 +274,7 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 	var result: Dictionary = await server_connection.equip_item_async(instance_id, slot_id, item_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
+		owned_units_ids = _inject_final_stats(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 		equip_successful.emit()
 	else:

@@ -40,7 +40,7 @@ func _patch_next_file() -> void:
 		push_error("AssetPatcher: Nakama session is invalid.")
 		_load_from_cache(file_type)
 		current_patch_index += 1
-		_patch_next_file()
+		call_deferred("_patch_next_file")
 		return
 		
 	var rpc_payload: String = JSON.stringify({"type": file_type})
@@ -50,7 +50,7 @@ func _patch_next_file() -> void:
 		push_error("Failed to get data version for %s: %s" % [file_type, result.get_exception().message])
 		_load_from_cache(file_type)
 		current_patch_index += 1
-		_patch_next_file()
+		call_deferred("_patch_next_file")
 		return
 		
 	var dict: Variant = JSON.parse_string(result.payload)
@@ -58,7 +58,7 @@ func _patch_next_file() -> void:
 		push_error("Invalid response for %s version: %s" % [file_type, result.payload])
 		_load_from_cache(file_type)
 		current_patch_index += 1
-		_patch_next_file()
+		call_deferred("_patch_next_file")
 		return
 		
 	var server_version: String = dict["version"]
@@ -70,7 +70,7 @@ func _patch_next_file() -> void:
 		patch_progress.emit(file_type, "Up to date")
 		_load_from_cache(file_type)
 		current_patch_index += 1
-		_patch_next_file()
+		call_deferred("_patch_next_file")
 	else:
 		patch_progress.emit(file_type, "Downloading...")
 		_download_file(file_type, download_url, server_version)
@@ -84,7 +84,7 @@ func _download_file(file_type: String, url: String, new_version: String) -> void
 		push_error("An error occurred in the HTTP request for %s." % file_type)
 		_load_from_cache(file_type)
 		current_patch_index += 1
-		_patch_next_file()
+		call_deferred("_patch_next_file")
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
 	var file_type: String = _http_request.get_meta("file_type")
@@ -94,20 +94,24 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		var json_string: String = body.get_string_from_utf8()
 		var parsed: Variant = JSON.parse_string(json_string)
 		
-		if parsed:
+		if parsed != null:
 			_save_to_cache(file_type, json_string)
 			_set_local_version(file_type, new_version)
 			cached_data[file_type] = parsed
 			patch_progress.emit(file_type, "Downloaded and cached")
 		else:
-			push_error("Failed to parse downloaded JSON for %s" % file_type)
+			var err_msg = "CRITICAL ERROR: Failed to parse downloaded JSON for %s. Raw body: %s" % [file_type, json_string.substr(0, 500)]
+			printerr(err_msg)
+			push_error(err_msg)
 			_load_from_cache(file_type)
 	else:
-		push_error("HTTP Request failed for %s. Code: %d" % [file_type, response_code])
+		var err_msg = "CRITICAL ERROR: HTTP Request failed for %s. Response Code: %d, Result Code: %d" % [file_type, response_code, result]
+		printerr(err_msg)
+		push_error(err_msg)
 		_load_from_cache(file_type)
 		
 	current_patch_index += 1
-	_patch_next_file()
+	call_deferred("_patch_next_file")
 
 func _get_local_version(file_type: String) -> String:
 	var versions: Dictionary = _load_versions_file()
@@ -159,7 +163,7 @@ func _load_from_cache(file_type: String) -> void:
 			var content: String = file.get_as_text()
 			file.close()
 			var parsed: Variant = JSON.parse_string(content)
-			if parsed:
+			if parsed != null:
 				cached_data[file_type] = parsed
 				return
 	

@@ -343,7 +343,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		btn.custom_minimum_size = Vector2(0, 60)
 		var item_id = equipment.get(slot_info.id, "")
 		if item_id != "":
-			var item_data = DataManager.game_data_equipment.get(item_id, {})
+			var template_id = DataManager.get_equipment_template_id(item_id)
+			var item_data = DataManager.game_data_equipment.get(template_id, {})
 			btn.text = slot_info.name + ": " + item_data.get("name", "Unknown")
 		else:
 			btn.text = slot_info.name + ": Empty"
@@ -352,7 +353,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		if slot_info.id in ["r_hand", "l_hand"]:
 			var other_item_id = equipment.get(other_hand, "")
 			if other_item_id != "":
-				var other_item_data = DataManager.game_data_equipment.get(other_item_id, {})
+				var other_template_id = DataManager.get_equipment_template_id(other_item_id)
+				var other_item_data = DataManager.game_data_equipment.get(other_template_id, {})
 				if other_item_data.get("is_twohanded", false):
 					btn.text = slot_info.name + ": Locked"
 					btn.disabled = true
@@ -378,7 +380,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		btn.custom_minimum_size = Vector2(0, 60)
 		var item_id = equipment.get(slot_id, "")
 		if item_id != "":
-			var item_data = DataManager.game_data_equipment.get(item_id, {})
+			var template_id = DataManager.get_equipment_template_id(item_id)
+			var item_data = DataManager.game_data_equipment.get(template_id, {})
 			btn.text = "Ability " + str(i+1) + ": " + item_data.get("name", "Unknown")
 		else:
 			btn.text = "Ability " + str(i+1) + ": Empty"

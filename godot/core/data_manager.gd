@@ -306,6 +306,13 @@ func perform_mission(mission_id: String) -> Dictionary:
 	return result
 
 
+func get_equipment_template_id(instance_id: String) -> String:
+	for item in owned_items.get("equipment", []):
+		if not item is Dictionary: continue
+		if item.get("instance_id", "") == instance_id:
+			return item.get("template_id", "")
+	return ""
+
 func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) -> Array:
 	var available_items: Array = []
 	for item in owned_items.get("equipment", []):

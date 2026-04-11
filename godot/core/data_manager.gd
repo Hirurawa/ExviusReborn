@@ -140,18 +140,34 @@ func _load_initial_data(email: String) -> void:
 
 	data_loaded.emit()
 
+func _sanitize_floats_to_ints(data: Variant) -> Variant:
+	if typeof(data) == TYPE_DICTIONARY:
+		var new_dict: Dictionary = {}
+		for key in data:
+			new_dict[key] = _sanitize_floats_to_ints(data[key])
+		return new_dict
+	elif typeof(data) == TYPE_ARRAY:
+		var new_array: Array = []
+		for item in data:
+			new_array.append(_sanitize_floats_to_ints(item))
+		return new_array
+	elif typeof(data) == TYPE_FLOAT:
+		if fmod(data, 1.0) == 0.0:
+			return int(data)
+	return data
+
 func _on_patch_complete() -> void:
-	game_data_units = AssetPatcher.get_data("units")
-	game_data_items = AssetPatcher.get_data("items")
-	game_data_equipment = AssetPatcher.get_data("equipment")
-	game_data_worlds = AssetPatcher.get_data("worlds")
-	game_data_dungeons = AssetPatcher.get_data("dungeons")
-	game_data_skills_magic = AssetPatcher.get_data("skills_magic")
-	game_data_skills_ability = AssetPatcher.get_data("skills_ability")
-	game_data_limitbursts = AssetPatcher.get_data("limitbursts")
-	game_data_materia = AssetPatcher.get_data("materia")
-	game_data_equipment_icons = AssetPatcher.get_data("equipment-icons")
-	game_data_monsters = AssetPatcher.get_data("monsters")
+	game_data_units = _sanitize_floats_to_ints(AssetPatcher.get_data("units"))
+	game_data_items = _sanitize_floats_to_ints(AssetPatcher.get_data("items"))
+	game_data_equipment = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment"))
+	game_data_worlds = _sanitize_floats_to_ints(AssetPatcher.get_data("worlds"))
+	game_data_dungeons = _sanitize_floats_to_ints(AssetPatcher.get_data("dungeons"))
+	game_data_skills_magic = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_magic"))
+	game_data_skills_ability = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_ability"))
+	game_data_limitbursts = _sanitize_floats_to_ints(AssetPatcher.get_data("limitbursts"))
+	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
+	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))
+	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
 
 func _update_wallet_data(wallet: Dictionary) -> void:
 	gil = int(wallet.get("gil", 0))

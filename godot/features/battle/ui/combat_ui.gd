@@ -110,7 +110,7 @@ func _on_battle_state_ready() -> void:
 	# Populate enemy details
 	enemy_name_label.text = battle_manager.enemy_data.get("name", "Unknown Monster")
 
-	var monster_id: String = str(battle_manager.enemy_data.get("monster_id", "5010010"))
+	var monster_id: String = str(battle_manager.enemy_data.get("id", "5010010"))
 	var tex_path: String = "res://assets/monster_icon/monster_icon_" + monster_id + ".png"
 	if ResourceLoader.exists(tex_path):
 		enemy_texture.texture = _get_dynamic_texture(tex_path)

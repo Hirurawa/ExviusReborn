@@ -107,7 +107,21 @@ func initialize_battle(dungeon_id: String) -> void:
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
 	if monsters_in_dungeon.size() > 0:
-		enemy_data = monsters_in_dungeon[0] # Take first monster for now
+		var dungeon_monster_data = monsters_in_dungeon[0] # Take first monster for now
+
+		var global_monster_data = {}
+		var monster_name = dungeon_monster_data.get("name", "")
+		if monster_name != "":
+			for monster in DataManager.game_data_monsters:
+				if typeof(monster) == TYPE_DICTIONARY and monster.get("name", "") == monster_name:
+					global_monster_data = monster.duplicate(true)
+					break
+
+		# Merge dungeon specific data into global monster data
+		enemy_data = global_monster_data
+		for key in dungeon_monster_data:
+			enemy_data[key] = dungeon_monster_data[key]
+
 		enemy_max_hp = int(enemy_data.get("hp", 1000))
 		enemy_current_hp = enemy_max_hp
 

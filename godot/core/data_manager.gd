@@ -142,7 +142,7 @@ func _load_initial_data(email: String) -> void:
 	items_updated.emit(owned_items)
 
 	owned_units_ids = await server_connection.read_player_units_async()
-	_inject_final_stats(owned_units_ids)
+	owned_units_ids = _hydrate_owned_units(owned_units_ids)
 	units_updated.emit(owned_units_ids)
 	
 	parties = await server_connection.get_parties_async()
@@ -269,7 +269,7 @@ func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String
 
 func summon_units(amount: int) -> Array:
 	var summoned_units: Array = await server_connection.summon_units_async(amount)
-	_inject_final_stats(summoned_units)
+	summoned_units = _hydrate_owned_units(summoned_units)
 	owned_units_ids.append_array(summoned_units)
 	units_updated.emit(owned_units_ids)
 	return summoned_units
@@ -278,7 +278,7 @@ func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	var result: Dictionary = await server_connection.add_unit_xp_async(instance_id, xp_amount)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
-		_inject_final_stats(owned_units_ids)
+		owned_units_ids = _hydrate_owned_units(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
 
@@ -286,7 +286,7 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var result: Dictionary = await server_connection.awaken_unit_async(instance_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
-		_inject_final_stats(owned_units_ids)
+		owned_units_ids = _hydrate_owned_units(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
 
@@ -315,16 +315,52 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 	var result: Dictionary = await server_connection.equip_item_async(instance_id, slot_id, item_id)
 	if not result.has("error"):
 		owned_units_ids = await server_connection.read_player_units_async()
-		_inject_final_stats(owned_units_ids)
+		owned_units_ids = _hydrate_owned_units(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 		equip_successful.emit()
 	else:
 		equip_failed.emit(result.get("error", "ERR_MISSING_SERVER_ERROR_MSG"))
 		
-func _inject_final_stats(units: Array) -> void:
-	for i in range(units.size()):
-		if units[i] is Dictionary:
-			units[i]["final_stats"] = StatCalculator.calculate_final_stats(units[i])
+func _hydrate_owned_units(units: Array) -> Array:
+	var hydrated_units: Array = []
+	for unit_instance in units:
+		if typeof(unit_instance) != TYPE_DICTIONARY:
+			hydrated_units.append(unit_instance)
+			continue
+
+		var hydrated_unit: Dictionary = {}
+
+		# 1. Base Template Data
+		var unit_id = str(unit_instance.get("unit_id", ""))
+		var template_data = game_data_units.get(unit_id, {})
+		hydrated_unit.merge(template_data)
+
+		# 2. Rarity Entry Data
+		var rarity = int(unit_instance.get("current_rarity", 1))
+		var entries = template_data.get("entries", {})
+		var rarity_entry = {}
+
+		if entries.has(str(unit_id)):
+			rarity_entry = entries[str(unit_id)]
+		elif entries.has(str(rarity)):
+			rarity_entry = entries[str(rarity)]
+
+		for key in entries.keys():
+			if entries[key].has("rarity") and int(entries[key]["rarity"]) == rarity:
+				rarity_entry = entries[key]
+				break
+
+		hydrated_unit.merge(rarity_entry, true)
+
+		# 3. Instance Data
+		hydrated_unit.merge(unit_instance, true)
+
+		# 4. Calculate Final Stats
+		hydrated_unit["final_stats"] = StatCalculator.calculate_final_stats(hydrated_unit)
+
+		hydrated_units.append(hydrated_unit)
+
+	return hydrated_units
 
 func list_friends() -> NakamaAPI.ApiFriendList:
 	var friends_list: NakamaAPI.ApiFriendList = await server_connection.list_friends_async()

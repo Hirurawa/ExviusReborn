@@ -76,8 +76,6 @@ func initialize_battle(dungeon_id: String) -> void:
 
 			if owned_unit != null:
 				var battle_unit = owned_unit.duplicate()
-				var template_id = str(battle_unit.get("unit_id", ""))
-				var template = DataManager.game_data_units.get(template_id, {})
 
 				# Use StatCalculator to get accurate max HP and MP
 				var final_stats = battle_unit.get("final_stats", {})
@@ -134,22 +132,9 @@ func request_basic_attack(attacker_index: int) -> void:
 
 	var attacker_data: Dictionary = party_data[attacker_index]
 
-	# Fetch unit's frame data
-	var template_id: String = str(attacker_data.get("unit_id", ""))
-	var template: Dictionary = DataManager.game_data_units.get(template_id, {})
-
-	var current_rarity: int = int(attacker_data.get("current_rarity", 1))
-	var entries: Dictionary = template.get("entries", {})
-	var target_entry: Dictionary = {}
-
-	for entry_key in entries.keys():
-		var entry: Dictionary = entries[entry_key]
-		if int(entry.get("rarity", 0)) == current_rarity:
-			target_entry = entry
-			break
-
-	var attack_frames: Array = target_entry.get("attack_frames", [30])
-	var attack_damage: Array = target_entry.get("attack_damage", [[100]])
+	# Fetch unit's frame data directly from the hydrated instance
+	var attack_frames: Array = attacker_data.get("attack_frames", [30])
+	var attack_damage: Array = attacker_data.get("attack_damage", [[100]])
 	var damage_percentages: Array = attack_damage[0] if attack_damage.size() > 0 else [100]
 
 	# Attacker ATK (must exist)
@@ -240,10 +225,7 @@ func request_unit_stats(index: int) -> void:
 	if unit_data.is_empty():
 		return
 
-	var template_id: String = str(unit_data.get("unit_id", ""))
-	var template: Dictionary = DataManager.game_data_units.get(template_id, {})
-
-	var unit_name: String = template.get("name", "Unknown")
+	var unit_name: String = unit_data.get("name", "ERR_MISSING_NAME")
 	var cur_hp: int = unit_data.get("current_hp", 0)
 	var max_hp: int = unit_data.get("max_hp", 1)
 	var cur_mp: int = unit_data.get("current_mp", 0)

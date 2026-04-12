@@ -8,9 +8,12 @@ signal attack_landed(attacker_index: int, target_index: int, damage: int)
 
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 
+const ENEMY_ATTACK_DELAY_FRAMES: int = 60
+
 var current_state: BattleState = BattleState.INIT
 var player_units_acted_this_turn: Array = []
-var active_attack_coroutines: int = 0
+var current_battle_frame: int = 0
+var pending_hits: Array[Dictionary] = []
 
 var enemy_data: Dictionary = {}
 var enemy_current_hp: int = 0
@@ -21,6 +24,33 @@ var turn_count: int = 1
 
 func _ready() -> void:
 	pass
+
+func _physics_process(_delta: float) -> void:
+	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
+		return
+
+	current_battle_frame += 1
+
+	for i in range(pending_hits.size() - 1, -1, -1):
+		var hit: Dictionary = pending_hits[i]
+		if hit.get("execute_on_frame", 0) <= current_battle_frame:
+			var target_index: int = hit.get("target_index", -1)
+			var damage: int = hit.get("damage", 0)
+			var attacker_index: int = hit.get("attacker_index", -1)
+
+			if target_index == -1:
+				enemy_current_hp = maxi(0, enemy_current_hp - damage)
+				set_enemy_hp(enemy_current_hp)
+			else:
+				var target_unit: Dictionary = party_data[target_index]
+				target_unit["current_hp"] = maxi(0, target_unit["current_hp"] - damage)
+				request_unit_stats(target_index)
+
+			attack_landed.emit(attacker_index, target_index, damage)
+			pending_hits.remove_at(i)
+
+	_check_turn_progression()
+
 
 func initialize_battle(dungeon_id: String) -> void:
 	party_data = []
@@ -79,7 +109,8 @@ func initialize_battle(dungeon_id: String) -> void:
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()
-	active_attack_coroutines = 0
+	current_battle_frame = 0
+	pending_hits.clear()
 
 	turn_count = 1
 	battle_state_ready.emit()
@@ -98,15 +129,30 @@ func request_basic_attack(attacker_index: int) -> void:
 		return
 
 	player_units_acted_this_turn.append(attacker_index)
-	active_attack_coroutines += 1
 
 	# Keep accepting inputs for other units by not changing state here
 
-	# Asynchronous simulated delay
-	await get_tree().create_timer(1.0).timeout
+	var attacker_data: Dictionary = party_data[attacker_index]
+
+	# Fetch unit's frame data
+	var template_id: String = str(attacker_data.get("unit_id", ""))
+	var template: Dictionary = DataManager.game_data_units.get(template_id, {})
+
+	var current_rarity: int = int(attacker_data.get("current_rarity", 1))
+	var entries: Dictionary = template.get("entries", {})
+	var target_entry: Dictionary = {}
+
+	for entry_key in entries.keys():
+		var entry: Dictionary = entries[entry_key]
+		if int(entry.get("rarity", 0)) == current_rarity:
+			target_entry = entry
+			break
+
+	var attack_frames: Array = target_entry.get("attack_frames", [30])
+	var attack_damage: Array = target_entry.get("attack_damage", [[100]])
+	var damage_percentages: Array = attack_damage[0] if attack_damage.size() > 0 else [100]
 
 	# Attacker ATK (must exist)
-	var attacker_data: Dictionary = party_data[attacker_index]
 	var attacker_stats: Dictionary = attacker_data.get("final_stats", {})
 	assert(attacker_stats.has("ATK"), "Player must have ATK")
 	var attacker_atk: int = attacker_stats.get("ATK")
@@ -114,41 +160,48 @@ func request_basic_attack(attacker_index: int) -> void:
 	# Enemy DEF (fallback to 5 since enemy stats are missing)
 	var enemy_def: int = enemy_data.get("DEF", 5)
 
-	# Calculate damage (minimum 1)
-	var damage: int = maxi(1, attacker_atk - enemy_def)
+	# Calculate total base damage (minimum 1)
+	var total_damage: int = maxi(1, attacker_atk - enemy_def)
 
-	# Apply damage
-	enemy_current_hp = maxi(0, enemy_current_hp - damage)
-	set_enemy_hp(enemy_current_hp)
+	# Queue hits
+	for i in range(attack_frames.size()):
+		var hit_frame: int = attack_frames[i]
+		var pct: int = damage_percentages[i] if i < damage_percentages.size() else 100
+		var hit_damage: int = maxi(1, int(total_damage * (float(pct) / 100.0)))
 
-	# Emit signal (-1 index for enemy)
-	attack_landed.emit(attacker_index, -1, damage)
-
-	# Cleanup and check turn
-	active_attack_coroutines -= 1
-	_check_turn_progression()
+		pending_hits.append({
+			"execute_on_frame": current_battle_frame + hit_frame,
+			"damage": hit_damage,
+			"attacker_index": attacker_index,
+			"target_index": -1
+		})
 
 func _check_turn_progression() -> void:
-	if active_attack_coroutines > 0:
+	if not pending_hits.is_empty():
 		return
 
-	var all_acted: bool = true
+	if current_state == BattleState.PLAYER_TURN:
+		var all_acted: bool = true
 
-	for i in range(party_data.size()):
-		var unit: Dictionary = party_data[i]
-		# A living unit is not empty, has current_hp, and current_hp > 0
-		if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
-			if i not in player_units_acted_this_turn:
-				all_acted = false
-				break
+		for i in range(party_data.size()):
+			var unit: Dictionary = party_data[i]
+			# A living unit is not empty, has current_hp, and current_hp > 0
+			if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
+				if i not in player_units_acted_this_turn:
+					all_acted = false
+					break
 
-	if all_acted:
-		current_state = BattleState.ENEMY_TURN
-		_execute_enemy_turn()
+		if all_acted:
+			current_state = BattleState.ENEMY_TURN
+			_execute_enemy_turn()
+	elif current_state == BattleState.ENEMY_TURN:
+		# Transition back to PLAYER_TURN
+		player_units_acted_this_turn.clear()
+		turn_count += 1
+		turn_changed.emit(turn_count)
+		current_state = BattleState.PLAYER_TURN
 
 func _execute_enemy_turn() -> void:
-	await get_tree().create_timer(1.0).timeout
-
 	var living_player_indices: Array[int] = []
 	for i in range(party_data.size()):
 		var unit: Dictionary = party_data[i]
@@ -171,18 +224,13 @@ func _execute_enemy_turn() -> void:
 		# Calculate damage (minimum 1)
 		var damage: int = maxi(1, enemy_atk - target_def)
 
-		# Apply damage
-		target_unit["current_hp"] = maxi(0, target_unit["current_hp"] - damage)
-
-		# Emit signal and update UI
-		attack_landed.emit(-1, target_index, damage)
-		request_unit_stats(target_index)
-
-	# Transition back to PLAYER_TURN
-	player_units_acted_this_turn.clear()
-	turn_count += 1
-	turn_changed.emit(turn_count)
-	current_state = BattleState.PLAYER_TURN
+		# Push a single hit to pending_hits
+		pending_hits.append({
+			"execute_on_frame": current_battle_frame + ENEMY_ATTACK_DELAY_FRAMES,
+			"damage": damage,
+			"attacker_index": -1,
+			"target_index": target_index
+		})
 
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():

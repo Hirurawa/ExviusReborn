@@ -76,11 +76,11 @@ func _update_overlays() -> void:
 	if _menu_stack.is_empty():
 		return
 
-	var current_scene_name: String = _menu_stack.back().name.to_lower()
+	var current_scene_name: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom: Array[String] = ["loginui", "registerui"]
-	var hide_bottom: Array[String] = ["mapui", "editprofileui"]
+	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui"]
+	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "mapui", "editprofileui"]
 
 	if top_header:
 		if current_scene_name in hide_top_and_bottom:
@@ -95,7 +95,7 @@ func _update_overlays() -> void:
 			bottom_nav.show()
 
 	if world_map_button:
-		if current_scene_name in hide_top_and_bottom or current_scene_name in hide_bottom or current_scene_name != "gameui":
+		if current_scene_name in hide_top_and_bottom or current_scene_name in hide_bottom or (current_scene_name != "game_ui" and current_scene_name != "gameui"):
 			world_map_button.hide()
 		else:
 			world_map_button.show()
@@ -123,9 +123,8 @@ func push(scene_name_key: String, params: Dictionary = {}) -> void:
 
 	# Check if the scene is already at the top of the stack
 	if not _menu_stack.is_empty():
-		var current_top: String = _menu_stack.back().name.to_lower()
-		var requested: String = scene_name_key.replace("_", "").to_lower()
-		if current_top == requested:
+		var current_top: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
+		if current_top == scene_name_key:
 			return # Already on this menu
 
 	var scene_path: String = _scenes_map[scene_name_key]
@@ -135,6 +134,7 @@ func push(scene_name_key: String, params: Dictionary = {}) -> void:
 		return
 
 	var instance: Node = packed_scene.instantiate()
+	instance.set_meta("scene_key", scene_name_key)
 
 	# If there's an existing scene, hide it
 	if not _menu_stack.is_empty():
@@ -179,6 +179,12 @@ func pop_to_root() -> void:
 	_update_overlays()
 
 func set_root(scene_name_key: String, params: Dictionary = {}) -> void:
+	# If the requested scene is already the root and the only one in the stack, do nothing
+	if _menu_stack.size() == 1:
+		var current_root_key = _menu_stack[0].get_meta("scene_key", "")
+		if current_root_key == scene_name_key:
+			return
+
 	# Clear the stack entirely
 	for scene in _menu_stack:
 		scene.queue_free()

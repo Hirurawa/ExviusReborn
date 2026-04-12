@@ -65,66 +65,55 @@ func _on_battle_state_ready() -> void:
 	for child in player_sprites_grid.get_children():
 		child.queue_free()
 
-	# Populate player units
-	# Order: Top Left, Bottom Left, Top Right, Middle Right.
-	# We can just iterate the party data and place them.
-	for i in range(battle_manager.party_data.size()):
-		# Add panel
-		var panel: Node = UnitPanelScene.instantiate()
-		bottom_section.add_child(panel)
-		panel.setup(i)
+	# Map the 6 grid cells to the correct party indices
+	# GridContainer places items left-to-right, top-to-bottom:
+	# Grid 0 (Top Left)     -> Party index 0
+	# Grid 1 (Top Right)    -> Party index 3
+	# Grid 2 (Mid Left)     -> Party index 1
+	# Grid 3 (Mid Right)    -> Party index 4
+	# Grid 4 (Bot Left)     -> Party index 2
+	# Grid 5 (Bot Right)    -> Empty / -1
+	var grid_to_party_map: Array[int] = [0, 3, 1, 4, 2, -1]
 
-		# Add sprite placeholder
-		var anim_sprite: AnimatedSprite2D = AnimatedSprite2D.new()
-		var frames: SpriteFrames = SpriteFrames.new()
-		frames.add_frame("default", _get_dynamic_texture("res://icon.svg"))
-		anim_sprite.sprite_frames = frames
+	for grid_idx in range(6):
+		var party_idx = grid_to_party_map[grid_idx]
+		var has_unit = false
 
-		# Put AnimatedSprite2D in a Control wrapper to work with GridContainer
-		var sprite_wrapper: Control = Control.new()
-		sprite_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		sprite_wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		if party_idx >= 0 and party_idx < battle_manager.party_data.size():
+			var unit_data = battle_manager.party_data[party_idx]
+			if not unit_data.is_empty():
+				has_unit = true
 
-		# Position sprite at center of wrapper
-		anim_sprite.position = Vector2(40, 40) # Approximate center for default icon
-		sprite_wrapper.add_child(anim_sprite)
-		player_sprites_grid.add_child(sprite_wrapper)
+		if has_unit:
+			# Add panel
+			var panel: Node = UnitPanelScene.instantiate()
+			bottom_section.add_child(panel)
+			panel.setup(party_idx)
 
-	# Reorder panels to match "Top Left -> Bottom Left -> Top Right -> Middle Right"
-	# GridContainer places items:
-	# 0 (Row 1 Col 1) - Top Left
-	# 1 (Row 1 Col 2) - Top Right
-	# 2 (Row 2 Col 1) - Mid Left
-	# 3 (Row 2 Col 2) - Mid Right
-	# 4 (Row 3 Col 1) - Bot Left
-	# 5 (Row 3 Col 2) - Bot Right
-	#
-	# User wants: Top Left (0), Bottom Left (4), Top Right (1), Middle Right (3)
+			# Add sprite placeholder
+			var anim_sprite: AnimatedSprite2D = AnimatedSprite2D.new()
+			var frames: SpriteFrames = SpriteFrames.new()
+			frames.add_frame("default", _get_dynamic_texture("res://icon.svg"))
+			anim_sprite.sprite_frames = frames
 
-	# Add empty slots to make exactly 6 items first
-	while bottom_section.get_child_count() < 6:
-		var empty_panel: Control = Control.new()
-		empty_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bottom_section.add_child(empty_panel)
-	while player_sprites_grid.get_child_count() < 6:
-		var empty_sprite: Control = Control.new()
-		empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		player_sprites_grid.add_child(empty_sprite)
+			# Put AnimatedSprite2D in a Control wrapper to work with GridContainer
+			var sprite_wrapper: Control = Control.new()
+			sprite_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			sprite_wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	var panels: Array[Node] = bottom_section.get_children()
-	var sprites: Array[Node] = player_sprites_grid.get_children()
+			# Position sprite at center of wrapper
+			anim_sprite.position = Vector2(40, 40) # Approximate center for default icon
+			sprite_wrapper.add_child(anim_sprite)
+			player_sprites_grid.add_child(sprite_wrapper)
+		else:
+			# Empty slot for both UI elements
+			var empty_panel: Control = Control.new()
+			empty_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bottom_section.add_child(empty_panel)
 
-	# Mapping from logical Party index to Grid index
-	# Index 0: Top Left -> Grid pos 0
-	# Index 1: Bottom Left -> Grid pos 4
-	# Index 2: Top Right -> Grid pos 1
-	# Index 3: Middle Right -> Grid pos 3
-	var expected_positions: Array[int] = [0, 4, 1, 3, 2, 5]
-
-	for i in range(panels.size()):
-		if i < expected_positions.size():
-			bottom_section.move_child(panels[i], expected_positions[i])
-			player_sprites_grid.move_child(sprites[i], expected_positions[i])
+			var empty_sprite: Control = Control.new()
+			empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			player_sprites_grid.add_child(empty_sprite)
 
 func _on_enemy_hp_changed(new_hp: int, max_hp: int, hp_percent: int) -> void:
 	enemy_hp_bar.max_value = max_hp

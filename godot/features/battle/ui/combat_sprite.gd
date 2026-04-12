@@ -1,0 +1,117 @@
+extends Sprite2D
+
+# To keep track of states and the current active animation
+var idle_anim: Dictionary = {}
+var atk_anim: Dictionary = {}
+
+var is_attacking: bool = false
+var current_frame_idx: int = 0
+var current_frame_timer: float = 0.0
+
+var party_index: int = -1
+
+@onready var battle_manager: Node = get_node("/root/Main/BattleManager") if get_tree().root.has_node("Main/BattleManager") else null
+
+func _ready() -> void:
+	if not battle_manager:
+		# Fallback if the path is not standard
+		var bt = get_tree().root.find_child("BattleManager", true, false)
+		if bt:
+			battle_manager = bt
+
+	if battle_manager:
+		battle_manager.unit_action_started.connect(_on_unit_action_started)
+
+func setup(p_index: int, template_id: String) -> void:
+	party_index = p_index
+
+	# Load animation data using TextureBuilder
+	idle_anim = TextureBuilder.load_unit_animation_data(template_id, "idle")
+	atk_anim = TextureBuilder.load_unit_animation_data(template_id, "atk")
+
+	# Visual fail-fast: If idle animation is missing, fallback to icon and turn neon pink
+	if idle_anim.is_empty():
+		var icon_tex: Texture2D = ResourceLoader.load("res://icon.svg") as Texture2D
+		texture = icon_tex
+		modulate = Color(1, 0, 1, 1) # Neon pink
+	else:
+		_play_idle()
+
+func _play_idle() -> void:
+	is_attacking = false
+	current_frame_idx = 0
+	current_frame_timer = 0.0
+
+	if not idle_anim.is_empty() and idle_anim.get("frames", []).size() > 0:
+		texture = idle_anim["frames"][current_frame_idx]
+
+func _play_atk() -> void:
+	is_attacking = true
+	current_frame_idx = 0
+	current_frame_timer = 0.0
+
+	# If attack animation is missing, fallback to pink and act as if done immediately
+	if atk_anim.is_empty() or atk_anim.get("frames", []).size() == 0:
+		# Missing atk anim, but we still fallback gracefully without crashing
+		_play_idle()
+		return
+
+	texture = atk_anim["frames"][current_frame_idx]
+
+func _process(delta: float) -> void:
+	# Convert delta (seconds) to frame delays logic? Wait, how are frame delays structured?
+	# In JSON they look like: "frameDelays": [3, 3, 3, ...].
+	# A frame delay of "1" is typically 1 unit. Wait, what unit? Let's check typical FFBE.
+	# Typically frame delays are in 1/60th of a second (frames). We'll assume delays are *frames* at 60fps.
+	# So delay time in seconds = frame_delay / 60.0
+
+	var current_anim = atk_anim if is_attacking else idle_anim
+
+	if current_anim.is_empty() or current_anim.get("frames", []).size() == 0:
+		return
+
+	var frames: Array = current_anim.get("frames", [])
+	var delays: Array = current_anim.get("delays", [])
+
+	# If for some reason we exceed bounds
+	if current_frame_idx >= frames.size():
+		if is_attacking:
+			_play_idle()
+		else:
+			current_frame_idx = 0
+		return
+
+	# Check delay for current frame. If delays array is shorter, default to say, 3.
+	var frame_delay_val: int = 3
+	if current_frame_idx < delays.size():
+		frame_delay_val = delays[current_frame_idx]
+
+	var delay_seconds: float = float(frame_delay_val) / 60.0
+
+	current_frame_timer += delta
+
+	if current_frame_timer >= delay_seconds:
+		# Consume the delay
+		current_frame_timer -= delay_seconds
+
+		# Advance frame
+		current_frame_idx += 1
+
+		if current_frame_idx >= frames.size():
+			if is_attacking:
+				# Attack animation finished
+				_play_idle()
+			else:
+				# Loop idle
+				current_frame_idx = 0
+		else:
+			# Just update texture
+			texture = frames[current_frame_idx]
+
+func _on_unit_action_started(unit_index: int, action: int) -> void:
+	if unit_index != party_index:
+		return
+
+	# Check if action is ATTACK
+	if action == battle_manager.CombatAction.ATTACK:
+		_play_atk()

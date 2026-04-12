@@ -158,20 +158,19 @@ func _on_battle_state_ready() -> void:
 			panel.open_item_menu.connect(_open_item_menu)
 			_active_panels.append(panel)
 
-			# Add sprite placeholder
-			var anim_sprite: AnimatedSprite2D = AnimatedSprite2D.new()
-			var frames: SpriteFrames = SpriteFrames.new()
-			frames.add_frame("default", _get_dynamic_texture("res://icon.svg"))
-			anim_sprite.sprite_frames = frames
+			# Add Combat Sprite
+			var template_id: String = str(unit_data.get("template_id", ""))
+			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
+			combat_sprite.setup(party_idx, template_id)
 
-			# Put AnimatedSprite2D in a Control wrapper to work with GridContainer
+			# Put CombatSprite in a Control wrapper to work with GridContainer
 			var sprite_wrapper: Control = Control.new()
 			sprite_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			sprite_wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 			# Position sprite at center of wrapper
-			anim_sprite.position = Vector2(40, 40) # Approximate center for default icon
-			sprite_wrapper.add_child(anim_sprite)
+			combat_sprite.position = Vector2(40, 40) # Approximate center for default icon
+			sprite_wrapper.add_child(combat_sprite)
 			player_sprites_grid.add_child(sprite_wrapper)
 		else:
 			# Empty slot for both UI elements

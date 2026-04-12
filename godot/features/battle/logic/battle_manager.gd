@@ -6,6 +6,7 @@ signal turn_changed(new_turn: int)
 signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int)
 signal attack_landed(attacker_index: int, target_index: int, damage: int)
 signal unit_acted(index: int)
+signal unit_action_started(unit_index: int, action: CombatAction)
 
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
@@ -173,6 +174,8 @@ func execute_queued_action(attacker_index: int) -> void:
 
 		# Calculate total base damage (minimum 1)
 		var total_damage: int = maxi(1, attacker_atk - enemy_def)
+
+		unit_action_started.emit(attacker_index, CombatAction.ATTACK)
 
 		# Queue hits
 		for i in range(attack_frames.size()):

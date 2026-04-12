@@ -20,14 +20,6 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"SPR": 0
 	}
 	
-	assert(unit_instance.has("unit_id"), "CRITICAL ERROR: unit_instance is missing unit_id!")
-	if not unit_instance.has("unit_id"): push_error("CRITICAL ERROR: unit_instance is missing unit_id!")
-	var unit_id = str(unit_instance["unit_id"])
-	
-	assert(DataManager.game_data_units.has(unit_id), "CRITICAL ERROR: game_data_units is missing unit_id: " + str(unit_id))
-	if not DataManager.game_data_units.has(unit_id): push_error("CRITICAL ERROR: game_data_units is missing unit_id: " + str(unit_id))
-	var unit_data = DataManager.game_data_units[unit_id]
-
 	assert(unit_instance.has("current_rarity"), "CRITICAL ERROR: unit_instance is missing current_rarity!")
 	if not unit_instance.has("current_rarity"): push_error("CRITICAL ERROR: unit_instance is missing current_rarity!")
 	var rarity = int(unit_instance["current_rarity"])
@@ -39,27 +31,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	assert(RARITY_MAX_LEVELS.has(rarity), "CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	var max_level = RARITY_MAX_LEVELS[rarity]
-
-	assert(unit_data.has("entries"), "CRITICAL ERROR: unit_data is missing entries!")
-	if not unit_data.has("entries"): push_error("CRITICAL ERROR: unit_data is missing entries!")
-	var entries = unit_data["entries"]
-
-	var entry = {}
-	if entries.has(str(unit_id)):
-		entry = entries[str(unit_id)]
-	elif entries.has(str(rarity)):
-		entry = entries[str(rarity)]
-	
-	for key in entries.keys():
-		assert(entries[key].has("rarity"), "CRITICAL ERROR: entry in entries is missing rarity!")
-		if not entries[key].has("rarity"): push_error("CRITICAL ERROR: entry in entries is missing rarity!")
-		if entries[key]["rarity"] == rarity:
-			entry = entries[key]
-			break
 			
-	assert(entry.has("stats"), "CRITICAL ERROR: entry is missing stats!")
-	if not entry.has("stats"): push_error("CRITICAL ERROR: entry is missing stats!")
-	var base_stats = entry["stats"]
+	var base_stats = unit_instance.get("stats", {})
 	
 	var base_calculated = {
 		"HP": 0.0,

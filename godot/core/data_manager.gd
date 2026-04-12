@@ -138,12 +138,12 @@ func _load_initial_data(email: String) -> void:
 	rank_updated.emit(current_rank, current_xp, next_rank_xp)
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
+	owned_items = await server_connection.read_player_items_async()
+	items_updated.emit(owned_items)
+
 	owned_units_ids = await server_connection.read_player_units_async()
 	_inject_final_stats(owned_units_ids)
 	units_updated.emit(owned_units_ids)
-	
-	owned_items = await server_connection.read_player_items_async()
-	items_updated.emit(owned_items)
 	
 	parties = await server_connection.get_parties_async()
 	parties_updated.emit(parties)

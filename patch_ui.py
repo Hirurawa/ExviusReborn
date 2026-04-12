@@ -1,4 +1,7 @@
-extends Control
+with open('./godot/features/battle/ui/combat_ui.gd', 'r') as f:
+    lines = f.readlines()
+
+new_content = """extends Control
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPanel.tscn")
@@ -43,7 +46,7 @@ func _ready() -> void:
 	DataManager.mission_failed.connect(_on_mission_failed)
 
 	enemy_texture.gui_input.connect(_on_enemy_texture_gui_input)
-	
+
 	_hit_flash = ColorRect.new()
 	_hit_flash.color = Color(1.0, 0.0, 0.0, 0.0)
 	_hit_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -209,8 +212,7 @@ func _on_finish_pressed() -> void:
 	DataManager.request_perform_mission(current_mission_id)
 
 func _on_mission_completed(rewards_text: String) -> void:
-	rewards_popup.dialog_text = "Mission completed successfully!
-" + rewards_text
+	rewards_popup.dialog_text = "Mission completed successfully!\n" + rewards_text
 	rewards_popup.popup_centered()
 
 func _on_mission_failed(error_msg: String) -> void:
@@ -219,3 +221,7 @@ func _on_mission_failed(error_msg: String) -> void:
 
 func _on_rewards_confirmed() -> void:
 	UIManager.pop()
+"""
+
+with open('./godot/features/battle/ui/combat_ui.gd', 'w') as f:
+    f.write(new_content)

@@ -1,4 +1,7 @@
-extends PanelContainer
+with open('./godot/features/battle/ui/combat_unit_panel.gd', 'r') as f:
+    lines = f.readlines()
+
+new_content = """extends PanelContainer
 
 @onready var name_label: Label = %NameLabel
 @onready var hp_label: Label = %HPLabel
@@ -139,3 +142,7 @@ func _update_visual_state() -> void:
 	elif _current_queued_action == _battle_manager.CombatAction.ITEM:
 		modulate = Color(0.6, 1.0, 0.6, 1.0) # Green tint for ITEM
 		name_label.text = base_name + " - " + action_name
+"""
+
+with open('./godot/features/battle/ui/combat_unit_panel.gd', 'w') as f:
+    f.write(new_content)

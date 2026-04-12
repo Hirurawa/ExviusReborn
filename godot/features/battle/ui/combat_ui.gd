@@ -160,7 +160,7 @@ func _on_battle_state_ready() -> void:
 			_active_panels.append(panel)
 
 			# Add Combat Sprite
-			var template_id: String = str(unit_data.get("template_id", ""))
+			var template_id: String = str(unit_data.get("unit_id", ""))
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 			combat_sprite.setup(party_idx, template_id)
 

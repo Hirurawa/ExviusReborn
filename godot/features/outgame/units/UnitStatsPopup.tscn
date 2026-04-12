@@ -97,6 +97,10 @@ size_flags_vertical = 3
 layout_mode = 2
 text = "Swap"
 
+[node name="RemoveButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Remove"
+
 [node name="CloseButton" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
 text = "Close"

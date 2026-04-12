@@ -16,6 +16,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var bottom_section: GridContainer = %BottomSection
 
 var _texture_cache: Dictionary = {}
+var _hit_flash: ColorRect
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
@@ -31,11 +32,18 @@ func _ready() -> void:
 	battle_manager.battle_state_ready.connect(_on_battle_state_ready)
 	battle_manager.enemy_hp_changed.connect(_on_enemy_hp_changed)
 	battle_manager.turn_changed.connect(_on_turn_changed)
+	battle_manager.attack_landed.connect(_on_attack_landed)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
 	DataManager.mission_failed.connect(_on_mission_failed)
 
 	enemy_texture.gui_input.connect(_on_enemy_texture_gui_input)
+	
+	_hit_flash = ColorRect.new()
+	_hit_flash.color = Color(1.0, 0.0, 0.0, 0.0)
+	_hit_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hit_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	enemy_texture.add_child(_hit_flash)
 
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
@@ -123,6 +131,12 @@ func _on_enemy_hp_changed(new_hp: int, max_hp: int, hp_percent: int) -> void:
 func _on_enemy_texture_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		print("Enemy tapped! Target set.")
+
+func _on_attack_landed(attacker_index: int, target_index: int, damage: int) -> void:
+	if target_index == -1:
+		_hit_flash.color.a = 0.8
+		var tween = create_tween()
+		tween.tween_property(_hit_flash, "color:a", 0.0, 0.15)
 
 func _on_turn_changed(new_turn: int) -> void:
 	turn_label.text = "Turn %d" % new_turn

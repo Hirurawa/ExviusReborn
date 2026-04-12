@@ -28,6 +28,7 @@ func initialize_battle(dungeon_id: String) -> void:
 
 		for instance_id in party_instance_ids:
 			if instance_id == "":
+				party_data.append({})
 				continue
 
 			var owned_unit = null
@@ -57,6 +58,8 @@ func initialize_battle(dungeon_id: String) -> void:
 				battle_unit["max_limit"] = 100 # arbitrary placeholder
 
 				party_data.append(battle_unit)
+			else:
+				party_data.append({})
 
 	# Load enemy data
 	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
@@ -82,6 +85,9 @@ func request_unit_stats(index: int) -> void:
 		return
 
 	var unit_data: Dictionary = party_data[index]
+	if unit_data.is_empty():
+		return
+
 	var template_id: String = str(unit_data.get("unit_id", ""))
 	var template: Dictionary = DataManager.game_data_units.get(template_id, {})
 

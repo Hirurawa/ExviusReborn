@@ -134,17 +134,9 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 
 	_populate_skills(unit_inst, unit_data)
 	_populate_equipment_slots(unit_inst, unit_data)
-	
-	var entries = unit_data.get("entries", {})
-	var entry = entries.get(str(unit_id), entries.get(str(rarity), {}))
 
-	for key in entries.keys():
-		if entries[key].get("rarity") == rarity:
-			entry = entries[key]
-			break
-
-	# Fetch and display the traits
-	var element_resist = entry.get("element_resist", [0,0,0,0,0,0,0,0])
+	# Fetch and display the traits directly from the hydrated unit instance
+	var element_resist = unit_inst.get("element_resist", [0,0,0,0,0,0,0,0])
 	for i in range(8):
 		var resist_panel = elem_resist_grid.get_node("Resist" + str(i+1))
 		var label = resist_panel.get_node("VBox/ValPanel/Label")
@@ -153,7 +145,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		else:
 			label.text = "-"
 
-	var status_resist = entry.get("status_resist", [0,0,0,0,0,0,0,0])
+	var status_resist = unit_inst.get("status_resist", [0,0,0,0,0,0,0,0])
 	for i in range(8):
 		var resist_panel = status_resist_grid.get_node("Resist" + str(i+1))
 		var label = resist_panel.get_node("VBox/ValPanel/Label")
@@ -162,7 +154,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		else:
 			label.text = "-"
 
-	var lb_id = str(int(entry.get("limitburst_id", "")))
+	var lb_id = str(int(unit_inst.get("limitburst_id", "")))
 	if lb_id != "" and DataManager.game_data_limitbursts.has(lb_id):
 		lb_name_label.text = DataManager.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
 	else:
@@ -362,16 +354,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		btn.pressed.connect(_on_equip_slot_clicked.bind(unit_inst, slot_info.id, slot_info.types))
 		unit_detail_equipment_grid.add_child(btn)
 
-	var ability_slots = unit_data.get("ability_slots", 1)
-	var entries = unit_data.get("entries", {})
-	var rarity = unit_inst.get("current_rarity", 1)
-	var entry = entries.get(str(unit_inst.get("unit_id")), entries.get(str(rarity), {}))
-	for key in entries.keys():
-		if entries[key].get("rarity") == rarity:
-			entry = entries[key]
-			break
-	if entry.has("ability_slots"):
-		ability_slots = entry.get("ability_slots")
+	# Fetch ability slots directly from the hydrated unit instance (fallback to unit_data)
+	var ability_slots = unit_inst.get("ability_slots", unit_data.get("ability_slots", 1))
 
 	for i in range(ability_slots):
 		var slot_id = "ability_" + str(i + 1)

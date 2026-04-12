@@ -144,8 +144,9 @@ func _on_battle_state_ready() -> void:
 		var party_idx = grid_to_party_map[grid_idx]
 		var has_unit = false
 
+		var unit_data = {}
 		if party_idx >= 0 and party_idx < battle_manager.party_data.size():
-			var unit_data = battle_manager.party_data[party_idx]
+			unit_data = battle_manager.party_data[party_idx]
 			if not unit_data.is_empty():
 				has_unit = true
 

@@ -2,8 +2,8 @@ class_name TextureBuilder
 extends RefCounted
 
 static func load_unit_animation_data(unit_id: String) -> Dictionary:
-	var png_path: String = "res://assets/unit_spritesheets/%s-atk.rawpng" % unit_id
-	var json_path: String = "res://assets/unit_spritesheets/%s-atk.json" % unit_id
+	var png_path: String = "res://assets/unit_spritesheets/atk/%s-atk.rawpng" % unit_id
+	var json_path: String = "res://assets/unit_spritesheets/atk/%s-atk.json" % unit_id
 
 	if not FileAccess.file_exists(png_path) or not FileAccess.file_exists(json_path):
 		return {}

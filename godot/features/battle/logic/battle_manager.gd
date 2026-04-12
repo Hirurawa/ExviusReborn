@@ -137,8 +137,19 @@ func request_basic_attack(attacker_index: int) -> void:
 	# Fetch unit's frame data
 	var template_id: String = str(attacker_data.get("unit_id", ""))
 	var template: Dictionary = DataManager.game_data_units.get(template_id, {})
-	var attack_frames: Array = template.get("attack_frames", [30])
-	var attack_damage: Array = template.get("attack_damage", [[100]])
+
+	var current_rarity: int = int(attacker_data.get("current_rarity", 1))
+	var entries: Dictionary = template.get("entries", {})
+	var target_entry: Dictionary = {}
+
+	for entry_key in entries.keys():
+		var entry: Dictionary = entries[entry_key]
+		if int(entry.get("rarity", 0)) == current_rarity:
+			target_entry = entry
+			break
+
+	var attack_frames: Array = target_entry.get("attack_frames", [30])
+	var attack_damage: Array = target_entry.get("attack_damage", [[100]])
 	var damage_percentages: Array = attack_damage[0] if attack_damage.size() > 0 else [100]
 
 	# Attacker ATK (must exist)

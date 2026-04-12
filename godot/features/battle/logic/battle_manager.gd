@@ -124,6 +124,14 @@ func set_enemy_hp(new_hp: int) -> void:
 		pct = int((float(enemy_current_hp) / float(enemy_max_hp)) * 100.0)
 	enemy_hp_changed.emit(enemy_current_hp, enemy_max_hp, pct)
 
+func set_queued_action(unit_index: int, new_action: CombatAction) -> void:
+	if unit_index < 0 or unit_index >= party_data.size():
+		return
+	var unit_data: Dictionary = party_data[unit_index]
+	if unit_data.is_empty():
+		return
+	unit_data["queued_action"] = new_action
+
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
 		return

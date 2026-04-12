@@ -14,6 +14,12 @@ func _ready() -> void:
 	if battle_manager and not battle_manager.unit_stats_updated.is_connected(_on_unit_stats_updated):
 		battle_manager.unit_stats_updated.connect(_on_unit_stats_updated)
 
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var battle_manager: Node = get_tree().root.find_child("BattleManager", true, false)
+		if battle_manager:
+			battle_manager.request_basic_attack(_my_index)
+
 func setup(unit_index: int) -> void:
 	_my_index = unit_index
 	var battle_manager: Node = get_tree().root.find_child("BattleManager", true, false)

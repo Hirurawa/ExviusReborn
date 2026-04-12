@@ -18,6 +18,11 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
 
+var _action_menu_panel: PanelContainer
+var _action_menu_vbox: VBoxContainer
+var _menu_target_unit_index: int = -1
+var _active_panels: Array = []
+
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
 		return _texture_cache[path]
@@ -44,6 +49,56 @@ func _ready() -> void:
 	_hit_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hit_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	enemy_texture.add_child(_hit_flash)
+
+	_setup_action_menu()
+
+func _setup_action_menu() -> void:
+	_action_menu_panel = PanelContainer.new()
+	_action_menu_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_action_menu_panel.hide()
+
+	_action_menu_vbox = VBoxContainer.new()
+	_action_menu_panel.add_child(_action_menu_vbox)
+
+	add_child(_action_menu_panel)
+
+func _open_skill_menu(unit_index: int) -> void:
+	_menu_target_unit_index = unit_index
+	_populate_action_menu("Skill", ["Fire", "Cure", "Slash"], battle_manager.CombatAction.SKILL)
+
+func _open_item_menu(unit_index: int) -> void:
+	_menu_target_unit_index = unit_index
+	_populate_action_menu("Item", ["Potion", "Phoenix Down"], battle_manager.CombatAction.ITEM)
+
+func _populate_action_menu(menu_title: String, options: Array, action_type: int) -> void:
+	for child in _action_menu_vbox.get_children():
+		child.queue_free()
+
+	var title_label = Label.new()
+	title_label.text = menu_title + " Menu"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_action_menu_vbox.add_child(title_label)
+
+	for opt in options:
+		var btn = Button.new()
+		btn.text = opt
+		btn.pressed.connect(func():
+			battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt)
+			for p in _active_panels:
+				if p._my_index == _menu_target_unit_index:
+					p.update_action_visuals()
+			_action_menu_panel.hide()
+		)
+		_action_menu_vbox.add_child(btn)
+
+	var cancel_btn = Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.pressed.connect(func():
+		_action_menu_panel.hide()
+	)
+	_action_menu_vbox.add_child(cancel_btn)
+
+	_action_menu_panel.show()
 
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
@@ -73,6 +128,8 @@ func _on_battle_state_ready() -> void:
 	for child in player_sprites_grid.get_children():
 		child.queue_free()
 
+	_active_panels.clear()
+
 	# Map the 6 grid cells to the correct party indices
 	# GridContainer places items left-to-right, top-to-bottom:
 	# Grid 0 (Top Left)     -> Party index 0
@@ -97,6 +154,9 @@ func _on_battle_state_ready() -> void:
 			var panel: Node = UnitPanelScene.instantiate()
 			bottom_section.add_child(panel)
 			panel.setup(party_idx)
+			panel.open_skill_menu.connect(_open_skill_menu)
+			panel.open_item_menu.connect(_open_item_menu)
+			_active_panels.append(panel)
 
 			# Add sprite placeholder
 			var anim_sprite: AnimatedSprite2D = AnimatedSprite2D.new()
@@ -149,7 +209,8 @@ func _on_finish_pressed() -> void:
 	DataManager.request_perform_mission(current_mission_id)
 
 func _on_mission_completed(rewards_text: String) -> void:
-	rewards_popup.dialog_text = "Mission completed successfully!\n" + rewards_text
+	rewards_popup.dialog_text = "Mission completed successfully!
+" + rewards_text
 	rewards_popup.popup_centered()
 
 func _on_mission_failed(error_msg: String) -> void:

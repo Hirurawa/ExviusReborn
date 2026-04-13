@@ -278,13 +278,14 @@ func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
 	var dungeon_id: String = params.get("dungeon_id", "")
 
-	battle_manager.initialize_battle(dungeon_id)
+	battle_manager.initialize_battle(current_mission_id)
 
 func _on_battle_state_ready() -> void:
 	# Populate enemy details
-	enemy_name_label.text = battle_manager.enemy_data.get("name", "Unknown Monster")
+	var enemy_data = battle_manager.enemy_units[0] if battle_manager.enemy_units.size() > 0 else {}
+	enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
 
-	var monster_id: String = str(battle_manager.enemy_data.get("id", "5010010"))
+	var monster_id: String = str(enemy_data.get("id", "5010010"))
 	var tex_path: String = "res://assets/monster_icon/monster_icon_" + monster_id + ".png"
 	if ResourceLoader.exists(tex_path):
 		enemy_texture.texture = _get_dynamic_texture(tex_path)
@@ -293,7 +294,7 @@ func _on_battle_state_ready() -> void:
 		enemy_texture.texture = _get_dynamic_texture("res://icon.svg")
 
 	# Populate enemy HP
-	battle_manager.set_enemy_hp(battle_manager.enemy_current_hp)
+	battle_manager.set_enemy_hp(0, enemy_data.get("current_hp", 0))
 	_on_turn_changed(battle_manager.turn_count)
 
 	# Clear previous panels and sprites
@@ -357,17 +358,18 @@ func _on_battle_state_ready() -> void:
 			empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			player_sprites_grid.add_child(empty_sprite)
 
-func _on_enemy_hp_changed(new_hp: int, max_hp: int, hp_percent: int) -> void:
-	enemy_hp_bar.max_value = max_hp
-	enemy_hp_bar.value = new_hp
-	enemy_hp_pct_label.text = "%d%%" % hp_percent
+func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
+	if enemy_index == 0:
+		enemy_hp_bar.max_value = max_hp
+		enemy_hp_bar.value = new_hp
+		enemy_hp_pct_label.text = "%d%%" % hp_percent
 
 func _on_enemy_texture_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		print("Enemy tapped! Target set.")
 
-func _on_attack_landed(attacker_index: int, target_index: int, damage: int) -> void:
-	if target_index == -1:
+func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int) -> void:
+	if target_team == "enemy" and target_index == 0:
 		_hit_flash.color.a = 0.8
 		var tween = create_tween()
 		tween.tween_property(_hit_flash, "color:a", 0.0, 0.15)

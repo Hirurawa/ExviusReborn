@@ -139,8 +139,6 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 					var modifier: float = float(parameters[5]) / 100.0
 					parsed_action["effects"].append({
 						"type": "MAGIC_DAMAGE",
-						"target_area": target_area,
-						"target_type": target_type,
 						"modifier": modifier
 					})
 			17: # RESTORE_MP
@@ -193,6 +191,78 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 					parsed_effect["hp_percent"] = int(parameters[0])
 					parsed_effect["duration"] = int(parameters[1])
 					parsed_action["effects"].append(parsed_effect)
+			30: # REGEN_MP
+				if typeof(parameters) == TYPE_ARRAY and parameters.size() >= 4:
+					if int(parameters[1]) == 1:
+						parsed_effect["type"] = "REGEN_MP"
+						parsed_effect["modifier"] = float(parameters[0]) / 100.0
+						parsed_effect["base_mp"] = float(parameters[2])
+						parsed_effect["duration"] = int(parameters[3])
+						parsed_action["effects"].append(parsed_effect)
+			33: # RESIST_ELEMENT
+				if typeof(parameters) == TYPE_ARRAY and parameters.size() >= 10:
+					parsed_effect["type"] = "RESIST_ELEMENT"
+					parsed_effect["duration"] = int(parameters[9])
+					
+					var resistances: Dictionary = {}
+					
+					# Map the exact same 8 element, storing the % resistance buff
+					if int(parameters[0]) > 0: resistances["FIRE"] = int(parameters[0])
+					if int(parameters[1]) > 0: resistances["ICE"] = int(parameters[1])
+					if int(parameters[2]) > 0: resistances["LIGHTNING"] = int(parameters[2])
+					if int(parameters[3]) > 0: resistances["WATER"] = int(parameters[3])
+					if int(parameters[4]) > 0: resistances["WIND"] = int(parameters[4])
+					if int(parameters[5]) > 0: resistances["EARTH"] = int(parameters[5])
+					if int(parameters[6]) > 0: resistances["LIGHT"] = int(parameters[6])
+					if int(parameters[7]) > 0: resistances["DARK"] = int(parameters[7])
+					
+					parsed_effect["resistances"] = resistances
+					parsed_action["effects"].append(parsed_effect)
+			35: # KO
+				parsed_effect["type"] = "KO"
+				parsed_effect["success_rate"] = int(parameters[0])
+				parsed_action["effects"].append(parsed_effect)
+			41: # FIXED_DAMAGE
+				parsed_effect["type"] = "FIXED_DAMAGE"
+				parsed_effect["damage"] = int(parameters[0])
+				parsed_action["effects"].append(parsed_effect)
+			47: # LIBRA
+				print()
+			54: # EVASION
+				print()
+			59: # DISPEL
+				print()
+			63: # LB_FILL_RATE
+				parsed_effect["type"] = "LB_FILL_RATE"
+				parsed_effect["fill_rate"] = float(parameters[0]) / 100.0
+				parsed_effect["duration"] = int(parameters[1])
+				parsed_action["effects"].append(parsed_effect)
+			64: # PERCENT_RESTORE
+				print()
+			70: # IGNORE_REFLECT_MAGIC
+				print()
+			72: # CONSECUTIVE_INCREASE_MAGIC
+				print()
+			86: # REFLECT
+				print()
+			88: # INFLICT_STOP
+				print()
+			89: # RESIST_STOP
+				print()
+			95: # ADD_ELEMENT_TO_PHYSICAL_ATTACK
+				print()
+			101: # REDUCE_DAMAGE_TAKEN
+				print()
+			103: # MAGIC_LIGHT
+				print()
+			111: # REMOVE_DEBUFF
+				print()
+			120: # INCREASE_LB_DAMAGE
+				print()
+			125: # INCREASE_LB_GAUGE
+				print()
+			127: # SHIELD
+				print()
 			
 			_: # Unhandled Opcodes
 				print("OpcodeParser: Unhandled Opcode ", opcode_id, " in skill ", skill_data.get("name", "Unknown"))

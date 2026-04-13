@@ -117,10 +117,19 @@ text = "Esper Gauge"
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="BottomSection" type="GridContainer" parent="MainLayout"]
+[node name="BottomUIWrapper" type="Control" parent="MainLayout"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="BottomSection" type="GridContainer" parent="MainLayout/BottomUIWrapper"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 columns = 2
 
 [node name="RewardsPopup" type="AcceptDialog" parent="."]

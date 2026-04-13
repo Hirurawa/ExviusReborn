@@ -1,10 +1,10 @@
 extends Node
 
 signal battle_state_ready
-signal enemy_hp_changed(new_hp: int, max_hp: int, hp_percent: int)
+signal enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int)
 signal turn_changed(new_turn: int)
 signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int)
-signal attack_landed(attacker_index: int, target_index: int, damage: int)
+signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
 
@@ -18,9 +18,8 @@ var player_units_acted_this_turn: Array = []
 var current_battle_frame: int = 0
 var pending_hits: Array[Dictionary] = []
 
-var enemy_data: Dictionary = {}
-var enemy_current_hp: int = 0
-var enemy_max_hp: int = 0
+var player_units: Array = []
+var enemy_units: Array = []
 
 var party_data: Array = []
 var turn_count: int = 1
@@ -37,19 +36,27 @@ func _physics_process(_delta: float) -> void:
 	for i in range(pending_hits.size() - 1, -1, -1):
 		var hit: Dictionary = pending_hits[i]
 		if hit.get("execute_on_frame", 0) <= current_battle_frame:
-			var target_index: int = hit.get("target_index", -1)
+			var target_team: String = hit.get("target_team", "enemy")
+			var target_index: int = hit.get("target_index", 0)
 			var damage: int = hit.get("damage", 0)
-			var attacker_index: int = hit.get("attacker_index", -1)
+			var attacker_team: String = hit.get("attacker_team", "player")
+			var attacker_index: int = hit.get("attacker_index", 0)
 
-			if target_index == -1:
-				enemy_current_hp = maxi(0, enemy_current_hp - damage)
-				set_enemy_hp(enemy_current_hp)
-			else:
-				var target_unit: Dictionary = party_data[target_index]
-				target_unit["current_hp"] = maxi(0, target_unit["current_hp"] - damage)
-				request_unit_stats(target_index)
+			var target_array = enemy_units if target_team == "enemy" else player_units
+			if target_index >= 0 and target_index < target_array.size():
+				var target = target_array[target_index]
+				if not target.is_empty():
+					target["current_hp"] = maxi(0, target.get("current_hp", 0) - damage)
+					if target_team == "enemy":
+						set_enemy_hp(target_index, target["current_hp"])
+					else:
+						# For UI stats, we still need the original party_data index
+						# For now, search it by instance_id or let request_unit_stats find it
+						var p_idx = party_data.find(target)
+						if p_idx != -1:
+							request_unit_stats(p_idx)
 
-			attack_landed.emit(attacker_index, target_index, damage)
+			attack_landed.emit(attacker_team, attacker_index, target_team, target_index, damage)
 			pending_hits.remove_at(i)
 
 	_check_turn_progression()
@@ -103,7 +110,13 @@ func initialize_battle(dungeon_id: String) -> void:
 			else:
 				party_data.append({})
 
+	player_units.clear()
+	for unit in party_data:
+		if not unit.is_empty():
+			player_units.append(unit)
+
 	# Load enemy data
+	enemy_units.clear()
 	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
@@ -119,12 +132,15 @@ func initialize_battle(dungeon_id: String) -> void:
 					break
 
 		# Merge dungeon specific data into global monster data
-		enemy_data = global_monster_data
+		var enemy_data = global_monster_data
 		for key in dungeon_monster_data:
 			enemy_data[key] = dungeon_monster_data[key]
 
-		enemy_max_hp = int(enemy_data.get("hp", 1000))
-		enemy_current_hp = enemy_max_hp
+		var enemy_max_hp = int(enemy_data.get("hp", 1000))
+		enemy_data["max_hp"] = enemy_max_hp
+		enemy_data["current_hp"] = enemy_max_hp
+
+		enemy_units.append(enemy_data)
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()
@@ -134,12 +150,17 @@ func initialize_battle(dungeon_id: String) -> void:
 	turn_count = 1
 	battle_state_ready.emit()
 
-func set_enemy_hp(new_hp: int) -> void:
-	enemy_current_hp = new_hp
+func set_enemy_hp(enemy_index: int, new_hp: int) -> void:
+	if enemy_index < 0 or enemy_index >= enemy_units.size():
+		return
+
+	var enemy = enemy_units[enemy_index]
+	enemy["current_hp"] = new_hp
+	var max_hp = enemy.get("max_hp", enemy.get("hp", 1000))
 	var pct: int = 0
-	if enemy_max_hp > 0:
-		pct = int((float(enemy_current_hp) / float(enemy_max_hp)) * 100.0)
-	enemy_hp_changed.emit(enemy_current_hp, enemy_max_hp, pct)
+	if max_hp > 0:
+		pct = int((float(enemy["current_hp"]) / float(max_hp)) * 100.0)
+	enemy_hp_changed.emit(enemy_index, enemy["current_hp"], max_hp, pct)
 
 func set_queued_action(unit_index: int, new_action: CombatAction, action_name: String = "", action_id: String = "") -> void:
 	if unit_index < 0 or unit_index >= party_data.size():
@@ -158,7 +179,8 @@ func execute_queued_action(attacker_index: int) -> void:
 		return
 
 	player_units_acted_this_turn.append(attacker_index)
-	var attacker_data: Dictionary = party_data[attacker_index]
+	var attacker_data: Dictionary = party_data[attacker_index] if attacker_index < party_data.size() else {}
+	if attacker_data.is_empty(): return
 	var action: int = attacker_data.get("queued_action", CombatAction.ATTACK)
 	
 	unit_acted.emit(attacker_index)
@@ -199,13 +221,21 @@ func execute_queued_action(attacker_index: int) -> void:
 		assert(attacker_stats.has("ATK"), "Player must have ATK")
 		var attacker_atk: int = attacker_stats.get("ATK")
 
-		# Enemy DEF (fallback to 5 since enemy stats are missing)
-		var enemy_def: int = enemy_data.get("DEF", 5)
+		# Target Enemy (default to index 0 for now)
+		var target_index: int = 0
+		var enemy_def: int = 5
+		if enemy_units.size() > 0:
+			enemy_def = enemy_units[target_index].get("DEF", 5)
 
 		# Calculate total base damage (minimum 1)
 		var total_damage: int = maxi(1, attacker_atk - enemy_def)
 
 		unit_action_started.emit(attacker_index, CombatAction.ATTACK)
+
+		# Find internal index if needed, but hit queue expects the attacker index logic correctly mapped below.
+		# The engine loop uses player_units while UI uses party_data indices. We use party_data index for emit and the hit payload.
+		var p_idx = player_units.find(attacker_data)
+		var internal_attacker_index = p_idx if p_idx != -1 else attacker_index
 
 		# Queue hits
 		for i in range(attack_frames.size()):
@@ -216,22 +246,28 @@ func execute_queued_action(attacker_index: int) -> void:
 			pending_hits.append({
 				"execute_on_frame": current_battle_frame + hit_frame,
 				"damage": hit_damage,
-				"attacker_index": attacker_index,
-				"target_index": -1
+				"attacker_team": "player",
+				"attacker_index": internal_attacker_index,
+				"target_team": "enemy",
+				"target_index": target_index
 			})
 
 func _check_turn_progression() -> void:
 	if not pending_hits.is_empty():
 		return
 
+	check_battle_state()
+
 	if current_state == BattleState.PLAYER_TURN:
 		var all_acted: bool = true
 
-		for i in range(party_data.size()):
-			var unit: Dictionary = party_data[i]
+		for i in range(player_units.size()):
+			var unit: Dictionary = player_units[i]
 			# A living unit is not empty, has current_hp, and current_hp > 0
 			if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
-				if i not in player_units_acted_this_turn:
+				# Find the original party index since player_units_acted_this_turn tracks UI party indices
+				var p_idx = party_data.find(unit)
+				if p_idx != -1 and p_idx not in player_units_acted_this_turn:
 					all_acted = false
 					break
 
@@ -241,7 +277,7 @@ func _check_turn_progression() -> void:
 	elif current_state == BattleState.ENEMY_TURN:
 		# Transition back to PLAYER_TURN
 		player_units_acted_this_turn.clear()
-		for unit in party_data:
+		for unit in player_units:
 			if not unit.is_empty():
 				unit["is_defending"] = false
 				
@@ -251,18 +287,21 @@ func _check_turn_progression() -> void:
 
 func _execute_enemy_turn() -> void:
 	var living_player_indices: Array[int] = []
-	for i in range(party_data.size()):
-		var unit: Dictionary = party_data[i]
+	for i in range(player_units.size()):
+		var unit: Dictionary = player_units[i]
 		if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
 			living_player_indices.append(i)
 
 	if living_player_indices.size() > 0:
 		var random_idx: int = randi() % living_player_indices.size()
 		var target_index: int = living_player_indices[random_idx]
-		var target_unit: Dictionary = party_data[target_index]
+		var target_unit: Dictionary = player_units[target_index]
 
-		# Enemy ATK (fallback to 10)
-		var enemy_atk: int = enemy_data.get("ATK", 10)
+		# Let's assume enemy index 0 for now
+		var attacker_index: int = 0
+		var enemy_atk: int = 10
+		if enemy_units.size() > 0:
+			enemy_atk = enemy_units[attacker_index].get("ATK", 10)
 
 		# Player DEF (must exist)
 		var target_stats: Dictionary = target_unit.get("final_stats", {})
@@ -279,7 +318,9 @@ func _execute_enemy_turn() -> void:
 		pending_hits.append({
 			"execute_on_frame": current_battle_frame + ENEMY_ATTACK_DELAY_FRAMES,
 			"damage": damage,
-			"attacker_index": -1,
+			"attacker_team": "enemy",
+			"attacker_index": attacker_index,
+			"target_team": "player",
 			"target_index": target_index
 		})
 
@@ -300,3 +341,36 @@ func request_unit_stats(index: int) -> void:
 	var max_limit: int = unit_data.get("max_limit", 100)
 
 	unit_stats_updated.emit(index, unit_name, cur_hp, max_hp, cur_mp, max_mp, cur_limit, max_limit)
+
+
+func _are_all_units_dead(team: Array) -> bool:
+	if team.size() == 0:
+		return true # Prevent edge cases where an empty wave triggers a soft-lock
+
+	for unit in team:
+		if unit.get("current_hp", 0) > 0:
+			return false
+
+	return true
+
+func check_battle_state() -> void:
+	# Check for Game Over first
+	if _are_all_units_dead(player_units):
+		_trigger_defeat()
+		return
+
+	# Check for Wave Clear
+	if _are_all_units_dead(enemy_units):
+		_trigger_wave_clear()
+		return
+
+	# Battle continues
+	print("BattleManager: Both sides still standing.")
+
+func _trigger_defeat() -> void:
+	print("BattleManager: Defeat! All allies have fallen.")
+	# TODO: Stop turn queue, show Game Over UI
+
+func _trigger_wave_clear() -> void:
+	print("BattleManager: Wave cleared! All enemies defeated.")
+	# TODO: Check for next wave, spawn enemies, or trigger Victory screen

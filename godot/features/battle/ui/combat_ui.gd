@@ -64,11 +64,49 @@ func _setup_action_menu() -> void:
 
 func _open_skill_menu(unit_index: int) -> void:
 	_menu_target_unit_index = unit_index
-	_populate_action_menu("Skill", ["Fire", "Cure", "Slash"], battle_manager.CombatAction.SKILL)
+
+	var options: Array = []
+	if unit_index >= 0 and unit_index < battle_manager.party_data.size():
+		var unit_inst: Dictionary = battle_manager.party_data[unit_index]
+		if not unit_inst.is_empty():
+			var unit_id = str(unit_inst.get("unit_id", ""))
+			var rarity = int(unit_inst.get("current_rarity", 1))
+			var level = int(unit_inst.get("level", 1))
+
+			var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+			var skills: Array = unit_data.get("skills", [])
+
+			for sk in skills:
+				var req_rarity = int(sk.get("rarity", 99))
+				var req_level = int(sk.get("level", 99))
+
+				if rarity > req_rarity or (rarity == req_rarity and level >= req_level):
+					var sk_id = str(int(sk.get("id", "")))
+					var sk_type = sk.get("type", "")
+
+					if sk_type == "MAGIC":
+						if DataManager.game_data_skills_magic.has(sk_id):
+							options.append(DataManager.game_data_skills_magic[sk_id].get("name", "Unknown Magic"))
+					elif sk_type == "ABILITY":
+						if DataManager.game_data_skills_ability.has(sk_id):
+							options.append(DataManager.game_data_skills_ability[sk_id].get("name", "Unknown Ability"))
+
+	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL)
 
 func _open_item_menu(unit_index: int) -> void:
 	_menu_target_unit_index = unit_index
-	_populate_action_menu("Item", ["Potion", "Phoenix Down"], battle_manager.CombatAction.ITEM)
+
+	var options: Array = []
+	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
+
+	for item_id in stackables.keys():
+		var quantity: int = stackables[item_id]
+		if quantity > 0 and DataManager.game_data_items.has(item_id):
+			var item_data: Dictionary = DataManager.game_data_items[item_id]
+			var item_name: String = item_data.get("name", "Unknown Item")
+			options.append(item_name + " (x" + str(quantity) + ")")
+
+	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM)
 
 func _populate_action_menu(menu_title: String, options: Array, action_type: int) -> void:
 	for child in _action_menu_vbox.get_children():

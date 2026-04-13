@@ -12,6 +12,8 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 		if typeof(effect) != TYPE_ARRAY or effect.size() < 4:
 			continue
 
+		var target_area: int = int(effect[0])
+		var target_type: int = int(effect[1])
 		var opcode_id: int = int(effect[2])
 		var parameters: Array = effect[3]
 
@@ -21,6 +23,8 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 					var modifier: float = float(parameters[5]) / 100.0
 					parsed_action["effects"].append({
 						"type": "MAGIC_DAMAGE",
+						"target_area": target_area,
+						"target_type": target_type,
 						"modifier": modifier
 					})
 			_: # Unhandled Opcodes

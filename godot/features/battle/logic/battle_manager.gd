@@ -73,7 +73,7 @@ func _physics_process(_delta: float) -> void:
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
-	var mission_data = DataManager.game_data_missions.get(mission_id, {})
+	var mission_data = DataManager.game_data_missions.get(str(mission_id), {})
 
 	total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
@@ -132,8 +132,8 @@ func initialize_battle(mission_id: String) -> void:
 
 	# Load enemy data
 	enemy_units.clear()
-	var dungeon_id = mission_data["dungeon_id"]
-	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
+	var dungeon_id = str(mission_data.get("dungeon_id", ""))
+	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
 	if monsters_in_dungeon.size() > 0:
@@ -143,7 +143,7 @@ func initialize_battle(mission_id: String) -> void:
 		var monster_name = dungeon_monster_data.get("name", "")
 		if monster_name != "":
 			for monster in DataManager.game_data_monsters:
-				if typeof(monster) == TYPE_DICTIONARY and monster.get("name", "") == monster_name:
+				if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
 					global_monster_data = monster.duplicate(true)
 					break
 
@@ -412,9 +412,9 @@ func _spawn_next_wave() -> void:
 
 	enemy_units.clear()
 
-	var mission_data = DataManager.game_data_missions.get(current_mission_id, {})
-	var dungeon_id = mission_data.get("dungeon_id", "")
-	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
+	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
+	var dungeon_id = str(mission_data.get("dungeon_id", ""))
+	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
 	if monsters_in_dungeon.size() > 0:
@@ -424,7 +424,7 @@ func _spawn_next_wave() -> void:
 		var monster_name = dungeon_monster_data.get("name", "")
 		if monster_name != "":
 			for monster in DataManager.game_data_monsters:
-				if typeof(monster) == TYPE_DICTIONARY and monster.get("name", "") == monster_name:
+				if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
 					global_monster_data = monster.duplicate(true)
 					break
 

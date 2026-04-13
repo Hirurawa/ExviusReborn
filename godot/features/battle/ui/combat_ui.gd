@@ -13,6 +13,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var enemy_name_label: Label = %EnemyNameLabel
 @onready var enemy_hp_bar: ProgressBar = %EnemyHPBar
 @onready var enemy_hp_pct_label: Label = %EnemyHPPctLabel
+@onready var bottom_ui_wrapper: Control = %BottomUIWrapper
 @onready var bottom_section: GridContainer = %BottomSection
 
 var _texture_cache: Dictionary = {}
@@ -22,6 +23,11 @@ var _action_menu_panel: PanelContainer
 var _action_menu_vbox: VBoxContainer
 var _menu_target_unit_index: int = -1
 var _active_panels: Array = []
+
+var _current_open_menu: String = ""
+var _menu_tween: Tween
+var _is_dragging_menu: bool = false
+var _menu_drag_start_position: Vector2
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
@@ -54,13 +60,34 @@ func _ready() -> void:
 
 func _setup_action_menu() -> void:
 	_action_menu_panel = PanelContainer.new()
-	_action_menu_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_action_menu_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_action_menu_panel.hide()
+	_action_menu_panel.gui_input.connect(_on_action_menu_gui_input)
 
 	_action_menu_vbox = VBoxContainer.new()
 	_action_menu_panel.add_child(_action_menu_vbox)
 
-	add_child(_action_menu_panel)
+	bottom_ui_wrapper.add_child(_action_menu_panel)
+
+func _on_action_menu_gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenDrag or event is InputEventMouseMotion:
+		if not _is_dragging_menu and (Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or event is InputEventScreenDrag):
+			_is_dragging_menu = true
+			_menu_drag_start_position = event.position
+		elif _is_dragging_menu:
+			var delta = event.position - _menu_drag_start_position
+			if abs(delta.x) > abs(delta.y) and abs(delta.x) > 20:
+				if _current_open_menu == "SKILL" and delta.x < -20:
+					_close_action_menu()
+					_is_dragging_menu = false
+				elif _current_open_menu == "ITEM" and delta.x > 20:
+					_close_action_menu()
+					_is_dragging_menu = false
+
+	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_is_dragging_menu = false
+	elif event is InputEventScreenTouch and not event.pressed:
+		_is_dragging_menu = false
 
 func _open_skill_menu(unit_index: int) -> void:
 	_menu_target_unit_index = unit_index
@@ -91,7 +118,20 @@ func _open_skill_menu(unit_index: int) -> void:
 						if DataManager.game_data_skills_ability.has(sk_id):
 							options.append(DataManager.game_data_skills_ability[sk_id].get("name", "Unknown Ability"))
 
-	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL)
+	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
+
+	_current_open_menu = "SKILL"
+	var target_center_x = 0.0
+	var offscreen_left_x = -bottom_ui_wrapper.size.x
+
+	_action_menu_panel.position.x = offscreen_left_x
+	_action_menu_panel.show()
+
+	if _menu_tween and _menu_tween.is_valid():
+		_menu_tween.kill()
+	_menu_tween = create_tween()
+	_menu_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_menu_tween.tween_property(_action_menu_panel, "position:x", target_center_x, 0.2)
 
 func _open_item_menu(unit_index: int) -> void:
 	_menu_target_unit_index = unit_index
@@ -106,37 +146,123 @@ func _open_item_menu(unit_index: int) -> void:
 			var item_name: String = item_data.get("name", "Unknown Item")
 			options.append(item_name + " (x" + str(quantity) + ")")
 
-	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM)
+	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM, false)
 
-func _populate_action_menu(menu_title: String, options: Array, action_type: int) -> void:
+	_current_open_menu = "ITEM"
+	var target_center_x = 0.0
+	var offscreen_right_x = bottom_ui_wrapper.size.x
+
+	_action_menu_panel.position.x = offscreen_right_x
+	_action_menu_panel.show()
+
+	if _menu_tween and _menu_tween.is_valid():
+		_menu_tween.kill()
+	_menu_tween = create_tween()
+	_menu_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_menu_tween.tween_property(_action_menu_panel, "position:x", target_center_x, 0.2)
+
+func _close_action_menu() -> void:
+	if _current_open_menu == "":
+		return
+
+	var target_x: float
+	if _current_open_menu == "SKILL":
+		target_x = -bottom_ui_wrapper.size.x
+	else:
+		target_x = bottom_ui_wrapper.size.x
+
+	if _menu_tween and _menu_tween.is_valid():
+		_menu_tween.kill()
+	_menu_tween = create_tween()
+	_menu_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_menu_tween.tween_property(_action_menu_panel, "position:x", target_x, 0.2)
+	_menu_tween.finished.connect(func():
+		_action_menu_panel.hide()
+		_current_open_menu = ""
+	)
+
+func _create_action_button(action_name: String, sub_text: String) -> Button:
+	var btn = Button.new()
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.custom_minimum_size = Vector2(0, 50)
+
+	var hbox = HBoxContainer.new()
+	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(hbox)
+
+	var icon_rect = TextureRect.new()
+	icon_rect.custom_minimum_size = Vector2(40, 40)
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(icon_rect)
+
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(vbox)
+
+	var name_label = Label.new()
+	name_label.text = action_name
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	vbox.add_child(name_label)
+
+	var sub_label = Label.new()
+	sub_label.text = sub_text
+	sub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	sub_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sub_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(sub_label)
+
+	return btn
+
+func _populate_action_menu(menu_title: String, options: Array, action_type: int, is_skill: bool) -> void:
 	for child in _action_menu_vbox.get_children():
 		child.queue_free()
 
-	var title_label = Label.new()
-	title_label.text = menu_title + " Menu"
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_action_menu_vbox.add_child(title_label)
+	var scroll = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_action_menu_vbox.add_child(scroll)
+
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(grid)
 
 	for opt in options:
-		var btn = Button.new()
-		btn.text = opt
+		var action_name: String = opt
+		var sub_text: String = "MP: --"
+
+		if not is_skill:
+			# For items, extract the " (xCount)" part to be the subtext
+			var paren_idx = opt.find(" (x")
+			if paren_idx != -1:
+				action_name = opt.left(paren_idx)
+				sub_text = opt.substr(paren_idx + 2, opt.length() - paren_idx - 3) # Extracts 'xCount'
+
+		var btn = _create_action_button(action_name, sub_text)
 		btn.pressed.connect(func():
 			battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt)
 			for p in _active_panels:
 				if p._my_index == _menu_target_unit_index:
 					p.update_action_visuals()
-			_action_menu_panel.hide()
+			_close_action_menu()
 		)
-		_action_menu_vbox.add_child(btn)
+		grid.add_child(btn)
+
+	var bottom_hbox = HBoxContainer.new()
+	bottom_hbox.alignment = BoxContainer.ALIGNMENT_END
+	_action_menu_vbox.add_child(bottom_hbox)
 
 	var cancel_btn = Button.new()
-	cancel_btn.text = "Cancel"
+	cancel_btn.text = "Back"
 	cancel_btn.pressed.connect(func():
-		_action_menu_panel.hide()
+		_close_action_menu()
 	)
-	_action_menu_vbox.add_child(cancel_btn)
-
-	_action_menu_panel.show()
+	bottom_hbox.add_child(cancel_btn)
 
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")

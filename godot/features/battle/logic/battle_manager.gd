@@ -64,7 +64,10 @@ func _physics_process(_delta: float) -> void:
 	_check_turn_progression()
 
 
-func initialize_battle(dungeon_id: String) -> void:
+func initialize_battle(mission_id: String) -> void:
+	
+	var mission_data = DataManager.game_data_missions.get(mission_id)
+
 	party_data = []
 
 	if DataManager.parties.size() > 0:
@@ -119,6 +122,7 @@ func initialize_battle(dungeon_id: String) -> void:
 
 	# Load enemy data
 	enemy_units.clear()
+	var dungeon_id = mission_data["dungeon_id"]
 	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 

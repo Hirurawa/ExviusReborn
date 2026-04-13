@@ -278,7 +278,7 @@ func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
 	var dungeon_id: String = params.get("dungeon_id", "")
 
-	battle_manager.initialize_battle(dungeon_id)
+	battle_manager.initialize_battle(current_mission_id)
 
 func _on_battle_state_ready() -> void:
 	# Populate enemy details

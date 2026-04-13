@@ -174,6 +174,8 @@ func execute_queued_action(attacker_index: int) -> void:
 
 		if action == CombatAction.SKILL:
 			var target_skill_data: Dictionary = DataManager.game_data_skills_magic.get(action_id, {})
+			if target_skill_data == {}:
+				target_skill_data = DataManager.game_data_skills_ability.get(action_id, {})
 
 			if target_skill_data.is_empty():
 				push_error("Error: Skill not found in database: " + action_name)

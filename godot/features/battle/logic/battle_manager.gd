@@ -168,6 +168,21 @@ func execute_queued_action(attacker_index: int) -> void:
 	elif action == CombatAction.SKILL or action == CombatAction.ITEM:
 		var action_name: String = attacker_data.get("queued_action_name", "")
 		print("Executing: ", action_name)
+
+		if action == CombatAction.SKILL:
+			var target_skill_data: Dictionary = {}
+			for skill in DataManager.game_data_skills_magic.values():
+				if skill.get("name", "") == action_name:
+					target_skill_data = skill
+					break
+
+			if target_skill_data.is_empty():
+				push_error("Error: Skill not found in database: " + action_name)
+				return
+
+			var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
+			print("Parsed Skill: ", parsed_data)
+
 		_check_turn_progression()
 		return
 	elif action == CombatAction.ATTACK:

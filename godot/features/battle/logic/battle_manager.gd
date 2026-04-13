@@ -96,6 +96,7 @@ func initialize_battle(dungeon_id: String) -> void:
 				battle_unit["max_limit"] = 100 # arbitrary placeholder
 				battle_unit["queued_action"] = CombatAction.ATTACK
 				battle_unit["queued_action_name"] = ""
+				battle_unit["queued_action_id"] = ""
 				battle_unit["is_defending"] = false
 
 				party_data.append(battle_unit)
@@ -140,7 +141,7 @@ func set_enemy_hp(new_hp: int) -> void:
 		pct = int((float(enemy_current_hp) / float(enemy_max_hp)) * 100.0)
 	enemy_hp_changed.emit(enemy_current_hp, enemy_max_hp, pct)
 
-func set_queued_action(unit_index: int, new_action: CombatAction, action_name: String = "") -> void:
+func set_queued_action(unit_index: int, new_action: CombatAction, action_name: String = "", action_id: String = "") -> void:
 	if unit_index < 0 or unit_index >= party_data.size():
 		return
 	var unit_data: Dictionary = party_data[unit_index]
@@ -148,6 +149,7 @@ func set_queued_action(unit_index: int, new_action: CombatAction, action_name: S
 		return
 	unit_data["queued_action"] = new_action
 	unit_data["queued_action_name"] = action_name
+	unit_data["queued_action_id"] = action_id
 
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
@@ -167,7 +169,21 @@ func execute_queued_action(attacker_index: int) -> void:
 		return
 	elif action == CombatAction.SKILL or action == CombatAction.ITEM:
 		var action_name: String = attacker_data.get("queued_action_name", "")
+		var action_id: String = attacker_data.get("queued_action_id", "")
 		print("Executing: ", action_name)
+
+		if action == CombatAction.SKILL:
+			var target_skill_data: Dictionary = DataManager.game_data_skills_magic.get(action_id, {})
+			if target_skill_data == {}:
+				target_skill_data = DataManager.game_data_skills_ability.get(action_id, {})
+
+			if target_skill_data.is_empty():
+				push_error("Error: Skill not found in database: " + action_name)
+				return
+
+			var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
+			print("Parsed Skill: ", parsed_data)
+
 		_check_turn_progression()
 		return
 	elif action == CombatAction.ATTACK:

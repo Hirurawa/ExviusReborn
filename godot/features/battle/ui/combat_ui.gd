@@ -113,10 +113,16 @@ func _open_skill_menu(unit_index: int) -> void:
 
 					if sk_type == "MAGIC":
 						if DataManager.game_data_skills_magic.has(sk_id):
-							options.append(DataManager.game_data_skills_magic[sk_id].get("name", "Unknown Magic"))
+							options.append({
+								"id": sk_id,
+								"name": DataManager.game_data_skills_magic[sk_id].get("name", "Unknown Magic")
+							})
 					elif sk_type == "ABILITY":
 						if DataManager.game_data_skills_ability.has(sk_id):
-							options.append(DataManager.game_data_skills_ability[sk_id].get("name", "Unknown Ability"))
+							options.append({
+								"id": sk_id,
+								"name": DataManager.game_data_skills_ability[sk_id].get("name", "Unknown Ability")
+							})
 
 	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
 
@@ -144,7 +150,10 @@ func _open_item_menu(unit_index: int) -> void:
 		if quantity > 0 and DataManager.game_data_items.has(item_id):
 			var item_data: Dictionary = DataManager.game_data_items[item_id]
 			var item_name: String = item_data.get("name", "Unknown Item")
-			options.append(item_name + " (x" + str(quantity) + ")")
+			options.append({
+				"id": item_id,
+				"name": item_name + " (x" + str(quantity) + ")"
+			})
 
 	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM, false)
 
@@ -233,19 +242,20 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 	scroll.add_child(grid)
 
 	for opt in options:
-		var action_name: String = opt
+		var action_id: String = opt.get("id", "")
+		var action_name: String = opt.get("name", "")
 		var sub_text: String = "MP: --"
 
 		if not is_skill:
 			# For items, extract the " (xCount)" part to be the subtext
-			var paren_idx = opt.find(" (x")
+			var paren_idx = action_name.find(" (x")
 			if paren_idx != -1:
-				action_name = opt.left(paren_idx)
-				sub_text = opt.substr(paren_idx + 2, opt.length() - paren_idx - 3) # Extracts 'xCount'
+				sub_text = action_name.substr(paren_idx + 2, action_name.length() - paren_idx - 3) # Extracts 'xCount'
+				action_name = action_name.left(paren_idx)
 
 		var btn = _create_action_button(action_name, sub_text)
 		btn.pressed.connect(func():
-			battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt)
+			battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
 			for p in _active_panels:
 				if p._my_index == _menu_target_unit_index:
 					p.update_action_visuals()

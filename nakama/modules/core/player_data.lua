@@ -119,10 +119,7 @@ function PlayerData.get_player_stats(context, payload)
         current_nrg = stats.current_nrg,
         max_nrg = max_energy,
         nrg_regen_rate_seconds = nrg_regen_rate_seconds,
-        seconds_until_next_nrg = seconds_until_next_nrg,
-        -- Backward compatibility
-        energy = stats.current_nrg,
-        max_energy = max_energy
+        seconds_until_next_nrg = seconds_until_next_nrg
     }
 
     return nk.json_encode(payload_out)

@@ -148,7 +148,7 @@ func initialize_battle(mission_id: String) -> void:
 					break
 
 		# Merge dungeon specific data into global monster data
-		var enemy_data = global_monster_data
+		var enemy_data = global_monster_data.duplicate(true)
 		for key in dungeon_monster_data:
 			enemy_data[key] = dungeon_monster_data[key]
 
@@ -428,7 +428,7 @@ func _spawn_next_wave() -> void:
 					global_monster_data = monster.duplicate(true)
 					break
 
-		var enemy_data = global_monster_data
+		var enemy_data = global_monster_data.duplicate(true)
 		for key in dungeon_monster_data:
 			enemy_data[key] = dungeon_monster_data[key]
 
@@ -445,5 +445,7 @@ func _spawn_next_wave() -> void:
 	current_battle_frame = 0
 	pending_hits.clear()
 
-	is_transitioning = false
 	battle_state_ready.emit()
+
+	# Only unlock after everything is fully set up
+	is_transitioning = false

@@ -24,6 +24,8 @@ var enemy_units: Array = []
 var party_data: Array = []
 var turn_count: int = 1
 
+var is_transitioning: bool = false
+
 func _ready() -> void:
 	pass
 
@@ -148,6 +150,7 @@ func initialize_battle(dungeon_id: String) -> void:
 	pending_hits.clear()
 
 	turn_count = 1
+	is_transitioning = false
 	battle_state_ready.emit()
 
 func set_enemy_hp(enemy_index: int, new_hp: int) -> void:
@@ -354,13 +357,19 @@ func _are_all_units_dead(team: Array) -> bool:
 	return true
 
 func check_battle_state() -> void:
+	# If we are already handling a win/loss, ignore further checks
+	if is_transitioning:
+		return
+
 	# Check for Game Over first
 	if _are_all_units_dead(player_units):
+		is_transitioning = true
 		_trigger_defeat()
 		return
 
 	# Check for Wave Clear
 	if _are_all_units_dead(enemy_units):
+		is_transitioning = true
 		_trigger_wave_clear()
 		return
 

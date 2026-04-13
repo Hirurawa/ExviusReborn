@@ -365,7 +365,7 @@ func check_battle_state() -> void:
 		return
 
 	# Battle continues
-	print("BattleManager: Both sides still standing.")
+	# print("BattleManager: Both sides still standing.")
 
 func _trigger_defeat() -> void:
 	print("BattleManager: Defeat! All allies have fallen.")

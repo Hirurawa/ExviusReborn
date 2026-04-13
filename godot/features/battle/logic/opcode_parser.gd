@@ -17,16 +17,15 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 		var opcode_id: int = int(effect[2])
 		var parameters: Array = effect[3]
 
-		var parsed_effect: Dictionary = {}
+		var parsed_effect: Dictionary = {"target_area": target_area, "target_type": target_type}
 		
 		match opcode_id:
 			2: # HEAL
 				if typeof(parameters) == TYPE_ARRAY and parameters.size() > 3:
-					parsed_action["effects"].append({
-						"type": "HEAL",
-						"base_heal": float(parameters[2]),
-						"modifier": float(parameters[3]) / 100.0
-					})
+					parsed_effect["type"] = "HEAL"
+					parsed_effect["base_heal"] =  float(parameters[2])
+					parsed_effect["modifier"] = float(parameters[3]) / 100.0
+					parsed_action["effects"].append(parsed_effect)
 			3: # STAT_BUFF
 				if typeof(parameters) == TYPE_ARRAY and parameters.size() > 4:
 					parsed_effect["type"] = "STAT_BUFF"
@@ -137,10 +136,9 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 			15: # MAGIC_DAMAGE
 				if typeof(parameters) == TYPE_ARRAY and parameters.size() > 5:
 					var modifier: float = float(parameters[5]) / 100.0
-					parsed_action["effects"].append({
-						"type": "MAGIC_DAMAGE",
-						"modifier": modifier
-					})
+					parsed_effect["type"] = "MAGIC_DAMAGE"
+					parsed_effect["modifier"] = modifier
+					parsed_action["effects"].append(parsed_effect)
 			17: # RESTORE_MP
 				if typeof(parameters) == TYPE_ARRAY and parameters.size() >= 1:
 					parsed_effect["type"] = "RESTORE_MP"
@@ -207,14 +205,14 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 					var resistances: Dictionary = {}
 					
 					# Map the exact same 8 element, storing the % resistance buff
-					if int(parameters[0]) > 0: resistances["FIRE"] = int(parameters[0])
-					if int(parameters[1]) > 0: resistances["ICE"] = int(parameters[1])
-					if int(parameters[2]) > 0: resistances["LIGHTNING"] = int(parameters[2])
-					if int(parameters[3]) > 0: resistances["WATER"] = int(parameters[3])
-					if int(parameters[4]) > 0: resistances["WIND"] = int(parameters[4])
-					if int(parameters[5]) > 0: resistances["EARTH"] = int(parameters[5])
-					if int(parameters[6]) > 0: resistances["LIGHT"] = int(parameters[6])
-					if int(parameters[7]) > 0: resistances["DARK"] = int(parameters[7])
+					if int(parameters[0]) != 0: resistances["FIRE"] = int(parameters[0])
+					if int(parameters[1]) != 0: resistances["ICE"] = int(parameters[1])
+					if int(parameters[2]) != 0: resistances["LIGHTNING"] = int(parameters[2])
+					if int(parameters[3]) != 0: resistances["WATER"] = int(parameters[3])
+					if int(parameters[4]) != 0: resistances["WIND"] = int(parameters[4])
+					if int(parameters[5]) != 0: resistances["EARTH"] = int(parameters[5])
+					if int(parameters[6]) != 0: resistances["LIGHT"] = int(parameters[6])
+					if int(parameters[7]) != 0: resistances["DARK"] = int(parameters[7])
 					
 					parsed_effect["resistances"] = resistances
 					parsed_action["effects"].append(parsed_effect)

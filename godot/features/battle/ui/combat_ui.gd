@@ -294,7 +294,7 @@ func _on_battle_state_ready() -> void:
 		enemy_texture.texture = _get_dynamic_texture("res://icon.svg")
 
 	# Populate enemy HP
-	battle_manager.set_enemy_hp(battle_manager.enemy_current_hp)
+	battle_manager.set_enemy_hp(0, enemy_data.get("current_hp", 0))
 	_on_turn_changed(battle_manager.turn_count)
 
 	# Clear previous panels and sprites

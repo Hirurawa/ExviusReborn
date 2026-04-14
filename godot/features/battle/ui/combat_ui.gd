@@ -370,12 +370,12 @@ func _on_enemy_texture_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		print("Enemy tapped! Target set.")
 
-func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int) -> void:
+func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int) -> void:
 	if target_team == "enemy" and target_index == 0:
 		_hit_flash.color.a = 0.8
 		var tween = create_tween()
 		tween.tween_property(_hit_flash, "color:a", 0.0, 0.15)
-
+		print(chain_count)
 		_spawn_damage_number(damage)
 
 func _spawn_damage_number(damage: int) -> void:

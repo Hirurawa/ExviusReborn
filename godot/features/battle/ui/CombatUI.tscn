@@ -61,7 +61,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -40.0
-offset_bottom = 40.0
+offset_top = 155.0
+offset_right = -10.0
+offset_bottom = 200.0
 grow_horizontal = 0
 
 [node name="PlayerArea" type="VBoxContainer" parent="MainLayout/TopSection"]

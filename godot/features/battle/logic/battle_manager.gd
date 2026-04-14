@@ -223,6 +223,14 @@ func execute_queued_action(attacker_index: int) -> void:
 			var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
 			print("Parsed Skill: ", parsed_data)
 
+			# Attempt to get targeting data from the queue, fallback to enemy 0 for now
+			var target_team: String = attacker_data.get("queued_target_team", "enemy")
+			var target_idx: int = attacker_data.get("queued_target_index", 0)
+
+			# Route the skill to the execution pipeline
+			# Note: We hardcode "player" here assuming only players use the UI queue right now
+			execute_parsed_skill(parsed_data, "player", attacker_index, target_team, target_idx)
+
 		_check_turn_progression()
 		return
 	elif action == CombatAction.ATTACK:
@@ -449,3 +457,63 @@ func _spawn_next_wave() -> void:
 
 	# Only unlock after everything is fully set up
 	is_transitioning = false
+
+func _resolve_targets(target_area: int, target_type: int, caster_team: String, caster_index: int, primary_team: String, primary_index: int) -> Array:
+	var targets = []
+	var enemy_pool = enemy_units
+	var ally_pool = player_units if caster_team == "player" else enemy_units # Adjust if enemies cast buffs on themselves
+
+	match target_area:
+		1: # Single Target
+			var pool = ally_pool if target_type in [2, 3, 4, 6] else enemy_units
+			if primary_index < pool.size():
+				targets.append(primary_index)
+		2: # AOE
+			var pool = ally_pool if target_type in [2, 6] else enemy_units
+			for i in range(pool.size()):
+				targets.append(i)
+		3: # Self
+			targets.append(caster_index)
+
+	return targets
+
+func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_idx: int, primary_target_team: String, primary_target_idx: int) -> void:
+	var effects = parsed_skill.get("effects", [])
+
+	for i in range(effects.size()):
+		var effect = effects[i]
+		var all_attack_damage = effect.get("attack_damage", [])
+		var all_attack_frames = effect.get("attack_frames", [])
+
+		# Safely grab the corresponding frame/damage arrays (fallback to defaults for non-damaging effects)
+		var attack_damage = all_attack_damage[i] if i < all_attack_damage.size() else [100]
+		var attack_frames = all_attack_frames[i] if i < all_attack_frames.size() else [0]
+
+		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster_team, caster_idx, primary_target_team, primary_target_idx)
+
+		_route_effect(effect, all_attack_damage, all_attack_frames, caster_team, caster_idx, actual_targets, primary_target_team)
+
+func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster_team: String, caster_idx: int, targets: Array, target_team: String) -> void:
+	match effect.get("type"):
+		"MAGIC_DAMAGE", "PHYSICAL_DAMAGE":
+			var modifier = effect.get("modifier", 1.0)
+
+			for target_idx in targets:
+				# TODO: Replace with actual stat fetching later
+				var caster_stat = 100
+				var target_stat = 50
+
+				var raw_damage = EffectProcessor.calculate_raw_damage(modifier, caster_stat, target_stat)
+				var hit_payloads = EffectProcessor.generate_hit_payloads(raw_damage, attack_damage, attack_frames, caster_team, caster_idx, target_team, target_idx)
+
+				# Add our current frame offset and push to the engine's hit queue
+				for hit in hit_payloads:
+					hit["frame_to_execute"] += current_battle_frame
+					# Note: changed current_frame to current_battle_frame to match the file's variable name.
+					# pending_hits items need execute_on_frame as expected by _physics_process
+					hit["execute_on_frame"] = hit["frame_to_execute"]
+					hit.erase("frame_to_execute") # Just to clean it up so it matches what we check
+					pending_hits.append(hit)
+
+		_:
+			print("BattleManager: No routing logic yet for effect type: ", effect.get("type"))

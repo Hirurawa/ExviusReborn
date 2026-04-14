@@ -7,6 +7,8 @@ signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: in
 signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
+signal mission_cleared
+signal wave_changed(current_wave: int, total_waves: int)
 
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
@@ -25,6 +27,10 @@ var party_data: Array = []
 var turn_count: int = 1
 
 var is_transitioning: bool = false
+
+var current_wave: int = 1
+var total_waves: int = 1
+var current_mission_id: String = ""
 
 func _ready() -> void:
 	pass
@@ -66,7 +72,11 @@ func _physics_process(_delta: float) -> void:
 
 func initialize_battle(mission_id: String) -> void:
 	
-	var mission_data = DataManager.game_data_missions.get(mission_id)
+	current_mission_id = mission_id
+	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
+
+	total_waves = mission_data.get("wave_count", 1)
+	current_wave = 1
 
 	party_data = []
 
@@ -122,8 +132,8 @@ func initialize_battle(mission_id: String) -> void:
 
 	# Load enemy data
 	enemy_units.clear()
-	var dungeon_id = mission_data["dungeon_id"]
-	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
+	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
+	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
 	if monsters_in_dungeon.size() > 0:
@@ -133,12 +143,12 @@ func initialize_battle(mission_id: String) -> void:
 		var monster_name = dungeon_monster_data.get("name", "")
 		if monster_name != "":
 			for monster in DataManager.game_data_monsters:
-				if typeof(monster) == TYPE_DICTIONARY and monster.get("name", "") == monster_name:
+				if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
 					global_monster_data = monster.duplicate(true)
 					break
 
 		# Merge dungeon specific data into global monster data
-		var enemy_data = global_monster_data
+		var enemy_data = global_monster_data.duplicate(true)
 		for key in dungeon_monster_data:
 			enemy_data[key] = dungeon_monster_data[key]
 
@@ -385,5 +395,57 @@ func _trigger_defeat() -> void:
 	# TODO: Stop turn queue, show Game Over UI
 
 func _trigger_wave_clear() -> void:
-	print("BattleManager: Wave cleared! All enemies defeated.")
-	# TODO: Check for next wave, spawn enemies, or trigger Victory screen
+	print("BattleManager: Wave %d cleared!" % current_wave)
+
+	if current_wave >= total_waves:
+		_trigger_mission_complete()
+	else:
+		_spawn_next_wave()
+
+func _trigger_mission_complete() -> void:
+	print("BattleManager: Final wave cleared. Initiating mission rewards...")
+	mission_cleared.emit()
+
+func _spawn_next_wave() -> void:
+	current_wave += 1
+	print("BattleManager: Spawning Wave %d..." % current_wave)
+
+	enemy_units.clear()
+
+	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
+	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
+	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
+	var monsters_in_dungeon = dungeon_data.get("monsters", [])
+
+	if monsters_in_dungeon.size() > 0:
+		var dungeon_monster_data = monsters_in_dungeon[0]
+
+		var global_monster_data = {}
+		var monster_name = dungeon_monster_data.get("name", "")
+		if monster_name != "":
+			for monster in DataManager.game_data_monsters:
+				if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
+					global_monster_data = monster.duplicate(true)
+					break
+
+		var enemy_data = global_monster_data.duplicate(true)
+		for key in dungeon_monster_data:
+			enemy_data[key] = dungeon_monster_data[key]
+
+		var enemy_max_hp = int(enemy_data.get("hp", 1000))
+		enemy_data["max_hp"] = enemy_max_hp
+		enemy_data["current_hp"] = enemy_max_hp
+
+		enemy_units.append(enemy_data)
+
+	wave_changed.emit(current_wave, total_waves)
+
+	current_state = BattleState.PLAYER_TURN
+	player_units_acted_this_turn.clear()
+	current_battle_frame = 0
+	pending_hits.clear()
+
+	battle_state_ready.emit()
+
+	# Only unlock after everything is fully set up
+	is_transitioning = false

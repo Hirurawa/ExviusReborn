@@ -4,7 +4,7 @@ signal battle_state_ready
 signal enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int)
 signal turn_changed(new_turn: int)
 signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int)
-signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int)
+signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
 signal mission_cleared
@@ -51,10 +51,32 @@ func _physics_process(_delta: float) -> void:
 			var attacker_index: int = hit.get("attacker_index", 0)
 
 			var target_array = enemy_units if target_team == "enemy" else player_units
+			var final_damage: int = damage
+			var chain_count_emitted: int = 0
+
 			if target_index >= 0 and target_index < target_array.size():
 				var target = target_array[target_index]
 				if not target.is_empty():
-					target["current_hp"] = maxi(0, target.get("current_hp", 0) - damage)
+					var frame_gap = current_battle_frame - target.get("last_hit_frame", -100)
+					var current_attacker = attacker_index
+					var base_damage = damage
+
+					# Check for Chain Break
+					if frame_gap > 20 or current_attacker == target.get("last_attacker_index", -1):
+						target["chain_count"] = 0
+					# Check for Chain Build
+					elif frame_gap <= 20 and current_attacker != target.get("last_attacker_index", -1):
+						target["chain_count"] += 1
+						target["chain_count"] = min(target["chain_count"], 10)
+
+					var chain_multiplier = 1.0 + (target["chain_count"] * 0.3)
+					final_damage = int(base_damage * chain_multiplier)
+
+					target["last_hit_frame"] = current_battle_frame
+					target["last_attacker_index"] = current_attacker
+					chain_count_emitted = target["chain_count"]
+
+					target["current_hp"] = maxi(0, target.get("current_hp", 0) - final_damage)
 					if target_team == "enemy":
 						set_enemy_hp(target_index, target["current_hp"])
 					else:
@@ -64,7 +86,7 @@ func _physics_process(_delta: float) -> void:
 						if p_idx != -1:
 							request_unit_stats(p_idx)
 
-			attack_landed.emit(attacker_team, attacker_index, target_team, target_index, damage)
+			attack_landed.emit(attacker_team, attacker_index, target_team, target_index, final_damage, chain_count_emitted)
 			pending_hits.remove_at(i)
 
 	_check_turn_progression()
@@ -121,6 +143,10 @@ func initialize_battle(mission_id: String) -> void:
 				battle_unit["queued_action_id"] = ""
 				battle_unit["is_defending"] = false
 
+				battle_unit["chain_count"] = 0
+				battle_unit["last_hit_frame"] = -100
+				battle_unit["last_attacker_index"] = -1
+
 				party_data.append(battle_unit)
 			else:
 				party_data.append({})
@@ -155,6 +181,10 @@ func initialize_battle(mission_id: String) -> void:
 		var enemy_max_hp = int(enemy_data.get("hp", 1000))
 		enemy_data["max_hp"] = enemy_max_hp
 		enemy_data["current_hp"] = enemy_max_hp
+
+		enemy_data["chain_count"] = 0
+		enemy_data["last_hit_frame"] = -100
+		enemy_data["last_attacker_index"] = -1
 
 		enemy_units.append(enemy_data)
 
@@ -443,6 +473,10 @@ func _spawn_next_wave() -> void:
 		var enemy_max_hp = int(enemy_data.get("hp", 1000))
 		enemy_data["max_hp"] = enemy_max_hp
 		enemy_data["current_hp"] = enemy_max_hp
+
+		enemy_data["chain_count"] = 0
+		enemy_data["last_hit_frame"] = -100
+		enemy_data["last_attacker_index"] = -1
 
 		enemy_units.append(enemy_data)
 

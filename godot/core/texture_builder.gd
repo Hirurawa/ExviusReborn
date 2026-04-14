@@ -4,7 +4,14 @@ extends RefCounted
 static func load_unit_animation_data(unit_id: String, anim_name: String = "atk") -> Dictionary:
 	var png_path: String = "res://assets/unit_spritesheets/%s/%s-%s.rawpng" % [anim_name, unit_id, anim_name]
 	var json_path: String = "res://assets/unit_spritesheets/%s/%s-%s.json" % [anim_name, unit_id, anim_name]
+	return _load_animation_data_internal(png_path, json_path)
 
+static func load_monster_animation_data(monster_id: String, anim_name: String = "atk") -> Dictionary:
+	var png_path: String = "res://assets/monster_spritesheets/%s/%s-%s.rawpng" % [anim_name, monster_id, anim_name]
+	var json_path: String = "res://assets/monster_spritesheets/%s/%s-%s.json" % [anim_name, monster_id, anim_name]
+	return _load_animation_data_internal(png_path, json_path)
+
+static func _load_animation_data_internal(png_path: String, json_path: String) -> Dictionary:
 	if not FileAccess.file_exists(png_path) or not FileAccess.file_exists(json_path):
 		return {}
 

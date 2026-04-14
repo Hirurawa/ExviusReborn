@@ -10,6 +10,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var enemy_texture: TextureRect = %EnemyTexture
 @onready var turn_label: Label = %TurnLabel
 @onready var player_sprites_grid: GridContainer = %PlayerSpritesGrid
+@onready var chain_count_label: Label = %ChainCountLabel
 @onready var enemy_name_label: Label = %EnemyNameLabel
 @onready var enemy_hp_bar: ProgressBar = %EnemyHPBar
 @onready var enemy_hp_pct_label: Label = %EnemyHPPctLabel
@@ -44,6 +45,7 @@ func _ready() -> void:
 	battle_manager.battle_state_ready.connect(_on_battle_state_ready)
 	battle_manager.enemy_hp_changed.connect(_on_enemy_hp_changed)
 	battle_manager.turn_changed.connect(_on_turn_changed)
+	battle_manager.wave_changed.connect(_on_wave_changed)
 	battle_manager.attack_landed.connect(_on_attack_landed)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
@@ -371,6 +373,7 @@ func _on_enemy_texture_gui_input(event: InputEvent) -> void:
 		print("Enemy tapped! Target set.")
 
 func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int) -> void:
+	chain_count_label.text = "Chain: %d" % chain_count
 	if target_team == "enemy" and target_index == 0:
 		_hit_flash.color.a = 0.8
 		var tween = create_tween()
@@ -415,6 +418,10 @@ func _spawn_damage_number(damage: int) -> void:
 
 func _on_turn_changed(new_turn: int) -> void:
 	turn_label.text = "Turn %d" % new_turn
+	chain_count_label.text = "Chain: 0"
+
+func _on_wave_changed(current_wave: int, total_waves: int) -> void:
+	chain_count_label.text = "Chain: 0"
 
 func _on_finish_pressed() -> void:
 	if current_mission_id == "":

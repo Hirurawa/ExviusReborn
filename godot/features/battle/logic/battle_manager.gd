@@ -73,7 +73,7 @@ func _physics_process(_delta: float) -> void:
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
-	var mission_data = DataManager.game_data_missions.get(str(mission_id), {})
+	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
 
 	total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
@@ -132,7 +132,7 @@ func initialize_battle(mission_id: String) -> void:
 
 	# Load enemy data
 	enemy_units.clear()
-	var dungeon_id = str(mission_data.get("dungeon_id", ""))
+	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
@@ -413,7 +413,7 @@ func _spawn_next_wave() -> void:
 	enemy_units.clear()
 
 	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
-	var dungeon_id = str(mission_data.get("dungeon_id", ""))
+	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 

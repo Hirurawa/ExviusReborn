@@ -46,6 +46,7 @@ func _ready() -> void:
 	battle_manager.attack_landed.connect(_on_attack_landed)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
+	battle_manager.mission_cleared.connect(_on_mission_completed)
 	DataManager.mission_failed.connect(_on_mission_failed)
 
 	enemy_texture.gui_input.connect(_on_enemy_texture_gui_input)
@@ -384,9 +385,8 @@ func _on_finish_pressed() -> void:
 	finish_button.disabled = true
 	DataManager.request_perform_mission(current_mission_id)
 
-func _on_mission_completed(rewards_text: String) -> void:
-	rewards_popup.dialog_text = "Mission completed successfully!
-" + rewards_text
+func _on_mission_completed(rewards_text: String = "") -> void:
+	rewards_popup.dialog_text = "Mission completed successfully!" + rewards_text
 	rewards_popup.popup_centered()
 
 func _on_mission_failed(error_msg: String) -> void:

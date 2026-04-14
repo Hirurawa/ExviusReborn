@@ -1,0 +1,16 @@
+{
+  "unitId": 3055510,
+  "animName": "atk",
+  "frameDelays": [
+    8,
+    8
+  ],
+  "frameRect": {
+    "x": 936,
+    "y": 784,
+    "width": 146,
+    "height": 265
+  },
+  "imageWidth": 292,
+  "imageHeight": 265
+}

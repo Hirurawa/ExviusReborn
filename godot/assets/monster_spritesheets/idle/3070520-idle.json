@@ -1,0 +1,18 @@
+{
+  "unitId": 3070520,
+  "animName": "idle",
+  "frameDelays": [
+    35,
+    35,
+    35,
+    35
+  ],
+  "frameRect": {
+    "x": 908,
+    "y": 867,
+    "width": 188,
+    "height": 186
+  },
+  "imageWidth": 752,
+  "imageHeight": 186
+}

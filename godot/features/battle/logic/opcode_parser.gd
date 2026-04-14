@@ -7,7 +7,7 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 	}
 
 	var effects_raw: Array = skill_data.get("effects_raw", [])
-
+	var i = 0
 	for effect in effects_raw:
 		if typeof(effect) != TYPE_ARRAY or effect.size() < 4:
 			continue
@@ -16,8 +16,14 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 		var target_type: int = int(effect[1])
 		var opcode_id: int = int(effect[2])
 		var parameters: Array = effect[3]
-
-		var parsed_effect: Dictionary = {"target_area": target_area, "target_type": target_type}
+		
+		var attack_damage: Array = skill_data.get("attack_damage", [])
+		var attack_frames: Array = skill_data.get("attack_frames", [])
+		
+		if(attack_damage.size() >= i): attack_damage = attack_damage[i]
+		if(attack_frames.size() >= i): attack_frames = attack_frames[i]
+		
+		var parsed_effect: Dictionary = {"target_area": target_area, "target_type": target_type, "attack_damage": attack_damage, "attack_frames": attack_frames}
 		
 		match opcode_id:
 			2: # HEAL

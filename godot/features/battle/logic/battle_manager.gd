@@ -479,11 +479,11 @@ func _resolve_targets(target_area: int, target_type: int, caster_team: String, c
 
 func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_idx: int, primary_target_team: String, primary_target_idx: int) -> void:
 	var effects = parsed_skill.get("effects", [])
-	var all_attack_damage = parsed_skill.get("attack_damage", [])
-	var all_attack_frames = parsed_skill.get("attack_frames", [])
 
 	for i in range(effects.size()):
 		var effect = effects[i]
+		var all_attack_damage = effect.get("attack_damage", [])
+		var all_attack_frames = effect.get("attack_frames", [])
 
 		# Safely grab the corresponding frame/damage arrays (fallback to defaults for non-damaging effects)
 		var attack_damage = all_attack_damage[i] if i < all_attack_damage.size() else [100]
@@ -491,7 +491,7 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_
 
 		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster_team, caster_idx, primary_target_team, primary_target_idx)
 
-		_route_effect(effect, attack_damage, attack_frames, caster_team, caster_idx, actual_targets, primary_target_team)
+		_route_effect(effect, all_attack_damage, all_attack_frames, caster_team, caster_idx, actual_targets, primary_target_team)
 
 func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster_team: String, caster_idx: int, targets: Array, target_team: String) -> void:
 	match effect.get("type"):

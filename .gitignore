@@ -20,3 +20,6 @@ mono_crash.*.json
 **/.gdignore
 
 .vscode
+
+# Ignore massive asset dumps
+/godot/assets/

@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://cx6m01qlyp86v"]
+[gd_scene format=3 uid="uid://cx6m01qlyp86v"]
 
-[ext_resource type="Script" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
-[ext_resource type="Script" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
+[ext_resource type="Script" uid="uid://ce0yln5qdskms" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
+[ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
 
-[node name="CombatUI" type="Control"]
+[node name="CombatUI" type="Control" unique_id=993553313]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,11 +12,11 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_f7b2x")
 
-[node name="BattleManager" type="Node" parent="."]
+[node name="BattleManager" type="Node" parent="." unique_id=1042845394]
 unique_name_in_owner = true
 script = ExtResource("2_battle")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=462267441]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,7 +25,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.12549, 0.12549, 0.12549, 1)
 
-[node name="MainLayout" type="VBoxContainer" parent="."]
+[node name="MainLayout" type="VBoxContainer" parent="." unique_id=1977068219]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,23 +38,23 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="TopSection" type="HBoxContainer" parent="MainLayout"]
+[node name="TopSection" type="HBoxContainer" parent="MainLayout" unique_id=48561190]
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 2.0
 
-[node name="EnemyArea" type="VBoxContainer" parent="MainLayout/TopSection"]
+[node name="EnemyArea" type="VBoxContainer" parent="MainLayout/TopSection" unique_id=1144268447]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="EnemyTexture" type="TextureRect" parent="MainLayout/TopSection/EnemyArea"]
+[node name="EnemyTexture" type="TextureRect" parent="MainLayout/TopSection/EnemyArea" unique_id=1345979934]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DamageNumbersContainer" type="Control" parent="MainLayout/TopSection/EnemyArea/EnemyTexture"]
+[node name="DamageNumbersContainer" type="Control" parent="MainLayout/TopSection/EnemyArea/EnemyTexture" unique_id=806441380]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 1
@@ -66,75 +66,75 @@ offset_right = -10.0
 offset_bottom = 200.0
 grow_horizontal = 0
 
-[node name="PlayerArea" type="VBoxContainer" parent="MainLayout/TopSection"]
+[node name="PlayerArea" type="VBoxContainer" parent="MainLayout/TopSection" unique_id=1435178926]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TurnLabel" type="Label" parent="MainLayout/TopSection/PlayerArea"]
+[node name="TurnLabel" type="Label" parent="MainLayout/TopSection/PlayerArea" unique_id=385088477]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Turn 1"
 horizontal_alignment = 2
 
-[node name="PlayerSpritesGrid" type="GridContainer" parent="MainLayout/TopSection/PlayerArea"]
+[node name="PlayerSpritesGrid" type="GridContainer" parent="MainLayout/TopSection/PlayerArea" unique_id=980138796]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 columns = 2
 
-[node name="InfoBar" type="PanelContainer" parent="MainLayout"]
-layout_mode = 2
+[node name="InfoBar" type="PanelContainer" parent="MainLayout" unique_id=1488761384]
 custom_minimum_size = Vector2(0, 60)
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar"]
 layout_mode = 2
 
-[node name="EnemyInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar" unique_id=76327261]
+layout_mode = 2
+
+[node name="EnemyInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=381750024]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="FinishButton" type="Button" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo"]
+[node name="FinishButton" type="Button" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=887308722]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Finish Battle (Debug)"
 
-[node name="EnemyNameLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo"]
+[node name="EnemyNameLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=987655719]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Enemy Name"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=1593568957]
 layout_mode = 2
 
-[node name="EnemyHPBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer"]
+[node name="EnemyHPBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer" unique_id=1210531152]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
-[node name="EnemyHPPctLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer"]
+[node name="EnemyHPPctLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer" unique_id=1794435181]
 unique_name_in_owner = true
 layout_mode = 2
 text = "100%"
 
-[node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer"]
+[node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=183465724]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo"]
+[node name="Label" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=2081814433]
 layout_mode = 2
 text = "Esper Gauge"
 
-[node name="EsperBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo"]
+[node name="EsperBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=891301653]
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="BottomUIWrapper" type="Control" parent="MainLayout"]
+[node name="BottomUIWrapper" type="Control" parent="MainLayout" unique_id=809296941]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="BottomSection" type="GridContainer" parent="MainLayout/BottomUIWrapper"]
+[node name="BottomSection" type="GridContainer" parent="MainLayout/BottomUIWrapper" unique_id=745081744]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -144,7 +144,7 @@ grow_horizontal = 2
 grow_vertical = 2
 columns = 2
 
-[node name="RewardsPopup" type="AcceptDialog" parent="."]
+[node name="RewardsPopup" type="AcceptDialog" parent="." unique_id=461772511]
 unique_name_in_owner = true
 title = "Mission Complete"
 size = Vector2i(300, 150)

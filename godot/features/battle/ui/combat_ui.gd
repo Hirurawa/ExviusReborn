@@ -15,6 +15,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var enemy_hp_pct_label: Label = %EnemyHPPctLabel
 @onready var bottom_ui_wrapper: Control = %BottomUIWrapper
 @onready var bottom_section: GridContainer = %BottomSection
+@onready var damage_numbers_container: Control = %DamageNumbersContainer
 
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
@@ -374,6 +375,43 @@ func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: 
 		_hit_flash.color.a = 0.8
 		var tween = create_tween()
 		tween.tween_property(_hit_flash, "color:a", 0.0, 0.15)
+
+		_spawn_damage_number(damage)
+
+func _spawn_damage_number(damage: int) -> void:
+	var label = Label.new()
+	label.text = str(damage)
+	# Set appearance
+	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_color_override("font_color", Color(1, 0.2, 0.2)) # Red damage color
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 4)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	# To ensure we push up by a known amount, we'll estimate or read the label size
+	# But Label size isn't immediately known before drawing, so we use a fixed offset.
+	var push_amount = 40.0
+
+	# Move existing labels up
+	for child in damage_numbers_container.get_children():
+		if child is Label:
+			var move_tween = create_tween()
+			move_tween.tween_property(child, "position:y", child.position.y - push_amount, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Add new label at bottom
+	damage_numbers_container.add_child(label)
+	# Start at 0,0 relative to container (which is anchored to top-right of EnemyTexture)
+	label.position = Vector2(0, 0)
+
+	# Animate the new label
+	# We want it to fade out over 1 second and then delete itself.
+	# We'll use a Tween that runs for 1 second, fading the alpha to 0.
+	var fade_tween = create_tween()
+	fade_tween.tween_property(label, "modulate:a", 0.0, 1.0).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	fade_tween.finished.connect(func():
+		label.queue_free()
+	)
 
 func _on_turn_changed(new_turn: int) -> void:
 	turn_label.text = "Turn %d" % new_turn

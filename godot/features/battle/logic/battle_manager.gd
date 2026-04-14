@@ -161,33 +161,7 @@ func initialize_battle(mission_id: String) -> void:
 	enemy_units.clear()
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
-	var monsters_in_dungeon = dungeon_data.get("monsters", [])
-
-	if monsters_in_dungeon.size() > 0:
-		var dungeon_monster_data = monsters_in_dungeon[0] # Take first monster for now
-
-		var global_monster_data = {}
-		var monster_name = dungeon_monster_data.get("name", "")
-		if monster_name != "":
-			for monster in DataManager.game_data_monsters:
-				if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
-					global_monster_data = monster.duplicate(true)
-					break
-
-		# Merge dungeon specific data into global monster data
-		var enemy_data = global_monster_data.duplicate(true)
-		for key in dungeon_monster_data:
-			enemy_data[key] = dungeon_monster_data[key]
-
-		var enemy_max_hp = int(enemy_data.get("hp", 1000))
-		enemy_data["max_hp"] = enemy_max_hp
-		enemy_data["current_hp"] = enemy_max_hp
-
-		enemy_data["chain_count"] = 0
-		enemy_data["last_hit_frame"] = -100
-		enemy_data["last_attacker_index"] = -1
-
-		enemy_units.append(enemy_data)
+	_spawn_enemies_for_wave(dungeon_data)
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()
@@ -441,10 +415,31 @@ func _spawn_next_wave() -> void:
 	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
-	var monsters_in_dungeon = dungeon_data.get("monsters", [])
 
-	if monsters_in_dungeon.size() > 0:
-		var dungeon_monster_data = monsters_in_dungeon[0]
+	_spawn_enemies_for_wave(dungeon_data)
+
+	wave_changed.emit(current_wave, total_waves)
+
+	current_state = BattleState.PLAYER_TURN
+	player_units_acted_this_turn.clear()
+	current_battle_frame = 0
+	pending_hits.clear()
+
+	battle_state_ready.emit()
+
+	# Only unlock after everything is fully set up
+	is_transitioning = false
+
+func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
+	var monster_pool = dungeon_data.get("monsters", [])
+	if monster_pool.size() == 0:
+		return
+
+	var num_enemies = randi() % 3 + 1 # 1 to 3 enemies
+
+	for i in range(num_enemies):
+		var random_monster_index = randi() % monster_pool.size()
+		var dungeon_monster_data = monster_pool[random_monster_index]
 
 		var global_monster_data = {}
 		var monster_name = dungeon_monster_data.get("name", "")
@@ -468,17 +463,6 @@ func _spawn_next_wave() -> void:
 
 		enemy_units.append(enemy_data)
 
-	wave_changed.emit(current_wave, total_waves)
-
-	current_state = BattleState.PLAYER_TURN
-	player_units_acted_this_turn.clear()
-	current_battle_frame = 0
-	pending_hits.clear()
-
-	battle_state_ready.emit()
-
-	# Only unlock after everything is fully set up
-	is_transitioning = false
 
 func _resolve_targets(target_area: int, target_type: int, caster_team: String, caster_index: int, primary_team: String, primary_index: int) -> Array:
 	var targets = []

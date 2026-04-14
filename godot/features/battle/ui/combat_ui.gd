@@ -290,23 +290,12 @@ func _on_battle_state_ready() -> void:
 	enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
 
 	var monster_id: String = str(enemy_data.get("id", "5010010"))
-	
-	# Clear previous children in enemy_texture (to remove old CombatSprites)
-	for child in enemy_texture.get_children():
-		if child is TextureRect and child.name == "EnemyCombatSprite":
-			child.queue_free()
-
-	# Instantiate a new CombatSprite for the enemy
-	var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
-	enemy_sprite.name = "EnemyCombatSprite"
-	enemy_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
-	enemy_texture.add_child(enemy_sprite)
-	enemy_sprite.setup(0, monster_id, true)
-	
-	# Clear the static texture since we are using the child sprite
-	enemy_texture.texture = null
+	var tex_path: String = "res://assets/monster_icon/monster_icon_" + monster_id + ".png"
+	if ResourceLoader.exists(tex_path):
+		enemy_texture.texture = _get_dynamic_texture(tex_path)
+	else:
+		# Fallback placeholder
+		enemy_texture.texture = _get_dynamic_texture("res://icon.svg")
 
 	# Populate enemy HP
 	battle_manager.set_enemy_hp(0, enemy_data.get("current_hp", 0))
@@ -352,13 +341,17 @@ func _on_battle_state_ready() -> void:
 			# Add Combat Sprite
 			var template_id: String = str(unit_data.get("unit_id", ""))
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
-			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-			combat_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			combat_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			combat_sprite.setup(party_idx, template_id)
 
-			player_sprites_grid.add_child(combat_sprite)
+			# Put CombatSprite in a Control wrapper to work with GridContainer
+			var sprite_wrapper: Control = Control.new()
+			sprite_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			sprite_wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+			# Position sprite at center of wrapper
+			combat_sprite.position = Vector2(40, 40) # Approximate center for default icon
+			sprite_wrapper.add_child(combat_sprite)
+			player_sprites_grid.add_child(sprite_wrapper)
 		else:
 			# Empty slot for both UI elements
 			var empty_panel: Control = Control.new()
@@ -367,7 +360,6 @@ func _on_battle_state_ready() -> void:
 
 			var empty_sprite: Control = Control.new()
 			empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			empty_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			player_sprites_grid.add_child(empty_sprite)
 
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:

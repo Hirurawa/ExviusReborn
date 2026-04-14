@@ -96,14 +96,14 @@ static func parse_skill(skill_data: Dictionary) -> Dictionary:
 					var resistances: Dictionary = {}
 					
 					# Map the exact same 8 ailments, storing the % resistance buff
-					if int(parameters[0]) != 0: resistances["POISON"] = int(parameters[0])
-					if int(parameters[1]) != 0: resistances["BLIND"] = int(parameters[1])
-					if int(parameters[2]) != 0: resistances["SLEEP"] = int(parameters[2])
-					if int(parameters[3]) != 0: resistances["SILENCE"] = int(parameters[3])
-					if int(parameters[4]) != 0: resistances["PARALYZE"] = int(parameters[4])
-					if int(parameters[5]) != 0: resistances["CONFUSION"] = int(parameters[5])
-					if int(parameters[6]) != 0: resistances["DISEASE"] = int(parameters[6])
-					if int(parameters[7]) != 0: resistances["PETRIFY"] = int(parameters[7])
+					if int(parameters[0]) > 0: resistances["POISON"] = int(parameters[0])
+					if int(parameters[1]) > 0: resistances["BLIND"] = int(parameters[1])
+					if int(parameters[2]) > 0: resistances["SLEEP"] = int(parameters[2])
+					if int(parameters[3]) > 0: resistances["SILENCE"] = int(parameters[3])
+					if int(parameters[4]) > 0: resistances["PARALYZE"] = int(parameters[4])
+					if int(parameters[5]) > 0: resistances["CONFUSION"] = int(parameters[5])
+					if int(parameters[6]) > 0: resistances["DISEASE"] = int(parameters[6])
+					if int(parameters[7]) > 0: resistances["PETRIFY"] = int(parameters[7])
 					
 					parsed_effect["resistances"] = resistances
 					parsed_action["effects"].append(parsed_effect)

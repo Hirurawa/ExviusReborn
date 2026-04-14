@@ -1,13 +1,10 @@
-extends TextureRect
+extends Sprite2D
 
 # To keep track of states and the current active animation
 var idle_anim: Dictionary = {}
 var atk_anim: Dictionary = {}
 
 var is_attacking: bool = false
-var is_enemy: bool = false
-var attack_loop_count: int = 0
-var max_attack_loops: int = 1
 var current_frame_idx: int = 0
 var current_frame_timer: float = 0.0
 
@@ -24,33 +21,19 @@ func _ready() -> void:
 
 	if battle_manager:
 		battle_manager.unit_action_started.connect(_on_unit_action_started)
-		battle_manager.enemy_action_started.connect(_on_enemy_action_started)
 
-func setup(p_index: int, template_id: String, p_is_enemy: bool = false) -> void:
+func setup(p_index: int, template_id: String) -> void:
 	party_index = p_index
-	is_enemy = p_is_enemy
 
 	# Load animation data using TextureBuilder
-	if is_enemy:
-		idle_anim = TextureBuilder.load_monster_animation_data(template_id, "idle")
-		atk_anim = TextureBuilder.load_monster_animation_data(template_id, "atk")
-		max_attack_loops = 2
-	else:
-		idle_anim = TextureBuilder.load_unit_animation_data(template_id, "idle")
-		atk_anim = TextureBuilder.load_unit_animation_data(template_id, "atk")
-		max_attack_loops = 1
+	idle_anim = TextureBuilder.load_unit_animation_data(template_id, "idle")
+	atk_anim = TextureBuilder.load_unit_animation_data(template_id, "atk")
 
 	# Visual fail-fast: If idle animation is missing, fallback to icon and turn neon pink
 	if idle_anim.is_empty():
-		if is_enemy:
-			var icon_path = "res://assets/monster_icon/monster_icon_" + template_id + ".png"
-			if ResourceLoader.exists(icon_path):
-				texture = ResourceLoader.load(icon_path) as Texture2D
-			else:
-				texture = ResourceLoader.load("res://icon.svg") as Texture2D
-		else:
-			texture = ResourceLoader.load("res://icon.svg") as Texture2D
-			modulate = Color(1, 0, 1, 1) # Neon pink
+		var icon_tex: Texture2D = ResourceLoader.load("res://icon.svg") as Texture2D
+		texture = icon_tex
+		modulate = Color(1, 0, 1, 1) # Neon pink
 	else:
 		_play_idle()
 
@@ -64,11 +47,10 @@ func _play_idle() -> void:
 
 func _play_atk() -> void:
 	is_attacking = true
-	attack_loop_count = 0
 	current_frame_idx = 0
 	current_frame_timer = 0.0
 
-	# If attack animation is missing, act as if done immediately
+	# If attack animation is missing, fallback to pink and act as if done immediately
 	if atk_anim.is_empty() or atk_anim.get("frames", []).size() == 0:
 		# Missing atk anim, but we still fallback gracefully without crashing
 		_play_idle()
@@ -117,33 +99,19 @@ func _process(delta: float) -> void:
 
 		if current_frame_idx >= frames.size():
 			if is_attacking:
-				attack_loop_count += 1
-				if attack_loop_count >= max_attack_loops:
-					# Attack animation finished
-					_play_idle()
-				else:
-					# Loop attack
-					current_frame_idx = 0
-					texture = frames[current_frame_idx]
+				# Attack animation finished
+				_play_idle()
 			else:
 				# Loop idle
 				current_frame_idx = 0
-				texture = frames[current_frame_idx]
 		else:
 			# Just update texture
 			texture = frames[current_frame_idx]
 
 func _on_unit_action_started(unit_index: int, action: int) -> void:
-	if is_enemy or unit_index != party_index:
+	if unit_index != party_index:
 		return
 
 	# Check if action is ATTACK
-	if action == battle_manager.CombatAction.ATTACK:
-		_play_atk()
-
-func _on_enemy_action_started(enemy_index: int, action: int) -> void:
-	if not is_enemy or enemy_index != party_index:
-		return
-
 	if action == battle_manager.CombatAction.ATTACK:
 		_play_atk()

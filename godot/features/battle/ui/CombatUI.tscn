@@ -47,12 +47,12 @@ size_flags_stretch_ratio = 2.0
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ChainCountLabel" type="Label" parent="MainLayout/TopSection/EnemyArea"]
+[node name="ChainCountLabel" type="Label" parent="MainLayout/TopSection/EnemyArea" unique_id=476063707]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Chain: 0"
 
-[node name="EnemyTexture" type="TextureRect" parent="MainLayout/TopSection/EnemyArea"]
+[node name="EnemyTexture" type="TextureRect" parent="MainLayout/TopSection/EnemyArea" unique_id=121630407]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3

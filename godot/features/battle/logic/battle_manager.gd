@@ -265,47 +265,27 @@ func execute_queued_action(attacker_index: int) -> void:
 		return
 	elif action == CombatAction.ATTACK:
 		# Keep accepting inputs for other units by not changing state here
-		
-		# Fetch unit's frame data directly from the hydrated instance
-		var attack_frames: Array = attacker_data.get("attack_frames", [30])
-		var attack_damage: Array = attacker_data.get("attack_damage", [[100]])
-		var damage_percentages: Array = attack_damage[0] if attack_damage.size() > 0 else [100]
-
-		# Attacker ATK (must exist)
-		var attacker_stats: Dictionary = attacker_data.get("final_stats", {})
-		assert(attacker_stats.has("ATK"), "Player must have ATK")
-		var attacker_atk: int = attacker_stats.get("ATK")
-
-		# Target Enemy (default to index 0 for now)
-		var target_index: int = 0
-		var enemy_def: int = 5
-		if enemy_units.size() > 0:
-			enemy_def = enemy_units[target_index].get("DEF", 5)
-
-		# Calculate total base damage (minimum 1)
-		var total_damage: int = maxi(1, attacker_atk - enemy_def)
-
 		unit_action_started.emit(attacker_index, CombatAction.ATTACK)
-
-		# Find internal index if needed, but hit queue expects the attacker index logic correctly mapped below.
-		# The engine loop uses player_units while UI uses party_data indices. We use party_data index for emit and the hit payload.
+		
+		# Build a dummy effect so it goes through our standard pipeline
+		var dummy_effect = {
+			"type": "BASIC_ATTACK",
+			"modifier": 1.0,
+			"target_area": 1,
+			"target_type": 1
+		}
+		
+		# Retrieve the actual queued target index
+		var target_index = attacker_data.get("queued_target_index", 0)
+		
+		var attack_frames = attacker_data.get("attack_frames", [30])
+		var attack_damage = attacker_data.get("attack_damage", [[100]])
+		
+		# Find internal index if needed
 		var p_idx = player_units.find(attacker_data)
 		var internal_attacker_index = p_idx if p_idx != -1 else attacker_index
 
-		# Queue hits
-		for i in range(attack_frames.size()):
-			var hit_frame: int = attack_frames[i]
-			var pct: int = damage_percentages[i] if i < damage_percentages.size() else 100
-			var hit_damage: int = maxi(1, int(total_damage * (float(pct) / 100.0)))
-
-			pending_hits.append({
-				"execute_on_frame": current_battle_frame + hit_frame,
-				"damage": hit_damage,
-				"attacker_team": "player",
-				"attacker_index": internal_attacker_index,
-				"target_team": "enemy",
-				"target_index": target_index
-			})
+		_route_effect(dummy_effect, attack_damage, attack_frames, "player", internal_attacker_index, [target_index], "enemy")
 
 func _check_turn_progression() -> void:
 	if not pending_hits.is_empty():
@@ -354,30 +334,18 @@ func _execute_enemy_turn() -> void:
 
 		# Let's assume enemy index 0 for now
 		var attacker_index: int = 0
-		var enemy_atk: int = 10
-		if enemy_units.size() > 0:
-			enemy_atk = enemy_units[attacker_index].get("ATK", 10)
 
-		# Player DEF (must exist)
-		var target_stats: Dictionary = target_unit.get("final_stats", {})
-		assert(target_stats.has("DEF"), "Player must have DEF")
-		var target_def: int = target_stats.get("DEF")
-
-		# Calculate damage (minimum 1)
-		var damage: int = maxi(1, enemy_atk - target_def)
+		var dummy_effect = {
+			"type": "BASIC_ATTACK",
+			"modifier": 1.0,
+			"target_area": 1,
+			"target_type": 1
+		}
 		
-		if target_unit.get("is_defending", false):
-			damage = int(damage * 0.5)
-
-		# Push a single hit to pending_hits
-		pending_hits.append({
-			"execute_on_frame": current_battle_frame + ENEMY_ATTACK_DELAY_FRAMES,
-			"damage": damage,
-			"attacker_team": "enemy",
-			"attacker_index": attacker_index,
-			"target_team": "player",
-			"target_index": target_index
-		})
+		var attack_frames = [ENEMY_ATTACK_DELAY_FRAMES]
+		var attack_damage = [[100]]
+		
+		_route_effect(dummy_effect, attack_damage, attack_frames, "enemy", attacker_index, [target_index], "player")
 
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():
@@ -525,15 +493,19 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_
 
 func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster_team: String, caster_idx: int, targets: Array, target_team: String) -> void:
 	match effect.get("type"):
-		"MAGIC_DAMAGE", "PHYSICAL_DAMAGE":
+		"MAGIC_DAMAGE", "PHYSICAL_DAMAGE", "BASIC_ATTACK":
 			var modifier = effect.get("modifier", 1.0)
+			
+			var active_roster = player_units if caster_team == "player" else enemy_units
+			var caster_data = active_roster[caster_idx]
+			var caster_stats = caster_data.get("final_stats", caster_data) # Fallback to base dict if final_stats missing
 
 			for target_idx in targets:
-				# TODO: Replace with actual stat fetching later
-				var caster_stat = 100
-				var target_stat = 50
+				var target_roster = enemy_units if target_team == "enemy" else player_units
+				var target_data = target_roster[target_idx]
+				var target_stats = target_data.get("final_stats", target_data)
 
-				var raw_damage = EffectProcessor.calculate_raw_damage(modifier, caster_stat, target_stat)
+				var raw_damage = EffectProcessor.calculate_raw_damage(effect.get("type"), modifier, caster_stats, target_stats)
 				var hit_payloads = EffectProcessor.generate_hit_payloads(raw_damage, attack_damage, attack_frames, caster_team, caster_idx, target_team, target_idx)
 
 				# Add our current frame offset and push to the engine's hit queue

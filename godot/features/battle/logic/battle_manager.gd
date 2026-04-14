@@ -7,6 +7,7 @@ signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: in
 signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
+signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
 signal wave_changed(current_wave: int, total_waves: int)
 
@@ -335,6 +336,9 @@ func _execute_enemy_turn() -> void:
 		# Let's assume enemy index 0 for now
 		var attacker_index: int = 0
 
+		# Emit signal so the UI can play the attack animation
+		enemy_action_started.emit(attacker_index, CombatAction.ATTACK)
+
 		var dummy_effect = {
 			"type": "BASIC_ATTACK",
 			"modifier": 1.0,
@@ -342,7 +346,23 @@ func _execute_enemy_turn() -> void:
 			"target_type": 1
 		}
 		
-		var attack_frames = [ENEMY_ATTACK_DELAY_FRAMES]
+		# Calculate dynamic attack frames based on enemy's animation duration (looping twice)
+		var monster_id: String = str(enemy_units[attacker_index].get("id", "5010010"))
+		var anim_data = TextureBuilder.load_monster_animation_data(monster_id, "atk")
+		
+		var attack_delay_frames = ENEMY_ATTACK_DELAY_FRAMES
+		if not anim_data.is_empty():
+			var delays = anim_data.get("delays", [])
+			var total_frames: int = 0
+			for d in delays:
+				# delays in JSON are typically frame counts at 60fps
+				# combat_sprite uses float(d)/60.0 for seconds.
+				# We want total frames to wait.
+				total_frames += int(d)
+			if total_frames > 0:
+				attack_delay_frames = total_frames * 2 # Play animation twice
+
+		var attack_frames = [attack_delay_frames]
 		var attack_damage = [[100]]
 		
 		_route_effect(dummy_effect, attack_damage, attack_frames, "enemy", attacker_index, [target_index], "player")

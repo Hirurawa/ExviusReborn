@@ -11,6 +11,7 @@ signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
 signal wave_changed(current_wave: int, total_waves: int)
 signal wave_transition_started(current_wave: int, next_wave: int, total_waves: int)
+signal item_dropped(enemy_index: int, item_id: String)
 
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
@@ -33,6 +34,7 @@ var is_transitioning: bool = false
 var current_wave: int = 1
 var total_waves: int = 1
 var current_mission_id: String = ""
+var mission_drops: Array[String] = []
 
 func _ready() -> void:
 	pass
@@ -78,7 +80,13 @@ func _physics_process(_delta: float) -> void:
 					target["last_attacker_index"] = current_attacker
 					chain_count_emitted = target["chain_count"]
 
-					target["current_hp"] = maxi(0, target.get("current_hp", 0) - final_damage)
+					var previous_hp = target.get("current_hp", 0)
+					target["current_hp"] = maxi(0, previous_hp - final_damage)
+
+					# If this hit killed them, roll for drops!
+					if previous_hp > 0 and target["current_hp"] == 0 and target_team == "enemy":
+						_roll_enemy_drops(target, target_index)
+
 					if target_team == "enemy":
 						set_enemy_hp(target_index, target["current_hp"])
 					else:
@@ -101,6 +109,7 @@ func initialize_battle(mission_id: String) -> void:
 
 	total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
+	mission_drops.clear()
 
 	party_data = []
 
@@ -413,6 +422,7 @@ func _trigger_wave_clear() -> void:
 
 func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
+	print("Mission Drops: ", mission_drops)
 	mission_cleared.emit()
 
 func _spawn_next_wave() -> void:
@@ -461,6 +471,26 @@ func _generate_enemy_data(dungeon_monster_data: Dictionary) -> Dictionary:
 	enemy_data["last_attacker_index"] = -1
 
 	return enemy_data
+
+func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
+	var loot_table = enemy_data.get("loot", {})
+	var drops = loot_table.get("drops", [])
+
+	if drops.is_empty():
+		return
+
+	# 1. Global chance to drop absolutely nothing (e.g., 50% fail rate)
+	if randf() > 0.50:
+		return # No chest dropped!
+
+	# 2. If we passed the global check, pick ONE random item from the pool
+	var random_item_idx = randi() % drops.size()
+	var selected_item_id = str(drops[random_item_idx])
+
+	# 3. Add to escrow and emit
+	mission_drops.append(selected_item_id)
+	item_dropped.emit(enemy_index, selected_item_id)
+
 
 func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 	enemy_units.clear()

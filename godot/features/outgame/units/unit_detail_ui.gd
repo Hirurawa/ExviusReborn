@@ -211,7 +211,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		unit_detail_ability_tab_btn.show()
 
 
-func _create_skill_panel(skill_data: Dictionary) -> PanelContainer:
+func _create_skill_panel(skill_data: Dictionary, source: String = "Trait") -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -249,7 +249,7 @@ func _create_skill_panel(skill_data: Dictionary) -> PanelContainer:
 	vbox.add_child(top_hbox)
 
 	var trait_lbl = Label.new()
-	trait_lbl.text = "Trait"
+	trait_lbl.text = source
 	trait_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	trait_lbl.add_theme_font_size_override("font_size", 12)
 	top_hbox.add_child(trait_lbl)
@@ -290,30 +290,35 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		child.queue_free()
 	for child in unit_detail_special_grid.get_children():
 		child.queue_free()
+		
+	if (not unit_inst.has("final_stats") or not unit_inst["final_stats"].has("skills")):
+		return
+		
+	var all_skills = unit_inst["final_stats"]["skills"]
 
-	var rarity = unit_inst.get("current_rarity", 1)
-	var level = unit_inst.get("level", 1)
-	var skills = unit_data.get("skills", [])
+	# 2. Populate Magic (Goes to Magic Grid)
+	var magic_list = all_skills.get("magic", [])
+	for sk in magic_list:
+		var sk_id = str(sk.get("id", ""))
+		if DataManager.game_data_skills_magic.has(sk_id):
+			var panel = _create_skill_panel(DataManager.game_data_skills_magic[sk_id], sk.get("source", "Trait"))
+			unit_detail_magic_grid.add_child(panel)
 
-	for sk in skills:
-		var req_rarity = sk.get("rarity", 99)
-		var req_level = sk.get("level", 99)
+	# 3. Populate Abilities (Goes to Special Grid)
+	var ability_list = all_skills.get("ability", [])
+	for sk in ability_list:
+		var sk_id = str(sk.get("id", ""))
+		if DataManager.game_data_skills_ability.has(sk_id):
+			var panel = _create_skill_panel(DataManager.game_data_skills_ability[sk_id], sk.get("source", "Trait"))
+			unit_detail_special_grid.add_child(panel)
 
-		if int(rarity) > int(req_rarity) or (rarity == req_rarity and level >= req_level):
-			var sk_id = str(int(sk.get("id", "")))
-			var sk_type = sk.get("type", "")
-
-			if sk_type == "MAGIC":
-				if DataManager.game_data_skills_magic.has(sk_id):
-					var panel = _create_skill_panel(DataManager.game_data_skills_magic[sk_id])
-					unit_detail_magic_grid.add_child(panel)
-			elif sk_type == "ABILITY":
-				if DataManager.game_data_skills_ability.has(sk_id):
-					var panel = _create_skill_panel(DataManager.game_data_skills_ability[sk_id])
-					unit_detail_special_grid.add_child(panel)
-				if DataManager.game_data_skills_passive.has(sk_id):
-					var panel = _create_skill_panel(DataManager.game_data_skills_passive[sk_id])
-					unit_detail_special_grid.add_child(panel)
+	# 4. Populate Passives (Goes to Special Grid)
+	var passive_list = all_skills.get("passive", [])
+	for sk in passive_list:
+		var sk_id = str(sk.get("id", ""))
+		if DataManager.game_data_skills_passive.has(sk_id):
+			var panel = _create_skill_panel(DataManager.game_data_skills_passive[sk_id], sk.get("source", "Trait"))
+			unit_detail_special_grid.add_child(panel)
 
 func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	for child in unit_detail_equipment_grid.get_children():

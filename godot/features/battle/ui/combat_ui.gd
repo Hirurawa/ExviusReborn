@@ -393,22 +393,26 @@ func _play_enemy_death(enemy_node: Node) -> void:
 		if old_tween and old_tween.is_valid():
 			old_tween.kill()
 
-	var tween = create_tween()
-	enemy_node.set_meta("shake_tween", tween)
+	var orig_x = 0.0
+	if enemy_node.has_meta("orig_x"):
+		orig_x = enemy_node.get_meta("orig_x")
+	else:
+		orig_x = enemy_node.position.x
+		enemy_node.set_meta("orig_x", orig_x)
 
-	# Shake violently while fading out
-	var orig_x = enemy_node.position.x
+	# Use a main tween for the fade and hide
+	var fade_tween = create_tween()
+	enemy_node.set_meta("shake_tween", fade_tween)
+
 	var fade_time = 0.4
-	tween.parallel().tween_property(enemy_node, "modulate:a", 0.0, fade_time)
+	fade_tween.tween_property(enemy_node, "modulate:a", 0.0, fade_time)
+	fade_tween.tween_callback(enemy_node.hide)
 
-	# Manually chain the shakes in parallel with the fade
-	# Total time = 0.4s. Let's do 4 back and forths (8 movements of 0.05s each)
-	for j in range(4):
-		tween.parallel().tween_property(enemy_node, "position:x", orig_x - 15, 0.05).set_delay(j * 0.1)
-		tween.parallel().tween_property(enemy_node, "position:x", orig_x + 15, 0.05).set_delay(j * 0.1 + 0.05)
-
-	# Instead of queue_free, we hide it to preserve indices
-	tween.tween_callback(enemy_node.hide).set_delay(fade_time)
+	# Use a separate tween for the sequential shaking to prevent parallel conflicts
+	var shake_tween = create_tween()
+	shake_tween.set_loops(4)
+	shake_tween.tween_property(enemy_node, "position:x", orig_x - 15, 0.05)
+	shake_tween.tween_property(enemy_node, "position:x", orig_x + 15, 0.05)
 
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
 	if enemy_index == _current_target_enemy_index:

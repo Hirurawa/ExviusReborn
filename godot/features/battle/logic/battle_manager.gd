@@ -423,6 +423,19 @@ func _trigger_wave_clear() -> void:
 func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
 	print("Mission Drops: ", mission_drops)
+
+	# Group the escrow drops
+	var grouped_drops = {}
+	for item_id in mission_drops:
+		grouped_drops[item_id] = grouped_drops.get(item_id, 0) + 1
+
+	# Send to server and wait for confirmation
+	for item_id in grouped_drops:
+		var quantity = grouped_drops[item_id]
+		print("Syncing drop to server: ", item_id, " x", quantity)
+		if DataManager.server_connection:
+			await DataManager.server_connection.add_item_async(item_id, quantity)
+
 	mission_cleared.emit()
 
 func _spawn_next_wave() -> void:

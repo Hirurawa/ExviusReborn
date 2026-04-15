@@ -50,6 +50,7 @@ func _ready() -> void:
 	battle_manager.wave_changed.connect(_on_wave_changed)
 	battle_manager.attack_landed.connect(_on_attack_landed)
 	battle_manager.wave_transition_started.connect(_on_wave_transition_started)
+	battle_manager.item_dropped.connect(_on_item_dropped)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
 	battle_manager.mission_cleared.connect(_on_mission_completed)
@@ -572,6 +573,47 @@ func _play_wave_one_intro(total_waves: int) -> void:
 	# Fade out
 	tween.tween_property(transition_ui, "modulate:a", 0.0, 0.3)
 	tween.tween_callback(transition_ui.hide)
+
+func _on_item_dropped(enemy_index: int, item_id: String) -> void:
+	var enemy_node: Node = null
+	if enemy_index >= 0 and enemy_index < enemies_container.get_child_count():
+		var wrapper = enemies_container.get_child(enemy_index)
+		if wrapper.get_child_count() > 0:
+			enemy_node = wrapper.get_child(0)
+
+	if not enemy_node:
+		return
+
+	var drop_icon = TextureRect.new()
+	var tex_path = "res://icon.svg"
+	if DataManager.game_data_items.has(item_id):
+		var item_data = DataManager.game_data_items[item_id]
+		if item_data.has("icon"):
+			tex_path = "res://assets/items/" + str(item_data["icon"])
+
+	if ResourceLoader.exists(tex_path):
+		drop_icon.texture = _get_dynamic_texture(tex_path)
+	else:
+		drop_icon.texture = _get_dynamic_texture("res://icon.svg")
+
+	drop_icon.custom_minimum_size = Vector2(40, 40)
+	drop_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	drop_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	drop_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	add_child(drop_icon)
+	drop_icon.global_position = enemy_node.global_position
+
+	var tween = create_tween()
+	var drop_distance_x = 60.0
+	var drop_distance_y = 40.0
+
+	tween.parallel().tween_property(drop_icon, "global_position:x", drop_icon.global_position.x + drop_distance_x, 0.6)
+	tween.parallel().tween_property(drop_icon, "global_position:y", drop_icon.global_position.y + drop_distance_y, 0.6).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+	tween.tween_interval(0.5)
+	tween.tween_property(drop_icon, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(drop_icon.queue_free)
 
 func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: int) -> void:
 	# Setup the labels

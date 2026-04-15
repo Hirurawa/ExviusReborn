@@ -288,6 +288,7 @@ func init_scene(params: Dictionary) -> void:
 func _on_battle_state_ready() -> void:
 	# Clear previous children in enemies_container (to remove old CombatSprites)
 	for child in enemies_container.get_children():
+		enemies_container.remove_child(child)
 		child.queue_free()
 
 	# Instantiate a new CombatSprite for each enemy
@@ -389,8 +390,8 @@ func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
 		_current_target_enemy_index = enemy_index
 
 		# Apply this target to all player units
-		for i in range(DataManager.party_data.size()):
-			var unit_data = DataManager.party_data[i]
+		for i in range(battle_manager.party_data.size()):
+			var unit_data = battle_manager.party_data[i]
 			if not unit_data.is_empty():
 				unit_data["queued_target_team"] = "enemy"
 				unit_data["queued_target_index"] = enemy_index

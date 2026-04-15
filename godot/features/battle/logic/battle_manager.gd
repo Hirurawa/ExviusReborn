@@ -433,7 +433,8 @@ func _trigger_mission_complete() -> void:
 	for item_id in grouped_drops:
 		var quantity = grouped_drops[item_id]
 		print("Syncing drop to server: ", item_id, " x", quantity)
-		await ServerConnection.add_item_async(item_id, quantity)
+		if DataManager.server_connection:
+			await DataManager.server_connection.add_item_async(item_id, quantity)
 
 	mission_cleared.emit()
 

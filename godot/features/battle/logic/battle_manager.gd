@@ -139,7 +139,9 @@ func initialize_battle(mission_id: String) -> void:
 				var final_stats = battle_unit.get("final_stats", {})
 				if final_stats.is_empty():
 					final_stats = StatCalculator.calculate_final_stats(battle_unit)
-
+					
+				final_stats = final_stats["stats"]
+				
 				var max_hp = final_stats.get("HP", 100)
 				var max_mp = final_stats.get("MP", 10)
 

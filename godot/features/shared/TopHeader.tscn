@@ -1,236 +1,163 @@
-[gd_scene format=3 uid="uid://dbj05lgxt6l0y"]
+[gd_scene load_steps=6 format=3 uid="uid://cb5c0x1m8l1r2"]
 
-[ext_resource type="Script" uid="uid://wycuf8j4w32t" path="res://features/shared/top_header.gd" id="1_script"]
+[ext_resource type="Script" path="res://features/shared/top_header.gd" id="1_1a1a1"]
+[ext_resource type="Texture2D" uid="uid://d1x65q4q6r8n4" path="res://icon.svg" id="2_2b2b2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-bg_color = Color(0.05, 0.15, 0.4, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.4, 0.6, 0.9, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
+bg_color = Color(0.0509804, 0.12549, 0.25098, 1)
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
-bg_color = Color(0.02, 0.1, 0.3, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.3, 0.5, 0.8, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
+bg_color = Color(0.1, 0.5, 0.8, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.1, 0.1, 0.1, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
+bg_color = Color(0.2, 0.8, 0.2, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nrg"]
-bg_color = Color(0.2, 0.6, 1, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+bg_color = Color(0.0, 0.0, 0.0, 0.5)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp"]
-bg_color = Color(0.4, 0.8, 0.2, 1)
-
-[node name="TopHeader" type="VBoxContainer" unique_id=637241948]
-visible = false
+[node name="TopHeader" type="PanelContainer"]
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 120.0
 grow_horizontal = 2
-theme_override_constants/separation = 0
-script = ExtResource("1_script")
-
-[node name="TopRow" type="PanelContainer" parent="." unique_id=2062911058]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+script = ExtResource("1_1a1a1")
 
-[node name="HBox" type="HBoxContainer" parent="TopRow" unique_id=937856225]
+[node name="MainSplit" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="GilLabel" type="Label" parent="TopRow/HBox" unique_id=749189590]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
-text = "Gil: 0"
-vertical_alignment = 1
-
-[node name="UserInfoLabel" type="Label" parent="TopRow/HBox" unique_id=1215828755]
+[node name="LeftColumn" type="VBoxContainer" parent="MainSplit"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 24
-text = "Player"
-horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="LapisLabel" type="Label" parent="TopRow/HBox" unique_id=231095278]
+[node name="GilRow" type="HBoxContainer" parent="MainSplit/LeftColumn"]
 layout_mode = 2
-size_flags_horizontal = 3
+
+[node name="GilIcon" type="TextureRect" parent="MainSplit/LeftColumn/GilRow"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("2_2b2b2")
+expand_mode = 1
+
+[node name="GilLabel" type="Label" parent="MainSplit/LeftColumn/GilRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="NRGRow" type="VBoxContainer" parent="MainSplit/LeftColumn"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainSplit/LeftColumn/NRGRow"]
+layout_mode = 2
+
+[node name="NRGLabel" type="Label" parent="MainSplit/LeftColumn/NRGRow/HBoxContainer"]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
-text = "Lapis: 0"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="BottomRow" type="PanelContainer" parent="." unique_id=1652868742]
-custom_minimum_size = Vector2(0, 60)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_2")
-
-[node name="HBox" type="HBoxContainer" parent="BottomRow" unique_id=111121635]
-layout_mode = 2
-
-[node name="EnergyContainer" type="VBoxContainer" parent="BottomRow/HBox" unique_id=37081782]
-layout_mode = 2
-size_flags_horizontal = 3
-alignment = 1
-
-[node name="NRGTopHBox" type="HBoxContainer" parent="BottomRow/HBox/EnergyContainer" unique_id=1015208776]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="BottomRow/HBox/EnergyContainer/NRGTopHBox" unique_id=721019409]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
 text = "NRG"
-vertical_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="BottomRow/HBox/EnergyContainer/NRGTopHBox" unique_id=2060556807]
+[node name="NRGBar" type="ProgressBar" parent="MainSplit/LeftColumn/NRGRow/HBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_nrg")
-value = 100.0
+size_flags_vertical = 1
+theme_override_styles/fill = SubResource("StyleBoxFlat_2")
+value = 50.0
 show_percentage = false
 
-[node name="EnergyText" type="Label" parent="BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar" unique_id=937595800]
+[node name="NRGTextOverlay" type="Label" parent="MainSplit/LeftColumn/NRGRow/HBoxContainer/NRGBar"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
 text = "0/0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="NRGTimeLabel" type="Label" parent="BottomRow/HBox/EnergyContainer" unique_id=1147102208]
+[node name="NRGStatusLabel" type="Label" parent="MainSplit/LeftColumn/NRGRow"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = "Fully Charged"
-horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="RankContainer" type="VBoxContainer" parent="BottomRow/HBox" unique_id=1005263728]
+[node name="CenterColumn" type="VBoxContainer" parent="MainSplit"]
 layout_mode = 2
+size_flags_horizontal = 3
 alignment = 1
 
-[node name="Label" type="Label" parent="BottomRow/HBox/RankContainer" unique_id=760721487]
+[node name="NameFrame" type="PanelContainer" parent="MainSplit/CenterColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 14
+theme_override_styles/panel = SubResource("StyleBoxFlat_4")
+
+[node name="PlayerNameLabel" type="Label" parent="MainSplit/CenterColumn/NameFrame"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Player"
+horizontal_alignment = 1
+
+[node name="RankLabel" type="Label" parent="MainSplit/CenterColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "RANK"
 horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="RankLabel" type="Label" parent="BottomRow/HBox/RankContainer" unique_id=2143547815]
+[node name="RankNumberLabel" type="Label" parent="MainSplit/CenterColumn"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 32
-text = "177"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+text = "1"
 horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="EXPContainer" type="HBoxContainer" parent="BottomRow/HBox" unique_id=543766423]
+[node name="RightColumn" type="VBoxContainer" parent="MainSplit"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 2
 
-[node name="ProgressBar" type="ProgressBar" parent="BottomRow/HBox/EXPContainer" unique_id=1100138718]
+[node name="LapisRow" type="HBoxContainer" parent="MainSplit/RightColumn"]
+layout_mode = 2
+alignment = 2
+
+[node name="LapisIcon" type="TextureRect" parent="MainSplit/RightColumn/LapisRow"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("2_2b2b2")
+expand_mode = 1
+
+[node name="LapisLabel" type="Label" parent="MainSplit/RightColumn/LapisRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="EXPRow" type="VBoxContainer" parent="MainSplit/RightColumn"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainSplit/RightColumn/EXPRow"]
+layout_mode = 2
+
+[node name="EXPBar" type="ProgressBar" parent="MainSplit/RightColumn/EXPRow/HBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_exp")
+size_flags_vertical = 1
+theme_override_styles/fill = SubResource("StyleBoxFlat_3")
 value = 50.0
 show_percentage = false
 
-[node name="XPLabel" type="Label" parent="BottomRow/HBox/EXPContainer/ProgressBar" unique_id=966985137]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
-text = "50%"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Label" type="Label" parent="BottomRow/HBox/EXPContainer" unique_id=1489642870]
+[node name="EXPLabel" type="Label" parent="MainSplit/RightColumn/EXPRow/HBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.2, 0.8, 0.2, 1)
 text = "EXP"
-vertical_alignment = 1
 
-[node name="DebugXPContainer" type="HBoxContainer" parent="." unique_id=415817500]
-visible = false
+[node name="EXPStatusLabel" type="Label" parent="MainSplit/RightColumn/EXPRow"]
+unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
-
-[node name="XPInput" type="LineEdit" parent="DebugXPContainer" unique_id=408750573]
-layout_mode = 2
-placeholder_text = "XP Amount"
-
-[node name="AddXPButton" type="Button" parent="DebugXPContainer" unique_id=2058958433]
-layout_mode = 2
-text = "Add XP"
-
-[node name="DebugWalletContainer" type="HBoxContainer" parent="." unique_id=733595891]
-visible = false
-layout_mode = 2
-alignment = 1
-
-[node name="GilInput" type="LineEdit" parent="DebugWalletContainer" unique_id=347862841]
-layout_mode = 2
-placeholder_text = "Gil Amount"
-
-[node name="AddGilButton" type="Button" parent="DebugWalletContainer" unique_id=1337158134]
-layout_mode = 2
-text = "Add Gil"
-
-[node name="LapisInput" type="LineEdit" parent="DebugWalletContainer" unique_id=210385979]
-layout_mode = 2
-placeholder_text = "Lapis Amount"
-
-[node name="AddLapisButton" type="Button" parent="DebugWalletContainer" unique_id=1449361870]
-layout_mode = 2
-text = "Add Lapis"
+theme_override_font_sizes/font_size = 12
+text = "Rank Up in 0"
+horizontal_alignment = 2

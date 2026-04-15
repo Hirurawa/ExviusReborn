@@ -296,14 +296,24 @@ func _on_battle_state_ready() -> void:
 		var enemy_data = battle_manager.enemy_units[i]
 		var monster_id: String = str(enemy_data.get("id", "5010010"))
 
+		var wrapper = Control.new()
+		wrapper.name = "EnemyWrapper_" + str(i)
+		wrapper.custom_minimum_size = Vector2(100, 100)
+		wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		enemies_container.add_child(wrapper)
+
 		var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 		enemy_sprite.name = "EnemyCombatSprite_" + str(i)
 		enemy_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		enemy_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 
-		enemies_container.add_child(enemy_sprite)
+		wrapper.add_child(enemy_sprite)
 		enemy_sprite.setup(i, monster_id, true)
+
+		var is_staggered = (i % 2 != 0)
+		if is_staggered:
+			enemy_sprite.position.y += 30
 
 		# Connect click input for targeting
 		enemy_sprite.gui_input.connect(Callable(self, "_on_enemy_clicked").bind(i))
@@ -377,11 +387,41 @@ func _on_battle_state_ready() -> void:
 			empty_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			player_sprites_grid.add_child(empty_sprite)
 
+func _play_enemy_death(enemy_node: Node) -> void:
+	if enemy_node.has_meta("shake_tween"):
+		var old_tween = enemy_node.get_meta("shake_tween")
+		if old_tween and old_tween.is_valid():
+			old_tween.kill()
+
+	var tween = create_tween()
+	enemy_node.set_meta("shake_tween", tween)
+
+	# Shake violently while fading out
+	var orig_x = enemy_node.position.x
+	var fade_time = 0.4
+	tween.parallel().tween_property(enemy_node, "modulate:a", 0.0, fade_time)
+
+	# Manually chain the shakes in parallel with the fade
+	# Total time = 0.4s. Let's do 4 back and forths (8 movements of 0.05s each)
+	for j in range(4):
+		tween.parallel().tween_property(enemy_node, "position:x", orig_x - 15, 0.05).set_delay(j * 0.1)
+		tween.parallel().tween_property(enemy_node, "position:x", orig_x + 15, 0.05).set_delay(j * 0.1 + 0.05)
+
+	# Instead of queue_free, we hide it to preserve indices
+	tween.tween_callback(enemy_node.hide).set_delay(fade_time)
+
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
 	if enemy_index == _current_target_enemy_index:
 		enemy_hp_bar.max_value = max_hp
 		enemy_hp_bar.value = new_hp
 		enemy_hp_pct_label.text = "%d%%" % hp_percent
+
+	if new_hp <= 0:
+		if enemy_index >= 0 and enemy_index < enemies_container.get_child_count():
+			var wrapper = enemies_container.get_child(enemy_index)
+			if wrapper.get_child_count() > 0:
+				var enemy_sprite = wrapper.get_child(0)
+				_play_enemy_death(enemy_sprite)
 
 func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -402,12 +442,38 @@ func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
 			enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
 			battle_manager.set_enemy_hp(enemy_index, enemy_data.get("current_hp", 0))
 
+func _shake_enemy(enemy_node: Node) -> void:
+	# Ensure we don't overlap tweens if hit rapidly
+	if enemy_node.has_meta("shake_tween"):
+		var old_tween = enemy_node.get_meta("shake_tween")
+		if old_tween and old_tween.is_valid():
+			old_tween.kill()
+
+	var tween = create_tween()
+	enemy_node.set_meta("shake_tween", tween)
+
+	var orig_x = 0.0
+	if enemy_node.has_meta("orig_x"):
+		orig_x = enemy_node.get_meta("orig_x")
+	else:
+		orig_x = enemy_node.position.x
+		enemy_node.set_meta("orig_x", orig_x)
+
+	var offset = 10.0
+
+	# Quick back and forth
+	tween.tween_property(enemy_node, "position:x", orig_x - offset, 0.05)
+	tween.tween_property(enemy_node, "position:x", orig_x + offset, 0.05)
+	tween.tween_property(enemy_node, "position:x", orig_x, 0.05)
+
 func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int) -> void:
 	chain_count_label.text = "Chain: %d" % chain_count
 	if target_team == "enemy":
-		_hit_flash.color.a = 0.8
-		var tween = create_tween()
-		tween.tween_property(_hit_flash, "color:a", 0.0, 0.15)
+		if target_index >= 0 and target_index < enemies_container.get_child_count():
+			var wrapper = enemies_container.get_child(target_index)
+			if wrapper.get_child_count() > 0:
+				var enemy_sprite = wrapper.get_child(0)
+				_shake_enemy(enemy_sprite)
 		print(chain_count)
 		_spawn_damage_number(damage, target_index)
 

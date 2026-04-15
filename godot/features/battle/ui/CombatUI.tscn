@@ -159,3 +159,73 @@ unique_name_in_owner = true
 title = "Mission Complete"
 size = Vector2i(300, 150)
 ok_button_text = "Return to Map"
+
+[node name="TransitionUI" type="Control" parent="." unique_id=987654321]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HBox" type="HBoxContainer" parent="TransitionUI" unique_id=987654322]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -25.0
+offset_right = 100.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="PrefixLabel" type="Label" parent="TransitionUI/HBox" unique_id=987654323]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "Wave "
+
+[node name="NumberMask" type="Control" parent="TransitionUI/HBox" unique_id=987654324]
+clip_contents = true
+custom_minimum_size = Vector2(40, 65)
+layout_mode = 2
+
+[node name="CurrentNum" type="Label" parent="TransitionUI/HBox/NumberMask" unique_id=987654325]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 67.0
+grow_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "1"
+horizontal_alignment = 1
+
+[node name="NextNum" type="Label" parent="TransitionUI/HBox/NumberMask" unique_id=987654326]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 67.0
+offset_bottom = 134.0
+grow_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "2"
+horizontal_alignment = 1
+
+[node name="TotalWavesLabel" type="Label" parent="TransitionUI/HBox" unique_id=987654327]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = " / 3"

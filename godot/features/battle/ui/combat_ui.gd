@@ -49,6 +49,7 @@ func _ready() -> void:
 	battle_manager.turn_changed.connect(_on_turn_changed)
 	battle_manager.wave_changed.connect(_on_wave_changed)
 	battle_manager.attack_landed.connect(_on_attack_landed)
+	battle_manager.wave_transition_started.connect(_on_wave_transition_started)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
 	battle_manager.mission_cleared.connect(_on_mission_completed)
@@ -286,6 +287,9 @@ func init_scene(params: Dictionary) -> void:
 	battle_manager.initialize_battle(current_mission_id)
 
 func _on_battle_state_ready() -> void:
+	if battle_manager.current_wave == 1:
+		_play_wave_one_intro(battle_manager.total_waves)
+
 	# Clear previous children in enemies_container (to remove old CombatSprites)
 	for child in enemies_container.get_children():
 		enemies_container.remove_child(child)
@@ -541,6 +545,66 @@ func _on_turn_changed(new_turn: int) -> void:
 
 func _on_wave_changed(current_wave: int, total_waves: int) -> void:
 	chain_count_label.text = "Chain: 0"
+
+func _play_wave_one_intro(total_waves: int) -> void:
+	# Setup the labels
+	var transition_ui = %TransitionUI
+	var current_num = transition_ui.get_node("HBox/NumberMask/CurrentNum")
+	var next_num = transition_ui.get_node("HBox/NumberMask/NextNum")
+	var total_waves_label = transition_ui.get_node("HBox/TotalWavesLabel")
+
+	current_num.text = "1"
+	next_num.text = "" # Keep it empty/hidden
+	total_waves_label.text = " / " + str(total_waves)
+
+	# Ensure positions are reset
+	current_num.position.y = 0
+	next_num.position.y = 50
+
+	transition_ui.show()
+	transition_ui.modulate.a = 0.0
+
+	var tween = create_tween()
+	# Fade in the UI
+	tween.tween_property(transition_ui, "modulate:a", 1.0, 0.3)
+	tween.tween_interval(1.0) # Hold so the player reads it
+
+	# Fade out
+	tween.tween_property(transition_ui, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(transition_ui.hide)
+
+func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: int) -> void:
+	# Setup the labels
+	var transition_ui = %TransitionUI
+	var current_num = transition_ui.get_node("HBox/NumberMask/CurrentNum")
+	var next_num = transition_ui.get_node("HBox/NumberMask/NextNum")
+	var total_waves_label = transition_ui.get_node("HBox/TotalWavesLabel")
+
+	current_num.text = str(curr_wave)
+	next_num.text = str(next_wave)
+	total_waves_label.text = " / " + str(total_waves)
+
+	# Ensure positions are reset
+	current_num.position.y = 0
+	next_num.position.y = 50
+
+	transition_ui.show()
+	transition_ui.modulate.a = 0.0
+
+	var tween = create_tween()
+	# Fade in the UI
+	tween.tween_property(transition_ui, "modulate:a", 1.0, 0.3)
+	tween.tween_interval(0.5) # Hold so the player reads it
+
+	# The Odometer "Push" Effect!
+	tween.parallel().tween_property(current_num, "position:y", -50, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
+	tween.parallel().tween_property(next_num, "position:y", 0, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
+
+	tween.tween_interval(0.5) # Hold again
+
+	# Fade out
+	tween.tween_property(transition_ui, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(transition_ui.hide)
 
 func _on_finish_pressed() -> void:
 	if current_mission_id == "":

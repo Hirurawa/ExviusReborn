@@ -10,6 +10,7 @@ signal unit_action_started(unit_index: int, action: CombatAction)
 signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
 signal wave_changed(current_wave: int, total_waves: int)
+signal wave_transition_started(current_wave: int, next_wave: int, total_waves: int)
 
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
@@ -396,9 +397,18 @@ func _trigger_defeat() -> void:
 func _trigger_wave_clear() -> void:
 	print("BattleManager: Wave %d cleared!" % current_wave)
 
+	# 1. Wait for the death tweens to finish (0.5 to 1.0 seconds)
+	await get_tree().create_timer(1.0).timeout
+
 	if current_wave >= total_waves:
 		_trigger_mission_complete()
 	else:
+		# 2. Tell the UI to do the rolling number animation
+		wave_transition_started.emit(current_wave, current_wave + 1, total_waves)
+
+		# 3. Wait for the UI animation to finish before actually spawning
+		await get_tree().create_timer(2.0).timeout
+
 		_spawn_next_wave()
 
 func _trigger_mission_complete() -> void:

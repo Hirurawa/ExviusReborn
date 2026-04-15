@@ -7,7 +7,8 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var finish_button: Button = %FinishButton
 @onready var rewards_popup: AcceptDialog = %RewardsPopup
 
-@onready var enemy_texture: TextureRect = %EnemyTexture
+@onready var enemy_region: Control = %EnemyRegion
+@onready var enemies_container: HBoxContainer = %EnemiesContainer
 @onready var turn_label: Label = %TurnLabel
 @onready var player_sprites_grid: GridContainer = %PlayerSpritesGrid
 @onready var chain_count_label: Label = %ChainCountLabel
@@ -24,6 +25,7 @@ var _hit_flash: ColorRect
 var _action_menu_panel: PanelContainer
 var _action_menu_vbox: VBoxContainer
 var _menu_target_unit_index: int = -1
+var _current_target_enemy_index: int = 0
 var _active_panels: Array = []
 
 var _current_open_menu: String = ""
@@ -52,13 +54,12 @@ func _ready() -> void:
 	battle_manager.mission_cleared.connect(_on_mission_completed)
 	DataManager.mission_failed.connect(_on_mission_failed)
 
-	enemy_texture.gui_input.connect(_on_enemy_texture_gui_input)
 	
 	_hit_flash = ColorRect.new()
 	_hit_flash.color = Color(1.0, 0.0, 0.0, 0.0)
 	_hit_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hit_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	enemy_texture.add_child(_hit_flash)
+	enemy_region.add_child(_hit_flash)
 
 	_setup_action_menu()
 
@@ -285,31 +286,37 @@ func init_scene(params: Dictionary) -> void:
 	battle_manager.initialize_battle(current_mission_id)
 
 func _on_battle_state_ready() -> void:
-	# Populate enemy details
-	var enemy_data = battle_manager.enemy_units[0] if battle_manager.enemy_units.size() > 0 else {}
-	enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
+	# Clear previous children in enemies_container (to remove old CombatSprites)
+	for child in enemies_container.get_children():
+		enemies_container.remove_child(child)
+		child.queue_free()
 
-	var monster_id: String = str(enemy_data.get("id", "5010010"))
-	
-	# Clear previous children in enemy_texture (to remove old CombatSprites)
-	for child in enemy_texture.get_children():
-		if child is TextureRect and child.name == "EnemyCombatSprite":
-			child.queue_free()
+	# Instantiate a new CombatSprite for each enemy
+	for i in range(battle_manager.enemy_units.size()):
+		var enemy_data = battle_manager.enemy_units[i]
+		var monster_id: String = str(enemy_data.get("id", "5010010"))
 
-	# Instantiate a new CombatSprite for the enemy
-	var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
-	enemy_sprite.name = "EnemyCombatSprite"
-	enemy_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
-	enemy_texture.add_child(enemy_sprite)
-	enemy_sprite.setup(0, monster_id, true)
-	
-	# Clear the static texture since we are using the child sprite
-	enemy_texture.texture = null
+		var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
+		enemy_sprite.name = "EnemyCombatSprite_" + str(i)
+		enemy_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		enemy_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	# Populate enemy HP
-	battle_manager.set_enemy_hp(0, enemy_data.get("current_hp", 0))
+		enemies_container.add_child(enemy_sprite)
+		enemy_sprite.setup(i, monster_id, true)
+
+		# Connect click input for targeting
+		enemy_sprite.gui_input.connect(Callable(self, "_on_enemy_clicked").bind(i))
+
+	# Initialize top bar to target the first enemy (index 0) if it exists
+	if battle_manager.enemy_units.size() > 0:
+		_current_target_enemy_index = 0
+		var first_enemy = battle_manager.enemy_units[0]
+		enemy_name_label.text = first_enemy.get("name", "Unknown Monster")
+		battle_manager.set_enemy_hp(0, first_enemy.get("current_hp", 0))
+	else:
+		enemy_name_label.text = "Cleared"
+		battle_manager.set_enemy_hp(0, 0)
 	_on_turn_changed(battle_manager.turn_count)
 
 	# Clear previous panels and sprites
@@ -371,25 +378,40 @@ func _on_battle_state_ready() -> void:
 			player_sprites_grid.add_child(empty_sprite)
 
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
-	if enemy_index == 0:
+	if enemy_index == _current_target_enemy_index:
 		enemy_hp_bar.max_value = max_hp
 		enemy_hp_bar.value = new_hp
 		enemy_hp_pct_label.text = "%d%%" % hp_percent
 
-func _on_enemy_texture_gui_input(event: InputEvent) -> void:
+func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		print("Enemy tapped! Target set.")
+		print("Enemy tapped! Global target set to index: ", enemy_index)
+
+		_current_target_enemy_index = enemy_index
+
+		# Apply this target to all player units
+		for i in range(battle_manager.party_data.size()):
+			var unit_data = battle_manager.party_data[i]
+			if not unit_data.is_empty():
+				unit_data["queued_target_team"] = "enemy"
+				unit_data["queued_target_index"] = enemy_index
+
+		# Update info bar with newly targeted enemy
+		if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
+			var enemy_data = battle_manager.enemy_units[enemy_index]
+			enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
+			battle_manager.set_enemy_hp(enemy_index, enemy_data.get("current_hp", 0))
 
 func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int) -> void:
 	chain_count_label.text = "Chain: %d" % chain_count
-	if target_team == "enemy" and target_index == 0:
+	if target_team == "enemy":
 		_hit_flash.color.a = 0.8
 		var tween = create_tween()
 		tween.tween_property(_hit_flash, "color:a", 0.0, 0.15)
 		print(chain_count)
-		_spawn_damage_number(damage)
+		_spawn_damage_number(damage, target_index)
 
-func _spawn_damage_number(damage: int) -> void:
+func _spawn_damage_number(damage: int, target_index: int) -> void:
 	var label = Label.new()
 	label.text = str(damage)
 	# Set appearance
@@ -412,8 +434,15 @@ func _spawn_damage_number(damage: int) -> void:
 
 	# Add new label at bottom
 	damage_numbers_container.add_child(label)
-	# Start at 0,0 relative to container (which is anchored to top-right of EnemyTexture)
-	label.position = Vector2(0, 0)
+
+	# Attempt to center the damage over the specific enemy sprite
+	var x_pos = 0.0
+	if target_index >= 0 and target_index < enemies_container.get_child_count():
+		var target_node = enemies_container.get_child(target_index)
+		# Approximate center based on the container size
+		x_pos = target_node.position.x + (target_node.size.x / 2.0) - 20.0
+
+	label.position = Vector2(x_pos, 0)
 
 	# Animate the new label
 	# We want it to fade out over 1 second and then delete itself.

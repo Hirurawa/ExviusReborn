@@ -111,7 +111,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var next_xp = unit_inst.get("next_xp", 0)
 	unit_detail_next_xp_label.text = "next %d" % next_xp
 
-	var final_stats = unit_inst.get("final_stats", {})
+	var final_stats = unit_inst["final_stats"].get("stats", {})
 
 	unit_detail_hp_value.text = str(final_stats.get("HP", 0))
 	unit_detail_mp_value.text = str(final_stats.get("MP", 0))
@@ -136,7 +136,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_populate_equipment_slots(unit_inst, unit_data)
 
 	# Fetch and display the traits directly from the hydrated unit instance
-	var element_resist = unit_inst.get("element_resist", [0,0,0,0,0,0,0,0])
+	var element_resist = unit_inst["final_stats"].get("element_resist", [0,0,0,0,0,0,0,0])
 	for i in range(8):
 		var resist_panel = elem_resist_grid.get_node("Resist" + str(i+1))
 		var label = resist_panel.get_node("VBox/ValPanel/Label")
@@ -145,7 +145,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		else:
 			label.text = "-"
 
-	var status_resist = unit_inst.get("status_resist", [0,0,0,0,0,0,0,0])
+	var status_resist = unit_inst["final_stats"].get("status_resist", [0,0,0,0,0,0,0,0])
 	for i in range(8):
 		var resist_panel = status_resist_grid.get_node("Resist" + str(i+1))
 		var label = resist_panel.get_node("VBox/ValPanel/Label")
@@ -310,6 +310,9 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 			elif sk_type == "ABILITY":
 				if DataManager.game_data_skills_ability.has(sk_id):
 					var panel = _create_skill_panel(DataManager.game_data_skills_ability[sk_id])
+					unit_detail_special_grid.add_child(panel)
+				if DataManager.game_data_skills_passive.has(sk_id):
+					var panel = _create_skill_panel(DataManager.game_data_skills_passive[sk_id])
 					unit_detail_special_grid.add_child(panel)
 
 func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> void:

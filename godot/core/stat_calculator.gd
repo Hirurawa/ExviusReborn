@@ -22,8 +22,11 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		},
 		"element_resist": {},
 		"status_resist": {},
-		"active_skills": [],
-		"passive_skills": []
+		"skills": {
+			"magic": [],
+			"ability": [],
+			"passive": []
+		}
 	}
 	
 	assert(unit_instance.has("current_rarity"), "CRITICAL ERROR: unit_instance is missing current_rarity!")
@@ -37,15 +40,11 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	assert(RARITY_MAX_LEVELS.has(rarity), "CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	var max_level = RARITY_MAX_LEVELS[rarity]
-			
-	var base_stats = unit_instance.get("stats", {})
 	
 	# Seed innate resistances
-	var _elem_res = base_stats.get("element_resist")
-	final_profile["element_resist"] = _elem_res.duplicate() if typeof(_elem_res) == TYPE_DICTIONARY else {}
-	var _stat_res = base_stats.get("status_resist")
-	final_profile["status_resist"] = _stat_res.duplicate() if typeof(_stat_res) == TYPE_DICTIONARY else {}
-
+	final_profile["element_resist"] = unit_instance.get("element_resist", {}).duplicate()
+	final_profile["status_resist"] = unit_instance.get("status_resist", {}).duplicate()
+	
 	var base_calculated = {
 		"HP": 0.0,
 		"MP": 0.0,
@@ -54,6 +53,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"MAG": 0.0,
 		"SPR": 0.0
 	}
+	
+	var base_stats = unit_instance.get("stats", {})
 	
 	if not base_stats.is_empty():
 		for stat_name in final_profile["stats"].keys():
@@ -73,8 +74,10 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	# Harvest innate skills
 	var innate_skills = unit_instance.get("skills", [])
 	for skill in innate_skills:
-		if skill.get("level", 999) <= level and skill.get("rarity", 999) <= rarity:
-			raw_skills.append({"id": skill.get("id"), "source": "Trait"})
+		if typeof(skill.get("rarity", 999)) != TYPE_STRING:
+			var req_rarity = skill.get("rarity", 999)
+			if rarity > int(req_rarity) or (rarity == req_rarity and level >= skill.get("level", 999)):
+				raw_skills.append({"id": skill.get("id"), "source": "Trait"})
 
 	var flat_mods = {
 		"HP": 0,
@@ -102,22 +105,23 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			
 			for stat_name in final_profile["stats"].keys():
 				flat_mods[stat_name] += item_stats.get(stat_name, 0)
-
+				
 			var equip_skills = item_data.get("skills", [])
-			for skill_id in equip_skills:
-				raw_skills.append({"id": skill_id, "source": "Equip"})
-
+			if equip_skills != null:
+				for skill_id in equip_skills:
+					raw_skills.append({"id": skill_id, "source": "Equip"})
+				
 	# Categorize skills
 	for raw_skill in raw_skills:
 		var skill_id_str = str(raw_skill["id"])
 		var skill_entry = {"id": int(raw_skill["id"]), "source": raw_skill["source"]}
-
+		
 		if DataManager.game_data_skills_magic.has(skill_id_str):
-			final_profile["active_skills"].append(skill_entry)
+			final_profile["skills"]["magic"].append(skill_entry)
 		elif DataManager.game_data_skills_ability.has(skill_id_str):
-			final_profile["active_skills"].append(skill_entry)
+			final_profile["skills"]["ability"].append(skill_entry)
 		elif DataManager.game_data_skills_passive.has(skill_id_str):
-			final_profile["passive_skills"].append(skill_entry)
+			final_profile["skills"]["passive"].append(skill_entry)
 
 	# TODO: Parse effects_raw for pct_mods here
 

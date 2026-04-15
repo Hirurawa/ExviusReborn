@@ -589,7 +589,7 @@ func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 	if DataManager.game_data_items.has(item_id):
 		var item_data = DataManager.game_data_items[item_id]
 		if item_data.has("icon"):
-			tex_path = "res://assets/items/" + str(item_data["icon"]) + ".png"
+			tex_path = "res://assets/items/" + str(item_data["icon"])
 
 	if ResourceLoader.exists(tex_path):
 		drop_icon.texture = _get_dynamic_texture(tex_path)

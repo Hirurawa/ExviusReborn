@@ -49,6 +49,7 @@ var game_data_dungeons: Dictionary = {}
 var game_data_missions: Dictionary = {}
 var game_data_skills_magic: Dictionary = {}
 var game_data_skills_ability: Dictionary = {}
+var game_data_skills_passive: Dictionary = {}
 var game_data_limitbursts: Dictionary = {}
 var game_data_materia: Dictionary = {}
 var game_data_equipment_icons: Dictionary = {}
@@ -158,12 +159,6 @@ func _load_initial_data(email: String) -> void:
 
 	data_loaded.emit()
 
-#func _inject_final_stats(units: Array) -> Array:
-	#for unit in units:
-		#if typeof(unit) == TYPE_DICTIONARY:
-			#unit["final_stats"] = StatCalculator.calculate_final_stats(unit)
-	#return units
-
 func _sanitize_floats_to_ints(data: Variant) -> Variant:
 	if typeof(data) == TYPE_DICTIONARY:
 		var new_dict: Dictionary = {}
@@ -188,6 +183,7 @@ func _on_patch_complete() -> void:
 	game_data_dungeons = _sanitize_floats_to_ints(AssetPatcher.get_data("dungeons"))
 	game_data_skills_magic = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_magic"))
 	game_data_skills_ability = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_ability"))
+	game_data_skills_passive = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_passive"))
 	game_data_limitbursts = _sanitize_floats_to_ints(AssetPatcher.get_data("limitbursts"))
 	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
 	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))

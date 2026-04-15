@@ -495,7 +495,6 @@ func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: 
 			if wrapper.get_child_count() > 0:
 				var enemy_sprite = wrapper.get_child(0)
 				_shake_enemy(enemy_sprite)
-		print(chain_count)
 		_spawn_damage_number(damage, target_index)
 
 func _spawn_damage_number(damage: int, target_index: int) -> void:

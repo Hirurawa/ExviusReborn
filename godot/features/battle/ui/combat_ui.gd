@@ -387,33 +387,45 @@ func _on_battle_state_ready() -> void:
 			empty_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			player_sprites_grid.add_child(empty_sprite)
 
-func _play_enemy_death(enemy_node: Node) -> void:
-	if enemy_node.has_meta("shake_tween"):
-		var old_tween = enemy_node.get_meta("shake_tween")
-		if old_tween and old_tween.is_valid():
-			old_tween.kill()
+func _play_enemy_death(inner_sprite: Node) -> void:
+	# 1. Kill any damage shake that is currently happening
+	if inner_sprite.has_meta("shake_tween"):
+		var old_shake = inner_sprite.get_meta("shake_tween")
+		if old_shake and old_shake.is_valid():
+			old_shake.kill()
+			
+	# 2. Kill any existing fade (just in case)
+	if inner_sprite.has_meta("fade_tween"):
+		var old_fade = inner_sprite.get_meta("fade_tween")
+		if old_fade and old_fade.is_valid():
+			old_fade.kill()
 
-	var orig_x = 0.0
-	if enemy_node.has_meta("orig_x"):
-		orig_x = enemy_node.get_meta("orig_x")
+	# 3. Establish base position
+	var orig_x = inner_sprite.position.x
+	if inner_sprite.has_meta("orig_x"):
+		orig_x = inner_sprite.get_meta("orig_x")
 	else:
-		orig_x = enemy_node.position.x
-		enemy_node.set_meta("orig_x", orig_x)
+		inner_sprite.set_meta("orig_x", orig_x)
 
-	# Use a main tween for the fade and hide
+	# 4. The Fade Tween
 	var fade_tween = create_tween()
-	enemy_node.set_meta("shake_tween", fade_tween)
-
+	inner_sprite.set_meta("fade_tween", fade_tween)
+	
 	var fade_time = 0.4
-	fade_tween.tween_property(enemy_node, "modulate:a", 0.0, fade_time)
-	fade_tween.tween_callback(enemy_node.hide)
-
-	# Use a separate tween for the sequential shaking to prevent parallel conflicts
+	fade_tween.tween_property(inner_sprite, "modulate:a", 0.0, fade_time)
+	fade_tween.tween_callback(inner_sprite.hide)
+	
+	# 5. The Shake Tween
 	var shake_tween = create_tween()
+	inner_sprite.set_meta("shake_tween", shake_tween)
+	
 	shake_tween.set_loops(4)
-	shake_tween.tween_property(enemy_node, "position:x", orig_x - 15, 0.05)
-	shake_tween.tween_property(enemy_node, "position:x", orig_x + 15, 0.05)
-
+	shake_tween.tween_property(inner_sprite, "position:x", orig_x - 15, 0.05)
+	shake_tween.tween_property(inner_sprite, "position:x", orig_x + 15, 0.05)
+	
+	# Optional: Snap it back exactly to center when the loops finish
+	shake_tween.finished.connect(func(): inner_sprite.position.x = orig_x)
+	
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
 	if enemy_index == _current_target_enemy_index:
 		enemy_hp_bar.max_value = max_hp

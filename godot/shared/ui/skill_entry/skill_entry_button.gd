@@ -1,21 +1,34 @@
 extends PanelContainer
 
-@onready var icon_rect = $Margin/HBox/IconWrapper/IconRect
-@onready var trait_lbl = $Margin/HBox/VBox/TopHBox/TraitLabel
-@onready var name_lbl = $Margin/HBox/VBox/TopHBox/NameLabel
-@onready var desc_lbl = $Margin/HBox/VBox/DescLabel
-@onready var mp_lbl = $Margin/HBox/IconWrapper/MPLabel
-@onready var lvl_hbox = $Margin/LevelHBox
-@onready var lvl_lbl = $Margin/LevelHBox/LevelLabel
-@onready var lvl_orb = $Margin/LevelHBox/LevelOrb
-@onready var button = $Button
+var icon_rect: TextureRect
+var trait_lbl: Label
+var name_lbl: Label
+var desc_lbl: Label
+var mp_lbl: Label
+var lvl_hbox: HBoxContainer
+var lvl_lbl: Label
+var lvl_orb: TextureRect
+var button: Button
 
 signal pressed
 
 func _ready() -> void:
+    icon_rect = $Margin/HBox/IconWrapper/IconRect
+    trait_lbl = $Margin/HBox/VBox/TopHBox/TraitLabel
+    name_lbl = $Margin/HBox/VBox/TopHBox/NameLabel
+    desc_lbl = $Margin/HBox/VBox/DescLabel
+    mp_lbl = $Margin/HBox/IconWrapper/MPLabel
+    lvl_hbox = $Margin/LevelHBox
+    lvl_lbl = $Margin/LevelHBox/LevelLabel
+    lvl_orb = $Margin/LevelHBox/LevelOrb
+    button = $Button
+
     button.pressed.connect(func(): pressed.emit())
 
 func setup_from_skill_data(skill_data: Dictionary, source: String = "Trait", is_button: bool = false, skill_level: int = -1) -> void:
+    if not is_inside_tree():
+        await ready
+
     var icon_path = "res://assets/abilities/" + skill_data.get("icon", "ability_1.png")
     var tex = load(icon_path)
     if tex:

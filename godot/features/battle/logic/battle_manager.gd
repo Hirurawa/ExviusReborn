@@ -39,7 +39,15 @@ var current_mission_id: String = ""
 var mission_drops: Array[String] = []
 
 func _ready() -> void:
-	pass
+	# 1. Instantiate the script purely in code
+	action_processor = preload("res://features/battle/logic/ActionProcessor.gd").new()
+	
+	# 2. Give it a name so it shows up cleanly in the debugger
+	action_processor.name = "ActionProcessor"
+	
+	# 3. Add it as a child to the BattleManager
+	add_child(action_processor)
+	#pass
 
 func _physics_process(_delta: float) -> void:
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:

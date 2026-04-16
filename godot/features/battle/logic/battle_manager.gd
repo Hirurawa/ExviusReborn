@@ -574,15 +574,6 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_
 
 		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster, primary_target)
 
-		# Convert "STAT_BOOST_PCT" to "_apply_stat_boost_pct"
-		var func_name = "_apply_" + effect.type.to_lower()
-		# Check if we have built the logic for this mechanic yet
-		if has_method(func_name):
-			# Dynamically call the function and pass the effect data
-			call(func_name, effect.effect)
-		else:
-			push_warning("StatCalculator: No logic built for passive type: " + effect.type)
-		
 		_route_effect(effect, all_attack_damage, all_attack_frames, caster, actual_targets)
 
 

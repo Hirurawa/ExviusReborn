@@ -792,6 +792,7 @@ text = "Reward Name"
 [node name="MagicContent" type="ScrollContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+#horizontal_scroll_mode = 0
 
 [node name="MagicGrid" type="GridContainer" parent="VBoxContainer/MagicContent"]
 layout_mode = 2
@@ -804,6 +805,7 @@ columns = 2
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
+#horizontal_scroll_mode = 0
 
 [node name="SpecialGrid" type="GridContainer" parent="VBoxContainer/SpecialContent"]
 layout_mode = 2

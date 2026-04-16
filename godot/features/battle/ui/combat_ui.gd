@@ -1,5 +1,7 @@
 extends Control
 
+const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
+
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPanel.tscn")
 
@@ -120,15 +122,21 @@ func _open_skill_menu(unit_index: int) -> void:
 
 					if sk_type == "MAGIC":
 						if DataManager.game_data_skills_magic.has(sk_id):
+							var magic_data = DataManager.game_data_skills_magic[sk_id]
 							options.append({
 								"id": sk_id,
-								"name": DataManager.game_data_skills_magic[sk_id].get("name", "Unknown Magic")
+								"name": magic_data.get("name", "Unknown Magic"),
+								"skill_data": magic_data,
+								"level": req_rarity
 							})
 					elif sk_type == "ABILITY":
 						if DataManager.game_data_skills_ability.has(sk_id):
+							var ability_data = DataManager.game_data_skills_ability[sk_id]
 							options.append({
 								"id": sk_id,
-								"name": DataManager.game_data_skills_ability[sk_id].get("name", "Unknown Ability")
+								"name": ability_data.get("name", "Unknown Ability"),
+								"skill_data": ability_data,
+								"level": req_rarity
 							})
 
 	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
@@ -200,6 +208,7 @@ func _close_action_menu() -> void:
 func _create_action_button(action_name: String, sub_text: String) -> Button:
 	var btn = Button.new()
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	btn.custom_minimum_size = Vector2(0, 50)
 
 	var hbox = HBoxContainer.new()
@@ -241,34 +250,56 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_action_menu_vbox.add_child(scroll)
 
 	var grid = GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
 	scroll.add_child(grid)
 
 	for opt in options:
 		var action_id: String = opt.get("id", "")
 		var action_name: String = opt.get("name", "")
-		var sub_text: String = "MP: --"
 
-		if not is_skill:
+		if is_skill:
+			var btn = SkillEntryButtonScene.instantiate()
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var skill_data = opt.get("skill_data", {})
+			var skill_level = opt.get("level", -1)
+			btn.setup_from_skill_data(skill_data, "", true, skill_level)
+
+			btn.pressed.connect(func():
+				battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
+				for p in _active_panels:
+					if p._my_index == _menu_target_unit_index:
+						p.update_action_visuals()
+				_close_action_menu()
+			)
+			grid.add_child(btn)
+		else:
+			var sub_text: String = "MP: --"
 			# For items, extract the " (xCount)" part to be the subtext
 			var paren_idx = action_name.find(" (x")
 			if paren_idx != -1:
 				sub_text = action_name.substr(paren_idx + 2, action_name.length() - paren_idx - 3) # Extracts 'xCount'
 				action_name = action_name.left(paren_idx)
 
-		var btn = _create_action_button(action_name, sub_text)
-		btn.pressed.connect(func():
-			battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
-			for p in _active_panels:
-				if p._my_index == _menu_target_unit_index:
-					p.update_action_visuals()
-			_close_action_menu()
-		)
-		grid.add_child(btn)
+			var btn = _create_action_button(action_name, sub_text)
+			btn.pressed.connect(func():
+				battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
+				for p in _active_panels:
+					if p._my_index == _menu_target_unit_index:
+						p.update_action_visuals()
+				_close_action_menu()
+			)
+			grid.add_child(btn)
 
 	var bottom_hbox = HBoxContainer.new()
 	bottom_hbox.alignment = BoxContainer.ALIGNMENT_END

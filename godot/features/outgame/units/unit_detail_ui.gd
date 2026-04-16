@@ -1,5 +1,7 @@
 extends Control
 
+const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
+
 @onready var illustration_button: TextureButton = $VBoxContainer/CharInfoHBox/IllustrationButton
 @onready var unit_detail_sprite: TextureRect = $VBoxContainer/CharInfoHBox/IllustrationButton/SpritePlaceholder
 @onready var anim_sprite: Sprite2D = $VBoxContainer/CharInfoHBox/IllustrationButton/AnimSprite
@@ -211,80 +213,6 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 		unit_detail_ability_tab_btn.show()
 
 
-func _create_skill_panel(skill_data: Dictionary, source: String = "Trait") -> PanelContainer:
-	var panel = PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 5)
-	margin.add_theme_constant_override("margin_right", 5)
-	margin.add_theme_constant_override("margin_top", 5)
-	margin.add_theme_constant_override("margin_bottom", 5)
-	panel.add_child(margin)
-
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 10)
-	margin.add_child(hbox)
-
-	var icon_rect = TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(40, 40)
-	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var icon_path = "res://assets/abilities/" + skill_data.get("icon", "ability_1.png")
-	var tex = load(icon_path)
-	if tex:
-		icon_rect.texture = tex
-	else:
-		var color_rect = ColorRect.new()
-		color_rect.custom_minimum_size = Vector2(40, 40)
-		color_rect.color = Color(0.3, 0.3, 0.3)
-		icon_rect.add_child(color_rect)
-	hbox.add_child(icon_rect)
-
-	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(vbox)
-
-	var top_hbox = HBoxContainer.new()
-	vbox.add_child(top_hbox)
-
-	var trait_lbl = Label.new()
-	trait_lbl.text = source
-	trait_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	trait_lbl.add_theme_font_size_override("font_size", 12)
-	top_hbox.add_child(trait_lbl)
-
-	var name_lbl = Label.new()
-	name_lbl.text = skill_data.get("name", "Unknown Skill")
-	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_hbox.add_child(name_lbl)
-
-	var cost = skill_data.get("cost", {})
-	if cost.has("MP") and cost["MP"] > 0:
-		var mp_lbl = Label.new()
-		mp_lbl.text = "MP " + str(int(cost["MP"]))
-		mp_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0))
-		top_hbox.add_child(mp_lbl)
-
-	var desc_lbl = Label.new()
-	var effects = skill_data.get("effects", [])
-	if typeof(effects) == TYPE_ARRAY and effects.size() > 0:
-		var first_eff = effects[0]
-		if typeof(first_eff) == TYPE_ARRAY and first_eff.size() > 0:
-			desc_lbl.text = str(first_eff[0])
-		elif typeof(first_eff) == TYPE_STRING:
-			desc_lbl.text = str(first_eff)
-		else:
-			desc_lbl.text = "No description."
-	else:
-		desc_lbl.text = "No description."
-	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_lbl.add_theme_font_size_override("font_size", 12)
-	desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
-	vbox.add_child(desc_lbl)
-
-	return panel
-
 func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	for child in unit_detail_magic_grid.get_children():
 		child.queue_free()
@@ -301,7 +229,8 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	for sk in magic_list:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_magic.has(sk_id):
-			var panel = _create_skill_panel(DataManager.game_data_skills_magic[sk_id], sk.get("source", "Trait"))
+			var panel = SkillEntryButtonScene.instantiate()
+			panel.setup_from_skill_data(DataManager.game_data_skills_magic[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_magic_grid.add_child(panel)
 
 	# 3. Populate Abilities (Goes to Special Grid)
@@ -309,7 +238,8 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	for sk in ability_list:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_ability.has(sk_id):
-			var panel = _create_skill_panel(DataManager.game_data_skills_ability[sk_id], sk.get("source", "Trait"))
+			var panel = SkillEntryButtonScene.instantiate()
+			panel.setup_from_skill_data(DataManager.game_data_skills_ability[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_special_grid.add_child(panel)
 
 	# 4. Populate Passives (Goes to Special Grid)
@@ -317,7 +247,8 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	for sk in passive_list:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_passive.has(sk_id):
-			var panel = _create_skill_panel(DataManager.game_data_skills_passive[sk_id], sk.get("source", "Trait"))
+			var panel = SkillEntryButtonScene.instantiate()
+			panel.setup_from_skill_data(DataManager.game_data_skills_passive[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_special_grid.add_child(panel)
 
 func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> void:

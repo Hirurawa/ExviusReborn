@@ -230,7 +230,7 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_magic.has(sk_id):
 			var panel = SkillEntryButtonScene.instantiate()
-			panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			#panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			panel.setup_from_skill_data(DataManager.game_data_skills_magic[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_magic_grid.add_child(panel)
 
@@ -240,7 +240,7 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_ability.has(sk_id):
 			var panel = SkillEntryButtonScene.instantiate()
-			panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			#panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			panel.setup_from_skill_data(DataManager.game_data_skills_ability[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_special_grid.add_child(panel)
 
@@ -250,7 +250,7 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_passive.has(sk_id):
 			var panel = SkillEntryButtonScene.instantiate()
-			panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			#panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			panel.setup_from_skill_data(DataManager.game_data_skills_passive[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_special_grid.add_child(panel)
 

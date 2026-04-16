@@ -39,7 +39,7 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "Trait", is_
 		color_rect.color = Color(0.3, 0.3, 0.3)
 		icon_rect.add_child(color_rect)
 
-	var orb_path = "res://assets/ui/orb_level.png"
+	var orb_path = "res://assets/icons/affinity/Affinity-Black.png"
 	var orb_tex = load(orb_path)
 	if orb_tex:
 		lvl_orb.texture = orb_tex

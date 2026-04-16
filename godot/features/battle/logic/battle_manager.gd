@@ -18,6 +18,8 @@ enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
 
+@onready var action_processor = $ActionProcessor
+
 var current_state: BattleState = BattleState.INIT
 var player_units_acted_this_turn: Array = []
 var current_battle_frame: int = 0
@@ -37,7 +39,15 @@ var current_mission_id: String = ""
 var mission_drops: Array[String] = []
 
 func _ready() -> void:
-	pass
+	# 1. Instantiate the script purely in code
+	action_processor = preload("res://features/battle/logic/ActionProcessor.gd").new()
+	
+	# 2. Give it a name so it shows up cleanly in the debugger
+	action_processor.name = "ActionProcessor"
+	
+	# 3. Add it as a child to the BattleManager
+	add_child(action_processor)
+	#pass
 
 func _physics_process(_delta: float) -> void:
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
@@ -287,7 +297,16 @@ func execute_queued_action(attacker_index: int) -> void:
 			if target_index < 0 or target_index >= player_units.size(): target_index = 0
 			if player_units.size() > 0: target_data = player_units[target_index]
 
-		_route_effect(dummy_effect, attack_damage, attack_frames, attacker_data, [target_data])
+		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
+		dummy_effect["attack_frames"] = attack_frames
+		dummy_effect["attack_damage"] = attack_damage
+
+		var hit_payloads = action_processor.execute_parsed_effect(dummy_effect, attacker_data, [target_data])
+		for hit in hit_payloads:
+			hit["frame_to_execute"] += current_battle_frame
+			hit["execute_on_frame"] = hit["frame_to_execute"]
+			hit.erase("frame_to_execute")
+			pending_hits.append(hit)
 
 func _check_turn_progression() -> void:
 	if not pending_hits.is_empty():
@@ -370,7 +389,16 @@ func _execute_enemy_turn() -> void:
 		
 		var caster_data = enemy_units[attacker_index]
 
-		_route_effect(dummy_effect, attack_damage, attack_frames, caster_data, [target_unit])
+		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
+		dummy_effect["attack_frames"] = attack_frames
+		dummy_effect["attack_damage"] = attack_damage
+
+		var hit_payloads = action_processor.execute_parsed_effect(dummy_effect, caster_data, [target_unit])
+		for hit in hit_payloads:
+			hit["frame_to_execute"] += current_battle_frame
+			hit["execute_on_frame"] = hit["frame_to_execute"]
+			hit.erase("frame_to_execute")
+			pending_hits.append(hit)
 
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():
@@ -569,35 +597,14 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_
 
 	for i in range(effects.size()):
 		var effect = effects[i]
-		var all_attack_damage = effect.get("attack_damage", [])
-		var all_attack_frames = effect.get("attack_frames", [])
-
 		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster, primary_target)
 
-		_route_effect(effect, all_attack_damage, all_attack_frames, caster, actual_targets)
+		# Delegate to the Action Processor
+		var hit_payloads = action_processor.execute_parsed_effect(effect, caster, actual_targets)
 
-
-func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster: Dictionary, targets: Array[Dictionary]) -> void:
-	match effect.get("type"):
-		"MAGIC_DAMAGE", "PHYSICAL_DAMAGE", "BASIC_ATTACK":
-			var modifier = effect.get("effect", {}).get("modifier", 100.0) / 100.0
-			
-			var caster_stats = caster.get("final_stats", caster).get("stats", {}) # Fallback to base dict if final_stats missing
-
-			for target in targets:
-				var target_stats = target.get("final_stats", target)
-
-				var raw_damage = EffectProcessor.calculate_raw_damage(effect.get("type"), modifier, caster_stats, target_stats)
-				var hit_payloads = EffectProcessor.generate_hit_payloads(raw_damage, attack_damage, attack_frames, caster.get("team"), caster.get("index"), target.get("team"), target.get("index"))
-
-				# Add our current frame offset and push to the engine's hit queue
-				for hit in hit_payloads:
-					hit["frame_to_execute"] += current_battle_frame
-					# Note: changed current_frame to current_battle_frame to match the file's variable name.
-					# pending_hits items need execute_on_frame as expected by _physics_process
-					hit["execute_on_frame"] = hit["frame_to_execute"]
-					hit.erase("frame_to_execute") # Just to clean it up so it matches what we check
-					pending_hits.append(hit)
-
-		_:
-			print("BattleManager: No routing logic yet for effect type: ", effect.get("type"))
+		# Process the returned receipts
+		for hit in hit_payloads:
+			hit["frame_to_execute"] += current_battle_frame
+			hit["execute_on_frame"] = hit["frame_to_execute"]
+			hit.erase("frame_to_execute")
+			pending_hits.append(hit)

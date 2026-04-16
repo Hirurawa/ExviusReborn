@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ce0yln5qdskms" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
 [ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
+[ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/ActionProcessor.gd" id="3_yiesy"]
 
 [node name="CombatUI" type="Control" unique_id=993553313]
 layout_mode = 3
@@ -15,6 +16,9 @@ script = ExtResource("1_f7b2x")
 [node name="BattleManager" type="Node" parent="." unique_id=1042845394]
 unique_name_in_owner = true
 script = ExtResource("2_battle")
+
+[node name="ActionProcessor" type="Node" parent="." unique_id=1023631385]
+script = ExtResource("3_yiesy")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=462267441]
 layout_mode = 1

@@ -289,7 +289,16 @@ func execute_queued_action(attacker_index: int) -> void:
 			if target_index < 0 or target_index >= player_units.size(): target_index = 0
 			if player_units.size() > 0: target_data = player_units[target_index]
 
-		_route_effect(dummy_effect, attack_damage, attack_frames, attacker_data, [target_data])
+		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
+		dummy_effect["attack_frames"] = attack_frames
+		dummy_effect["attack_damage"] = attack_damage
+
+		var hit_payloads = action_processor.execute_parsed_effect(dummy_effect, attacker_data, [target_data])
+		for hit in hit_payloads:
+			hit["frame_to_execute"] += current_battle_frame
+			hit["execute_on_frame"] = hit["frame_to_execute"]
+			hit.erase("frame_to_execute")
+			pending_hits.append(hit)
 
 func _check_turn_progression() -> void:
 	if not pending_hits.is_empty():
@@ -372,7 +381,16 @@ func _execute_enemy_turn() -> void:
 		
 		var caster_data = enemy_units[attacker_index]
 
-		_route_effect(dummy_effect, attack_damage, attack_frames, caster_data, [target_unit])
+		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
+		dummy_effect["attack_frames"] = attack_frames
+		dummy_effect["attack_damage"] = attack_damage
+
+		var hit_payloads = action_processor.execute_parsed_effect(dummy_effect, caster_data, [target_unit])
+		for hit in hit_payloads:
+			hit["frame_to_execute"] += current_battle_frame
+			hit["execute_on_frame"] = hit["frame_to_execute"]
+			hit.erase("frame_to_execute")
+			pending_hits.append(hit)
 
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():

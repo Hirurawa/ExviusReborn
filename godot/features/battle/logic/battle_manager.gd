@@ -92,7 +92,7 @@ func _physics_process(_delta: float) -> void:
 					else:
 						# For UI stats, we still need the original party_data index
 						# For now, search it by instance_id or let request_unit_stats find it
-						var p_idx = party_data.find(target)
+						var p_idx = target.get("index", -1)
 						if p_idx != -1:
 							request_unit_stats(p_idx)
 
@@ -159,6 +159,9 @@ func initialize_battle(mission_id: String) -> void:
 				battle_unit["chain_count"] = 0
 				battle_unit["last_hit_frame"] = -100
 				battle_unit["last_attacker_index"] = -1
+
+				battle_unit["team"] = "player"
+				battle_unit["index"] = party_data.size()
 
 				party_data.append(battle_unit)
 			else:
@@ -244,9 +247,16 @@ func execute_queued_action(attacker_index: int) -> void:
 			var target_team: String = attacker_data.get("queued_target_team", "enemy")
 			var target_idx: int = attacker_data.get("queued_target_index", 0)
 
+			var primary_target: Dictionary = {}
+			if target_team == "enemy":
+				if target_idx < 0 or target_idx >= enemy_units.size(): target_idx = 0
+				if enemy_units.size() > 0: primary_target = enemy_units[target_idx]
+			else:
+				if target_idx < 0 or target_idx >= player_units.size(): target_idx = 0
+				if player_units.size() > 0: primary_target = player_units[target_idx]
+
 			# Route the skill to the execution pipeline
-			# Note: We hardcode "player" here assuming only players use the UI queue right now
-			execute_parsed_skill(parsed_data, "player", attacker_index, target_team, target_idx)
+			execute_parsed_skill(parsed_data, attacker_data, primary_target)
 
 		_check_turn_progression()
 		return
@@ -264,15 +274,20 @@ func execute_queued_action(attacker_index: int) -> void:
 		
 		# Retrieve the actual queued target index
 		var target_index = attacker_data.get("queued_target_index", 0)
+		var target_team = attacker_data.get("queued_target_team", "enemy")
 		
 		var attack_frames = attacker_data.get("attack_frames", [30])
 		var attack_damage = attacker_data.get("attack_damage", [[100]])
 		
-		# Find internal index if needed
-		var p_idx = player_units.find(attacker_data)
-		var internal_attacker_index = p_idx if p_idx != -1 else attacker_index
+		var target_data: Dictionary = {}
+		if target_team == "enemy":
+			if target_index < 0 or target_index >= enemy_units.size(): target_index = 0
+			if enemy_units.size() > 0: target_data = enemy_units[target_index]
+		else:
+			if target_index < 0 or target_index >= player_units.size(): target_index = 0
+			if player_units.size() > 0: target_data = player_units[target_index]
 
-		_route_effect(dummy_effect, attack_damage, attack_frames, "player", internal_attacker_index, [target_index], "enemy")
+		_route_effect(dummy_effect, attack_damage, attack_frames, attacker_data, [target_data])
 
 func _check_turn_progression() -> void:
 	if not pending_hits.is_empty():
@@ -288,7 +303,7 @@ func _check_turn_progression() -> void:
 			# A living unit is not empty, has current_hp, and current_hp > 0
 			if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
 				# Find the original party index since player_units_acted_this_turn tracks UI party indices
-				var p_idx = party_data.find(unit)
+				var p_idx = unit.get("index", -1)
 				if p_idx != -1 and p_idx not in player_units_acted_this_turn:
 					all_acted = false
 					break
@@ -317,7 +332,9 @@ func _execute_enemy_turn() -> void:
 	if living_player_indices.size() > 0:
 		var random_idx: int = randi() % living_player_indices.size()
 		var target_index: int = living_player_indices[random_idx]
-		var target_unit: Dictionary = player_units[target_index]
+		var target_unit: Dictionary = {}
+		if target_index >= 0 and target_index < player_units.size():
+			target_unit = player_units[target_index]
 
 		# Let's assume enemy index 0 for now
 		var attacker_index: int = 0
@@ -351,7 +368,9 @@ func _execute_enemy_turn() -> void:
 		var attack_frames = [attack_delay_frames]
 		var attack_damage = [[100]]
 		
-		_route_effect(dummy_effect, attack_damage, attack_frames, "enemy", attacker_index, [target_index], "player")
+		var caster_data = enemy_units[attacker_index]
+
+		_route_effect(dummy_effect, attack_damage, attack_frames, caster_data, [target_unit])
 
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():
@@ -520,29 +539,32 @@ func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 			var selected_monster_data = monsters_in_dungeon[random_monster_idx]
 
 			var fully_hydrated_enemy = _generate_enemy_data(selected_monster_data)
+
+			fully_hydrated_enemy["team"] = "enemy"
+			fully_hydrated_enemy["index"] = enemy_units.size()
 			enemy_units.append(fully_hydrated_enemy)
 
 
-func _resolve_targets(target_area: int, target_type: int, caster_team: String, caster_index: int, primary_team: String, primary_index: int) -> Array:
-	var targets = []
+func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, primary_target: Dictionary) -> Array[Dictionary]:
+	var targets: Array[Dictionary] = []
 	var enemy_pool = enemy_units
-	var ally_pool = player_units if caster_team == "player" else enemy_units # Adjust if enemies cast buffs on themselves
+	var ally_pool = player_units if caster.get("team") == "player" else enemy_units # Adjust if enemies cast buffs on themselves
 
 	match target_area:
 		1: # Single Target
 			var pool = ally_pool if target_type in [2, 3, 4, 6] else enemy_units
-			if primary_index < pool.size():
-				targets.append(primary_index)
+			if primary_target.get("index", 0) < pool.size():
+				targets.append(primary_target)
 		2: # AOE
 			var pool = ally_pool if target_type in [2, 6] else enemy_units
-			for i in range(pool.size()):
-				targets.append(i)
+			for u in pool:
+				targets.append(u)
 		3: # Self
-			targets.append(caster_index)
+			targets.append(caster)
 
 	return targets
 
-func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_idx: int, primary_target_team: String, primary_target_idx: int) -> void:
+func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var effects = parsed_skill.get("effects", [])
 
 	for i in range(effects.size()):
@@ -550,7 +572,7 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_
 		var all_attack_damage = effect.get("attack_damage", [])
 		var all_attack_frames = effect.get("attack_frames", [])
 
-		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster_team, caster_idx, primary_target_team, primary_target_idx)
+		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster, primary_target)
 
 		# Convert "STAT_BOOST_PCT" to "_apply_stat_boost_pct"
 		var func_name = "_apply_" + effect.type.to_lower()
@@ -561,25 +583,21 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_
 		else:
 			push_warning("StatCalculator: No logic built for passive type: " + effect.type)
 		
-		_route_effect(effect, all_attack_damage, all_attack_frames, caster_team, caster_idx, actual_targets, primary_target_team)
+		_route_effect(effect, all_attack_damage, all_attack_frames, caster, actual_targets)
 
 
-func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster_team: String, caster_idx: int, targets: Array, target_team: String) -> void:
+func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster: Dictionary, targets: Array[Dictionary]) -> void:
 	match effect.get("type"):
 		"MAGIC_DAMAGE", "PHYSICAL_DAMAGE", "BASIC_ATTACK":
 			var modifier = effect.get("effect", {}).get("modifier", 100.0) / 100.0
 			
-			var active_roster = player_units if caster_team == "player" else enemy_units
-			var caster_data = active_roster[caster_idx]
-			var caster_stats = caster_data.get("final_stats", caster_data).get("stats", {}) # Fallback to base dict if final_stats missing
+			var caster_stats = caster.get("final_stats", caster).get("stats", {}) # Fallback to base dict if final_stats missing
 
-			for target_idx in targets:
-				var target_roster = enemy_units if target_team == "enemy" else player_units
-				var target_data = target_roster[target_idx]
-				var target_stats = target_data.get("final_stats", target_data)
+			for target in targets:
+				var target_stats = target.get("final_stats", target)
 
 				var raw_damage = EffectProcessor.calculate_raw_damage(effect.get("type"), modifier, caster_stats, target_stats)
-				var hit_payloads = EffectProcessor.generate_hit_payloads(raw_damage, attack_damage, attack_frames, caster_team, caster_idx, target_team, target_idx)
+				var hit_payloads = EffectProcessor.generate_hit_payloads(raw_damage, attack_damage, attack_frames, caster.get("team"), caster.get("index"), target.get("team"), target.get("index"))
 
 				# Add our current frame offset and push to the engine's hit queue
 				for hit in hit_payloads:

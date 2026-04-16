@@ -1,0 +1,194 @@
+{
+    "1": {
+        "type": "STAT_BOOST_PCT",
+        "keys": ["ATK", "DEF", "MAG", "SPR", "HP", "MP", "UNKNOWN"]
+    },
+    "2": {
+        "type": "STATUS_RESIIST",
+        "keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify"]
+    },
+    "3": {
+        "type": "ELEMENT_RESIST",
+        "keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"]
+    },
+    "4": {
+        "type": "",
+        "keys": [""]
+    },
+    "5": {
+        "type": "ENABLE_EQUIP",
+        "keys": ["equip_id"]
+    },
+    "6": {
+        "type": "EQUIP_CONDITIONAL_BOOST",
+        "keys": ["equip_id", "ATK", "DEF", "MAG", "SPR", "HP", "MP"]
+    },
+    "8": {
+        "type": "INTERCEPT",
+        "keys": ["condition", "", "reduce_phys", "reduce_mag", "chance_pct"]
+    },
+    "9": {
+        "type": "HEALING_ITEM_POWER",
+        "keys": ["pct"]
+    },
+    "10": {
+        "type": "AUTO_POTION",
+        "keys": [""]
+    },
+    "11": {
+        "type": "KILLER",
+        "keys": ["race_id", "phys_pct", "mag_pct"]
+    },
+    "12": {
+        "type": "COUNTER",
+        "keys": ["chance_pct", "phys", "mag"]
+    },
+    "13": {
+        "type": "EQUIPMENT_ATK",
+        "keys": ["pct", "???"]
+    },
+    "14": {
+        "type": "DUAL_WIELD",
+        "keys": []
+    },
+    "16": {
+        "type": "STEAL",
+        "keys": ["success_rate", "???"]
+    },
+    "17": {
+        "type": "JUMP",
+        "keys": ["pct"]
+    },
+    "18": {
+        "type": "CURE_AFTER_BATTLE",
+        "keys": ["poison", "blind", "sleep", "silence", "paralyze", "cConfusion", "disease", "petrify"]
+    },
+    "19": {
+        "type": "UNARMED_ATK",
+        "keys": ["pct"]
+    },
+    "20": {
+        "type": "COUNTER_CHANCE",
+        "keys": ["pct"]
+    },
+    "21": {
+        "type": "ESPER_DAMAGE",
+        "keys": ["pct"]
+    },
+    "22": {
+        "type": "EVASION",
+        "keys": ["pct"]
+    },
+    "24": {
+        "type": "AGGRO_INCREASE",
+        "keys": ["pct"]
+    },
+    "25": {
+        "type": "AGGRO_DECREASE",
+        "keys": ["pct"]
+    },
+    "26": {
+        "type": "BERSERK",
+        "keys": ["ATK", "turn_count"]
+    },
+    "28": {
+        "type": "GUARD_REGEN",
+        "keys": ["mod", "HP"]
+    },
+    "29": {
+        "type": "EXPLORATION_HEAL",
+        "keys": ["???", "HP", "???", "MP", "per_step"]
+    },
+    "30": {
+        "type": "DRAIN_MP",
+        "keys": ["pct"]
+    },
+    "31": {
+        "type": "LB_FILLRATE",
+        "keys": ["pct"]
+    },
+    "32": {
+        "type": "MP_PER_TURN",
+        "keys": ["pct"]
+    },
+    "33": {
+        "type": "LB_GAUGE_INCREASE",
+        "keys": ["amount"]
+    },
+    "35": {
+        "type": "AUTO_ABILITY",
+        "keys": ["ability_id"]
+    },
+    "37": {
+        "type": "GIL_INCREASE",
+        "keys": ["pct"]
+    },
+    "41": {
+        "type": "COUNTER_MAGIC_ATTACK",
+        "keys": ["chance_pct", "", ""]
+    },
+    "42": {
+        "type": "ABSORB_ELEMENT",
+        "keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"]
+    },
+    "43": {
+        "type": "EXPLORATION_ENCOUNTER",
+        "keys": ["pct"]
+    },
+    "44": {
+        "type": "NORMAL_ATTACK",
+        "keys": ["times"]
+    },
+    "45": {
+        "type": "EXP_INCREASE",
+        "keys": ["pct"]
+    },
+    "47": {
+        "type": "ITEM_DROPRATE",
+        "keys": ["normal", "rare"]
+    },
+    "48": {
+        "type": "SONG_MP_REDUCTION",
+        "keys": ["amount"]
+    },
+    "49": {
+        "type": "PHYS_COUNTER_ABILITY",
+        "keys": ["pct", "???", "ability_id"]
+    },
+    "50": {
+        "type": "MAG_COUNTER_ABILITY",
+        "keys": ["pct", "???", "ability_id"]
+    },
+    "51": {
+        "type": "FATAL_PREVENT",
+        "keys": ["HP_threshold", "pct", "???", "times"]
+    },
+    "54": {
+        "type": "MAGIC_EVASION",
+        "keys": ["", "pct"]
+    },
+    "55": {
+        "type": "SPECIAL_STATUS_RESIST",
+        "keys": ["atk_break", "def_break", "mag_break", "spr_break", "stop", "charm"]
+    },
+    "56": {
+        "type": "REVIVE_AUTO_ABILITY",
+        "keys": ["ability_id"]
+    },
+    "59": {
+        "type": "ST_MAGIC_COVER",
+        "keys": ["???", "???", "phys_pct", "mag_pct", "chance_pct"]
+    },
+    "68": {
+        "type": "LB_DAMAGE",
+        "keys": ["pct"]
+    },
+    "69": {
+        "type": "DUAL_WIELD_EQUIPMENT_STAT",
+        "keys": ["stat_id", "pct", "???"]
+    },
+    "77": {
+        "type": "MP_REDUCTION",
+        "keys": ["pct", "???", "???"]
+    }
+}

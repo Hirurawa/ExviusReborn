@@ -236,7 +236,8 @@ func execute_queued_action(attacker_index: int) -> void:
 				push_error("Error: Skill not found in database: " + action_name)
 				return
 
-			var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
+			#var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
+			var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(target_skill_data)
 			print("Parsed Skill: ", parsed_data)
 
 			# Attempt to get targeting data from the queue, fallback to enemy 0 for now
@@ -551,16 +552,26 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster_team: String, caster_
 
 		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster_team, caster_idx, primary_target_team, primary_target_idx)
 
+		# Convert "STAT_BOOST_PCT" to "_apply_stat_boost_pct"
+		var func_name = "_apply_" + effect.type.to_lower()
+		# Check if we have built the logic for this mechanic yet
+		if has_method(func_name):
+			# Dynamically call the function and pass the effect data
+			call(func_name, effect.effect)
+		else:
+			push_warning("StatCalculator: No logic built for passive type: " + effect.type)
+		
 		_route_effect(effect, all_attack_damage, all_attack_frames, caster_team, caster_idx, actual_targets, primary_target_team)
+
 
 func _route_effect(effect: Dictionary, attack_damage: Array, attack_frames: Array, caster_team: String, caster_idx: int, targets: Array, target_team: String) -> void:
 	match effect.get("type"):
 		"MAGIC_DAMAGE", "PHYSICAL_DAMAGE", "BASIC_ATTACK":
-			var modifier = effect.get("modifier", 1.0)
+			var modifier = effect.get("effect", {}).get("modifier", 100.0) / 100.0
 			
 			var active_roster = player_units if caster_team == "player" else enemy_units
 			var caster_data = active_roster[caster_idx]
-			var caster_stats = caster_data.get("final_stats", caster_data) # Fallback to base dict if final_stats missing
+			var caster_stats = caster_data.get("final_stats", caster_data).get("stats", {}) # Fallback to base dict if final_stats missing
 
 			for target_idx in targets:
 				var target_roster = enemy_units if target_team == "enemy" else player_units

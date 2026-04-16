@@ -43,6 +43,7 @@ func _populate_data() -> void:
 	level_label.text = "Level: %s" % current_unit_inst.get("level", 1)
 
 	var final_stats: Dictionary = current_unit_inst.get("final_stats", {})
+	final_stats = final_stats.get("stats", {})
 
 	hp_label.text = "HP: " + str(final_stats.get("HP", 0))
 	mp_label.text = "MP: " + str(final_stats.get("MP", 0))

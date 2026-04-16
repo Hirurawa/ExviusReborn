@@ -10,6 +10,18 @@ const RARITY_MAX_LEVELS: Dictionary = {
 	7: 120
 }
 
+func _apply_parsed_passives(parsed_effects: Array) -> void:
+	for effect in parsed_effects:
+		# Convert "STAT_BOOST_PCT" to "_apply_stat_boost_pct"
+		var func_name = "_apply_" + effect.type.to_lower()
+	
+	# Check if we have built the logic for this mechanic yet
+		if has_method(func_name):
+			# Dynamically call the function and pass the effect data
+			call(func_name, effect.effect)
+		else:
+			push_warning("StatCalculator: No logic built for passive type: " + effect.type)
+
 func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var final_profile = {
 		"stats": {

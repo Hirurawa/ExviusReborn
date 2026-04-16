@@ -1,0 +1,130 @@
+{
+    "1": {
+        "type": "PHYSICAL_DAMAGE",
+        "keys": ["", "", "", "", "", "", "modifier", ""]
+    },
+    "2": {
+        "type": "HEAL",
+        "keys": ["", "", "amount", "modifier", ""]
+    },
+    "3": {
+        "type": "STAT_BOOST_PCT",
+        "keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""]
+    },
+    "4": {
+        "type": "REVIVE",
+        "keys": ["HP_pct"]
+    },
+    "5": {
+        "type": "STATUS_CURE",
+        "keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify"]
+    },
+    "6": {
+        "type": "STATUS_INFLICT",
+        "keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "turn_count"]
+    },
+    "7": {
+        "type": "STATUS_RESIST",
+        "keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "", "turn_count"]
+    },
+    "8": {
+        "type": "REGEN",
+        "keys": ["modifier", "", "amount", "turn_count"]
+    },
+    "9": {
+        "type": "PCT_DAMAGE",
+        "keys": ["pct", "", "", ""]
+    },
+    "10": {
+        "type": "MP_DRAIN",
+        "keys": ["modifier", "chance_pct", ""]
+    },
+    "15": {
+        "type": "MAGIC_DAMAGE",
+        "keys": ["", "", "", "", "", "modifier", ""]
+    },
+    "17": {
+        "type": "MP_RESTORE",
+        "keys": ["amount"]
+    },
+    "18": {
+        "type": "PHYS_DAMAGE_REDUCE",
+        "keys": ["pct", "turn_count", "", ""]
+    },
+    "19": {
+        "type": "MAG_DAMAGE_REDUCE",
+        "keys": ["pct", "turn_count", "", ""]
+    },
+    "24": {
+        "type": "STAT_BREAK",
+        "keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""]
+    },
+    "25": {
+        "type": "DRAIN",
+        "keys": ["pct", "modifier", ""]
+    },
+    "27": {
+        "type": "AUTO_REVIVE",
+        "keys": ["HP_pct", "turn_count", ""]
+    },
+    "30": {
+        "type": "MP_REGEN",
+        "keys": ["modifier", "", "MP_amount", "turn_count"]
+    },
+    "33": {
+        "type": "ELEMENT_RESISTANCE",
+        "keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "", "turn_count"]
+    },
+    "35": {
+        "type": "KO",
+        "keys": ["pct"]
+    },
+    "41": {
+        "type": "FIXED_DAMAGE",
+        "keys": ["amount"]
+    },
+    "54": {
+        "type": "DODGE",
+        "keys": ["amount", "turn_count"]
+    },
+    "59": {
+        "type": "DISPEL",
+        "keys": [""]
+    },
+    "63": {
+        "type": "LB_FILLRATE",
+        "keys": ["pct", "turn_count"]
+    },
+    "64": {
+        "type": "PCT_RESTORE",
+        "keys": ["HP", "MP"]
+    },
+    "86": {
+        "type": "REFLECT",
+        "keys": ["", "spell_count", "turn_count"]
+    },
+    "95": {
+        "type": "PHYS_ELEMENT",
+        "keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "turn_count", ""]
+    },
+    "101": {
+        "type": "DAMAGE_REDUCE",
+        "keys": ["pct", "turn_count", "", ""]
+    },
+    "103": {
+        "type": "SPR_DAMAGE",
+        "keys": ["", "", "modifier"]
+    },
+    "111": {
+        "type": "REMOVE_STAT_DEBUFF",
+        "keys": ["ATK", "DEF", "MAG", "SPR", "STOP", "CHARM"]
+    },
+    "120": {
+        "type": "LB_DAMAGE",
+        "keys": ["pct", "turn_count", "", ""]
+    },
+    "127": {
+        "type": "SHIELD",
+        "keys": ["HP", "turn_count", ""]
+    }
+}

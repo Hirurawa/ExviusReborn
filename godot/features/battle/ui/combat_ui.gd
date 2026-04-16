@@ -208,6 +208,7 @@ func _close_action_menu() -> void:
 func _create_action_button(action_name: String, sub_text: String) -> Button:
 	var btn = Button.new()
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	btn.custom_minimum_size = Vector2(0, 50)
 
 	var hbox = HBoxContainer.new()
@@ -249,11 +250,16 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_action_menu_vbox.add_child(scroll)
 
 	var grid = GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
 	scroll.add_child(grid)
 
 	for opt in options:
@@ -262,6 +268,8 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 
 		if is_skill:
 			var btn = SkillEntryButtonScene.instantiate()
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var skill_data = opt.get("skill_data", {})
 			var skill_level = opt.get("level", -1)
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)

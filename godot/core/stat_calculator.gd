@@ -1,5 +1,9 @@
 extends Node
 
+const CORE_STATS = ["HP", "MP", "ATK", "DEF", "MAG", "SPR", "INT"]
+const ELEMENTS = ["FIRE", "ICE", "LIGHTNING", "WATER", "WIND", "EARTH", "LIGHT", "DARK"]
+const STATUSES = ["POISON", "BLIND", "SLEEP", "SILENCE", "PARALYSIS", "CONFUSION", "DISEASE", "PETRIFY"]
+
 const RARITY_MAX_LEVELS: Dictionary = {
 	1: 15,
 	2: 30,
@@ -30,7 +34,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			"ATK": 0,
 			"DEF": 0,
 			"MAG": 0,
-			"SPR": 0
+			"SPR": 0,
+			"INT": 0
 		},
 		"element_resist": {},
 		"status_resist": {},
@@ -41,6 +46,18 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		}
 	}
 	
+	var pct_mods = {}
+	for stat in CORE_STATS:
+		pct_mods[stat] = 0
+
+	var element_resists = {}
+	for el in ELEMENTS:
+		element_resists[el] = 0
+
+	var status_resists = {}
+	for st in STATUSES:
+		status_resists[st] = 0
+
 	assert(unit_instance.has("current_rarity"), "CRITICAL ERROR: unit_instance is missing current_rarity!")
 	if not unit_instance.has("current_rarity"): push_error("CRITICAL ERROR: unit_instance is missing current_rarity!")
 	var rarity = int(unit_instance["current_rarity"])
@@ -53,9 +70,16 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	var max_level = RARITY_MAX_LEVELS[rarity]
 	
-	# Seed innate resistances
-	final_profile["element_resist"] = unit_instance.get("element_resist", {}).duplicate()
-	final_profile["status_resist"] = unit_instance.get("status_resist", {}).duplicate()
+	# Seed innate resistances into pools
+	var innate_elements = unit_instance.get("element_resist", {})
+	for el in innate_elements.keys():
+		if element_resists.has(el):
+			element_resists[el] += innate_elements[el]
+
+	var innate_statuses = unit_instance.get("status_resist", {})
+	for st in innate_statuses.keys():
+		if status_resists.has(st):
+			status_resists[st] += innate_statuses[st]
 	
 	var base_calculated = {
 		"HP": 0.0,
@@ -137,11 +161,44 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 
 	# TODO: Parse effects_raw for pct_mods here
 
+	var active_buffs = {}
+	var active_debuffs = {}
+
+	for effect in unit_instance.get("active_effects", []):
+		var modifiers = effect.get("modifiers", {})
+		for key in modifiers.keys():
+			var val = modifiers[key]
+
+			# If it's a positive buff, keep the highest value
+			if val > 0:
+				active_buffs[key] = max(active_buffs.get(key, 0), val)
+			# If it's a negative debuff, keep the lowest (most negative) value
+			elif val < 0:
+				active_debuffs[key] = min(active_debuffs.get(key, 0), val)
+
+	var all_active_mods = active_buffs.duplicate()
+	for key in active_debuffs.keys():
+		all_active_mods[key] = all_active_mods.get(key, 0) + active_debuffs[key]
+
+	for key in all_active_mods.keys():
+		var val = all_active_mods[key]
+		if pct_mods.has(key):
+			pct_mods[key] += val
+		elif element_resists.has(key):
+			element_resists[key] += val
+		elif status_resists.has(key):
+			status_resists[key] += val
+		else:
+			push_warning("StatCalculator: Unhandled modifier -> " + key)
+
 	for stat_name in final_profile["stats"].keys():
-		var base = base_calculated[stat_name]
-		var total_flat = flat_mods[stat_name]
+		var base = base_calculated.get(stat_name, 0.0)
+		var total_flat = flat_mods.get(stat_name, 0)
 		
-		var final_val = base + total_flat
+		var final_val = (base * (1.0 + (float(pct_mods.get(stat_name, 0)) / 100.0))) + total_flat
 		final_profile["stats"][stat_name] = int(round(final_val))
 		
+	final_profile["element_resist"] = element_resists
+	final_profile["status_resist"] = status_resists
+
 	return final_profile

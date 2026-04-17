@@ -9,6 +9,7 @@ extends PanelContainer
 
 signal open_skill_menu(unit_index: int)
 signal open_item_menu(unit_index: int)
+signal panel_tapped(unit_index: int)
 
 var _my_index: int = -1
 var _is_dragging: bool = false
@@ -36,7 +37,7 @@ func _gui_input(event: InputEvent) -> void:
 			_drag_start_position = event.position
 		else:
 			if not _is_dragging:
-				_battle_manager.execute_queued_action(_my_index)
+				panel_tapped.emit(_my_index)
 			_is_dragging = false
 
 	elif event is InputEventScreenTouch:
@@ -45,7 +46,7 @@ func _gui_input(event: InputEvent) -> void:
 			_drag_start_position = event.position
 		else:
 			if not _is_dragging:
-				_battle_manager.execute_queued_action(_my_index)
+				panel_tapped.emit(_my_index)
 			_is_dragging = false
 
 	elif (event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or event is InputEventScreenDrag:

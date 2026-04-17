@@ -35,6 +35,12 @@ var _menu_tween: Tween
 var _is_dragging_menu: bool = false
 var _menu_drag_start_position: Vector2
 
+var _is_ally_targeting_mode: bool = false
+var _pending_skill_action_id: String = ""
+var _pending_skill_action_name: String = ""
+var _pending_skill_action_type: int = 0
+var _cancel_target_button: Button
+
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
 		return _texture_cache[path]
@@ -66,6 +72,47 @@ func _ready() -> void:
 	enemy_region.add_child(_hit_flash)
 
 	_setup_action_menu()
+	_setup_cancel_target_button()
+
+func _enter_ally_selection_state(action_type: int, action_name: String, action_id: String) -> void:
+	_is_ally_targeting_mode = true
+	_pending_skill_action_type = action_type
+	_pending_skill_action_name = action_name
+	_pending_skill_action_id = action_id
+
+	if _cancel_target_button:
+		_cancel_target_button.show()
+
+	for p in _active_panels:
+		p.modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
+
+func _exit_ally_selection_state() -> void:
+	_is_ally_targeting_mode = false
+	_pending_skill_action_type = 0
+	_pending_skill_action_name = ""
+	_pending_skill_action_id = ""
+
+	if _cancel_target_button:
+		_cancel_target_button.hide()
+
+	# Reset panels visually
+	for p in _active_panels:
+		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		p.update_action_visuals()
+
+func _setup_cancel_target_button() -> void:
+	_cancel_target_button = Button.new()
+	_cancel_target_button.text = "Cancel Target"
+	_cancel_target_button.custom_minimum_size = Vector2(200, 60)
+	_cancel_target_button.hide()
+
+	# Center it near the top of the bottom section
+	_cancel_target_button.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_cancel_target_button.position.y = -80 # Move it up above the panels
+
+	_cancel_target_button.pressed.connect(_exit_ally_selection_state)
+
+	bottom_ui_wrapper.add_child(_cancel_target_button)
 
 func _setup_action_menu() -> void:
 	_action_menu_panel = PanelContainer.new()
@@ -276,11 +323,23 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)
 
 			btn.pressed.connect(func():
-				battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
-				for p in _active_panels:
-					if p._my_index == _menu_target_unit_index:
-						p.update_action_visuals()
-				_close_action_menu()
+				var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(skill_data)
+				var needs_ally_target = false
+
+				for effect in parsed_data.get("effects", []):
+					if effect.get("target_area", 1) == 1 and effect.get("target_type", 1) in [2, 3, 4, 6]:
+						needs_ally_target = true
+						break
+
+				if needs_ally_target:
+					_enter_ally_selection_state(action_type, opt.get("name", ""), action_id)
+					_close_action_menu()
+				else:
+					battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
+					for p in _active_panels:
+						if p._my_index == _menu_target_unit_index:
+							p.update_action_visuals()
+					_close_action_menu()
 			)
 			grid.add_child(btn)
 		else:
@@ -400,6 +459,7 @@ func _on_battle_state_ready() -> void:
 			panel.setup(party_idx)
 			panel.open_skill_menu.connect(_open_skill_menu)
 			panel.open_item_menu.connect(_open_item_menu)
+			panel.panel_tapped.connect(_on_panel_tapped)
 			_active_panels.append(panel)
 
 			# Add Combat Sprite
@@ -475,8 +535,32 @@ func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent
 				var enemy_sprite = wrapper.get_child(0)
 				_play_enemy_death(enemy_sprite)
 
+func _on_panel_tapped(unit_index: int) -> void:
+	if _is_ally_targeting_mode:
+		# Finalize targeting
+		if unit_index >= 0 and unit_index < battle_manager.party_data.size():
+			var unit_data = battle_manager.party_data[_menu_target_unit_index]
+			if not unit_data.is_empty():
+				unit_data["queued_target_team"] = "player"
+				unit_data["queued_target_index"] = unit_index
+
+				# Now queue the skill
+				battle_manager.set_queued_action(_menu_target_unit_index, _pending_skill_action_type, _pending_skill_action_name, _pending_skill_action_id)
+				for p in _active_panels:
+					if p._my_index == _menu_target_unit_index:
+						p.update_action_visuals()
+
+		_exit_ally_selection_state()
+	else:
+		# Normal execution
+		battle_manager.execute_queued_action(unit_index)
+
 func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _is_ally_targeting_mode:
+			_exit_ally_selection_state()
+			return
+
 		print("Enemy tapped! Global target set to index: ", enemy_index)
 
 		_current_target_enemy_index = enemy_index

@@ -20,8 +20,8 @@ func _get_stat_safe(stats: Dictionary, stat_name: String, default_value: int = 1
 
 # --- ---
 func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
-	var all_attack_damage = parsed_effect.get("attack_damage", [])
-	var all_attack_frames = parsed_effect.get("attack_frames", [])
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
 	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
 
 	var caster_stats = caster.get("final_stats", caster).get("stats", {})
@@ -36,14 +36,13 @@ func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targe
 		var raw_damage = (float(ATK * ATK) / float(max(1, DEF))) * modifier
 		var hit_payloads = EffectProcessor.generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
 		
-		for hit in hit_payloads:
-			all_hit_payloads.append(hit)
+		all_hit_payloads.append_array(hit_payloads)
 
 	return all_hit_payloads
 
 func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
-	var all_attack_damage = parsed_effect.get("attack_damage", [])
-	var all_attack_frames = parsed_effect.get("attack_frames", [])
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
 	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
 
 	var caster_stats = caster.get("final_stats", caster).get("stats", {})
@@ -58,14 +57,13 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 		var raw_damage = (float(MAG * MAG) / float(max(1, SPR))) * modifier
 		var hit_payloads = EffectProcessor.generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
 
-		for hit in hit_payloads:
-			all_hit_payloads.append(hit)
+		all_hit_payloads.append_array(hit_payloads)
 
 	return all_hit_payloads
 
 func _apply_heal(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
-	var all_attack_damage = parsed_effect.get("attack_damage", [])
-	var all_attack_frames = parsed_effect.get("attack_frames", [])
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
 	var effect = parsed_effect.get("effect", {})
 	var modifier = effect.get("modifier", 100.0) / 100.0
 
@@ -80,11 +78,29 @@ func _apply_heal(parsed_effect: Dictionary, caster: Dictionary, targets: Array) 
 	
 	for target in targets:
 		var hit_payloads = EffectProcessor.generate_effect_payloads(parsed_effect.get("type"), raw_heal, all_attack_damage, all_attack_frames, caster, target)
-		for hit in hit_payloads:
-			all_hit_payloads.append(hit)
+		all_hit_payloads.append_array(hit_payloads)
 
 	return all_hit_payloads
 
 func _apply_stat_boost_pct(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
-	print("STAT BOOST %")
-	return []
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var effect = parsed_effect.get("effect", {})
+	
+	var duration = effect.get("turn_count", 1)
+
+	var stats_to_buff = effect.duplicate()
+	stats_to_buff.erase("turn_count") 
+
+	var extra_data = {
+		"duration": duration,
+		"modifiers": stats_to_buff
+	}
+	
+	var all_hit_payloads: Array[Dictionary] = []
+	
+	for target in targets:
+		var hit_payloads = EffectProcessor.generate_effect_payloads(parsed_effect.get("type"), 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
+		all_hit_payloads.append_array(hit_payloads)
+	
+	return all_hit_payloads

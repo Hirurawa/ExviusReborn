@@ -16,6 +16,7 @@ var _is_dragging: bool = false
 var _drag_start_position: Vector2 = Vector2.ZERO
 var _current_queued_action: int = 0 # 0 is ATTACK
 var _battle_manager: Node = null
+var _has_acted: bool = false
 
 func _ready() -> void:
 	_battle_manager = get_tree().root.find_child("BattleManager", true, false)
@@ -29,6 +30,9 @@ func _ready() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:
+		return
+
+	if _my_index in _battle_manager.player_units_acted_this_turn:
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -79,10 +83,12 @@ func setup(unit_index: int) -> void:
 
 func _on_unit_acted(index: int) -> void:
 	if index == _my_index:
+		_has_acted = true
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 		name_label.text = name_label.text.split(" - ")[0] # Clean up action text
 
 func _on_turn_changed(_new_turn: int) -> void:
+	_has_acted = false
 	_current_queued_action = 0 # ATTACK is 0, handled safely via variable initialization
 	if _battle_manager:
 		_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)
@@ -122,6 +128,10 @@ func update_action_visuals() -> void:
 
 func _update_visual_state() -> void:
 	if not _battle_manager:
+		return
+
+	if _has_acted:
+		modulate = Color(0.5, 0.5, 0.5, 1.0)
 		return
 
 	var base_name = name_label.text.split(" - ")[0]

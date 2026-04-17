@@ -1,0 +1,48 @@
+extends Node
+class_name ResultProcessor
+
+func apply_receipt(receipt: Dictionary, target: Dictionary) -> void:
+	var type_str = receipt.get("type", "")
+	if type_str == "":
+		push_warning("ResultProcessor: Receipt has no type.")
+		return
+
+	var func_name = "_resolve_" + type_str.to_lower()
+
+	if has_method(func_name):
+		call(func_name, receipt, target)
+	else:
+		push_warning("ResultProcessor: Missing handler for receipt type: " + type_str)
+
+func _resolve_damage(receipt: Dictionary, target: Dictionary) -> void:
+	var amount = receipt.get("amount", 0)
+	var current_hp = target.get("current_hp", 0)
+	target["current_hp"] = maxi(0, current_hp - amount)
+
+func _resolve_heal(receipt: Dictionary, target: Dictionary) -> void:
+	var amount = receipt.get("amount", 0)
+	var current_hp = target.get("current_hp", 0)
+	var max_hp = target.get("max_hp", 0)
+	target["current_hp"] = mini(max_hp, current_hp + amount)
+
+func _resolve_buff(receipt: Dictionary, target: Dictionary) -> void:
+	if not target.has("active_effects"):
+		target["active_effects"] = []
+
+	var effect = {
+		"duration": receipt.get("duration", 3),
+		"modifiers": receipt.get("modifiers", {})
+	}
+	target["active_effects"].append(effect)
+	StatCalculator.calculate_final_stats(target)
+
+func _resolve_debuff(receipt: Dictionary, target: Dictionary) -> void:
+	if not target.has("active_effects"):
+		target["active_effects"] = []
+
+	var effect = {
+		"duration": receipt.get("duration", 3),
+		"modifiers": receipt.get("modifiers", {})
+	}
+	target["active_effects"].append(effect)
+	StatCalculator.calculate_final_stats(target)

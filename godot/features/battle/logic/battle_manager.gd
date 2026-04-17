@@ -19,7 +19,7 @@ enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
 
 @onready var action_processor = $ActionProcessor
-
+#var action_processor
 var current_state: BattleState = BattleState.INIT
 var player_units_acted_this_turn: Array = []
 var current_battle_frame: int = 0
@@ -276,7 +276,7 @@ func execute_queued_action(attacker_index: int) -> void:
 		
 		# Build a dummy effect so it goes through our standard pipeline
 		var dummy_effect = {
-			"type": "BASIC_ATTACK",
+			"type": "PHYSICAL_DAMAGE",
 			"modifier": 1.0,
 			"target_area": 1,
 			"target_type": 1
@@ -362,7 +362,7 @@ func _execute_enemy_turn() -> void:
 		enemy_action_started.emit(attacker_index, CombatAction.ATTACK)
 
 		var dummy_effect = {
-			"type": "BASIC_ATTACK",
+			"type": "PHYSICAL_DAMAGE",
 			"modifier": 1.0,
 			"target_area": 1,
 			"target_type": 1

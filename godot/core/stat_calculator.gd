@@ -1,6 +1,6 @@
 extends Node
 
-const CORE_STATS = ["HP", "MP", "ATK", "DEF", "MAG", "SPR", "INT"]
+const CORE_STATS = ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]
 const ELEMENTS = ["FIRE", "ICE", "LIGHTNING", "WATER", "WIND", "EARTH", "LIGHT", "DARK"]
 const STATUSES = ["POISON", "BLIND", "SLEEP", "SILENCE", "PARALYSIS", "CONFUSION", "DISEASE", "PETRIFY"]
 
@@ -34,8 +34,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			"ATK": 0,
 			"DEF": 0,
 			"MAG": 0,
-			"SPR": 0,
-			"INT": 0
+			"SPR": 0
 		},
 		"element_resist": {},
 		"status_resist": {},
@@ -72,14 +71,16 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	
 	# Seed innate resistances into pools
 	var innate_elements = unit_instance.get("element_resist", {})
-	for el in innate_elements.keys():
-		if element_resists.has(el):
-			element_resists[el] += innate_elements[el]
+	if typeof(innate_elements) == TYPE_DICTIONARY:
+		for el in innate_elements.keys():
+			if element_resists.has(el):
+				element_resists[el] += innate_elements[el]
 
 	var innate_statuses = unit_instance.get("status_resist", {})
-	for st in innate_statuses.keys():
-		if status_resists.has(st):
-			status_resists[st] += innate_statuses[st]
+	if typeof(innate_statuses) == TYPE_DICTIONARY:
+		for st in innate_statuses.keys():
+			if status_resists.has(st):
+				status_resists[st] += innate_statuses[st]
 	
 	var base_calculated = {
 		"HP": 0.0,

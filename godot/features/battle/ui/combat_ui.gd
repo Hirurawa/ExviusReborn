@@ -536,6 +536,9 @@ func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent
 				_play_enemy_death(enemy_sprite)
 
 func _on_panel_tapped(unit_index: int) -> void:
+	if unit_index in battle_manager.player_units_acted_this_turn:
+		return
+
 	if _is_ally_targeting_mode:
 		# Finalize targeting
 		if unit_index >= 0 and unit_index < battle_manager.party_data.size():

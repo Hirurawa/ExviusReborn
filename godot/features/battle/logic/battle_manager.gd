@@ -60,7 +60,7 @@ func _physics_process(_delta: float) -> void:
 		if hit.get("execute_on_frame", 0) <= current_battle_frame:
 			var target_team: String = hit.get("target_team", "enemy")
 			var target_index: int = hit.get("target_index", 0)
-			var damage: int = hit.get("damage", 0)
+			var damage: int = hit.get("amount", 0)
 			var attacker_team: String = hit.get("attacker_team", "player")
 			var attacker_index: int = hit.get("attacker_index", 0)
 

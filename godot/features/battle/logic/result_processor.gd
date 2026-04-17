@@ -34,8 +34,8 @@ func _resolve_buff(receipt: Dictionary, target: Dictionary) -> void:
 		"modifiers": receipt.get("modifiers", {})
 	}
 	target["active_effects"].append(effect)
-	StatCalculator.calculate_final_stats(target)
-
+	target["final_stats"] = StatCalculator.calculate_final_stats(target)
+	
 func _resolve_debuff(receipt: Dictionary, target: Dictionary) -> void:
 	if not target.has("active_effects"):
 		target["active_effects"] = []
@@ -45,4 +45,4 @@ func _resolve_debuff(receipt: Dictionary, target: Dictionary) -> void:
 		"modifiers": receipt.get("modifiers", {})
 	}
 	target["active_effects"].append(effect)
-	StatCalculator.calculate_final_stats(target)
+	target["final_stats"] = StatCalculator.calculate_final_stats(target)

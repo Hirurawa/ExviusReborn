@@ -155,8 +155,9 @@ func initialize_battle(mission_id: String) -> void:
 
 				# Use StatCalculator to get accurate max HP and MP
 				var final_stats = battle_unit.get("final_stats", {})
-				if final_stats.is_empty():
-					final_stats = StatCalculator.calculate_final_stats(battle_unit)
+				
+				battle_unit["final_stats"] = StatCalculator.calculate_final_stats(battle_unit)
+				final_stats = StatCalculator.calculate_final_stats(battle_unit)
 					
 				final_stats = final_stats["stats"]
 				

@@ -70,17 +70,18 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var max_level = RARITY_MAX_LEVELS[rarity]
 	
 	# Seed innate resistances into pools
-	var innate_elements = unit_instance.get("element_resist", {})
-	if typeof(innate_elements) == TYPE_DICTIONARY:
-		for el in innate_elements.keys():
-			if element_resists.has(el):
-				element_resists[el] += innate_elements[el]
+	var innate_elements = unit_instance.get("element_resist", [])
+	if typeof(innate_elements) == TYPE_ARRAY:
+		# Use min() to prevent out-of-bounds crashes if the datamine array is too long/short
+		for i in range(min(innate_elements.size(), ELEMENTS.size())):
+			var element_name = ELEMENTS[i]
+			element_resists[element_name] += innate_elements[i]
 
-	var innate_statuses = unit_instance.get("status_resist", {})
-	if typeof(innate_statuses) == TYPE_DICTIONARY:
-		for st in innate_statuses.keys():
-			if status_resists.has(st):
-				status_resists[st] += innate_statuses[st]
+	var innate_statuses = unit_instance.get("status_resist", [])
+	if typeof(innate_statuses) == TYPE_ARRAY:
+		for i in range(min(innate_statuses.size(), STATUSES.size())):
+			var status_name = STATUSES[i]
+			status_resists[status_name] += innate_statuses[i]
 	
 	var base_calculated = {
 		"HP": 0.0,

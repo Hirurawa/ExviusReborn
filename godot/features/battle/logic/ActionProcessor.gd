@@ -100,7 +100,7 @@ func _apply_stat_boost_pct(parsed_effect: Dictionary, caster: Dictionary, target
 	var all_hit_payloads: Array[Dictionary] = []
 	
 	for target in targets:
-		var hit_payloads = EffectProcessor.generate_effect_payloads(parsed_effect.get("type"), 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
+		var hit_payloads = EffectProcessor.generate_effect_payloads("BUFF", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
 		all_hit_payloads.append_array(hit_payloads)
 	
 	return all_hit_payloads

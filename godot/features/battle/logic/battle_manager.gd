@@ -284,7 +284,7 @@ func execute_queued_action(attacker_index: int) -> void:
 		
 		# Build a dummy effect so it goes through our standard pipeline
 		var dummy_effect = {
-			"type": "DAMAGE",
+			"type": "PHYSICAL_DAMAGE",
 			"modifier": 1.0,
 			"target_area": 1,
 			"target_type": 1
@@ -370,7 +370,7 @@ func _execute_enemy_turn() -> void:
 		enemy_action_started.emit(attacker_index, CombatAction.ATTACK)
 
 		var dummy_effect = {
-			"type": "DAMAGE",
+			"type": "PHYSICAL_DAMAGE",
 			"modifier": 1.0,
 			"target_area": 1,
 			"target_type": 1

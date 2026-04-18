@@ -22,8 +22,8 @@ func setup(unit_data: Dictionary) -> void:
 	var current_mp = unit_data.get("current_mp", 0)
 
 	var final_stats = unit_data.get("final_stats", {})
-	var max_hp = final_stats.get("max_hp", 0)
-	var max_mp = final_stats.get("max_mp", 0)
+	var max_hp = unit_data.get("max_hp", 0)
+	var max_mp = unit_data.get("max_mp", 0)
 
 	text_content += "[b][u]%s[/u][/b]\n" % unit_name
 	text_content += "HP: %d / %d\n" % [current_hp, max_hp]

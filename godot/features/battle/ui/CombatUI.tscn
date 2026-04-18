@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://ce0yln5qdskms" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
 [ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
 [ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/ActionProcessor.gd" id="3_yiesy"]
-[ext_resource type="PackedScene" uid="uid://unitinfopopupuid" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
+[ext_resource type="PackedScene" uid="uid://eupai3x1p8wt" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
 
 [node name="CombatUI" type="Control" unique_id=993553313]
 layout_mode = 3
@@ -62,7 +62,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="EnemiesContainer" type="HBoxContainer" parent="MainLayout/TopSection/EnemyArea/EnemyRegion" unique_id=806441381]
+[node name="EnemiesContainer" type="VBoxContainer" parent="MainLayout/TopSection/EnemyArea/EnemyRegion" unique_id=1535255836]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -235,7 +235,7 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 48
 text = " / 3"
 
-[node name="UnitInfoPopup" parent="." instance=ExtResource("4_popup")]
+[node name="UnitInfoPopup" parent="." unique_id=696240222 instance=ExtResource("4_popup")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1

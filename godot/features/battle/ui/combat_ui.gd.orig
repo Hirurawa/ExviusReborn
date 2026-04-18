@@ -10,7 +10,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var rewards_popup: AcceptDialog = %RewardsPopup
 
 @onready var enemy_region: Control = %EnemyRegion
-@onready var enemies_container: VBoxContainer = %EnemiesContainer
+@onready var enemies_container: HBoxContainer = %EnemiesContainer
 @onready var turn_label: Label = %TurnLabel
 @onready var player_sprites_grid: GridContainer = %PlayerSpritesGrid
 @onready var chain_count_label: Label = %ChainCountLabel
@@ -65,7 +65,7 @@ func _ready() -> void:
 	battle_manager.mission_cleared.connect(_on_mission_completed)
 	DataManager.mission_failed.connect(_on_mission_failed)
 
-	
+
 	_hit_flash = ColorRect.new()
 	_hit_flash.color = Color(1.0, 0.0, 0.0, 0.0)
 	_hit_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -396,13 +396,12 @@ func _on_battle_state_ready() -> void:
 		wrapper.name = "EnemyWrapper_" + str(i)
 		wrapper.custom_minimum_size = Vector2(100, 100)
 		wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		enemies_container.add_child(wrapper)
 
 		var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 		enemy_sprite.name = "EnemyCombatSprite_" + str(i)
-		enemy_sprite.expand_mode = TextureRect.EXPAND_KEEP_SIZE
-		enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		enemy_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 		wrapper.add_child(enemy_sprite)
@@ -410,7 +409,7 @@ func _on_battle_state_ready() -> void:
 
 		var is_staggered = (i % 2 != 0)
 		if is_staggered:
-			enemy_sprite.position.x += 30
+			enemy_sprite.position.y += 30
 
 		# Connect click input for targeting
 		enemy_sprite.gui_input.connect(Callable(self, "_on_enemy_clicked").bind(i))
@@ -492,7 +491,7 @@ func _play_enemy_death(inner_sprite: Node) -> void:
 		var old_shake = inner_sprite.get_meta("shake_tween")
 		if old_shake and old_shake.is_valid():
 			old_shake.kill()
-			
+
 	# 2. Kill any existing fade (just in case)
 	if inner_sprite.has_meta("fade_tween"):
 		var old_fade = inner_sprite.get_meta("fade_tween")
@@ -509,22 +508,22 @@ func _play_enemy_death(inner_sprite: Node) -> void:
 	# 4. The Fade Tween
 	var fade_tween = create_tween()
 	inner_sprite.set_meta("fade_tween", fade_tween)
-	
+
 	var fade_time = 0.4
 	fade_tween.tween_property(inner_sprite, "modulate:a", 0.0, fade_time)
 	fade_tween.tween_callback(inner_sprite.hide)
-	
+
 	# 5. The Shake Tween
 	var shake_tween = create_tween()
 	inner_sprite.set_meta("shake_tween", shake_tween)
-	
+
 	shake_tween.set_loops(4)
 	shake_tween.tween_property(inner_sprite, "position:x", orig_x - 15, 0.05)
 	shake_tween.tween_property(inner_sprite, "position:x", orig_x + 15, 0.05)
-	
+
 	# Optional: Snap it back exactly to center when the loops finish
 	shake_tween.finished.connect(func(): inner_sprite.position.x = orig_x)
-	
+
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
 	if enemy_index == _current_target_enemy_index:
 		enemy_hp_bar.max_value = max_hp

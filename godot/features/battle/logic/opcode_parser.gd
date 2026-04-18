@@ -19,12 +19,16 @@ static func parse_skill_improved(skill_data: Dictionary) -> Dictionary:
 		var target_type: int = int(effect_data[1])
 		
 		var current_attack_damage: Array = []
-		if idx < attack_damage.size():
-			current_attack_damage = attack_damage[idx]
+		#if idx < attack_damage.size():
+			#current_attack_damage = attack_damage[idx]
+		if attack_damage.size() > 0:
+			current_attack_damage = attack_damage[idx] if idx < attack_damage.size() else attack_damage[0]
 			
 		var current_attack_frames: Array = []
-		if idx < attack_frames.size():
-			current_attack_frames = attack_frames[idx]
+		#if idx < attack_frames.size():
+			#current_attack_frames = attack_frames[idx]
+		if attack_frames.size() > 0:
+			current_attack_frames = attack_frames[idx] if idx < attack_frames.size() else attack_frames[0]
 		
 		var parsed_effect: Dictionary = {
 			"type": "",
@@ -44,7 +48,7 @@ static func parse_skill_improved(skill_data: Dictionary) -> Dictionary:
 			var schema = SKILL_SCHEMA.get(str(opcode))
 			parsed_effect["type"] = schema["type"]
 
-			# Map the payload to the keys (Your exact idea)
+			# Map the payload to the keys
 			for i in range(min(schema["keys"].size(), payload.size())):
 				var key = schema["keys"][i]
 				var value = payload[i]

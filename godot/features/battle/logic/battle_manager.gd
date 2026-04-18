@@ -67,7 +67,7 @@ func _physics_process(_delta: float) -> void:
 			var attacker_team: String = hit.get("attacker_team", "player")
 			var attacker_index: int = hit.get("attacker_index", 0)
 
-			var target_array = enemy_units if target_team == "enemy" else player_units
+			var target_array = enemy_units if target_team == "enemy" else party_data
 			var final_damage: int = damage
 			var chain_count_emitted: int = 0
 
@@ -582,24 +582,52 @@ func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 			enemy_units.append(fully_hydrated_enemy)
 
 
+# Helper function to grab only living units
+static func _get_living_units(team_array: Array) -> Array:
+	var living = []
+	for unit in team_array:
+		if not unit.is_empty() and unit.get("current_hp", 0) > 0:
+			living.append(unit)
+	return living
+
 func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, primary_target: Dictionary) -> Array[Dictionary]:
 	var targets: Array[Dictionary] = []
 	var enemy_pool = enemy_units
 	var ally_pool = player_units if caster.get("team") == "player" else enemy_units # Adjust if enemies cast buffs on themselves
-
-	match target_area:
-		1: # Single Target
-			var pool = ally_pool if target_type in [2, 3, 4, 6] else enemy_units
-			if primary_target.get("index", 0) < pool.size():
-				targets.append(primary_target)
-		2: # AOE
-			var pool = ally_pool if target_type in [2, 6] else enemy_units
-			for u in pool:
-				targets.append(u)
-		3: # Self
-			targets.append(caster)
-
-	return targets
+	
+	# TYPE 3: SELF
+	if target_type == 3:
+		return [caster]
+	
+	# TYPE 1: ENEMY
+	if target_type == 1:
+		var living_enemies = _get_living_units(enemy_pool)
+		if living_enemies.is_empty(): return [] # Win condition safety
+		
+		if target_area == 2: # AOE
+			return living_enemies
+		else: # Single Target
+			if primary_target.get("current_hp", 0) > 0:
+				return [primary_target]
+			else:
+				return [living_enemies[0]] # Fallback to first alive if target died
+				
+	# TYPE 2: ALLY
+	if target_type in [2, 6]:
+		var living_allies = _get_living_units(ally_pool)
+		if living_allies.is_empty(): return [] # Game over safety
+		
+		if target_area == 2: # AOE
+			return living_allies
+		else: # Single Target
+			if primary_target.get("current_hp", 0) > 0:
+				return [primary_target]
+			else:
+				# Fallback to self if the targeted ally somehow died
+				return [caster] 
+				
+	# Fallback catch-all
+	return []
 
 func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var effects = parsed_skill.get("effects", [])
@@ -607,7 +635,7 @@ func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_
 	for i in range(effects.size()):
 		var effect = effects[i]
 		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster, primary_target)
-
+		
 		# Delegate to the Action Processor
 		var hit_payloads = action_processor.execute_parsed_effect(effect, caster, actual_targets)
 

@@ -20,6 +20,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var bottom_ui_wrapper: Control = %BottomUIWrapper
 @onready var bottom_section: GridContainer = %BottomSection
 @onready var damage_numbers_container: Control = %DamageNumbersContainer
+@onready var unit_info_popup: Control = %UnitInfoPopup
 
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
@@ -460,6 +461,7 @@ func _on_battle_state_ready() -> void:
 			panel.open_skill_menu.connect(_open_skill_menu)
 			panel.open_item_menu.connect(_open_item_menu)
 			panel.panel_tapped.connect(_on_panel_tapped)
+			panel.info_tapped.connect(_on_unit_info_tapped)
 			_active_panels.append(panel)
 
 			# Add Combat Sprite
@@ -534,6 +536,12 @@ func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent
 			if wrapper.get_child_count() > 0:
 				var enemy_sprite = wrapper.get_child(0)
 				_play_enemy_death(enemy_sprite)
+
+func _on_unit_info_tapped(unit_index: int) -> void:
+	if unit_index >= 0 and unit_index < battle_manager.party_data.size():
+		var unit_data = battle_manager.party_data[unit_index]
+		unit_info_popup.setup(unit_data)
+		unit_info_popup.show()
 
 func _on_panel_tapped(unit_index: int) -> void:
 	if unit_index in battle_manager.player_units_acted_this_turn:

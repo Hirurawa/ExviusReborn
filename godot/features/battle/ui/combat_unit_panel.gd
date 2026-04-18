@@ -6,10 +6,12 @@ extends PanelContainer
 @onready var hp_bar: ProgressBar = %HPBar
 @onready var mp_bar: ProgressBar = %MPBar
 @onready var limit_bar: ProgressBar = %LimitBar
+@onready var info_button: Button = %InfoButton
 
 signal open_skill_menu(unit_index: int)
 signal open_item_menu(unit_index: int)
 signal panel_tapped(unit_index: int)
+signal info_tapped(unit_index: int)
 
 var _my_index: int = -1
 var _is_dragging: bool = false
@@ -27,6 +29,12 @@ func _ready() -> void:
 			_battle_manager.unit_acted.connect(_on_unit_acted)
 		if not _battle_manager.turn_changed.is_connected(_on_turn_changed):
 			_battle_manager.turn_changed.connect(_on_turn_changed)
+
+	if info_button:
+		info_button.pressed.connect(_on_info_button_pressed)
+
+func _on_info_button_pressed() -> void:
+	info_tapped.emit(_my_index)
 
 func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:

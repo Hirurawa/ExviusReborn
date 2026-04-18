@@ -46,3 +46,15 @@ func _resolve_debuff(receipt: Dictionary, target: Dictionary) -> void:
 	}
 	target["active_effects"].append(effect)
 	target["final_stats"] = StatCalculator.calculate_final_stats(target)
+
+func _resolve_dodge(receipt: Dictionary, target: Dictionary) -> void:
+	if not target.has("active_effects"):
+		target["active_effects"] = []
+
+	var effect = {
+		"duration": receipt.get("duration", 3),
+		"hits_to_dodge": receipt.get("hits_to_dodge", {})
+	}
+	target["active_effects"].append(effect)
+	#target["final_stats"] = StatCalculator.calculate_final_stats(target)
+	

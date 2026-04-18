@@ -104,3 +104,29 @@ func _apply_stat_boost_pct(parsed_effect: Dictionary, caster: Dictionary, target
 		all_hit_payloads.append_array(hit_payloads)
 	
 	return all_hit_payloads
+
+func _apply_dodge(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	if(all_attack_damage == []): all_attack_damage = [[100]]
+	if(all_attack_frames == []): all_attack_frames = [[0]]
+	
+	var effect = parsed_effect.get("effect", {})
+	
+	var duration = effect.get("turn_count", 1)
+
+	var hits_to_dodge = effect.duplicate()
+	hits_to_dodge.erase("turn_count") 
+
+	var extra_data = {
+		"duration": duration,
+		"hits_to_dodge": hits_to_dodge["amount"]
+	}
+	
+	var all_hit_payloads: Array[Dictionary] = []
+	
+	for target in targets:
+		var hit_payloads = EffectProcessor.generate_effect_payloads("DODGE", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
+		all_hit_payloads.append_array(hit_payloads)
+	
+	return all_hit_payloads

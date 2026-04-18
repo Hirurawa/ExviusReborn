@@ -328,7 +328,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 				var needs_ally_target = false
 
 				for effect in parsed_data.get("effects", []):
-					if effect.get("target_area", 1) == 1 and effect.get("target_type", 1) in [2, 3, 4, 6]:
+					if effect.get("target_area", 1) == 1 and effect.get("target_type", 1) in [2, 6]:
 						needs_ally_target = true
 						break
 
@@ -544,9 +544,6 @@ func _on_unit_info_tapped(unit_index: int) -> void:
 		unit_info_popup.show()
 
 func _on_panel_tapped(unit_index: int) -> void:
-	if unit_index in battle_manager.player_units_acted_this_turn:
-		return
-
 	if _is_ally_targeting_mode:
 		# Finalize targeting
 		if unit_index >= 0 and unit_index < battle_manager.party_data.size():
@@ -563,6 +560,8 @@ func _on_panel_tapped(unit_index: int) -> void:
 
 		_exit_ally_selection_state()
 	else:
+		if unit_index in battle_manager.player_units_acted_this_turn:
+			return
 		# Normal execution
 		battle_manager.execute_queued_action(unit_index)
 

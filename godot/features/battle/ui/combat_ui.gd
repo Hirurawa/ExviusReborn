@@ -10,7 +10,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var rewards_popup: AcceptDialog = %RewardsPopup
 
 @onready var enemy_region: Control = %EnemyRegion
-@onready var enemies_container: HBoxContainer = %EnemiesContainer
+@onready var enemies_container: VBoxContainer = %EnemiesContainer
 @onready var turn_label: Label = %TurnLabel
 @onready var player_sprites_grid: GridContainer = %PlayerSpritesGrid
 @onready var chain_count_label: Label = %ChainCountLabel
@@ -410,7 +410,7 @@ func _on_battle_state_ready() -> void:
 
 		var is_staggered = (i % 2 != 0)
 		if is_staggered:
-			enemy_sprite.position.y += 30
+			enemy_sprite.position.x += 30
 
 		# Connect click input for targeting
 		enemy_sprite.gui_input.connect(Callable(self, "_on_enemy_clicked").bind(i))

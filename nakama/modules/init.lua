@@ -32,7 +32,8 @@ nk.register_rpc(Economy.buy_item, "buy_item")
 nk.register_rpc(PlayerData.get_player_stats, "get_player_stats")
 nk.register_rpc(PlayerData.add_rank_xp, "add_rank_xp")
 
-nk.register_rpc(Combat.perform_mission, "perform_mission")
+nk.register_rpc(Combat.start_mission, "start_mission")
+nk.register_rpc(Combat.finish_mission, "finish_mission")
 
 nk.register_rpc(Parties.rpc_get_parties, "get_parties")
 nk.register_rpc(Parties.rpc_save_parties, "save_parties")

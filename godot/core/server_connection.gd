@@ -361,6 +361,44 @@ func buy_item_async(item_id: String, quantity: int = 1) -> Dictionary:
 
 	return {}
 
+func start_mission_async(mission_id: String) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {"success": false, "error": "Not authenticated"}
+
+	var payload = JSON.stringify({
+		"mission_id": mission_id
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "start_mission", payload)
+
+	if result.is_exception():
+		push_error("Failed to start mission: %s" % result.get_exception().message)
+		return {"success": false, "error": result.get_exception().message}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {"success": false, "error": "Invalid response"}
+
+func finish_mission_async(win_status: bool) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {"success": false, "error": "Not authenticated"}
+
+	var payload = JSON.stringify({
+		"win_status": win_status
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "finish_mission", payload)
+
+	if result.is_exception():
+		push_error("Failed to finish mission: %s" % result.get_exception().message)
+		return {"success": false, "error": result.get_exception().message}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {"success": false, "error": "Invalid response"}
+
 func perform_mission_async(mission_id: String) -> Dictionary:
 	if _session == null or _session.is_expired():
 		return {}

@@ -315,5 +315,16 @@ func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 
 
 func _on_start_mission_pressed(mission_id: String) -> void:
-	mission_details_popup.hide()
-	UIManager.push("combat_ui", {"mission_id": mission_id, "dungeon_id": current_selected_dungeon_id})
+	var result = await DataManager.server_connection.start_mission_async(mission_id)
+
+	if result.get("success") == true:
+		mission_details_popup.hide()
+		UIManager.push("combat_ui", {"mission_id": mission_id, "dungeon_id": current_selected_dungeon_id})
+	else:
+		var error_msg = result.get("error", "Unknown error occurred")
+		var error_dialog = AcceptDialog.new()
+		error_dialog.dialog_text = error_msg
+		error_dialog.title = "Mission Failed to Start"
+		add_child(error_dialog)
+		error_dialog.popup_centered()
+		error_dialog.confirmed.connect(func(): error_dialog.queue_free())

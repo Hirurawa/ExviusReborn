@@ -226,11 +226,11 @@ func set_queued_action(unit_index: int, new_action: CombatAction, action_name: S
 	var unit_data: Dictionary = party_data[unit_index]
 	if unit_data.is_empty():
 		return
-
+		
 	var old_payload = unit_data.get("queued_payload", {})
 	if old_payload.get("is_item", false) == true:
 		item_refunded.emit(old_payload.get("original_item_id"))
-
+		
 	unit_data["queued_action"] = new_action
 	unit_data["queued_action_name"] = action_name
 	unit_data["queued_action_id"] = action_id

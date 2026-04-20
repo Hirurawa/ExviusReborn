@@ -43,6 +43,10 @@
         "type": "MAGIC_DAMAGE",
         "keys": ["", "", "", "", "", "modifier", ""]
     },
+    "16": {
+        "type": "HP_RESTORE",
+        "keys": ["amount"]
+    },
     "17": {
         "type": "MP_RESTORE",
         "keys": ["amount"]

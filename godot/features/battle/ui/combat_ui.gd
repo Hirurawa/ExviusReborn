@@ -388,7 +388,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 							"is_item": true,
 							"original_item_id": action_id
 						}
-
+						
 						battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), unwrapped_ability_id, action_payload)
 						for p in _active_panels:
 							if p._my_index == _menu_target_unit_index:

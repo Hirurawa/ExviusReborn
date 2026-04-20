@@ -10,6 +10,8 @@ signal unit_action_started(unit_index: int, action: CombatAction)
 signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
 signal mission_failed
+
+signal item_refunded(item_id: String)
 signal wave_changed(current_wave: int, total_waves: int)
 signal wave_transition_started(current_wave: int, next_wave: int, total_waves: int)
 signal item_dropped(enemy_index: int, item_id: String)
@@ -218,15 +220,21 @@ func set_enemy_hp(enemy_index: int, new_hp: int) -> void:
 		pct = int((float(enemy["current_hp"]) / float(max_hp)) * 100.0)
 	enemy_hp_changed.emit(enemy_index, enemy["current_hp"], max_hp, pct)
 
-func set_queued_action(unit_index: int, new_action: CombatAction, action_name: String = "", action_id: String = "") -> void:
+func set_queued_action(unit_index: int, new_action: CombatAction, action_name: String = "", action_id: String = "", payload: Dictionary = {}) -> void:
 	if unit_index < 0 or unit_index >= party_data.size():
 		return
 	var unit_data: Dictionary = party_data[unit_index]
 	if unit_data.is_empty():
 		return
+
+	var old_payload = unit_data.get("queued_payload", {})
+	if old_payload.get("is_item", false) == true:
+		item_refunded.emit(old_payload.get("original_item_id"))
+
 	unit_data["queued_action"] = new_action
 	unit_data["queued_action_name"] = action_name
 	unit_data["queued_action_id"] = action_id
+	unit_data["queued_payload"] = payload
 
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
@@ -250,18 +258,18 @@ func execute_queued_action(attacker_index: int) -> void:
 		var action_id: String = attacker_data.get("queued_action_id", "")
 		print("Executing: ", action_name)
 
-		if action == CombatAction.SKILL:
+		if action == CombatAction.SKILL or action == CombatAction.ITEM:
 			var target_skill_data: Dictionary = DataManager.game_data_skills_magic.get(action_id, {})
 			if target_skill_data == {}:
 				target_skill_data = DataManager.game_data_skills_ability.get(action_id, {})
 
 			if target_skill_data.is_empty():
-				push_error("Error: Skill not found in database: " + action_name)
+				push_error("Error: Skill/Item Ability not found in database: " + action_name)
 				return
 
 			#var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
 			var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(target_skill_data)
-			print("Parsed Skill: ", parsed_data)
+			print("Parsed Skill/Item: ", parsed_data)
 
 			# Attempt to get targeting data from the queue, fallback to enemy 0 for now
 			var target_team: String = attacker_data.get("queued_target_team", "enemy")

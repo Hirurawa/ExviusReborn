@@ -36,6 +36,8 @@ var _menu_tween: Tween
 var _is_dragging_menu: bool = false
 var _menu_drag_start_position: Vector2
 
+var combat_inventory: Dictionary = {}
+
 var _is_ally_targeting_mode: bool = false
 var _pending_skill_action_id: String = ""
 var _pending_skill_action_name: String = ""
@@ -60,6 +62,7 @@ func _ready() -> void:
 	battle_manager.attack_landed.connect(_on_attack_landed)
 	battle_manager.wave_transition_started.connect(_on_wave_transition_started)
 	battle_manager.item_dropped.connect(_on_item_dropped)
+	battle_manager.item_refunded.connect(_on_item_refunded)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
 	battle_manager.mission_cleared.connect(_on_mission_completed)
@@ -75,6 +78,7 @@ func _ready() -> void:
 
 	_setup_action_menu()
 	_setup_cancel_target_button()
+	_init_combat_inventory()
 
 func _enter_ally_selection_state(action_type: int, action_name: String, action_id: String) -> void:
 	_is_ally_targeting_mode = true
@@ -87,6 +91,25 @@ func _enter_ally_selection_state(action_type: int, action_name: String, action_i
 
 	for p in _active_panels:
 		p.modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
+
+func _init_combat_inventory() -> void:
+	combat_inventory.clear()
+	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
+
+	for item_id in stackables.keys():
+		var quantity: int = stackables[item_id]
+		if quantity > 0 and DataManager.game_data_items.has(item_id):
+			var item_data: Dictionary = DataManager.game_data_items[item_id]
+			if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
+				combat_inventory[item_id] = quantity
+
+func _unwrap_item_ability_id(effects_raw: Array) -> String:
+	for effect in effects_raw:
+		if effect.size() >= 4 and effect[2] == 71:
+			var payload = effect[3]
+			if typeof(payload) == TYPE_ARRAY and payload.size() > 0:
+				return str(payload[0])
+	return ""
 
 func _exit_ally_selection_state() -> void:
 	_is_ally_targeting_mode = false
@@ -207,16 +230,16 @@ func _open_item_menu(unit_index: int) -> void:
 	_menu_target_unit_index = unit_index
 
 	var options: Array = []
-	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
 
-	for item_id in stackables.keys():
-		var quantity: int = stackables[item_id]
+	for item_id in combat_inventory.keys():
+		var quantity: int = combat_inventory[item_id]
 		if quantity > 0 and DataManager.game_data_items.has(item_id):
 			var item_data: Dictionary = DataManager.game_data_items[item_id]
 			var item_name: String = item_data.get("name", "Unknown Item")
 			options.append({
 				"id": item_id,
-				"name": item_name + " (x" + str(quantity) + ")"
+				"name": item_name + " (x" + str(quantity) + ")",
+				"item_data": item_data
 			})
 
 	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM, false)
@@ -354,11 +377,31 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 
 			var btn = _create_action_button(action_name, sub_text)
 			btn.pressed.connect(func():
-				battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
-				for p in _active_panels:
-					if p._my_index == _menu_target_unit_index:
-						p.update_action_visuals()
-				_close_action_menu()
+				if action_type == battle_manager.CombatAction.ITEM:
+					if combat_inventory.has(action_id) and combat_inventory[action_id] > 0:
+						combat_inventory[action_id] -= 1
+						var item_data = opt.get("item_data", {})
+						var effects_raw = item_data.get("effects_raw", [])
+						var unwrapped_ability_id = _unwrap_item_ability_id(effects_raw)
+
+						var action_payload: Dictionary = {
+							"is_item": true,
+							"original_item_id": action_id
+						}
+
+						battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), unwrapped_ability_id, action_payload)
+						for p in _active_panels:
+							if p._my_index == _menu_target_unit_index:
+								p.update_action_visuals()
+
+						# We should just close the menu. If we wanted to refresh it while open, we wouldn't call _close_action_menu.
+						_close_action_menu()
+				else:
+					battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
+					for p in _active_panels:
+						if p._my_index == _menu_target_unit_index:
+							p.update_action_visuals()
+					_close_action_menu()
 			)
 			grid.add_child(btn)
 
@@ -699,6 +742,15 @@ func _play_wave_one_intro(total_waves: int) -> void:
 	# Fade out
 	tween.tween_property(transition_ui, "modulate:a", 0.0, 0.3)
 	tween.tween_callback(transition_ui.hide)
+
+func _on_item_refunded(item_id: String) -> void:
+	if combat_inventory.has(item_id):
+		combat_inventory[item_id] += 1
+	else:
+		combat_inventory[item_id] = 1
+
+	if _current_open_menu == "ITEM":
+		_open_item_menu(_menu_target_unit_index)
 
 func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 	var enemy_node: Node = null

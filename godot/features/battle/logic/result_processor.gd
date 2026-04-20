@@ -56,5 +56,4 @@ func _resolve_dodge(receipt: Dictionary, target: Dictionary) -> void:
 		"hits_to_dodge": receipt.get("hits_to_dodge", {})
 	}
 	target["active_effects"].append(effect)
-	#target["final_stats"] = StatCalculator.calculate_final_stats(target)
 	

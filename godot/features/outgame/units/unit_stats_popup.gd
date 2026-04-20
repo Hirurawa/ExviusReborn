@@ -40,7 +40,7 @@ func _populate_data() -> void:
 	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 
 	name_label.text = unit_data.get("name", "Unknown")
-	level_label.text = "Level: %s" % current_unit_inst.get("level", 1)
+	level_label.text = "Level: %s" % str(int(current_unit_inst.get("level", 1)))
 
 	var final_stats: Dictionary = current_unit_inst.get("final_stats", {})
 	final_stats = final_stats.get("stats", {})

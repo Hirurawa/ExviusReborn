@@ -85,7 +85,7 @@ func _update_slots(unit_uuids: Array) -> void:
 
 				var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 				unit_name = unit_data.get("name", "Unknown")
-				unit_level = "Lvl %s" % unit_inst.get("level", 1)
+				unit_level = "Lvl %s" % str(int(unit_inst.get("level", 1)))
 
 		# Update slot visuals
 		var tex_rect: TextureRect = slot_btn.get_node("TextureRect") as TextureRect

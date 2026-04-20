@@ -354,6 +354,7 @@ func _check_turn_progression() -> void:
 		for unit in player_units:
 			if not unit.is_empty():
 				unit["is_defending"] = false
+				unit.erase("queued_payload")
 				
 		turn_count += 1
 		turn_changed.emit(turn_count)

@@ -90,6 +90,7 @@ func _enter_ally_selection_state(action_type: int, action_name: String, action_i
 		_cancel_target_button.show()
 
 	for p in _active_panels:
+		p.is_ally_targeting_mode = true
 		p.modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
 
 func _init_combat_inventory() -> void:
@@ -122,6 +123,7 @@ func _exit_ally_selection_state() -> void:
 
 	# Reset panels visually
 	for p in _active_panels:
+		p.is_ally_targeting_mode = false
 		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		p.update_action_visuals()
 

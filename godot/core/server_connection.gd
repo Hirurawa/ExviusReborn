@@ -380,12 +380,13 @@ func start_mission_async(mission_id: String) -> Dictionary:
 
 	return {"success": false, "error": "Invalid response"}
 
-func finish_mission_async(win_status: bool) -> Dictionary:
+func finish_mission_async(win_status: bool, used_items: Dictionary = {}) -> Dictionary:
 	if _session == null or _session.is_expired():
 		return {"success": false, "error": "Not authenticated"}
 
 	var payload = JSON.stringify({
-		"win_status": win_status
+		"win_status": win_status,
+		"used_items": used_items
 	})
 	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "finish_mission", payload)
 

@@ -19,14 +19,10 @@ static func parse_skill_improved(skill_data: Dictionary) -> Dictionary:
 		var target_type: int = int(effect_data[1])
 		
 		var current_attack_damage: Array = []
-		#if idx < attack_damage.size():
-			#current_attack_damage = attack_damage[idx]
 		if attack_damage.size() > 0:
 			current_attack_damage = attack_damage[idx] if idx < attack_damage.size() else attack_damage[0]
 			
 		var current_attack_frames: Array = []
-		#if idx < attack_frames.size():
-			#current_attack_frames = attack_frames[idx]
 		if attack_frames.size() > 0:
 			current_attack_frames = attack_frames[idx] if idx < attack_frames.size() else attack_frames[0]
 		

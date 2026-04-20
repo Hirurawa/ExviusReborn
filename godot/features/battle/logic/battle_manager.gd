@@ -461,7 +461,6 @@ func check_battle_state() -> void:
 
 func _trigger_defeat() -> void:
 	print("BattleManager: Defeat! All allies have fallen.")
-	get_tree().paused = true
 	if DataManager.server_connection:
 		await DataManager.server_connection.finish_mission_async(false)
 	mission_failed.emit()
@@ -487,7 +486,6 @@ func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
 	print("Mission Drops: ", mission_drops)
 
-	get_tree().paused = true
 	if DataManager.server_connection:
 		await DataManager.server_connection.finish_mission_async(true)
 
@@ -579,8 +577,8 @@ func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 
 
 # Helper function to grab only living units
-static func _get_living_units(team_array: Array) -> Array:
-	var living = []
+static func _get_living_units(team_array: Array) -> Array[Dictionary]:
+	var living: Array[Dictionary] = []
 	for unit in team_array:
 		if not unit.is_empty() and unit.get("current_hp", 0) > 0:
 			living.append(unit)

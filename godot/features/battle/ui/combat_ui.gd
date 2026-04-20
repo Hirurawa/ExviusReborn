@@ -791,5 +791,4 @@ func _on_mission_failed(error_msg: String = "") -> void:
 	rewards_popup.popup_centered()
 
 func _on_rewards_confirmed() -> void:
-	get_tree().paused = false
 	UIManager.pop()

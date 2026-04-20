@@ -63,6 +63,7 @@ func _ready() -> void:
 
 	DataManager.mission_completed.connect(_on_mission_completed)
 	battle_manager.mission_cleared.connect(_on_mission_completed)
+	battle_manager.mission_failed.connect(_on_mission_failed)
 	DataManager.mission_failed.connect(_on_mission_failed)
 
 	
@@ -784,9 +785,10 @@ func _on_mission_completed(rewards_text: String = "") -> void:
 	rewards_popup.dialog_text = "Mission completed successfully!" + rewards_text
 	rewards_popup.popup_centered()
 
-func _on_mission_failed(error_msg: String) -> void:
+func _on_mission_failed(error_msg: String = "") -> void:
 	print("Failed to complete mission: ", error_msg)
-	finish_button.disabled = false
+	rewards_popup.dialog_text = "Mission Failed!"
+	rewards_popup.popup_centered()
 
 func _on_rewards_confirmed() -> void:
 	UIManager.pop()

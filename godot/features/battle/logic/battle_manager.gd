@@ -9,6 +9,7 @@ signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
 signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
+signal mission_failed
 signal wave_changed(current_wave: int, total_waves: int)
 signal wave_transition_started(current_wave: int, next_wave: int, total_waves: int)
 signal item_dropped(enemy_index: int, item_id: String)
@@ -460,7 +461,9 @@ func check_battle_state() -> void:
 
 func _trigger_defeat() -> void:
 	print("BattleManager: Defeat! All allies have fallen.")
-	# TODO: Stop turn queue, show Game Over UI
+	if DataManager.server_connection:
+		await DataManager.server_connection.finish_mission_async(false)
+	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
 	print("BattleManager: Wave %d cleared!" % current_wave)
@@ -483,17 +486,8 @@ func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
 	print("Mission Drops: ", mission_drops)
 
-	# Group the escrow drops
-	var grouped_drops = {}
-	for item_id in mission_drops:
-		grouped_drops[item_id] = grouped_drops.get(item_id, 0) + 1
-
-	# Send to server and wait for confirmation
-	for item_id in grouped_drops:
-		var quantity = grouped_drops[item_id]
-		print("Syncing drop to server: ", item_id, " x", quantity)
-		if DataManager.server_connection:
-			await DataManager.server_connection.add_item_async(item_id, quantity)
+	if DataManager.server_connection:
+		await DataManager.server_connection.finish_mission_async(true)
 
 	mission_cleared.emit()
 
@@ -583,8 +577,8 @@ func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 
 
 # Helper function to grab only living units
-static func _get_living_units(team_array: Array) -> Array:
-	var living = []
+static func _get_living_units(team_array: Array) -> Array[Dictionary]:
+	var living: Array[Dictionary] = []
 	for unit in team_array:
 		if not unit.is_empty() and unit.get("current_hp", 0) > 0:
 			living.append(unit)

@@ -19,7 +19,6 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var enemy_hp_pct_label: Label = %EnemyHPPctLabel
 @onready var bottom_ui_wrapper: Control = %BottomUIWrapper
 @onready var bottom_section: GridContainer = %BottomSection
-@onready var damage_numbers_container: Control = %DamageNumbersContainer
 @onready var unit_info_popup: Control = %UnitInfoPopup
 
 var _texture_cache: Dictionary = {}
@@ -454,9 +453,16 @@ func _on_battle_state_ready() -> void:
 		wrapper.add_child(enemy_sprite)
 		enemy_sprite.setup(i, monster_id, true)
 
+		var damage_container = Control.new()
+		damage_container.name = "DamageContainer"
+		damage_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+		damage_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		wrapper.add_child(damage_container)
+
 		var is_staggered = (i % 2 != 0)
 		if is_staggered:
 			enemy_sprite.position.x += 30
+			damage_container.position.x += 30
 
 		# Connect click input for targeting
 		enemy_sprite.gui_input.connect(Callable(self, "_on_enemy_clicked").bind(i))
@@ -670,6 +676,14 @@ func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: 
 		_spawn_damage_number(damage, target_index)
 
 func _spawn_damage_number(damage: int, target_index: int) -> void:
+	if target_index < 0 or target_index >= enemies_container.get_child_count():
+		return
+
+	var wrapper = enemies_container.get_child(target_index)
+	var damage_container = wrapper.get_node_or_null("DamageContainer")
+	if not damage_container:
+		return
+
 	var label = Label.new()
 	label.text = str(damage)
 	# Set appearance
@@ -679,28 +693,21 @@ func _spawn_damage_number(damage: int, target_index: int) -> void:
 	label.add_theme_constant_override("outline_size", 4)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 	# To ensure we push up by a known amount, we'll estimate or read the label size
 	# But Label size isn't immediately known before drawing, so we use a fixed offset.
 	var push_amount = 40.0
 
 	# Move existing labels up
-	for child in damage_numbers_container.get_children():
+	for child in damage_container.get_children():
 		if child is Label:
 			var move_tween = create_tween()
 			move_tween.tween_property(child, "position:y", child.position.y - push_amount, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	# Add new label at bottom
-	damage_numbers_container.add_child(label)
-
-	# Attempt to center the damage over the specific enemy sprite
-	var x_pos = 0.0
-	if target_index >= 0 and target_index < enemies_container.get_child_count():
-		var target_node = enemies_container.get_child(target_index)
-		# Approximate center based on the container size
-		x_pos = target_node.position.x + (target_node.size.x / 2.0) - 20.0
-
-	label.position = Vector2(x_pos, 0)
+	damage_container.add_child(label)
+	label.position = Vector2.ZERO
 
 	# Animate the new label
 	# We want it to fade out over 1 second and then delete itself.

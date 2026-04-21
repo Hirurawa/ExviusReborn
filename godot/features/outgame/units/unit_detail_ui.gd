@@ -138,23 +138,27 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_populate_equipment_slots(unit_inst, unit_data)
 
 	# Fetch and display the traits directly from the hydrated unit instance
-	var element_resist = unit_inst["final_stats"].get("element_resist", [0,0,0,0,0,0,0,0])
-	for i in range(8):
-		var resist_panel = elem_resist_grid.get_node("Resist" + str(i+1))
-		var label = resist_panel.get_node("VBox/ValPanel/Label")
-		if element_resist.size() > i and element_resist[i] != 0:
-			label.text = str(int(element_resist[i])) + "%"
-		else:
-			label.text = "-"
+	var element_resist = unit_inst["final_stats"].get("element_resist", {})
+	for elem in StatCalculator.ELEMENTS:
+		if elem_resist_grid.has_node(elem):
+			var resist_panel = elem_resist_grid.get_node(elem)
+			var label = resist_panel.get_node("VBox/ValPanel/Label")
+			var val = element_resist.get(elem, 0)
+			if val != 0:
+				label.text = str(int(val)) + "%"
+			else:
+				label.text = "-"
 
-	var status_resist = unit_inst["final_stats"].get("status_resist", [0,0,0,0,0,0,0,0])
-	for i in range(8):
-		var resist_panel = status_resist_grid.get_node("Resist" + str(i+1))
-		var label = resist_panel.get_node("VBox/ValPanel/Label")
-		if status_resist.size() > i and status_resist[i] != 0:
-			label.text = str(int(status_resist[i])) + "%"
-		else:
-			label.text = "-"
+	var status_resist = unit_inst["final_stats"].get("status_resist", {})
+	for status in StatCalculator.STATUSES:
+		if status_resist_grid.has_node(status):
+			var resist_panel = status_resist_grid.get_node(status)
+			var label = resist_panel.get_node("VBox/ValPanel/Label")
+			var val = status_resist.get(status, 0)
+			if val != 0:
+				label.text = str(int(val)) + "%"
+			else:
+				label.text = "-"
 
 	var lb_id = str(int(unit_inst.get("limitburst_id", "")))
 	if lb_id != "" and DataManager.game_data_limitbursts.has(lb_id):

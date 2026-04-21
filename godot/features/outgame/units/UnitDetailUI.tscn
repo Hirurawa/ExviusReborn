@@ -273,16 +273,16 @@ layout_mode = 2
 theme_override_constants/h_separation = 5
 columns = 8
 
-[node name="Resist1" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="FIRE" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/FIRE"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/FIRE/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -290,11 +290,11 @@ texture = ExtResource("elem_fire")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/FIRE/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist1/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/FIRE/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -302,16 +302,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist2" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="ICE" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/ICE"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/ICE/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -319,11 +319,11 @@ texture = ExtResource("elem_ice")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/ICE/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist2/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/ICE/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -331,16 +331,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist3" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="LIGHTNING" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHTNING"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHTNING/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -348,11 +348,11 @@ texture = ExtResource("elem_lightning")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHTNING/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist3/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHTNING/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -360,16 +360,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist4" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="WATER" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/WATER"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/WATER/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -377,11 +377,11 @@ texture = ExtResource("elem_water")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/WATER/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist4/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/WATER/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -389,16 +389,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist5" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="WIND" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/WIND"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/WIND/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -406,11 +406,11 @@ texture = ExtResource("elem_wind")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/WIND/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist5/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/WIND/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -418,16 +418,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist6" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="EARTH" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/EARTH"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/EARTH/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -435,11 +435,11 @@ texture = ExtResource("elem_earth")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/EARTH/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist6/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/EARTH/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -447,16 +447,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist7" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="LIGHT" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHT"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHT/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -464,11 +464,11 @@ texture = ExtResource("elem_light")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHT/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist7/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/LIGHT/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -476,16 +476,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist8" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
+[node name="DARK" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/DARK"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/ElementResistGrid/DARK/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -493,11 +493,11 @@ texture = ExtResource("elem_dark")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/ElementResistGrid/DARK/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/Resist8/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/ElementResistGrid/DARK/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -514,16 +514,16 @@ layout_mode = 2
 theme_override_constants/h_separation = 5
 columns = 8
 
-[node name="Resist1" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="POISON" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/POISON"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/POISON/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -531,11 +531,11 @@ texture = ExtResource("ailm_poison")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/POISON/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist1/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/POISON/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -543,16 +543,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist2" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="BLIND" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/BLIND"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/BLIND/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -560,11 +560,11 @@ texture = ExtResource("ailm_blind")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/BLIND/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist2/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/BLIND/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -572,16 +572,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist3" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="SLEEP" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/SLEEP"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/SLEEP/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -589,11 +589,11 @@ texture = ExtResource("ailm_sleep")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/SLEEP/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist3/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/SLEEP/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -601,16 +601,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist4" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="SILENCE" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/SILENCE"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/SILENCE/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -618,11 +618,11 @@ texture = ExtResource("ailm_silence")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/SILENCE/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist4/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/SILENCE/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -630,16 +630,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist5" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="PARALYSIS" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/PARALYSIS"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/PARALYSIS/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -647,11 +647,11 @@ texture = ExtResource("ailm_paralysis")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/PARALYSIS/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist5/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/PARALYSIS/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -659,16 +659,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist6" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="CONFUSION" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/CONFUSION"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/CONFUSION/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -676,11 +676,11 @@ texture = ExtResource("ailm_confuse")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/CONFUSION/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist6/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/CONFUSION/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -688,16 +688,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist7" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="DISEASE" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/DISEASE"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/DISEASE/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -705,11 +705,11 @@ texture = ExtResource("ailm_disease")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/DISEASE/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist7/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/DISEASE/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
@@ -717,16 +717,16 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Resist8" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
+[node name="PETRIFY" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid"]
 custom_minimum_size = Vector2(40, 50)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitPanel")
 
-[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8"]
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/PETRIFY"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox"]
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/StatusResistGrid/PETRIFY/VBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 3
@@ -734,11 +734,11 @@ texture = ExtResource("ailm_petrification")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox"]
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/StatusResistGrid/PETRIFY/VBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_TraitVal")
 
-[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/Resist8/VBox/ValPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/StatusResistGrid/PETRIFY/VBox/ValPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12

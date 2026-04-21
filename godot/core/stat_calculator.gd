@@ -42,7 +42,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			"magic": [],
 			"ability": [],
 			"passive": []
-		}
+		},
+		"passive_effects": []
 	}
 	
 	var pct_mods = {}
@@ -160,7 +161,14 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			final_profile["skills"]["ability"].append(skill_entry)
 		elif DataManager.game_data_skills_passive.has(skill_id_str):
 			final_profile["skills"]["passive"].append(skill_entry)
-
+			var skill_data = DataManager.game_data_skills_passive.get(skill_id_str)
+			var parsed_passive = OpcodeParser.parse_passive(skill_data)
+			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
+			for e in parsed_passive.get("effects", []):
+				if(e.get("type") == "STAT_BOOST_PCT"):
+					for stat in e.get("effect").keys():
+						pct_mods[stat] = e.get("effect")[stat]
+			
 	# TODO: Parse effects_raw for pct_mods here
 
 	var active_buffs = {}

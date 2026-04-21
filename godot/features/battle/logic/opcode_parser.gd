@@ -1,5 +1,43 @@
 class_name OpcodeParser
 
+static func parse_passive(skill_data: Dictionary) -> Dictionary:
+	var file = "c:\\Workspaces\\GachaTest\\godot\\features\\battle\\logic\\passive_schema.json"
+	var json_as_text = FileAccess.get_file_as_string(file)
+	var PASSIVE_SCHEMA = JSON.parse_string(json_as_text)
+	
+	var parsed_action: Dictionary = {
+		"effects": []
+	}
+	
+	var effects_raw: Array = skill_data.get("effects_raw", [])
+	for effect_data in effects_raw:
+		var parsed_effect: Dictionary = {
+			"type": "",
+			"effect": {}
+			}
+		var opcode = effect_data[2]  # e.g., 3
+		var payload = effect_data[3] # e.g., [0, 0, 0, 0, 10, 0, 0]
+		
+		# Check if our "mask file" knows this opcode
+		if PASSIVE_SCHEMA.has(str(opcode)):
+			var schema = PASSIVE_SCHEMA.get(str(opcode))
+			parsed_effect["type"] = schema["type"]
+
+			# Map the payload to the keys
+			for i in range(min(schema["keys"].size(), payload.size())):
+				var key = schema["keys"][i]
+				var value = payload[i]
+				
+				# Drop zeros and unknowns for a perfectly clean output!
+				if value != 0 and key != "UNKNOWN" and key != "???" and key != "":
+					parsed_effect["effect"][key] = value
+					
+			parsed_action.get("effects").append(parsed_effect)
+		else:
+			push_warning("OpcodeParser: Unknown passive opcode: " + str(opcode))
+			
+	return parsed_action
+
 static func parse_skill_improved(skill_data: Dictionary) -> Dictionary:
 	var file = "c:\\Workspaces\\GachaTest\\godot\\features\\battle\\logic\\skill_schema.json"
 	var json_as_text = FileAccess.get_file_as_string(file)

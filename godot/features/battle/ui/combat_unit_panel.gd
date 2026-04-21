@@ -19,6 +19,7 @@ var _drag_start_position: Vector2 = Vector2.ZERO
 var _current_queued_action: int = 0 # 0 is ATTACK
 var _battle_manager: Node = null
 var _has_acted: bool = false
+var is_ally_targeting_mode: bool = false
 
 func _ready() -> void:
 	_battle_manager = get_tree().root.find_child("BattleManager", true, false)
@@ -40,7 +41,9 @@ func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:
 		return
 
-	if _my_index in _battle_manager.player_units_acted_this_turn:
+	var has_acted = _my_index in _battle_manager.player_units_acted_this_turn
+
+	if has_acted and not is_ally_targeting_mode:
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -62,6 +65,9 @@ func _gui_input(event: InputEvent) -> void:
 			_is_dragging = false
 
 	elif (event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or event is InputEventScreenDrag:
+		if has_acted:
+			return
+
 		var diff = event.position - _drag_start_position
 		if not _is_dragging:
 			if abs(diff.y) > 20 and abs(diff.y) > abs(diff.x):

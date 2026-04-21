@@ -478,8 +478,8 @@ func check_battle_state() -> void:
 
 func _trigger_defeat() -> void:
 	print("BattleManager: Defeat! All allies have fallen.")
-	if DataManager.server_connection:
-		await DataManager.server_connection.finish_mission_async(false, used_items)
+	if DataManager.has_method("request_finish_mission"):
+		await DataManager.request_finish_mission(false, current_mission_id, used_items)
 	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
@@ -503,8 +503,8 @@ func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
 	print("Mission Drops: ", mission_drops)
 
-	if DataManager.server_connection:
-		await DataManager.server_connection.finish_mission_async(true, used_items)
+	if DataManager.has_method("request_finish_mission"):
+		await DataManager.request_finish_mission(true, current_mission_id, used_items)
 
 	mission_cleared.emit()
 

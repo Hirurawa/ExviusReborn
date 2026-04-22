@@ -36,8 +36,8 @@ func _ready() -> void:
 
 func _load_persistent_overlays() -> void:
 	# These will be created in step 2. We'll instance them and set visibility.
-	if ResourceLoader.exists("res://features/shared/TopHeader.tscn"):
-		var top_scene: PackedScene = preload("res://features/shared/TopHeader.tscn")
+	if ResourceLoader.exists("res://features/shared/Header.tscn"):
+		var top_scene: PackedScene = preload("res://features/shared/Header.tscn")
 		top_header = top_scene.instantiate()
 		top_header.hide()
 		canvas_layer.add_child(top_header)

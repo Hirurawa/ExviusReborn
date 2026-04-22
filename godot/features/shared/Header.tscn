@@ -1,0 +1,192 @@
+[gd_scene format=3 uid="uid://caat5jj5ltkpl"]
+
+[ext_resource type="Script" uid="uid://cfnwfn5444hx7" path="res://features/shared/header.gd" id="1_u18cj"]
+[ext_resource type="Texture2D" uid="uid://bk4m0p1tfk2uy" path="res://unpacked_ui/mypage_header_.tres" id="2_sgcbl"]
+[ext_resource type="Texture2D" uid="uid://cgrwhibtdwme4" path="res://unpacked_ui/icon_coin.tres" id="3_8vme6"]
+[ext_resource type="Texture2D" uid="uid://1yvwgxlibky0" path="res://unpacked_ui/icon_dia.tres" id="4_earw3"]
+[ext_resource type="Texture2D" uid="uid://bmr6bmqd1aar1" path="res://unpacked_ui/mypage_exp_bar.tres" id="5_px8dm"]
+[ext_resource type="Texture2D" uid="uid://c2mp65u6ypndk" path="res://unpacked_ui/mypage_exp_gauge.tres" id="6_hawyt"]
+[ext_resource type="Texture2D" uid="uid://cqp518y1fp26y" path="res://unpacked_ui/mypage_stamina_info.tres" id="7_12k04"]
+[ext_resource type="Texture2D" uid="uid://euhsqfdnn1da" path="res://unpacked_ui/mypage_stamina_bar.tres" id="8_7281i"]
+[ext_resource type="Texture2D" uid="uid://dleymoqskonxr" path="res://unpacked_ui/mypage_stamina_gauge.tres" id="9_jv5fp"]
+[ext_resource type="Texture2D" uid="uid://cjjduyo6t0svq" path="res://unpacked_ui/mypage_rankup_info.tres" id="10_hhlix"]
+
+[node name="Header" type="Control" unique_id=174978603]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_u18cj")
+
+[node name="header_bg" type="TextureRect" parent="." unique_id=2115700804]
+layout_mode = 0
+offset_top = -14.0
+offset_right = 640.0
+offset_bottom = 126.0
+texture = ExtResource("2_sgcbl")
+expand_mode = 1
+
+[node name="header_user_name" type="Label" parent="." unique_id=2082318662]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 232.0
+offset_top = 6.0
+offset_right = 407.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 20
+text = "header_user_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="header_coin_icon" type="TextureRect" parent="." unique_id=95052109]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 5.0
+offset_right = 40.0
+offset_bottom = 37.0
+texture = ExtResource("3_8vme6")
+expand_mode = 1
+
+[node name="header_coin_num" type="Label" parent="." unique_id=1551282680]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 36.0
+offset_top = 10.0
+offset_right = 202.0
+offset_bottom = 33.0
+theme_override_font_sizes/font_size = 16
+text = "header_coin_num"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="header_dia_icon" type="TextureRect" parent="." unique_id=487683934]
+layout_mode = 0
+offset_left = 432.0
+offset_top = 5.0
+offset_right = 464.0
+offset_bottom = 37.0
+texture = ExtResource("4_earw3")
+expand_mode = 1
+
+[node name="header_dia_num" type="Label" parent="." unique_id=596853528]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 469.0
+offset_top = 12.0
+offset_right = 626.0
+offset_bottom = 35.0
+theme_override_font_sizes/font_size = 16
+text = "header_dia_num"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="header_exp_bar" type="TextureRect" parent="." unique_id=70943106]
+layout_mode = 0
+offset_left = 383.0
+offset_top = 52.0
+offset_right = 579.0
+offset_bottom = 74.0
+texture = ExtResource("5_px8dm")
+expand_mode = 1
+
+[node name="header_exp_gauge" type="TextureRect" parent="." unique_id=1587316859]
+layout_mode = 0
+offset_left = 380.0
+offset_top = 49.0
+offset_right = 630.0
+offset_bottom = 77.0
+texture = ExtResource("6_hawyt")
+expand_mode = 1
+
+[node name="header_stamina_info" type="TextureRect" parent="." unique_id=987431482]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 80.0
+offset_right = 153.0
+offset_bottom = 99.0
+texture = ExtResource("7_12k04")
+expand_mode = 1
+
+[node name="header_stamina_time" type="Label" parent="." unique_id=542554953]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 156.0
+offset_top = 80.0
+offset_right = 323.0
+offset_bottom = 103.0
+theme_override_font_sizes/font_size = 20
+text = "header_stamina_time"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="header_stamina_bar" type="TextureRect" parent="." unique_id=478284382]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 52.0
+offset_right = 257.0
+offset_bottom = 74.0
+texture = ExtResource("8_7281i")
+expand_mode = 1
+
+[node name="header_stamina_gauge" type="TextureRect" parent="." unique_id=2085399118]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 49.0
+offset_right = 260.0
+offset_bottom = 77.0
+texture = ExtResource("9_jv5fp")
+expand_mode = 1
+
+[node name="header_stamina_num" type="Label" parent="." unique_id=1005466232]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 150.0
+offset_top = 53.0
+offset_right = 317.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 20
+text = "header_stamina_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="header_stamina_num_now" type="Label" parent="." unique_id=1207978347]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 61.0
+offset_top = 53.0
+offset_right = 268.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 20
+text = "header_stamina_num_now"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="header_lv_num" type="Label" parent="." unique_id=770209109]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 212.0
+offset_top = 48.0
+offset_right = 431.0
+offset_bottom = 90.0
+theme_override_font_sizes/font_size = 30
+text = "header_lv_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="header_lv_info" type="TextureRect" parent="." unique_id=1878813171]
+layout_mode = 0
+offset_left = 407.0
+offset_top = 80.0
+offset_right = 556.0
+offset_bottom = 99.0
+texture = ExtResource("10_hhlix")
+expand_mode = 1
+
+[node name="header_exp_num" type="Label" parent="." unique_id=22030085]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 557.0
+offset_top = 82.0
+offset_right = 689.0
+offset_bottom = 105.0
+theme_override_font_sizes/font_size = 15
+text = "header_exp_num"
+vertical_alignment = 1

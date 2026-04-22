@@ -86,3 +86,8 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "Trait", is_
 	else:
 		button.hide()
 		button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func set_disabled(is_disabled: bool) -> void:
+	if not is_inside_tree():
+		await ready
+	button.disabled = is_disabled

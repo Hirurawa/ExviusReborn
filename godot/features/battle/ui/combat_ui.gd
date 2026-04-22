@@ -348,6 +348,20 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			var skill_level = opt.get("level", -1)
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)
 
+			var mp_cost = 0
+			var cost_data = skill_data.get("cost", {})
+			if cost_data.has("MP"):
+				mp_cost = int(cost_data["MP"])
+
+			var has_enough_mp = true
+			if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
+				var unit_data = battle_manager.party_data[_menu_target_unit_index]
+				if not unit_data.is_empty():
+					var current_mp = unit_data.get("current_mp", 0)
+					if current_mp < mp_cost:
+						has_enough_mp = false
+						btn.set_disabled(true)
+
 			btn.pressed.connect(func():
 				var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(skill_data)
 				var needs_ally_target = false

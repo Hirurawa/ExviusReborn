@@ -280,6 +280,14 @@ func execute_queued_action(attacker_index: int) -> void:
 				push_error("Error: Skill/Item Ability not found in database: " + action_name)
 				return
 
+			if action == CombatAction.SKILL:
+				var cost_data = target_skill_data.get("cost", {})
+				if cost_data.has("MP"):
+					var mp_cost = int(cost_data["MP"])
+					if mp_cost > 0:
+						attacker_data["current_mp"] = max(0, attacker_data.get("current_mp", 0) - mp_cost)
+						request_unit_stats(attacker_index)
+
 			#var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
 			var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(target_skill_data)
 			print("Parsed Skill/Item: ", parsed_data)

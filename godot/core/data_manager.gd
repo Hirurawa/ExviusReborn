@@ -38,6 +38,8 @@ var gil: int = 0
 var lapis: int = 0
 
 var owned_units_ids: Array = []
+
+var last_played_dungeon_name: String = ""
 var owned_items: Dictionary = {"stackables": {}, "equipment": []}
 var parties: Array = []
 

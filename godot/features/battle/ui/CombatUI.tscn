@@ -21,14 +21,14 @@ script = ExtResource("2_battle")
 [node name="ActionProcessor" type="Node" parent="." unique_id=1023631385]
 script = ExtResource("3_yiesy")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=462267441]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.12549, 0.12549, 0.12549, 1)
+expand_mode = 1
 
 [node name="MainLayout" type="VBoxContainer" parent="." unique_id=1977068219]
 layout_mode = 1

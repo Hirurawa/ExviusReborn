@@ -423,8 +423,8 @@ func init_scene(params: Dictionary) -> void:
 
 	if dungeon_id != "":
 		var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
-		if dungeon_data.has("name"):
-			var dungeon_name = str(dungeon_data["name"])
+		if dungeon_data.has("names"):
+			var dungeon_name = str(dungeon_data["names"][0])
 			var formatted_name = dungeon_name.replace(" ", "_")
 			DataManager.last_played_dungeon_name = formatted_name
 

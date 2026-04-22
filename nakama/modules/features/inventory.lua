@@ -29,6 +29,25 @@ function Inventory.save_stackables(user_id, stackables)
     })
 end
 
+function Inventory.remove_stackables(user_id, items_to_remove)
+    if not items_to_remove or type(items_to_remove) ~= "table" then
+        return false, "Invalid items_to_remove table"
+    end
+
+    local stackables = Inventory.get_stackables(user_id)
+    for item_id, count in pairs(items_to_remove) do
+        local id_str = tostring(item_id)
+        if type(count) == "number" and count > 0 then
+            stackables[id_str] = (stackables[id_str] or 0) - count
+            if stackables[id_str] < 0 then
+                stackables[id_str] = 0
+            end
+        end
+    end
+    Inventory.save_stackables(user_id, stackables)
+    return true
+end
+
 function Inventory.get_equipment(user_id)
     local equipment = {}
     local cursor = nil

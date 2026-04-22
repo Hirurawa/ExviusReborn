@@ -40,6 +40,7 @@ var current_wave: int = 1
 var total_waves: int = 1
 var current_mission_id: String = ""
 var mission_drops: Array[String] = []
+var used_items: Dictionary = {}
 
 func _ready() -> void:
 	# 1. Instantiate the script purely in code
@@ -131,6 +132,7 @@ func initialize_battle(mission_id: String) -> void:
 	total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
 	mission_drops.clear()
+	used_items.clear()
 
 	party_data = []
 
@@ -257,6 +259,12 @@ func execute_queued_action(attacker_index: int) -> void:
 		var action_name: String = attacker_data.get("queued_action_name", "")
 		var action_id: String = attacker_data.get("queued_action_id", "")
 		print("Executing: ", action_name)
+
+		if action == CombatAction.ITEM:
+			var payload_data: Dictionary = attacker_data.get("queued_payload", {})
+			var item_id: String = payload_data.get("original_item_id", "")
+			if item_id != "":
+				used_items[item_id] = used_items.get(item_id, 0) + 1
 
 		if action == CombatAction.SKILL or action == CombatAction.ITEM:
 			var target_skill_data: Dictionary = DataManager.game_data_skills_magic.get(action_id, {})
@@ -470,8 +478,8 @@ func check_battle_state() -> void:
 
 func _trigger_defeat() -> void:
 	print("BattleManager: Defeat! All allies have fallen.")
-	if DataManager.server_connection:
-		await DataManager.server_connection.finish_mission_async(false)
+	if DataManager.has_method("request_finish_mission"):
+		await DataManager.request_finish_mission(false, current_mission_id, used_items)
 	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
@@ -495,8 +503,8 @@ func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
 	print("Mission Drops: ", mission_drops)
 
-	if DataManager.server_connection:
-		await DataManager.server_connection.finish_mission_async(true)
+	if DataManager.has_method("request_finish_mission"):
+		await DataManager.request_finish_mission(true, current_mission_id, used_items)
 
 	mission_cleared.emit()
 

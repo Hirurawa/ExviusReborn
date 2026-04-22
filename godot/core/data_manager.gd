@@ -379,37 +379,41 @@ func delete_friend(username: String) -> void:
 	else:
 		friend_action_result.emit(false, "Error code: %d" % result)
 
-func perform_mission(mission_id: String) -> Dictionary:
-	var result: Dictionary = await server_connection.perform_mission_async(mission_id)
-	if not result.has("error"):
-		if result.has("stats"):
-			var stats = result.stats
-			assert(stats.has("rank"), "CRITICAL ERROR: stats is missing rank!")
-			if not stats.has("rank"): push_error("CRITICAL ERROR: stats is missing rank!")
-			current_rank = int(stats["rank"])
-			assert(stats.has("xp"), "CRITICAL ERROR: stats is missing xp!")
-			if not stats.has("xp"): push_error("CRITICAL ERROR: stats is missing xp!")
-			current_xp = int(stats["xp"])
-			assert(stats.has("next_rank_xp"), "CRITICAL ERROR: stats is missing next_rank_xp!")
-			if not stats.has("next_rank_xp"): push_error("CRITICAL ERROR: stats is missing next_rank_xp!")
-			next_rank_xp = int(stats["next_rank_xp"])
-			assert(stats.has("current_nrg"), "CRITICAL ERROR: stats is missing current_nrg!")
-			if not stats.has("current_nrg"): push_error("CRITICAL ERROR: stats is missing current_nrg!")
-			current_nrg = int(stats["current_nrg"])
-			assert(stats.has("max_nrg"), "CRITICAL ERROR: stats is missing max_nrg!")
-			if not stats.has("max_nrg"): push_error("CRITICAL ERROR: stats is missing max_nrg!")
-			max_nrg = int(stats["max_nrg"])
-			assert(stats.has("nrg_regen_rate_seconds"), "CRITICAL ERROR: stats is missing nrg_regen_rate_seconds!")
-			if not stats.has("nrg_regen_rate_seconds"): push_error("CRITICAL ERROR: stats is missing nrg_regen_rate_seconds!")
-			nrg_regen_rate_seconds = int(stats["nrg_regen_rate_seconds"])
-			assert(stats.has("seconds_until_next_nrg"), "CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
-			if not stats.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
-			seconds_until_next_nrg = float(stats["seconds_until_next_nrg"])
-			rank_updated.emit(current_rank, current_xp, next_rank_xp)
-			nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
-		if result.has("wallet"):
-			var wallet = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
-			_update_wallet_data(wallet)
+func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}) -> Dictionary:
+	var result: Dictionary = await server_connection.finish_mission_async(win_status, used_items)
+	if not result.has("error") and result.get("success", false) == true:
+		if result.has("rewards"):
+			var rewards = result.rewards
+			if rewards.has("stats"):
+				var stats = rewards.stats
+				if stats.has("rank"): current_rank = int(stats["rank"])
+				if stats.has("xp"): current_xp = int(stats["xp"])
+				if stats.has("next_rank_xp"): next_rank_xp = int(stats["next_rank_xp"])
+				if stats.has("current_nrg"): current_nrg = int(stats["current_nrg"])
+				if stats.has("max_nrg"): max_nrg = int(stats["max_nrg"])
+				if stats.has("nrg_regen_rate_seconds"): nrg_regen_rate_seconds = float(stats["nrg_regen_rate_seconds"])
+				if stats.has("seconds_until_next_nrg"): seconds_until_next_nrg = float(stats["seconds_until_next_nrg"])
+				rank_updated.emit(current_rank, current_xp, next_rank_xp)
+				nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
+			if rewards.has("wallet"):
+				var wallet = JSON.parse_string(rewards.wallet) if rewards.wallet is String else rewards.wallet
+				_update_wallet_data(wallet)
+
+		if win_status:
+			var rewards_text: String = ""
+			var mission_data: Dictionary = game_data_missions.get(mission_id, {})
+			if mission_data.has("gil"):
+				rewards_text += "Gil +%s\n" % str(int(mission_data["gil"]))
+			if mission_data.has("exp"):
+				rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
+			mission_completed.emit(rewards_text)
+	else:
+		if win_status:
+			mission_failed.emit(str(result.get("error", "Unknown error finishing mission")))
+	
+	# Update items since they might have been deducted
+	#request_player_items()
+	
 	return result
 
 func request_dungeon_missions(mission_ids: Array) -> void:
@@ -421,29 +425,6 @@ func request_dungeon_missions(mission_ids: Array) -> void:
 		if not mission_data.is_empty():
 			game_data_missions[str(mission_id)] = mission_data # Cache it
 	dungeon_missions_ready.emit(mission_ids)
-
-func request_perform_mission(mission_id: String) -> void:
-	var result: Dictionary = await perform_mission(mission_id)
-
-	if result.has("error"):
-		mission_failed.emit(str(result.error))
-	else:
-		var rewards_text: String = ""
-		assert(game_data_missions.has(mission_id), "CRITICAL ERROR: game_data_missions is missing mission_id: " + mission_id)
-		if not game_data_missions.has(mission_id): push_error("CRITICAL ERROR: game_data_missions is missing mission_id: " + mission_id)
-		var mission_data: Dictionary = game_data_missions[mission_id] if game_data_missions.has(mission_id) else {}
-
-		if mission_data.has("gil"):
-			assert(mission_data.has("gil"), "CRITICAL ERROR: mission_data is missing gil!")
-			if not mission_data.has("gil"): push_error("CRITICAL ERROR: mission_data is missing gil!")
-			rewards_text += "Gil +%s\n" % str(int(mission_data["gil"]))
-		if mission_data.has("exp"):
-			assert(mission_data.has("exp"), "CRITICAL ERROR: mission_data is missing exp!")
-			if not mission_data.has("exp"): push_error("CRITICAL ERROR: mission_data is missing exp!")
-			rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
-
-		mission_completed.emit(rewards_text)
-
 
 func get_equipment_template_id(instance_id: String) -> String:
 	assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")

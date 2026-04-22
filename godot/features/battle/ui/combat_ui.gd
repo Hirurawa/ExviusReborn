@@ -64,7 +64,6 @@ func _ready() -> void:
 	battle_manager.item_refunded.connect(_on_item_refunded)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
-	battle_manager.mission_cleared.connect(_on_mission_completed)
 	battle_manager.mission_failed.connect(_on_mission_failed)
 	DataManager.mission_failed.connect(_on_mission_failed)
 
@@ -840,7 +839,7 @@ func _on_finish_pressed() -> void:
 		return
 
 	finish_button.disabled = true
-	DataManager.request_perform_mission(current_mission_id)
+	battle_manager._trigger_mission_complete()
 
 func _on_mission_completed(rewards_text: String = "") -> void:
 	rewards_popup.dialog_text = "Mission completed successfully!" + rewards_text

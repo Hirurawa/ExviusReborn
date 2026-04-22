@@ -380,12 +380,13 @@ func start_mission_async(mission_id: String) -> Dictionary:
 
 	return {"success": false, "error": "Invalid response"}
 
-func finish_mission_async(win_status: bool) -> Dictionary:
+func finish_mission_async(win_status: bool, used_items: Dictionary = {}) -> Dictionary:
 	if _session == null or _session.is_expired():
 		return {"success": false, "error": "Not authenticated"}
 
 	var payload = JSON.stringify({
-		"win_status": win_status
+		"win_status": win_status,
+		"used_items": used_items
 	})
 	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "finish_mission", payload)
 
@@ -398,26 +399,6 @@ func finish_mission_async(win_status: bool) -> Dictionary:
 		return dict
 
 	return {"success": false, "error": "Invalid response"}
-
-func perform_mission_async(mission_id: String) -> Dictionary:
-	if _session == null or _session.is_expired():
-		return {}
-
-	var payload = JSON.stringify({
-		"mission_id": mission_id
-	})
-	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "perform_mission", payload)
-
-	if result.is_exception():
-		push_error("Failed to perform mission: %s" % result.get_exception().message)
-		return {"error": result.get_exception().message}
-
-	var dict = JSON.parse_string(result.payload)
-	if dict and dict is Dictionary:
-		return dict
-
-	return {}
-
 
 func equip_item_async(unit_instance_id: String, slot: String, item_instance_id: String) -> Dictionary:
 	var payload = JSON.stringify({"unit_instance_id": unit_instance_id, "slot": slot, "item_instance_id": item_instance_id})

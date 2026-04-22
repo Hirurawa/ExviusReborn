@@ -2,6 +2,7 @@ local nk = require("nakama")
 local StaticData = require("core.static_data")
 local PlayerData = require("core.player_data")
 local Utilities = require("core.utilities")
+local Inventory = require("features.inventory")
 
 local Combat = {}
 
@@ -109,6 +110,22 @@ function Combat.finish_mission(context, payload)
     local mission_id = active_mission.mission_id
 
     local mission_data = StaticData.missions_data[tostring(mission_id)]
+
+    -- Anti-cheat validation for used items
+    if request.used_items and type(request.used_items) == "table" then
+        local stackables = Inventory.get_stackables(context.user_id)
+        for item_id, used_count in pairs(request.used_items) do
+            local id_str = tostring(item_id)
+            if type(used_count) == "number" and used_count > 0 then
+                local current_amount = stackables[id_str] or 0
+                if current_amount < used_count then
+                    return nk.json_encode({success = false, error_message = "Anti-cheat: Not enough items"})
+                end
+            end
+        end
+        -- Deduction
+        Inventory.remove_stackables(context.user_id, request.used_items)
+    end
 
     -- Clear the active mission lock
     local write_objects = {

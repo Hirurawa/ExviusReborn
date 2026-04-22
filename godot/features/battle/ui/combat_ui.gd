@@ -20,6 +20,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/CombatUnitPa
 @onready var bottom_ui_wrapper: Control = %BottomUIWrapper
 @onready var bottom_section: GridContainer = %BottomSection
 @onready var unit_info_popup: Control = %UnitInfoPopup
+@onready var background: TextureRect = $Background
 
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
@@ -419,6 +420,19 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
 	var dungeon_id: String = params.get("dungeon_id", "")
+
+	if dungeon_id != "":
+		var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
+		if dungeon_data.has("names"):
+			var dungeon_name = str(dungeon_data["names"][0])
+			var formatted_name = dungeon_name.replace(" ", "_")
+			DataManager.last_played_dungeon_name = formatted_name
+
+			var bg_path = "res://assets/battle_bg/%s.jpg" % formatted_name
+			if ResourceLoader.exists(bg_path):
+				background.texture = load(bg_path)
+			else:
+				print("CombatUI: Background not found at ", bg_path)
 
 	battle_manager.initialize_battle(current_mission_id)
 

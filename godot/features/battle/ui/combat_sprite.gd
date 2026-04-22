@@ -3,8 +3,12 @@ extends TextureRect
 # To keep track of states and the current active animation
 var idle_anim: Dictionary = {}
 var atk_anim: Dictionary = {}
+var magic_standby_anim: Dictionary = {}
+var magic_atk_anim: Dictionary = {}
 
 var is_attacking: bool = false
+var is_magic_standby: bool = false
+var is_magic_atk: bool = false
 var is_enemy: bool = false
 var attack_loop_count: int = 0
 var max_attack_loops: int = 1
@@ -25,6 +29,7 @@ func _ready() -> void:
 	if battle_manager:
 		battle_manager.unit_action_started.connect(_on_unit_action_started)
 		battle_manager.enemy_action_started.connect(_on_enemy_action_started)
+		battle_manager.action_queued.connect(_on_action_queued)
 
 func setup(p_index: int, template_id: String, p_is_enemy: bool = false) -> void:
 	party_index = p_index
@@ -38,6 +43,8 @@ func setup(p_index: int, template_id: String, p_is_enemy: bool = false) -> void:
 	else:
 		idle_anim = TextureBuilder.load_unit_animation_data(template_id, "idle")
 		atk_anim = TextureBuilder.load_unit_animation_data(template_id, "atk")
+		magic_standby_anim = TextureBuilder.load_unit_animation_data(template_id, "magic_standby")
+		magic_atk_anim = TextureBuilder.load_unit_animation_data(template_id, "magic_atk")
 		max_attack_loops = 1
 
 	# Visual fail-fast: If idle animation is missing, fallback to icon and turn neon pink
@@ -56,14 +63,40 @@ func setup(p_index: int, template_id: String, p_is_enemy: bool = false) -> void:
 
 func _play_idle() -> void:
 	is_attacking = false
+	is_magic_standby = false
+	is_magic_atk = false
 	current_frame_idx = 0
 	current_frame_timer = 0.0
 
 	if not idle_anim.is_empty() and idle_anim.get("frames", []).size() > 0:
 		texture = idle_anim["frames"][current_frame_idx]
 
+func _play_magic_standby() -> void:
+	if magic_standby_anim.is_empty() or magic_standby_anim.get("frames", []).size() == 0:
+		_play_idle()
+		return
+
+	is_attacking = false
+	is_magic_standby = true
+	current_frame_idx = 0
+	current_frame_timer = 0.0
+	texture = magic_standby_anim["frames"][current_frame_idx]
+
+func _play_magic_atk() -> void:
+	if magic_atk_anim.is_empty() or magic_atk_anim.get("frames", []).size() == 0:
+		_play_atk()
+		return
+
+	is_attacking = true
+	is_magic_atk = true
+	attack_loop_count = 0
+	current_frame_idx = 0
+	current_frame_timer = 0.0
+	texture = magic_atk_anim["frames"][current_frame_idx]
+
 func _play_atk() -> void:
 	is_attacking = true
+	is_magic_atk = false
 	attack_loop_count = 0
 	current_frame_idx = 0
 	current_frame_timer = 0.0
@@ -83,7 +116,11 @@ func _process(delta: float) -> void:
 	# Typically frame delays are in 1/60th of a second (frames). We'll assume delays are *frames* at 60fps.
 	# So delay time in seconds = frame_delay / 60.0
 
-	var current_anim = atk_anim if is_attacking else idle_anim
+	var current_anim = idle_anim
+	if is_attacking:
+		current_anim = magic_atk_anim if is_magic_atk else atk_anim
+	elif is_magic_standby:
+		current_anim = magic_standby_anim
 
 	if current_anim.is_empty() or current_anim.get("frames", []).size() == 0:
 		return
@@ -140,6 +177,12 @@ func _on_unit_action_started(unit_index: int, action: int) -> void:
 	# Check if action is ATTACK
 	if action == battle_manager.CombatAction.ATTACK:
 		_play_atk()
+	elif action == battle_manager.CombatAction.SKILL or action == battle_manager.CombatAction.ITEM:
+		var action_id = battle_manager.party_data[party_index].get("queued_action_id", "")
+		if DataManager.game_data_skills_magic.has(action_id):
+			_play_magic_atk()
+		else:
+			_play_atk()
 
 func _on_enemy_action_started(enemy_index: int, action: int) -> void:
 	if not is_enemy or enemy_index != party_index:
@@ -147,3 +190,15 @@ func _on_enemy_action_started(enemy_index: int, action: int) -> void:
 
 	if action == battle_manager.CombatAction.ATTACK:
 		_play_atk()
+
+func _on_action_queued(unit_index: int, action: int, action_id: String) -> void:
+	if is_enemy or unit_index != party_index:
+		return
+
+	if action == battle_manager.CombatAction.SKILL or action == battle_manager.CombatAction.ITEM:
+		if DataManager.game_data_skills_magic.has(action_id):
+			_play_magic_standby()
+		else:
+			_play_idle()
+	else:
+		_play_idle()

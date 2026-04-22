@@ -7,6 +7,7 @@ signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: in
 signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
+signal action_queued(unit_index: int, action: CombatAction, action_id: String)
 signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
 signal mission_failed
@@ -238,6 +239,8 @@ func set_queued_action(unit_index: int, new_action: CombatAction, action_name: S
 	unit_data["queued_action_id"] = action_id
 	unit_data["queued_payload"] = payload
 
+	action_queued.emit(unit_index, new_action, action_id)
+
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
 		return
@@ -259,6 +262,8 @@ func execute_queued_action(attacker_index: int) -> void:
 		var action_name: String = attacker_data.get("queued_action_name", "")
 		var action_id: String = attacker_data.get("queued_action_id", "")
 		print("Executing: ", action_name)
+
+		unit_action_started.emit(attacker_index, action)
 
 		if action == CombatAction.ITEM:
 			var payload_data: Dictionary = attacker_data.get("queued_payload", {})

@@ -180,6 +180,7 @@ func _on_unit_action_started(unit_index: int, action: int) -> void:
 	elif action == battle_manager.CombatAction.SKILL or action == battle_manager.CombatAction.ITEM:
 		var action_id = battle_manager.party_data[party_index].get("queued_action_id", "")
 		if DataManager.game_data_skills_magic.has(action_id):
+			max_attack_loops = 3
 			_play_magic_atk()
 		else:
 			_play_atk()

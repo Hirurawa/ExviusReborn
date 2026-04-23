@@ -6,6 +6,89 @@ local Inventory = require("features.inventory")
 
 local Combat = {}
 
+local function get_mission_progress(user_id)
+    local object_ids = {
+        {collection = "mission_progress", key = "cleared_missions", user_id = user_id}
+    }
+    local objects = nk.storage_read(object_ids)
+    if #objects == 0 or not objects[1].value then
+        return {}
+    end
+    return objects[1].value
+end
+
+local function save_mission_progress(user_id, mission_key, objectives)
+    local progress = get_mission_progress(user_id)
+    progress[mission_key] = {
+        cleared = true,
+        objectives = objectives
+    }
+
+    nk.storage_write({
+        {
+            collection = "mission_progress",
+            key = "cleared_missions",
+            user_id = user_id,
+            value = progress,
+            permission_read = 1,
+            permission_write = 1
+        }
+    })
+end
+
+local function normalize_currency_key(raw_currency)
+    if type(raw_currency) ~= "string" then
+        return nil
+    end
+    return string.lower(raw_currency)
+end
+
+local function is_wallet_currency(currency_key)
+    return currency_key == "gil" or currency_key == "lapis"
+end
+
+local function add_reward_tuple(changeset, reward_tuple)
+    if type(reward_tuple) ~= "table" or #reward_tuple < 3 then
+        return
+    end
+
+    local currency_key = normalize_currency_key(reward_tuple[1])
+    local amount = tonumber(reward_tuple[3])
+    if not currency_key or not amount or amount == 0 then
+        return
+    end
+
+    -- Only wallet currencies are supported in this reward path for now.
+    if not is_wallet_currency(currency_key) then
+        return
+    end
+
+    changeset[currency_key] = (changeset[currency_key] or 0) + amount
+end
+
+local function get_optional_objective_rewards(mission_data)
+    local rewards = {}
+    local challenges = mission_data and mission_data.challenges
+    if type(challenges) ~= "table" or #challenges == 0 then
+        return rewards
+    end
+
+    -- Prefer skipping base completion challenge when present.
+    local start_index = 1
+    if #challenges >= 4 then
+        start_index = 2
+    end
+
+    for i = start_index, math.min(start_index + 2, #challenges) do
+        local challenge = challenges[i]
+        if challenge and challenge.reward then
+            table.insert(rewards, challenge.reward)
+        end
+    end
+
+    return rewards
+end
+
 function Combat.start_mission(context, payload)
     local request = Utilities.parse_payload(payload)
     if not request then
@@ -47,7 +130,10 @@ function Combat.start_mission(context, payload)
         {collection = "stats", key = "player_stats", user_id = context.user_id}
     }
     local objects = nk.storage_read(object_ids)
-    local raw_stats = objects[1].value
+    local raw_stats = {}
+    if #objects > 0 and objects[1].value then
+        raw_stats = objects[1].value
+    end
 
     -- Check if player already has an active mission, could be optional but good for safety
     if raw_stats.active_mission then
@@ -66,6 +152,7 @@ function Combat.start_mission(context, payload)
                 xp = stats.xp,
                 current_nrg = stats.current_nrg,
                 last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or current_time,
+                last_entered_mission_id = tostring(mission_id),
                 active_mission = {
                     mission_id = mission_id,
                     start_time = current_time
@@ -108,6 +195,7 @@ function Combat.finish_mission(context, payload)
 
     local active_mission = raw_stats.active_mission
     local mission_id = active_mission.mission_id
+    local mission_key = "mission_" .. tostring(mission_id)
 
     local mission_data = StaticData.missions_data[tostring(mission_id)]
 
@@ -137,7 +225,8 @@ function Combat.finish_mission(context, payload)
                 rank = raw_stats.rank,
                 xp = raw_stats.xp,
                 current_nrg = raw_stats.current_nrg,
-                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000)
+                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000),
+                last_entered_mission_id = tostring(raw_stats.last_entered_mission_id or mission_id)
                 -- active_mission is omitted, thus clearing it
             },
             permission_read = 1,
@@ -155,6 +244,9 @@ function Combat.finish_mission(context, payload)
         nk.storage_write(write_objects)
         return nk.json_encode({success = false, error_message = "Mission data not found for active mission"})
     end
+
+    local mission_progress = get_mission_progress(context.user_id)
+    local is_first_clear = mission_progress[mission_key] == nil
 
     local gil_reward = mission_data.gil or 0
     local exp_reward = mission_data.exp or 0
@@ -214,7 +306,8 @@ function Combat.finish_mission(context, payload)
                 rank = stats.rank,
                 xp = stats.xp,
                 current_nrg = stats.current_nrg,
-                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000)
+                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000),
+                last_entered_mission_id = tostring(raw_stats.last_entered_mission_id or mission_id)
                 -- active_mission is omitted, clearing it
             },
             permission_read = 1,
@@ -223,15 +316,48 @@ function Combat.finish_mission(context, payload)
     }
     nk.storage_write(write_objects)
 
-    -- Add gil
-    local wallet_out = {}
+    -- Use challenge_results from the payload if provided and valid, otherwise fall back
+    -- to marking all objectives complete (backward-compatible default).
+    local objective_flags = {true, true, true}
+    if type(request.challenge_results) == "table" and #request.challenge_results > 0 then
+        objective_flags = {}
+        for i, v in ipairs(request.challenge_results) do
+            objective_flags[i] = v == true
+        end
+    end
+
+    local wallet_changeset = {}
     if gil_reward > 0 then
-        local changeset = { gil = gil_reward }
-        local metadata = { source = "finish_mission", mission_id = mission_id }
-        local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
+        wallet_changeset.gil = gil_reward
+    end
+
+    if is_first_clear then
+        if type(mission_data.rewards) == "table" then
+            for _, reward_tuple in ipairs(mission_data.rewards) do
+                add_reward_tuple(wallet_changeset, reward_tuple)
+            end
+        end
+
+        local optional_rewards = get_optional_objective_rewards(mission_data)
+        for _, reward_tuple in ipairs(optional_rewards) do
+            add_reward_tuple(wallet_changeset, reward_tuple)
+        end
+    end
+
+    if next(wallet_changeset) ~= nil then
+        local metadata = {
+            source = "finish_mission",
+            mission_id = mission_id,
+            first_clear = is_first_clear
+        }
+        local status, result = pcall(nk.wallet_update, context.user_id, wallet_changeset, metadata, true)
         if not status then
             return nk.json_encode({success = false, error_message = "Failed to update wallet: " .. tostring(result)})
         end
+    end
+
+    if is_first_clear then
+        save_mission_progress(context.user_id, mission_key, objective_flags)
     end
 
     local account = nk.account_get_id(context.user_id)
@@ -239,6 +365,12 @@ function Combat.finish_mission(context, payload)
     return nk.json_encode({
         success = true,
         gameplay_result = "win",
+        first_clear = is_first_clear,
+        mission_progress = {
+            key = mission_key,
+            cleared = true,
+            objectives = objective_flags
+        },
         rewards = {
             stats = stats,
             wallet = account.wallet

@@ -69,4 +69,18 @@ function ClientData.get_dungeon_missions(context, payload)
     return nk.json_encode({missions = result})
 end
 
+function ClientData.get_mission_progress(context, payload)
+    local object_ids = {
+        {collection = "mission_progress", key = "cleared_missions", user_id = context.user_id}
+    }
+    local objects = nk.storage_read(object_ids)
+
+    local cleared_missions = {}
+    if #objects > 0 and objects[1].value then
+        cleared_missions = objects[1].value
+    end
+
+    return nk.json_encode({cleared_missions = cleared_missions})
+end
+
 return ClientData

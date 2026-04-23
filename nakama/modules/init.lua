@@ -16,6 +16,7 @@ local Economy = require("features.economy")
 nk.register_rpc(ClientData.get_data_version, "get_data_version")
 nk.register_rpc(ClientData.get_game_data, "get_game_data")
 nk.register_rpc(ClientData.get_dungeon_missions, "get_dungeon_missions")
+nk.register_rpc(ClientData.get_mission_progress, "get_mission_progress")
 
 nk.register_rpc(Units.get_player_units_rpc, "get_player_units")
 nk.register_rpc(Units.summon_units, "summon_units")

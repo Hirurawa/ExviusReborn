@@ -39,8 +39,8 @@ function Inventory.remove_stackables(user_id, items_to_remove)
         local id_str = tostring(item_id)
         if type(count) == "number" and count > 0 then
             stackables[id_str] = (stackables[id_str] or 0) - count
-            if stackables[id_str] < 0 then
-                stackables[id_str] = 0
+            if stackables[id_str] <= 0 then
+                stackables[id_str] = nil
             end
         end
     end

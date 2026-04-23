@@ -33,6 +33,7 @@ var current_nrg: int = 0
 var max_nrg: int = 0
 var nrg_regen_rate_seconds: int = 300
 var seconds_until_next_nrg: float = 0.0
+var last_entered_mission_id: String = ""
 
 var gil: int = 0
 var lapis: int = 0
@@ -97,6 +98,8 @@ func register(email: String, password: String, username: String) -> void:
 func logout() -> void:
 	server_connection.logout()
 	account_info = null
+	last_entered_mission_id = ""
+	last_played_dungeon_name = ""
 
 func update_account(new_username: String) -> bool:
 	var result: int = await server_connection.update_account_async(new_username)
@@ -138,6 +141,11 @@ func _load_initial_data(email: String) -> void:
 	assert(stats.has("seconds_until_next_nrg"), "CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
 	if not stats.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: stats is missing seconds_until_next_nrg!")
 	seconds_until_next_nrg = float(stats["seconds_until_next_nrg"])
+	last_entered_mission_id = str(stats.get("last_entered_mission_id", ""))
+	if last_entered_mission_id != "":
+		await _update_last_played_dungeon_from_mission(last_entered_mission_id)
+	else:
+		last_played_dungeon_name = ""
 	rank_updated.emit(current_rank, current_xp, next_rank_xp)
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
@@ -224,6 +232,7 @@ func add_rank_xp(xp_to_add: int) -> void:
 		assert(result.has("seconds_until_next_nrg"), "CRITICAL ERROR: result is missing seconds_until_next_nrg!")
 		if not result.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: result is missing seconds_until_next_nrg!")
 		seconds_until_next_nrg = float(result["seconds_until_next_nrg"])
+		last_entered_mission_id = str(result.get("last_entered_mission_id", last_entered_mission_id))
 		rank_updated.emit(current_rank, current_xp, next_rank_xp)
 		nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
@@ -251,6 +260,43 @@ func request_buy_item(item_id: String, quantity: int) -> void:
 		purchase_successful.emit()
 	else:
 		purchase_failed.emit(result.get("error", "ERR_MISSING_SERVER_ERROR_MSG"))
+
+func request_start_mission(mission_id: String) -> Dictionary:
+	var result: Dictionary = await server_connection.start_mission_async(mission_id)
+	if result.get("success", false) == true:
+		last_entered_mission_id = mission_id
+		await _update_last_played_dungeon_from_mission(mission_id)
+	return result
+
+func _update_last_played_dungeon_from_mission(mission_id: String) -> void:
+	if mission_id == "":
+		last_played_dungeon_name = ""
+		return
+
+	var mission_key: String = str(mission_id)
+	var mission_data: Dictionary = game_data_missions.get(mission_key, {})
+
+	# Mission cache is loaded lazily, so fetch this specific mission if needed.
+	if mission_data.is_empty():
+		var fetched_missions: Dictionary = await server_connection.get_dungeon_missions_async([mission_key])
+		if fetched_missions.has(mission_key):
+			mission_data = fetched_missions[mission_key]
+			game_data_missions[mission_key] = mission_data
+
+	if mission_data.is_empty():
+		return
+
+	var dungeon_id: String = str(mission_data.get("dungeon_id", ""))
+	if dungeon_id == "":
+		return
+
+	var dungeon_data: Dictionary = game_data_dungeons.get(dungeon_id, {})
+	if dungeon_data.is_empty():
+		return
+
+	if dungeon_data.has("names") and dungeon_data["names"] is Array and dungeon_data["names"].size() > 0:
+		var dungeon_name: String = str(dungeon_data["names"][0])
+		last_played_dungeon_name = dungeon_name.replace(" ", "_")
 
 func save_parties(new_parties: Array) -> Dictionary:
 	var result: Dictionary = await server_connection.save_parties_async(new_parties)
@@ -381,8 +427,8 @@ func delete_friend(username: String) -> void:
 	else:
 		friend_action_result.emit(false, "Error code: %d" % result)
 
-func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}) -> Dictionary:
-	var result: Dictionary = await server_connection.finish_mission_async(win_status, used_items)
+func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = []) -> Dictionary:
+	var result: Dictionary = await server_connection.finish_mission_async(win_status, used_items, challenge_results)
 	if not result.has("error") and result.get("success", false) == true:
 		if result.has("rewards"):
 			var rewards = result.rewards
@@ -395,6 +441,9 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 				if stats.has("max_nrg"): max_nrg = int(stats["max_nrg"])
 				if stats.has("nrg_regen_rate_seconds"): nrg_regen_rate_seconds = float(stats["nrg_regen_rate_seconds"])
 				if stats.has("seconds_until_next_nrg"): seconds_until_next_nrg = float(stats["seconds_until_next_nrg"])
+				if stats.has("last_entered_mission_id"):
+					last_entered_mission_id = str(stats["last_entered_mission_id"])
+					await _update_last_played_dungeon_from_mission(last_entered_mission_id)
 				rank_updated.emit(current_rank, current_xp, next_rank_xp)
 				nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 			if rewards.has("wallet"):

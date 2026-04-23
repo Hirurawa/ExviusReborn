@@ -14,7 +14,8 @@ function PlayerData.get_player_stats(context, payload)
         rank = 1,
         xp = 0,
         current_nrg = 41,
-        last_nrg_update_time = math.floor(nk.time() / 1000)
+        last_nrg_update_time = math.floor(nk.time() / 1000),
+        last_entered_mission_id = ""
     }
 
     if #objects > 0 then
@@ -25,6 +26,7 @@ function PlayerData.get_player_stats(context, payload)
             -- Backwards compatibility with old energy fields
             stats.current_nrg = data.current_nrg or data.energy or stats.current_nrg
             stats.last_nrg_update_time = data.last_nrg_update_time or data.last_energy_update_time or stats.last_nrg_update_time
+            stats.last_entered_mission_id = tostring(data.last_entered_mission_id or "")
         end
     else
         -- Brand new account: lazy initialization
@@ -119,7 +121,8 @@ function PlayerData.get_player_stats(context, payload)
         current_nrg = stats.current_nrg,
         max_nrg = max_energy,
         nrg_regen_rate_seconds = nrg_regen_rate_seconds,
-        seconds_until_next_nrg = seconds_until_next_nrg
+        seconds_until_next_nrg = seconds_until_next_nrg,
+        last_entered_mission_id = stats.last_entered_mission_id
     }
 
     return nk.json_encode(payload_out)
@@ -203,7 +206,8 @@ function PlayerData.add_rank_xp(context, payload)
                 rank = stats.rank,
                 xp = stats.xp,
                 current_nrg = stats.current_nrg,
-                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000)
+                last_nrg_update_time = raw_stats.last_nrg_update_time or raw_stats.last_energy_update_time or math.floor(nk.time() / 1000),
+                last_entered_mission_id = tostring(raw_stats.last_entered_mission_id or "")
             },
             permission_read = 1,
             permission_write = 1

@@ -42,6 +42,7 @@ var total_waves: int = 1
 var current_mission_id: String = ""
 var mission_drops: Array[String] = []
 var used_items: Dictionary = {}
+var challenge_results: Array[bool] = []
 
 func _ready() -> void:
 	# 1. Instantiate the script purely in code
@@ -134,6 +135,9 @@ func initialize_battle(mission_id: String) -> void:
 	current_wave = 1
 	mission_drops.clear()
 	used_items.clear()
+	var challenge_count: int = (mission_data.get("challenges", []) as Array).size()
+	challenge_results.resize(challenge_count)
+	challenge_results.fill(false)
 
 	party_data = []
 
@@ -210,6 +214,12 @@ func initialize_battle(mission_id: String) -> void:
 	turn_count = 1
 	is_transitioning = false
 	battle_state_ready.emit()
+
+func set_challenge_result(challenge_index: int, value: bool) -> void:
+	if challenge_index < 0 or challenge_index >= challenge_results.size():
+		push_error("BattleManager: set_challenge_result index %d out of range (size %d)" % [challenge_index, challenge_results.size()])
+		return
+	challenge_results[challenge_index] = value
 
 func set_enemy_hp(enemy_index: int, new_hp: int) -> void:
 	if enemy_index < 0 or enemy_index >= enemy_units.size():
@@ -509,7 +519,7 @@ func _trigger_mission_complete() -> void:
 	print("Mission Drops: ", mission_drops)
 
 	if DataManager.has_method("request_finish_mission"):
-		await DataManager.request_finish_mission(true, current_mission_id, used_items)
+		await DataManager.request_finish_mission(true, current_mission_id, used_items, challenge_results)
 
 	mission_cleared.emit()
 

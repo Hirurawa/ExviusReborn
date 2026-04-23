@@ -5,10 +5,10 @@ extends Node
 @onready var user_info_label: Label = $header_user_name
 
 @onready var rank_label: Label = $header_lv_num
-#@onready var xp_bar: ProgressBar = $BottomRow/HBox/EXPContainer/ProgressBar
+@onready var xp_bar: TextureProgressBar = $header_exp_bar
 @onready var xp_label: Label = $header_exp_num
 
-#@onready var energy_bar: ProgressBar = $BottomRow/HBox/EnergyContainer/NRGTopHBox/ProgressBar
+@onready var energy_bar: TextureProgressBar = $header_stamina_bar
 @onready var energy_label_current: Label = $header_stamina_num_now
 @onready var energy_label_max: Label = $header_stamina_num
 @onready var energy_time_label: Label = $header_stamina_time
@@ -23,15 +23,15 @@ func _ready() -> void:
 
 func _on_rank_updated(rank: int, xp: int, next_rank_xp: int) -> void:
 	rank_label.text = str(rank)
-	#if next_rank_xp > 0:
-		#xp_bar.max_value = next_rank_xp
-		#xp_bar.value = xp
+	if next_rank_xp > 0:
+		xp_bar.max_value = next_rank_xp
+		xp_bar.value = xp
 	xp_label.text = "%d" % next_rank_xp
 
 func _on_nrg_updated(current_nrg: int, max_nrg: int, time_until_next: float) -> void:
-	#if max_nrg > 0:
-		#energy_bar.max_value = max_nrg
-		#energy_bar.value = min(current_nrg, max_nrg)
+	if max_nrg > 0:
+		energy_bar.max_value = max_nrg
+		energy_bar.value = min(current_nrg, max_nrg)
 	energy_label_current.text = "%d" % current_nrg
 	energy_label_max.text = "%d" % max_nrg
 

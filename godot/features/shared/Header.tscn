@@ -78,14 +78,15 @@ text = "header_dia_num"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="header_exp_bar" type="TextureRect" parent="." unique_id=70943106]
+[node name="header_exp_bar" type="TextureProgressBar" parent="." unique_id=1758583408]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 383.0
 offset_top = 52.0
 offset_right = 579.0
 offset_bottom = 74.0
-texture = ExtResource("5_px8dm")
-expand_mode = 1
+nine_patch_stretch = true
+texture_progress = ExtResource("5_px8dm")
 
 [node name="header_exp_gauge" type="TextureRect" parent="." unique_id=1587316859]
 layout_mode = 0
@@ -117,14 +118,15 @@ text = "header_stamina_time"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="header_stamina_bar" type="TextureRect" parent="." unique_id=478284382]
+[node name="header_stamina_bar" type="TextureProgressBar" parent="." unique_id=6659240]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 61.0
 offset_top = 52.0
 offset_right = 257.0
 offset_bottom = 74.0
-texture = ExtResource("8_7281i")
-expand_mode = 1
+nine_patch_stretch = true
+texture_progress = ExtResource("8_7281i")
 
 [node name="header_stamina_gauge" type="TextureRect" parent="." unique_id=2085399118]
 layout_mode = 0

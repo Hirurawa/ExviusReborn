@@ -13,16 +13,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="DefaultBackground" type="ColorRect" parent="."]
+[node name="DefaultBackground" type="ColorRect" parent="." unique_id=622355554]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 1, 1, 1)
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=2075915510]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,18 +30,3 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
 stretch_mode = 3
-
-[node name="EarthShrineButton" type="Button" parent="."]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -90.0
-offset_top = -170.0
-offset_right = 90.0
-offset_bottom = -140.0
-grow_horizontal = 2
-grow_vertical = 0
-text = "Earth Shrine Entrance"

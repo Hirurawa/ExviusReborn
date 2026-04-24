@@ -24,7 +24,8 @@ var _scenes_map: Dictionary = {
 	"friends_ui": "res://features/outgame/friends/FriendsUI.tscn",
 	"summon_ui": "res://features/outgame/summon/SummonUI.tscn",
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
-	"combat_ui": "res://features/battle/ui/CombatUI.tscn"
+	"combat_ui": "res://features/battle/ui/BattleUI.tscn",
+	"battle_ui": "res://features/battle/ui/BattleUI.tscn"
 }
 
 func _ready() -> void:
@@ -79,7 +80,7 @@ func _update_overlays() -> void:
 	var current_scene_name: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui"]
+	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui", "battle_ui", "battleui"]
 	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "mapui", "editprofileui"]
 
 	if top_header:

@@ -1,0 +1,141 @@
+[gd_scene format=3 uid="uid://ciu085uiywmdx"]
+
+[ext_resource type="Texture2D" uid="uid://b1xc44d0e5jkg" path="res://assets/ui/battle/battle_unit_wait.tres" id="1_unit_slot"]
+[ext_resource type="Texture2D" uid="uid://dh06plcinm7yu" path="res://assets/ui/battle/battle_com_mini_baloon.tres" id="2_cmd_baloon"]
+[ext_resource type="Texture2D" uid="uid://bvy8i1eujmh1y" path="res://assets/ui/battle/battle_unit_hp_gauge.tres" id="4_hp_gage"]
+[ext_resource type="Texture2D" uid="uid://dc6teygvm5t36" path="res://assets/ui/battle/battle_unit_hp_bar1.tres" id="4_vu3se"]
+[ext_resource type="Texture2D" uid="uid://duoususx3s63y" path="res://assets/ui/battle/battle_unit_mp_gauge.tres" id="5_mp_gage"]
+[ext_resource type="Texture2D" uid="uid://ste34mggcxee" path="res://assets/ui/battle/battle_unit_barrier_bar.tres" id="6_j3osv"]
+[ext_resource type="Texture2D" uid="uid://bmyerm57rdmxk" path="res://assets/ui/battle/battle_unit_limit_gauge.tres" id="6_limit_gage"]
+[ext_resource type="Texture2D" uid="uid://oehdw2s3eo6r" path="res://assets/ui/battle/battle_unit_barrier_gauge.tres" id="7_barrier_gage"]
+[ext_resource type="Texture2D" uid="uid://ck3cjasl0e4p3" path="res://assets/ui/battle/battle_unit_limit_bar.tres" id="8_dc0hk"]
+[ext_resource type="Script" uid="uid://crrsp5bbi42xa" path="res://features/battle/ui/unit_panel.gd" id="8_script"]
+[ext_resource type="Texture2D" uid="uid://dhkrg88uwyaoi" path="res://assets/ui/battle/battle_unit_mp_bar.tres" id="10_msdk6"]
+
+[node name="UnitPanel" type="TextureRect" unique_id=1462866111]
+custom_minimum_size = Vector2(320, 116)
+texture = ExtResource("1_unit_slot")
+expand_mode = 1
+script = ExtResource("8_script")
+
+[node name="CmdBaloon" type="TextureRect" parent="." unique_id=2129973417]
+layout_mode = 0
+offset_left = 1.0
+offset_top = -24.0
+offset_right = 51.0
+offset_bottom = 32.0
+mouse_filter = 2
+texture = ExtResource("2_cmd_baloon")
+expand_mode = 1
+
+[node name="UnitThum" type="TextureRect" parent="." unique_id=517182817]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 15.0
+offset_right = 66.0
+offset_bottom = 53.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="UnitName" type="TextureRect" parent="." unique_id=213634392]
+layout_mode = 0
+offset_left = 65.0
+offset_top = 26.0
+offset_right = 213.0
+offset_bottom = 54.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="BattleUnitHpBar1" type="Sprite2D" parent="." unique_id=618544670]
+position = Vector2(114, 94)
+texture = ExtResource("4_vu3se")
+
+[node name="HPGage" type="TextureRect" parent="." unique_id=1671152418]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 73.0
+offset_right = 207.0
+offset_bottom = 99.0
+mouse_filter = 2
+texture = ExtResource("4_hp_gage")
+expand_mode = 1
+
+[node name="BattleUnitBarrierBar" type="Sprite2D" parent="." unique_id=1252045917]
+visible = false
+position = Vector2(114, 94)
+texture = ExtResource("6_j3osv")
+
+[node name="BarrierGage" type="TextureRect" parent="." unique_id=658203581]
+visible = false
+layout_mode = 0
+offset_left = 14.0
+offset_top = 72.0
+offset_right = 214.0
+offset_bottom = 108.0
+mouse_filter = 2
+texture = ExtResource("7_barrier_gage")
+expand_mode = 1
+
+[node name="HPNow" type="TextureRect" parent="." unique_id=114875068]
+layout_mode = 0
+offset_left = 62.0
+offset_top = 70.0
+offset_right = 129.0
+offset_bottom = 89.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="HPSlash" type="TextureRect" parent="." unique_id=391611582]
+layout_mode = 0
+offset_left = 133.0
+offset_top = 70.0
+offset_right = 141.0
+offset_bottom = 89.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="HPMax" type="TextureRect" parent="." unique_id=614683788]
+layout_mode = 0
+offset_left = 143.0
+offset_top = 76.0
+offset_right = 186.0
+offset_bottom = 89.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="MPNow" type="TextureRect" parent="." unique_id=439036350]
+layout_mode = 0
+offset_left = 255.0
+offset_top = 70.0
+offset_right = 303.0
+offset_bottom = 88.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="BattleUnitLimitBar" type="Sprite2D" parent="." unique_id=1915037813]
+position = Vector2(259, 62)
+texture = ExtResource("8_dc0hk")
+
+[node name="LimitGage" type="TextureRect" parent="." unique_id=755701380]
+layout_mode = 0
+offset_left = 207.0
+offset_top = 42.0
+offset_right = 311.0
+offset_bottom = 74.0
+mouse_filter = 2
+texture = ExtResource("6_limit_gage")
+expand_mode = 1
+
+[node name="BattleUnitMpBar" type="Sprite2D" parent="." unique_id=7522383]
+position = Vector2(259, 94)
+texture = ExtResource("10_msdk6")
+
+[node name="MPGage" type="TextureRect" parent="." unique_id=1872902920]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 73.0
+offset_right = 304.0
+offset_bottom = 99.0
+mouse_filter = 2
+texture = ExtResource("5_mp_gage")
+expand_mode = 1

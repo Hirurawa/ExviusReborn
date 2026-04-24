@@ -1,0 +1,445 @@
+[gd_scene format=3 uid="uid://cx6m01qlyp86v"]
+
+[ext_resource type="Script" uid="uid://ce0yln5qdskms" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
+[ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
+[ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/ActionProcessor.gd" id="3_yiesy"]
+[ext_resource type="PackedScene" uid="uid://eupai3x1p8wt" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
+[ext_resource type="Texture2D" uid="uid://cnhfbhvsnu0ar" path="res://assets/ui/battle/battle_bg_ally.tres" id="5_party_bg"]
+[ext_resource type="Texture2D" uid="uid://4iruksxhhilr" path="res://assets/ui/battle/battle_com_bg.tres" id="6_bottom_bar"]
+[ext_resource type="Texture2D" uid="uid://b1xc44d0e5jkg" path="res://assets/ui/battle/battle_unit_wait.tres" id="7_unit_slot"]
+[ext_resource type="Texture2D" uid="uid://djig3iii4odtj" path="res://assets/ui/battle/battle_com_auto_btn1.tres" id="8_auto_btn"]
+[ext_resource type="Texture2D" uid="uid://dbxly1tkl57rt" path="res://assets/ui/battle/battle_summon_bar.tres" id="8_ebndp"]
+[ext_resource type="Texture2D" uid="uid://758l4gko0axu" path="res://assets/ui/battle/battle_com_memory_btn1.tres" id="9_memory_btn"]
+[ext_resource type="Texture2D" uid="uid://chf6c26j4khh" path="res://assets/ui/battle/battle_com_menu_btn1.tres" id="10_menu_btn"]
+[ext_resource type="Texture2D" uid="uid://bw4t1ihyfbfm1" path="res://assets/ui/battle/battle_gaugebg.tres" id="11_summon_bg"]
+[ext_resource type="Texture2D" uid="uid://ddp473bv0h4bs" path="res://assets/ui/battle/battle_summon_gauge.tres" id="12_summon_fill"]
+[ext_resource type="Texture2D" uid="uid://bjmms2xio563p" path="res://assets/ui/battle/battle_bg_enemy.tres" id="13_hl17h"]
+[ext_resource type="Texture2D" uid="uid://cdpixjjnnbkjw" path="res://assets/ui/battle/battle_enemy_hp_bar1.tres" id="14_ebndp"]
+[ext_resource type="Texture2D" uid="uid://cyifnjpf1mkx5" path="res://assets/ui/battle/battle_enemy_hp_gauge.tres" id="14_snfla"]
+
+[node name="BattleUI" type="Control" unique_id=993553313]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_f7b2x")
+
+[node name="BattleManager" type="Node" parent="." unique_id=1042845394]
+unique_name_in_owner = true
+script = ExtResource("2_battle")
+
+[node name="ActionProcessor" type="Node" parent="." unique_id=1023631385]
+script = ExtResource("3_yiesy")
+
+[node name="Background" type="TextureRect" parent="." unique_id=533043043]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+
+[node name="VisualLayer" type="Control" parent="." unique_id=1226300491]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PartyBackdrop" type="TextureRect" parent="VisualLayer" unique_id=1875007386]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -496.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("5_party_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="BottomCommandBar" type="TextureRect" parent="VisualLayer" unique_id=1489582349]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -82.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_bottom_bar")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="InfoBarVisual" type="Control" parent="VisualLayer" unique_id=1781586935]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -527.0
+offset_bottom = -467.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="UnitSlotDecor" type="Control" parent="VisualLayer" unique_id=547385631]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -433.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Slot1" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=1148825228]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 322.0
+offset_bottom = 116.0
+texture = ExtResource("7_unit_slot")
+expand_mode = 1
+
+[node name="Slot2" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=1605436309]
+layout_mode = 0
+offset_top = 115.0
+offset_right = 320.0
+offset_bottom = 231.0
+texture = ExtResource("7_unit_slot")
+expand_mode = 1
+
+[node name="Slot3" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=1737810476]
+layout_mode = 0
+offset_top = 230.0
+offset_right = 320.0
+offset_bottom = 346.0
+texture = ExtResource("7_unit_slot")
+expand_mode = 1
+
+[node name="Slot4" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=119550910]
+layout_mode = 0
+offset_left = 317.0
+offset_right = 637.0
+offset_bottom = 116.0
+texture = ExtResource("7_unit_slot")
+expand_mode = 1
+
+[node name="Slot5" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=867006919]
+layout_mode = 0
+offset_left = 317.0
+offset_top = 115.0
+offset_right = 637.0
+offset_bottom = 231.0
+texture = ExtResource("7_unit_slot")
+expand_mode = 1
+
+[node name="Slot6" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=961152692]
+layout_mode = 0
+offset_left = 318.0
+offset_top = 230.0
+offset_right = 638.0
+offset_bottom = 346.0
+texture = ExtResource("7_unit_slot")
+expand_mode = 1
+
+[node name="SummonGaugeBg" type="TextureRect" parent="VisualLayer" unique_id=1438414906]
+layout_mode = 0
+offset_left = 396.0
+offset_top = 475.0
+offset_right = 640.0
+offset_bottom = 531.0
+texture = ExtResource("11_summon_bg")
+expand_mode = 1
+
+[node name="BattleSummonBar" type="Sprite2D" parent="VisualLayer/SummonGaugeBg" unique_id=1440777645]
+position = Vector2(151, 28)
+texture = ExtResource("8_ebndp")
+
+[node name="SummonGaugeFill" type="TextureRect" parent="VisualLayer/SummonGaugeBg" unique_id=1973607915]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("12_summon_fill")
+expand_mode = 3
+stretch_mode = 6
+
+[node name="CommandButtons" type="Control" parent="VisualLayer" unique_id=196450635]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -84.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="AutoButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=642913203]
+layout_mode = 0
+offset_right = 164.0
+offset_bottom = 80.0
+texture = ExtResource("8_auto_btn")
+expand_mode = 1
+
+[node name="MemoryButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=927617625]
+layout_mode = 0
+offset_left = 156.0
+offset_right = 320.0
+offset_bottom = 80.0
+texture = ExtResource("9_memory_btn")
+expand_mode = 1
+
+[node name="MenuButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=2132310257]
+layout_mode = 0
+offset_left = 472.0
+offset_top = -4.0
+offset_right = 640.0
+offset_bottom = 84.0
+texture = ExtResource("10_menu_btn")
+expand_mode = 1
+
+[node name="MainLayout" type="VBoxContainer" parent="." unique_id=1977068219]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -495.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TopSection" type="HBoxContainer" parent="MainLayout" unique_id=48561190]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="EnemyArea" type="VBoxContainer" parent="MainLayout/TopSection" unique_id=1144268447]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ChainCountLabel" type="Label" parent="MainLayout/TopSection/EnemyArea" unique_id=476063707]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Chain: 0"
+
+[node name="EnemyRegion" type="Control" parent="MainLayout/TopSection/EnemyArea" unique_id=121630407]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EnemiesContainer" type="VBoxContainer" parent="MainLayout/TopSection/EnemyArea/EnemyRegion" unique_id=1535255836]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerArea" type="VBoxContainer" parent="MainLayout/TopSection" unique_id=1435178926]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TurnLabel" type="Label" parent="MainLayout/TopSection/PlayerArea" unique_id=385088477]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Turn 1"
+horizontal_alignment = 2
+
+[node name="PlayerSpritesGrid" type="GridContainer" parent="MainLayout/TopSection/PlayerArea" unique_id=980138796]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+
+[node name="InfoBar" type="PanelContainer" parent="MainLayout" unique_id=1488761384]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar" unique_id=76327261]
+layout_mode = 2
+
+[node name="EnemyInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=381750024]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FinishButton" type="Button" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=887308722]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Finish Battle (Debug)"
+
+[node name="EnemyNameLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=987655719]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enemy Name"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=1593568957]
+layout_mode = 2
+
+[node name="EnemyHPBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer" unique_id=1210531152]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="EnemyHPPctLabel" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer" unique_id=1794435181]
+unique_name_in_owner = true
+layout_mode = 2
+text = "100%"
+
+[node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=183465724]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=2081814433]
+layout_mode = 2
+text = "Esper Gauge"
+
+[node name="EsperBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=891301653]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="BottomUIWrapper" type="Control" parent="." unique_id=809296941]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_top = 527.0
+offset_right = 637.0
+offset_bottom = 873.0
+
+[node name="BottomSection" type="GridContainer" parent="BottomUIWrapper" unique_id=745081744]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = -3
+theme_override_constants/v_separation = -1
+columns = 2
+
+[node name="RewardsPopup" type="AcceptDialog" parent="." unique_id=461772511]
+unique_name_in_owner = true
+title = "Mission Complete"
+size = Vector2i(300, 150)
+ok_button_text = "Return to Map"
+
+[node name="TransitionUI" type="Control" parent="." unique_id=987654321]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HBox" type="HBoxContainer" parent="TransitionUI" unique_id=987654322]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -25.0
+offset_right = 100.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="PrefixLabel" type="Label" parent="TransitionUI/HBox" unique_id=987654323]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "Wave "
+
+[node name="NumberMask" type="Control" parent="TransitionUI/HBox" unique_id=987654324]
+clip_contents = true
+custom_minimum_size = Vector2(40, 65)
+layout_mode = 2
+
+[node name="CurrentNum" type="Label" parent="TransitionUI/HBox/NumberMask" unique_id=987654325]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 67.0
+grow_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "1"
+horizontal_alignment = 1
+
+[node name="NextNum" type="Label" parent="TransitionUI/HBox/NumberMask" unique_id=987654326]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 67.0
+offset_bottom = 134.0
+grow_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "2"
+horizontal_alignment = 1
+
+[node name="TotalWavesLabel" type="Label" parent="TransitionUI/HBox" unique_id=987654327]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = " / 3"
+
+[node name="UnitInfoPopup" parent="." unique_id=696240222 instance=ExtResource("4_popup")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="monster_name_base_break" type="TextureRect" parent="." unique_id=261158633]
+layout_mode = 0
+offset_top = 411.0
+offset_right = 396.0
+offset_bottom = 519.0
+texture = ExtResource("13_hl17h")
+expand_mode = 1
+
+[node name="monster_name_break" type="TextureRect" parent="." unique_id=1126377272]
+layout_mode = 0
+offset_left = 49.0
+offset_top = 436.0
+offset_right = 197.0
+offset_bottom = 464.0
+expand_mode = 1
+
+[node name="BattleEnemyHpBar1" type="Sprite2D" parent="." unique_id=191007537]
+position = Vector2(17, 473)
+texture = ExtResource("14_ebndp")
+centered = false
+
+[node name="monster_hp_gage_break" type="TextureRect" parent="." unique_id=1945225037]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 465.0
+offset_right = 419.0
+offset_bottom = 505.0
+texture = ExtResource("14_snfla")
+expand_mode = 1

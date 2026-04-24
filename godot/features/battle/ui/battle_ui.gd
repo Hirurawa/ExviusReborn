@@ -1,6 +1,7 @@
 extends Control
 
 const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
+const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -21,8 +22,6 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var bottom_section: GridContainer = %BottomSection
 @onready var unit_info_popup: Control = %UnitInfoPopup
 @onready var background: TextureRect = $Background
-@onready var monster_hp_gauge: TextureRect = $monster_hp_gage_break
-@onready var monster_hp_bar: Sprite2D = $BattleEnemyHpBar1
 
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
@@ -428,7 +427,6 @@ func init_scene(params: Dictionary) -> void:
 		if dungeon_data.has("names"):
 			var dungeon_name = str(dungeon_data["names"][0])
 			var formatted_name = dungeon_name.replace(" ", "_")
-			DataManager.last_played_dungeon_name = formatted_name
 
 			var bg_path = "res://assets/battle_bg/%s.jpg" % formatted_name
 			if ResourceLoader.exists(bg_path):
@@ -521,9 +519,15 @@ func _on_battle_state_ready() -> void:
 			if not unit_data.is_empty():
 				has_unit = true
 
+		# Create a visual placeholder in every slot first.
+		var slot_node: Control = _create_slot_placeholder()
+		bottom_section.add_child(slot_node)
+
 		if has_unit:
-			# Add panel
+			# Replace placeholder with functional panel when a unit exists.
 			var panel: Node = UnitPanelScene.instantiate()
+			bottom_section.remove_child(slot_node)
+			slot_node.queue_free()
 			bottom_section.add_child(panel)
 			panel.setup(party_idx)
 			panel.open_skill_menu.connect(_open_skill_menu)
@@ -543,15 +547,21 @@ func _on_battle_state_ready() -> void:
 
 			player_sprites_grid.add_child(combat_sprite)
 		else:
-			# Empty slot for both UI elements
-			var empty_panel: Control = Control.new()
-			empty_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			bottom_section.add_child(empty_panel)
-
+			# Keep placeholder in slot for empty party index.
 			var empty_sprite: Control = Control.new()
 			empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			empty_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			player_sprites_grid.add_child(empty_sprite)
+
+func _create_slot_placeholder() -> TextureRect:
+	var placeholder := TextureRect.new()
+	placeholder.texture = UnitSlotTexture
+	placeholder.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	placeholder.stretch_mode = TextureRect.STRETCH_SCALE
+	placeholder.custom_minimum_size = Vector2(320, 116)
+	placeholder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return placeholder
 
 func _play_enemy_death(inner_sprite: Node) -> void:
 	# 1. Kill any damage shake that is currently happening
@@ -594,9 +604,6 @@ func _play_enemy_death(inner_sprite: Node) -> void:
 	
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
 	if enemy_index == _current_target_enemy_index:
-		var fill_ratio: float = clampf(float(new_hp) / float(max_hp), 0.0, 1.0)
-		monster_hp_bar.scale.x = fill_ratio
-		
 		enemy_hp_bar.max_value = max_hp
 		enemy_hp_bar.value = new_hp
 		enemy_hp_pct_label.text = "%d%%" % hp_percent

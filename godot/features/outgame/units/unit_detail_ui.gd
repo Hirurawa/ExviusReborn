@@ -1,6 +1,7 @@
 extends Control
 
 const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
+const MagicScene = preload("res://features/shared/Magic.tscn")
 
 @onready var illustration_button: TextureButton = $VBoxContainer/CharInfoHBox/IllustrationButton
 @onready var unit_detail_sprite: TextureRect = $VBoxContainer/CharInfoHBox/IllustrationButton/SpritePlaceholder
@@ -233,8 +234,7 @@ func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	for sk in magic_list:
 		var sk_id = str(sk.get("id", ""))
 		if DataManager.game_data_skills_magic.has(sk_id):
-			var panel = SkillEntryButtonScene.instantiate()
-			#panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var panel = MagicScene.instantiate()
 			panel.setup_from_skill_data(DataManager.game_data_skills_magic[sk_id], sk.get("source", "Trait"), false, int(sk.get("rarity", -1)))
 			unit_detail_magic_grid.add_child(panel)
 

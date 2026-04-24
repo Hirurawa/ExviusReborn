@@ -2,6 +2,7 @@ extends Control
 
 const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
 const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
+const MagicScene = preload("res://features/shared/Magic.tscn")
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -13,7 +14,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var enemy_region: Control = %EnemyRegion
 @onready var enemies_container: VBoxContainer = %EnemiesContainer
 @onready var turn_label: Label = %TurnLabel
-@onready var player_sprites_grid: GridContainer = %PlayerSpritesGrid
+@onready var player_sprites_container: Control = %PlayerSpritesContainer
 @onready var chain_count_label: Label = %ChainCountLabel
 @onready var enemy_name_label: Label = %EnemyNameLabel
 @onready var enemy_hp_bar: ProgressBar = %EnemyHPBar
@@ -22,6 +23,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var bottom_section: GridContainer = %BottomSection
 @onready var unit_info_popup: Control = %UnitInfoPopup
 @onready var background: TextureRect = $Background
+@onready var monster_hp_bar: Sprite2D = $BattleEnemyHpBar1
 
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
@@ -342,11 +344,16 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 		var action_name: String = opt.get("name", "")
 
 		if is_skill:
-			var btn = SkillEntryButtonScene.instantiate()
-			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			#var btn = SkillEntryButtonScene.instantiate()
+			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var skill_data = opt.get("skill_data", {})
 			var skill_level = opt.get("level", -1)
+			
+			var btn = MagicScene.instantiate() if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)
 
 			btn.pressed.connect(func():
@@ -494,19 +501,19 @@ func _on_battle_state_ready() -> void:
 	# Clear previous panels and sprites
 	for child in bottom_section.get_children():
 		child.queue_free()
-	for child in player_sprites_grid.get_children():
-		child.queue_free()
+	for dot in player_sprites_container.get_children():
+		for child in dot.get_children():
+			child.queue_free()
 
 	_active_panels.clear()
 
-	# Map the 6 grid cells to the correct party indices
-	# GridContainer places items left-to-right, top-to-bottom:
-	# Grid 0 (Top Left)     -> Party index 0
-	# Grid 1 (Top Right)    -> Party index 3
-	# Grid 2 (Mid Left)     -> Party index 1
-	# Grid 3 (Mid Right)    -> Party index 4
-	# Grid 4 (Bot Left)     -> Party index 2
-	# Grid 5 (Bot Right)    -> Empty / -1
+	# Map the 6 UnitDot slots to the correct party indices:
+	# UnitDot0 (Top Left)     -> Party index 0
+	# UnitDot1 (Top Right)    -> Party index 3
+	# UnitDot2 (Mid Left)     -> Party index 1
+	# UnitDot3 (Mid Right)    -> Party index 4
+	# UnitDot4 (Bot Left)     -> Party index 2
+	# UnitDot5 (Bot Right)    -> Empty / -1
 	var grid_to_party_map: Array[int] = [0, 3, 1, 4, 2, -1]
 
 	for grid_idx in range(6):
@@ -536,22 +543,15 @@ func _on_battle_state_ready() -> void:
 			panel.info_tapped.connect(_on_unit_info_tapped)
 			_active_panels.append(panel)
 
-			# Add Combat Sprite
+			# Add Combat Sprite to the corresponding UnitDot
 			var template_id: String = str(unit_data.get("unit_id", ""))
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-			combat_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			combat_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			combat_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 			combat_sprite.setup(party_idx, template_id)
 
-			player_sprites_grid.add_child(combat_sprite)
-		else:
-			# Keep placeholder in slot for empty party index.
-			var empty_sprite: Control = Control.new()
-			empty_sprite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			empty_sprite.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			player_sprites_grid.add_child(empty_sprite)
+			player_sprites_container.get_child(grid_idx).add_child(combat_sprite)
 
 func _create_slot_placeholder() -> TextureRect:
 	var placeholder := TextureRect.new()
@@ -604,6 +604,9 @@ func _play_enemy_death(inner_sprite: Node) -> void:
 	
 func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int) -> void:
 	if enemy_index == _current_target_enemy_index:
+		var fill_ratio: float = clampf(float(new_hp) / float(max_hp), 0.0, 1.0)
+		monster_hp_bar.scale.x = fill_ratio
+		
 		enemy_hp_bar.max_value = max_hp
 		enemy_hp_bar.value = new_hp
 		enemy_hp_pct_label.text = "%d%%" % hp_percent

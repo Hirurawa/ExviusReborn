@@ -55,10 +55,21 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
-
+		
 		var container: VBoxContainer = VBoxContainer.new()
 		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		container.alignment = BoxContainer.ALIGNMENT_CENTER
+
+		# Layered Control so the pedestal can be overlaid at the bottom of the sprite
+		const SPRITE_W: int = 80
+		const SPRITE_H: int = 100
+		const PEDESTAL_H: int = 28
+
+		var sprite_container: Control = Control.new()
+		sprite_container.custom_minimum_size = Vector2(SPRITE_W, SPRITE_H)
+		sprite_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# Prevent the VBoxContainer from stretching this vertically beyond its minimum
+		sprite_container.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 		var tex_btn: TextureButton = TextureButton.new()
 		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
@@ -67,13 +78,25 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			if tex:
 				tex_btn.texture_normal = tex
 
-		tex_btn.custom_minimum_size = Vector2(80, 80)
+		tex_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		tex_btn.ignore_texture_size = true
 		tex_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		tex_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
 		tex_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))
-		container.add_child(tex_btn)
+		sprite_container.add_child(tex_btn)
+
+		# Pedestal affixed at the bottom using explicit position/size to avoid anchor timing issues
+		var charastand_path: String = "res://assets/ui/unit/unit_charastand_rare%s_small.tres" % unit_inst.get("rarity", 1)
+		if ResourceLoader.exists(charastand_path):
+			var pedestal_rect: TextureRect = TextureRect.new()
+			var tex_pedestal: Texture2D = _get_dynamic_texture(charastand_path) as Texture2D
+			if tex_pedestal:
+				pedestal_rect.texture = tex_pedestal
+			pedestal_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			pedestal_rect.position = Vector2(0, SPRITE_H - PEDESTAL_H)
+			pedestal_rect.size = Vector2(SPRITE_W, PEDESTAL_H)
+			sprite_container.add_child(pedestal_rect)
+
+		container.add_child(sprite_container)
 
 		var name_label: Label = Label.new()
 		name_label.text = unit_data.get("name", "Unknown")

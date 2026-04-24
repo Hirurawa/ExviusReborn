@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cx6m01qlyp86v"]
 
-[ext_resource type="Script" uid="uid://ce0yln5qdskms" path="res://features/battle/ui/combat_ui.gd" id="1_f7b2x"]
+[ext_resource type="Script" uid="uid://mqlys6vct5rg" path="res://features/battle/ui/battle_ui.gd" id="1_f7b2x"]
 [ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
 [ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/ActionProcessor.gd" id="3_yiesy"]
 [ext_resource type="PackedScene" uid="uid://eupai3x1p8wt" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
@@ -76,18 +76,6 @@ grow_vertical = 0
 texture = ExtResource("6_bottom_bar")
 expand_mode = 1
 stretch_mode = 6
-
-[node name="InfoBarVisual" type="Control" parent="VisualLayer" unique_id=1781586935]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -527.0
-offset_bottom = -467.0
-grow_horizontal = 2
-grow_vertical = 0
-mouse_filter = 2
 
 [node name="UnitSlotDecor" type="Control" parent="VisualLayer" unique_id=547385631]
 visible = false
@@ -261,12 +249,6 @@ layout_mode = 2
 text = "Turn 1"
 horizontal_alignment = 2
 
-[node name="PlayerSpritesGrid" type="GridContainer" parent="MainLayout/TopSection/PlayerArea" unique_id=980138796]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-columns = 2
-
 [node name="InfoBar" type="PanelContainer" parent="MainLayout" unique_id=1488761384]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
@@ -333,6 +315,61 @@ theme_override_constants/h_separation = -3
 theme_override_constants/v_separation = -1
 columns = 2
 
+[node name="PlayerSpritesContainer" type="Control" parent="." unique_id=120000001]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 960.0
+mouse_filter = 2
+
+[node name="UnitDot0" type="Control" parent="PlayerSpritesContainer" unique_id=110000001]
+anchors_preset = 0
+offset_left = 403.0
+offset_top = 185.0
+offset_right = 505.0
+offset_bottom = 287.0
+mouse_filter = 2
+
+[node name="UnitDot1" type="Control" parent="PlayerSpritesContainer" unique_id=110000002]
+anchors_preset = 0
+offset_left = 515.0
+offset_top = 206.0
+offset_right = 617.0
+offset_bottom = 308.0
+mouse_filter = 2
+
+[node name="UnitDot2" type="Control" parent="PlayerSpritesContainer" unique_id=110000003]
+anchors_preset = 0
+offset_left = 364.0
+offset_top = 254.0
+offset_right = 466.0
+offset_bottom = 356.0
+mouse_filter = 2
+
+[node name="UnitDot3" type="Control" parent="PlayerSpritesContainer" unique_id=110000004]
+anchors_preset = 0
+offset_left = 479.0
+offset_top = 273.0
+offset_right = 581.0
+offset_bottom = 375.0
+mouse_filter = 2
+
+[node name="UnitDot4" type="Control" parent="PlayerSpritesContainer" unique_id=110000005]
+anchors_preset = 0
+offset_left = 398.0
+offset_top = 329.0
+offset_right = 500.0
+offset_bottom = 431.0
+mouse_filter = 2
+
+[node name="UnitDot5" type="Control" parent="PlayerSpritesContainer" unique_id=110000006]
+anchors_preset = 0
+offset_left = 511.0
+offset_top = 350.0
+offset_right = 613.0
+offset_bottom = 452.0
+mouse_filter = 2
+
 [node name="RewardsPopup" type="AcceptDialog" parent="." unique_id=461772511]
 unique_name_in_owner = true
 title = "Mission Complete"
@@ -343,9 +380,9 @@ ok_button_text = "Return to Map"
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = 15
 anchor_right = 1.0
-anchor_bottom = 1.0
+anchor_bottom = 0.507
+offset_bottom = 0.27996826
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2

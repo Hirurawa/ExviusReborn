@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://baq2silquhrr6"]
+
+[ext_resource type="Script" uid="uid://co5sj8n3mpx6n" path="res://features/shared/unit.gd" id="1_g0uxp"]
+
+[node name="Node2D" type="Control" unique_id=425515258]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_g0uxp")
+
+[node name="Pedestal" type="Sprite2D" parent="." unique_id=610055935]
+
+[node name="Unit" type="Sprite2D" parent="Pedestal" unique_id=945323975]

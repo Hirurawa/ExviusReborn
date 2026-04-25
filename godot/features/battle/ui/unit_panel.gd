@@ -8,13 +8,13 @@ signal panel_tapped(unit_index: int)
 signal info_tapped(unit_index: int)
 
 @onready var unit_thum: TextureRect = $UnitThum
-@onready var unit_name: TextureRect = $UnitName
+@onready var unit_name: Label = $UnitName
 @onready var hp_gage: TextureRect = $HPGage
-@onready var hp_now: TextureRect = $HPNow
+@onready var hp_now: Label = $HPNow
 @onready var hp_slash: TextureRect = $HPSlash
-@onready var hp_max: TextureRect = $HPMax
+@onready var hp_max: Label = $HPMax
 @onready var mp_gage: TextureRect = $MPGage
-@onready var mp_now: TextureRect = $MPNow
+@onready var mp_now: Label = $MPNow
 @onready var limit_gage: TextureRect = $LimitGage
 @onready var barrier_gage: TextureRect = $BarrierGage
 @onready var cmd_baloon: TextureRect = $CmdBaloon
@@ -89,11 +89,13 @@ func _gui_input(event: InputEvent) -> void:
 					if _current_queued_action != _battle_manager.CombatAction.DEFEND:
 						_current_queued_action = _battle_manager.CombatAction.DEFEND
 						_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.DEFEND)
+						_update_command_icon("defense")
 						_update_visual_state()
 				elif diff.y < -20:
 					if _current_queued_action != _battle_manager.CombatAction.ATTACK:
 						_current_queued_action = _battle_manager.CombatAction.ATTACK
 						_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)
+						_update_command_icon("attack")
 						_update_visual_state()
 			elif abs(diff.x) > 20 and abs(diff.x) > abs(diff.y):
 				_is_dragging = true
@@ -118,11 +120,13 @@ func _on_turn_changed(_new_turn: int) -> void:
 	_current_queued_action = 0
 	if _battle_manager:
 		_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)
+	_update_command_icon("attack")
 	_update_visual_state()
 
 func _on_unit_stats_updated(index: int, _unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int) -> void:
 	if index != _my_index:
 		return
+	_update_stats_display(_unit_name, cur_hp, max_hp, cur_mp)
 	set_hp_display(cur_hp, max_hp)
 	set_mp_display(cur_mp, max_mp)
 	set_limit_gauge(cur_limit, max_limit)
@@ -146,12 +150,16 @@ func _update_visual_state() -> void:
 
 	if _current_queued_action == _battle_manager.CombatAction.ATTACK:
 		modulate = Color(1.0, 1.0, 1.0, 1.0)
+		_update_command_icon("attack")
 	elif _current_queued_action == _battle_manager.CombatAction.DEFEND:
 		modulate = Color(0.5, 0.8, 1.0, 1.0)
+		_update_command_icon("defense")
 	elif _current_queued_action == _battle_manager.CombatAction.SKILL:
 		modulate = Color(1.0, 0.6, 0.6, 1.0)
+		_update_command_icon("magic")
 	elif _current_queued_action == _battle_manager.CombatAction.ITEM:
 		modulate = Color(0.6, 1.0, 0.6, 1.0)
+		_update_command_icon("item")
 
 func set_hp_display(current_hp: int, max_hp: int) -> void:
 	if max_hp <= 0:
@@ -173,6 +181,26 @@ func set_limit_gauge(current_limit: int, max_limit: int) -> void:
 	var fill_ratio: float = clampf(float(current_limit) / float(max_limit), 0.0, 1.0)
 	limit_gage.scale.x = fill_ratio
 	limit_bar.scale.x = fill_ratio
+
+func _update_command_icon(command: String) -> void:
+	var icon_path: String = "res://assets/ui/battle/battle_com_icon_%s.tres" % command
+	if ResourceLoader.exists(icon_path):
+		cmd_baloon.texture = ResourceLoader.load(icon_path)
+
+func _update_stats_display(unit_name_str: String, cur_hp: int, max_hp: int, cur_mp: int) -> void:
+	unit_name.text = unit_name_str
+	hp_now.text = str(cur_hp)
+	hp_max.text = str(max_hp)
+	mp_now.text = str(cur_mp)
+	
+	# Load and display unit thumbnail
+	if _battle_manager and _my_index >= 0 and _my_index < _battle_manager.party_data.size():
+		var unit_data: Dictionary = _battle_manager.party_data[_my_index]
+		var unit_static_id: String = unit_data.get("unit_id", "")
+		if unit_static_id != "":
+			var texture_path: String = "res://assets/unit_icons/unit_icon_%s.png" % unit_static_id
+			if ResourceLoader.exists(texture_path):
+				unit_thum.texture = ResourceLoader.load(texture_path)
 
 func set_barrier_gauge(current_barrier: float) -> void:
 	var is_active: bool = current_barrier > 0.0

@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://chf6c26j4khh" path="res://assets/ui/battle/battle_com_menu_btn1.tres" id="10_menu_btn"]
 [ext_resource type="Texture2D" uid="uid://bw4t1ihyfbfm1" path="res://assets/ui/battle/battle_gaugebg.tres" id="11_summon_bg"]
 [ext_resource type="Texture2D" uid="uid://ddp473bv0h4bs" path="res://assets/ui/battle/battle_summon_gauge.tres" id="12_summon_fill"]
+[ext_resource type="Texture2D" uid="uid://djy7ch8eas7na" path="res://assets/ui/battle/battle_com_reload_btn1.tres" id="12_wwlun"]
 [ext_resource type="Texture2D" uid="uid://bjmms2xio563p" path="res://assets/ui/battle/battle_bg_enemy.tres" id="13_hl17h"]
 [ext_resource type="Texture2D" uid="uid://cdpixjjnnbkjw" path="res://assets/ui/battle/battle_enemy_hp_bar1.tres" id="14_ebndp"]
 [ext_resource type="Texture2D" uid="uid://cyifnjpf1mkx5" path="res://assets/ui/battle/battle_enemy_hp_gauge.tres" id="14_snfla"]
@@ -188,6 +189,13 @@ offset_right = 320.0
 offset_bottom = 80.0
 texture = ExtResource("9_memory_btn")
 expand_mode = 1
+
+[node name="ReloadButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=205012880]
+layout_mode = 0
+offset_left = 313.0
+offset_right = 478.0
+offset_bottom = 80.0
+texture = ExtResource("12_wwlun")
 
 [node name="MenuButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=2132310257]
 layout_mode = 0

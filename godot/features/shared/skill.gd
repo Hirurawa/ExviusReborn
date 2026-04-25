@@ -24,6 +24,9 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 	if not is_inside_tree():
 		await ready
 
+	# button_limit1.tres <- in case of a limit break
+	# button_item1.tres <- in case of a regular skill
+
 	name_label.text = str(skill_data.get("name", "Unknown Magic"))
 	
 	var icon_path = "res://assets/abilities/" + skill_data.get("icon", "ability_1.png")

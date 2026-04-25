@@ -1,77 +1,77 @@
 [gd_scene format=3 uid="uid://ud12k0ij0lyx"]
 
-[ext_resource type="Script" uid="uid://cj3pqlm08tv1g" path="res://features/shared/magic.gd" id="1_4y2sa"]
+[ext_resource type="Script" uid="uid://cj3pqlm08tv1g" path="res://features/shared/skill.gd" id="1_4y2sa"]
 [ext_resource type="Texture2D" uid="uid://dv3a2baao2odf" path="res://assets/ui/common/button_item1.tres" id="2_vnha4"]
 [ext_resource type="Texture2D" uid="uid://cr5hhlhik3sxa" path="res://assets/ui/common/text_mp.tres" id="3_5gmq1"]
 [ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="6_66tcj"]
 
 [node name="Magic" type="Control" unique_id=174978603]
-custom_minimum_size = Vector2(319, 115)
+custom_minimum_size = Vector2(320, 115)
 layout_mode = 3
 anchors_preset = 0
+offset_right = 319.0
+offset_bottom = 115.0
 script = ExtResource("1_4y2sa")
 
 [node name="unit_magic_bg_1" type="TextureRect" parent="." unique_id=1906780704]
 layout_mode = 0
-offset_left = 13.0
-offset_top = 7.0
-offset_right = 319.0
-offset_bottom = 115.0
+offset_right = 306.0
+offset_bottom = 108.0
 texture = ExtResource("2_vnha4")
 expand_mode = 1
 
 [node name="unit_magic_category_1" type="TextureRect" parent="." unique_id=523265709]
 layout_mode = 0
-offset_left = 22.0
-offset_top = 17.0
-offset_right = 80.0
-offset_bottom = 35.0
+offset_left = 9.0
+offset_top = 10.0
+offset_right = 67.0
+offset_bottom = 28.0
 expand_mode = 1
 
 [node name="unit_magic_icon_1" type="TextureRect" parent="." unique_id=740905204]
 layout_mode = 0
-offset_left = 30.0
-offset_top = 27.0
-offset_right = 102.0
-offset_bottom = 99.0
+offset_left = 17.0
+offset_top = 20.0
+offset_right = 89.0
+offset_bottom = 92.0
 expand_mode = 1
 stretch_mode = 5
 
 [node name="unit_magic_name_text_1" type="Label" parent="." unique_id=1087739549]
 layout_mode = 0
-offset_left = 115.0
-offset_top = 16.0
-offset_right = 327.0
-offset_bottom = 42.0
+offset_left = 102.0
+offset_top = 9.0
+offset_right = 314.0
+offset_bottom = 35.0
 theme_override_font_sizes/font_size = 18
 text = "unit_magic_name_text_1"
 vertical_alignment = 1
 
 [node name="unit_magic_mp_1" type="TextureRect" parent="." unique_id=1557645553]
 layout_mode = 0
-offset_left = 29.0
-offset_top = 87.0
-offset_right = 59.0
-offset_bottom = 105.0
+offset_left = 16.0
+offset_top = 80.0
+offset_right = 46.0
+offset_bottom = 98.0
 texture = ExtResource("3_5gmq1")
 expand_mode = 1
 
 [node name="unit_magic_mp_number_1" type="Label" parent="." unique_id=162692375]
 layout_mode = 0
-offset_left = 59.0
-offset_top = 84.0
-offset_right = 285.0
-offset_bottom = 110.0
+offset_left = 46.0
+offset_top = 77.0
+offset_right = 272.0
+offset_bottom = 103.0
 theme_override_font_sizes/font_size = 18
 text = "unit_magic_mp_number_1"
 vertical_alignment = 1
 
 [node name="unit_magic_detail_text_1" type="Label" parent="." unique_id=1909893740]
 layout_mode = 0
-offset_left = 115.0
-offset_top = 47.0
-offset_right = 305.0
-offset_bottom = 102.0
+offset_left = 102.0
+offset_top = 40.0
+offset_right = 292.0
+offset_bottom = 95.0
 theme_override_font_sizes/font_size = 18
 text = "unit_magic_detail_text_1"
 horizontal_alignment = 2
@@ -79,30 +79,29 @@ autowrap_mode = 1
 
 [node name="unit_magic_icon" type="TextureRect" parent="." unique_id=526603598]
 layout_mode = 0
-offset_left = 252.0
-offset_top = 92.0
-offset_right = 268.0
-offset_bottom = 108.0
+offset_left = 239.0
+offset_top = 85.0
+offset_right = 255.0
+offset_bottom = 101.0
 expand_mode = 1
 
 [node name="unit_magic_lv" type="TextureRect" parent="." unique_id=1182841070]
 layout_mode = 0
-offset_left = 263.0
-offset_top = 90.0
-offset_right = 291.0
-offset_bottom = 110.0
+offset_left = 250.0
+offset_top = 83.0
+offset_right = 278.0
+offset_bottom = 103.0
 texture = ExtResource("6_66tcj")
 expand_mode = 1
 
 [node name="unit_magic_lv_num" type="Label" parent="." unique_id=1349906532]
 layout_mode = 0
-offset_left = 289.0
-offset_top = 93.0
-offset_right = 435.0
-offset_bottom = 116.0
+offset_left = 277.0
+offset_top = 83.0
+offset_right = 423.0
+offset_bottom = 106.0
 theme_override_font_sizes/font_size = 14
 text = "unit_magic_lv_num"
-vertical_alignment = 1
 
 [node name="Button" type="Button" parent="." unique_id=1844393597]
 visible = false

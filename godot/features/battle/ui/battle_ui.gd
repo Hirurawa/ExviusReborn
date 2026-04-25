@@ -2,7 +2,7 @@ extends Control
 
 const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
 const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
-const MagicScene = preload("res://features/shared/Magic.tscn")
+const MagicScene = preload("res://features/shared/Skill.tscn")
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -350,7 +350,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			var skill_data = opt.get("skill_data", {})
 			var skill_level = opt.get("level", -1)
 			
-			var btn = MagicScene.instantiate() if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
+			var btn = MagicScene.instantiate() #if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			

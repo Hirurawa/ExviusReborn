@@ -41,9 +41,45 @@ func _ready() -> void:
 	DataManager.dungeon_missions_ready.connect(_on_dungeon_missions_ready)
 
 	_populate_world_options()
+	await _apply_latest_cleared_map_selection()
 	map_zoom_level = 1.0
 	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
 	map_sizer.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
+
+func _apply_latest_cleared_map_selection() -> void:
+	var selection: Dictionary = await DataManager.get_latest_cleared_map_selection()
+	if selection.is_empty():
+		return
+
+	var world_id: String = str(selection.get("world_id", ""))
+	var region_id: String = str(selection.get("region_id", ""))
+	var subregion_id: String = str(selection.get("subregion_id", ""))
+
+	var world_idx: int = _select_option_by_metadata(map_world_option, world_id)
+	if world_idx == -1:
+		return
+	_on_map_world_selected(world_idx)
+
+	var region_idx: int = _select_option_by_metadata(map_region_option, region_id)
+	if region_idx == -1:
+		return
+	_on_map_region_selected(region_idx)
+
+	var subregion_idx: int = _select_option_by_metadata(map_subregion_option, subregion_id)
+	if subregion_idx == -1:
+		return
+	_on_map_subregion_selected(subregion_idx)
+
+func _select_option_by_metadata(option_button: OptionButton, metadata_id: String) -> int:
+	if metadata_id == "":
+		return -1
+
+	for idx in range(option_button.get_item_count()):
+		if str(option_button.get_item_metadata(idx)) == metadata_id:
+			option_button.select(idx)
+			return idx
+
+	return -1
 
 func _on_map_scroll_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -315,7 +351,7 @@ func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 
 
 func _on_start_mission_pressed(mission_id: String) -> void:
-	var result = await DataManager.server_connection.start_mission_async(mission_id)
+	var result: Dictionary = await DataManager.request_start_mission(mission_id)
 
 	if result.get("success") == true:
 		mission_details_popup.hide()

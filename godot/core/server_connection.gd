@@ -196,6 +196,22 @@ func get_dungeon_missions_async(mission_ids: Array) -> Dictionary:
 
 	return {}
 
+func get_mission_progress_async() -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {"cleared_missions": {}}
+
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_mission_progress", "{}")
+
+	if result.is_exception():
+		push_error("Failed to get mission progress: %s" % result.get_exception().message)
+		return {"cleared_missions": {}}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {"cleared_missions": {}}
+
 func summon_units_async(amount: int) -> Array:
 	if _session == null or _session.is_expired():
 		return []

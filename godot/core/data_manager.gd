@@ -23,6 +23,7 @@ signal mission_completed(rewards_text: String)
 signal mission_failed(error_msg: String)
 signal equip_successful()
 signal equip_failed(error_message: String)
+signal mission_progress_loaded(latest_mission_id: String)
 
 var server_connection: Node
 
@@ -41,6 +42,8 @@ var lapis: int = 0
 var owned_units_ids: Array = []
 
 var last_played_dungeon_name: String = ""
+var cleared_missions: Dictionary = {}
+var latest_cleared_mission_id: String = ""
 var owned_items: Dictionary = {"stackables": {}, "equipment": []}
 var parties: Array = []
 
@@ -146,6 +149,7 @@ func _load_initial_data(email: String) -> void:
 		await _update_last_played_dungeon_from_mission(last_entered_mission_id)
 	else:
 		last_played_dungeon_name = ""
+	await load_mission_progress()
 	rank_updated.emit(current_rank, current_xp, next_rank_xp)
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
 
@@ -268,25 +272,55 @@ func request_start_mission(mission_id: String) -> Dictionary:
 		await _update_last_played_dungeon_from_mission(mission_id)
 	return result
 
+func load_mission_progress() -> void:
+	var progress_payload: Dictionary = await server_connection.get_mission_progress_async()
+	var payload_cleared_missions: Variant = progress_payload.get("cleared_missions", {})
+
+	if payload_cleared_missions is Dictionary:
+		cleared_missions = payload_cleared_missions
+	else:
+		cleared_missions = {}
+
+	latest_cleared_mission_id = _get_latest_cleared_mission_id_from_progress(cleared_missions)
+
+	if latest_cleared_mission_id != "":
+		await _update_last_played_dungeon_from_mission(latest_cleared_mission_id)
+
+	mission_progress_loaded.emit(latest_cleared_mission_id)
+
+func get_latest_cleared_map_selection() -> Dictionary:
+	if latest_cleared_mission_id == "":
+		return {}
+	return await get_map_selection_for_mission(latest_cleared_mission_id)
+
+func get_map_selection_for_mission(mission_id: String) -> Dictionary:
+	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
+	if mission_data.is_empty():
+		return {}
+
+	var dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
+	if dungeon_id == "":
+		return {}
+
+	var map_location: Dictionary = _find_dungeon_location_in_worlds(dungeon_id)
+	if map_location.is_empty():
+		return {}
+
+	map_location["mission_id"] = mission_id
+	map_location["dungeon_id"] = dungeon_id
+	return map_location
+
 func _update_last_played_dungeon_from_mission(mission_id: String) -> void:
 	if mission_id == "":
 		last_played_dungeon_name = ""
 		return
 
-	var mission_key: String = str(mission_id)
-	var mission_data: Dictionary = game_data_missions.get(mission_key, {})
-
-	# Mission cache is loaded lazily, so fetch this specific mission if needed.
-	if mission_data.is_empty():
-		var fetched_missions: Dictionary = await server_connection.get_dungeon_missions_async([mission_key])
-		if fetched_missions.has(mission_key):
-			mission_data = fetched_missions[mission_key]
-			game_data_missions[mission_key] = mission_data
+	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
 
 	if mission_data.is_empty():
 		return
 
-	var dungeon_id: String = str(mission_data.get("dungeon_id", ""))
+	var dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
 	if dungeon_id == "":
 		return
 
@@ -297,6 +331,83 @@ func _update_last_played_dungeon_from_mission(mission_id: String) -> void:
 	if dungeon_data.has("names") and dungeon_data["names"] is Array and dungeon_data["names"].size() > 0:
 		var dungeon_name: String = str(dungeon_data["names"][0])
 		last_played_dungeon_name = dungeon_name.replace(" ", "_")
+
+func _get_or_load_mission_data(mission_id: String) -> Dictionary:
+	var mission_key: String = str(mission_id)
+	var mission_data: Dictionary = game_data_missions.get(mission_key, {})
+
+	if mission_data.is_empty():
+		var fetched_missions: Dictionary = await server_connection.get_dungeon_missions_async([mission_key])
+		if fetched_missions.has(mission_key):
+			mission_data = fetched_missions[mission_key]
+			game_data_missions[mission_key] = mission_data
+
+	return mission_data
+
+func _get_latest_cleared_mission_id_from_progress(progress: Dictionary) -> String:
+	var latest_numeric_id: int = -1
+
+	for mission_key in progress.keys():
+		var mission_key_str: String = str(mission_key)
+		var progress_entry: Variant = progress[mission_key]
+		if progress_entry is Dictionary and progress_entry.has("cleared") and progress_entry["cleared"] == false:
+			continue
+
+		var numeric_id: int = _extract_mission_numeric_id(mission_key_str)
+		if numeric_id > latest_numeric_id:
+			latest_numeric_id = numeric_id
+
+	if latest_numeric_id < 0:
+		return ""
+
+	return str(latest_numeric_id)
+
+func _extract_mission_numeric_id(mission_key: String) -> int:
+	var numeric_str: String = mission_key
+	if numeric_str.begins_with("mission_"):
+		numeric_str = numeric_str.substr(8)
+
+	if not numeric_str.is_valid_int():
+		return -1
+
+	return int(numeric_str)
+
+func _find_dungeon_location_in_worlds(dungeon_id: String) -> Dictionary:
+	for world_id in game_data_worlds.keys():
+		var world_data: Dictionary = game_data_worlds.get(world_id, {})
+		var regions: Dictionary = world_data.get("regions", {})
+		for region_id in regions.keys():
+			var region_data: Dictionary = regions.get(region_id, {})
+			var subregions: Dictionary = region_data.get("subregions", {})
+			for subregion_id in subregions.keys():
+				var subregion_data: Dictionary = subregions.get(subregion_id, {})
+				var dungeons: Variant = subregion_data.get("dungeons", [])
+				if _subregion_contains_dungeon(dungeons, dungeon_id):
+					return {
+						"world_id": str(world_id),
+						"region_id": str(region_id),
+						"subregion_id": str(subregion_id)
+					}
+
+	return {}
+
+func _subregion_contains_dungeon(dungeons: Variant, dungeon_id: String) -> bool:
+	if dungeons is Dictionary:
+		for candidate_id in dungeons.keys():
+			if str(candidate_id) == dungeon_id:
+				return true
+		return false
+
+	if dungeons is Array:
+		for candidate_id in dungeons:
+			if str(candidate_id) == dungeon_id:
+				return true
+		return false
+
+	if dungeons is String:
+		return str(dungeons) == dungeon_id
+
+	return false
 
 func save_parties(new_parties: Array) -> Dictionary:
 	var result: Dictionary = await server_connection.save_parties_async(new_parties)

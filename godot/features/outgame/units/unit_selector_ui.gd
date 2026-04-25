@@ -2,18 +2,21 @@ extends Control
 
 const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 
+@onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
 
 var mode: String = "view"
 var target_party_index: int = 0
 var target_slot_index: int = 0
 
+const GRID_COLUMNS: int = 5
 const UNIT_CELL_W: int = 128
 const UNIT_CELL_H: int = 164
 const UNIT_NAME_H: int = 34
 const PEDESTAL_BOTTOM_MARGIN: int = 2
 const UNIT_SIDE_PADDING: int = 4
 const UNIT_FEET_OFFSET_ESTIMATE: float = 5.0
+const V_SCROLLBAR_MIN_W: float = 12.0
 
 signal unit_selected(unit_inst: Dictionary)
 
@@ -49,6 +52,11 @@ func init_scene(params: Dictionary) -> void:
 		target_slot_index = params.slot_index
 
 func _ready() -> void:
+	units_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	units_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	_configure_vertical_scrollbar()
+	units_list_container.columns = GRID_COLUMNS
+	units_scroll_container.resized.connect(_on_scroll_metrics_changed)
 	DataManager.units_updated.connect(_on_units_updated)
 	_refresh_units_list(DataManager.owned_units_ids)
 
@@ -56,6 +64,9 @@ func _on_units_updated(units: Array) -> void:
 	_refresh_units_list(units)
 
 func _refresh_units_list(owned_units_ids: Array) -> void:
+	var cell_width: int = _get_effective_cell_width()
+	units_list_container.columns = GRID_COLUMNS
+
 	for child in units_list_container.get_children():
 		child.queue_free()
 
@@ -79,9 +90,9 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 		
-		# Fixed-size cell for consistent 5-column layout.
+		# Keep five columns and shrink cell width only when viewport is tight.
 		var container: Control = Control.new()
-		container.custom_minimum_size = Vector2(UNIT_CELL_W, UNIT_CELL_H)
+		container.custom_minimum_size = Vector2(cell_width, UNIT_CELL_H)
 		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		container.clip_contents = true
@@ -95,8 +106,8 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var pedestal_texture: Texture2D = _get_pedestal_texture(unit_inst.get("rarity", 1))
 
 		var visual_area_h: int = UNIT_CELL_H
-		var center_x: float = UNIT_CELL_W * 0.5
-		var available_w: float = float(UNIT_CELL_W - (UNIT_SIDE_PADDING * 2))
+		var center_x: float = float(cell_width) * 0.5
+		var available_w: float = float(cell_width - (UNIT_SIDE_PADDING * 2))
 
 		var visual_container: Control = Control.new()
 		visual_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -149,6 +160,38 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		container.add_child(name_label)
 
 		units_list_container.add_child(container)
+
+func _on_scroll_metrics_changed() -> void:
+	_configure_vertical_scrollbar()
+	call_deferred("_rebuild_for_layout_change")
+
+func _configure_vertical_scrollbar() -> void:
+	var vertical_bar: VScrollBar = units_scroll_container.get_v_scroll_bar()
+	if vertical_bar == null:
+		return
+
+	vertical_bar.show()
+	vertical_bar.custom_minimum_size.x = maxf(V_SCROLLBAR_MIN_W, vertical_bar.custom_minimum_size.x)
+
+func _get_effective_cell_width() -> int:
+	var column_spacing: float = float(units_list_container.get_theme_constant("h_separation"))
+	var usable_width: float = units_scroll_container.size.x
+
+	var vertical_bar: VScrollBar = units_scroll_container.get_v_scroll_bar()
+	if vertical_bar:
+		var reserved_scroll_w: float = maxf(V_SCROLLBAR_MIN_W, vertical_bar.custom_minimum_size.x)
+		usable_width -= reserved_scroll_w
+
+	if usable_width <= 0.0:
+		return UNIT_CELL_W
+
+	var spacing_total: float = column_spacing * float(GRID_COLUMNS - 1)
+	var available_for_cells: float = maxf(1.0, usable_width - spacing_total)
+	var fitted_cell_width: int = int(floor(available_for_cells / float(GRID_COLUMNS)))
+	return maxi(1, mini(UNIT_CELL_W, fitted_cell_width))
+
+func _rebuild_for_layout_change() -> void:
+	_refresh_units_list(DataManager.owned_units_ids)
 
 func _on_unit_clicked(unit_inst: Dictionary) -> void:
 	if mode == "view":

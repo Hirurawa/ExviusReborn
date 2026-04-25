@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://b7vankwgbga6o" path="res://features/outgame/units/unit_selector_ui.gd" id="1_script"]
 
 [node name="UnitSelectorUI" type="Control" unique_id=155837347]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,7 +17,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -60.0
+offset_bottom = -110.0
 grow_horizontal = 2
 grow_vertical = 2
 

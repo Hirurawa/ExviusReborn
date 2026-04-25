@@ -162,7 +162,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		elif DataManager.game_data_skills_passive.has(skill_id_str):
 			final_profile["skills"]["passive"].append(skill_entry)
 			var skill_data = DataManager.game_data_skills_passive.get(skill_id_str)
-			var parsed_passive = OpcodeParser.parse_passive(skill_data)
+			var parsed_passive = DataManager.parse_passive_effects(skill_data)
 			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
 			for e in parsed_passive.get("effects", []):
 				if(e.get("type") == "STAT_BOOST_PCT"):

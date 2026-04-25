@@ -357,7 +357,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)
 
 			btn.pressed.connect(func():
-				var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(skill_data)
+				var parsed_data: Dictionary = DataManager.parse_skill_effects(skill_data)
 				var needs_ally_target = false
 
 				for effect in parsed_data.get("effects", []):

@@ -60,6 +60,13 @@ var game_data_limitbursts: Dictionary = {}
 var game_data_materia: Dictionary = {}
 var game_data_equipment_icons: Dictionary = {}
 var game_data_monsters = []
+var opcode_skill_schema: Dictionary = {}
+var opcode_passive_schema: Dictionary = {}
+var opcode_schemas_ready: bool = false
+var opcode_schema_error: String = ""
+
+const OPCODE_SKILL_SCHEMA_PATH: String = "res://features/battle/logic/skill_schema.json"
+const OPCODE_PASSIVE_SCHEMA_PATH: String = "res://features/battle/logic/passive_schema.json"
 
 var account_info: NakamaAPI.ApiAccount = null
 
@@ -202,6 +209,67 @@ func _on_patch_complete() -> void:
 	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
 	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))
 	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
+	_load_opcode_schemas()
+
+func _load_opcode_schemas() -> void:
+	opcode_schemas_ready = false
+	opcode_schema_error = ""
+	opcode_skill_schema = _load_opcode_schema_file(OPCODE_SKILL_SCHEMA_PATH, "skill")
+	opcode_passive_schema = _load_opcode_schema_file(OPCODE_PASSIVE_SCHEMA_PATH, "passive")
+
+	if opcode_schema_error != "":
+		return
+
+	opcode_schemas_ready = true
+
+func _load_opcode_schema_file(schema_path: String, schema_name: String) -> Dictionary:
+	if not FileAccess.file_exists(schema_path):
+		_record_opcode_schema_error("CRITICAL ERROR: Missing %s opcode schema at %s" % [schema_name, schema_path])
+		return {}
+
+	var json_as_text: String = FileAccess.get_file_as_string(schema_path)
+	if json_as_text.strip_edges() == "":
+		_record_opcode_schema_error("CRITICAL ERROR: Empty %s opcode schema at %s" % [schema_name, schema_path])
+		return {}
+
+	var parsed: Variant = JSON.parse_string(json_as_text)
+	if parsed == null:
+		_record_opcode_schema_error("CRITICAL ERROR: Invalid JSON in %s opcode schema at %s" % [schema_name, schema_path])
+		return {}
+
+	if not parsed is Dictionary:
+		_record_opcode_schema_error("CRITICAL ERROR: %s opcode schema must parse as Dictionary at %s" % [schema_name, schema_path])
+		return {}
+
+	return parsed as Dictionary
+
+func _record_opcode_schema_error(error_message: String) -> void:
+	if opcode_schema_error == "":
+		opcode_schema_error = error_message
+	push_error(error_message)
+
+func _ensure_opcode_schemas_ready(caller_name: String) -> bool:
+	if opcode_schemas_ready:
+		return true
+
+	var details: String = opcode_schema_error if opcode_schema_error != "" else "CRITICAL ERROR: Opcode schemas not loaded."
+	push_error("DataManager: %s cannot parse opcodes. %s" % [caller_name, details])
+	return false
+
+func parse_passive_effects(skill_data: Dictionary) -> Dictionary:
+	if not _ensure_opcode_schemas_ready("parse_passive_effects"):
+		return {"effects": []}
+
+	return OpcodeParser.parse_passive(skill_data, opcode_passive_schema)
+
+func parse_skill_effects(skill_data: Dictionary) -> Dictionary:
+	if not _ensure_opcode_schemas_ready("parse_skill_effects"):
+		return {
+			"element_inflict": skill_data.get("element_inflict", []),
+			"effects": []
+		}
+
+	return OpcodeParser.parse_skill_improved(skill_data, opcode_skill_schema)
 
 func _update_wallet_data(wallet: Dictionary) -> void:
 	assert(wallet.has("gil"), "CRITICAL ERROR: wallet is missing gil!")

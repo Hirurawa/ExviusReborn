@@ -291,7 +291,7 @@ func execute_queued_action(attacker_index: int) -> void:
 				return
 
 			#var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
-			var parsed_data: Dictionary = OpcodeParser.parse_skill_improved(target_skill_data)
+			var parsed_data: Dictionary = DataManager.parse_skill_effects(target_skill_data)
 			print("Parsed Skill/Item: ", parsed_data)
 
 			# Attempt to get targeting data from the queue, fallback to enemy 0 for now

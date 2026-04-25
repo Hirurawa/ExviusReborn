@@ -6,6 +6,15 @@ var mode: String = "view"
 var target_party_index: int = 0
 var target_slot_index: int = 0
 
+const UNIT_CELL_W: int = 128
+const UNIT_CELL_H: int = 164
+const UNIT_NAME_H: int = 34
+const UNIT_SCALE_FACTOR: float = 0.72
+const PEDESTAL_SCALE_FACTOR: float = 0.42
+const UNIT_FOOT_OVERLAP: int = 16
+const PEDESTAL_BOTTOM_MARGIN: int = 2
+const PEDESTAL_CONTACT_RATIO: float = 0.62
+
 signal unit_selected(unit_inst: Dictionary)
 
 var _texture_cache: Dictionary = {}
@@ -30,6 +39,12 @@ func _get_pedestal_texture(rarity: int) -> Texture2D:
 			return _get_dynamic_texture(path)
 
 	return null
+
+func _get_scaled_texture_size(texture: Texture2D, max_scale: float = 1.0) -> Vector2:
+	if not texture:
+		return Vector2.ZERO
+	var original_size: Vector2 = texture.get_size()
+	return original_size * max_scale
 
 func init_scene(params: Dictionary) -> void:
 	if params.has("mode"):
@@ -70,47 +85,60 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 		
-		var container: VBoxContainer = VBoxContainer.new()
+		# Fixed-size cell for consistent 5-column layout.
+		var container: Control = Control.new()
+		container.custom_minimum_size = Vector2(UNIT_CELL_W, UNIT_CELL_H)
 		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		container.alignment = BoxContainer.ALIGNMENT_CENTER
+		container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		container.clip_contents = true
 
-		# Layered tile for deterministic sprite + pedestal composition.
-		const TILE_W: int = 120
-		const TILE_H: int = 120
-		const PEDESTAL_H: int = 52
-
-		var sprite_container: Control = Control.new()
-		sprite_container.custom_minimum_size = Vector2(TILE_W, TILE_H)
-		sprite_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		sprite_container.clip_contents = true
-		# Prevent the VBoxContainer from stretching this vertically beyond its minimum.
-		sprite_container.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-
-		var sprite_rect: TextureRect = TextureRect.new()
-		sprite_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		sprite_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		sprite_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-
+		# Load textures first to determine pixel-perfect sizing.
+		var sprite_texture: Texture2D = null
 		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
 		if ResourceLoader.exists(img_path):
-			var tex: Texture2D = _get_dynamic_texture(img_path)
-			if tex:
-				sprite_rect.texture = tex
+			sprite_texture = _get_dynamic_texture(img_path)
 
-		# Draw pedestal behind the sprite and clamp everything to tile bounds.
 		var pedestal_texture: Texture2D = _get_pedestal_texture(unit_inst.get("rarity", 1))
+		var sprite_size: Vector2 = _get_scaled_texture_size(sprite_texture, UNIT_SCALE_FACTOR)
+		var pedestal_size: Vector2 = _get_scaled_texture_size(pedestal_texture, PEDESTAL_SCALE_FACTOR)
+
+		var visual_area_h: int = UNIT_CELL_H - UNIT_NAME_H
+		var center_x: float = UNIT_CELL_W * 0.5
+		var pedestal_y: float = visual_area_h - pedestal_size.y - PEDESTAL_BOTTOM_MARGIN
+		# Anchor feet into the pedestal body/shadow area, not just above its top edge.
+		var pedestal_contact_y: float = pedestal_y + (pedestal_size.y * PEDESTAL_CONTACT_RATIO)
+		var sprite_y: float = pedestal_contact_y - sprite_size.y + UNIT_FOOT_OVERLAP
+
+		if not pedestal_texture:
+			sprite_y = (visual_area_h - sprite_size.y) * 0.5
+
+		sprite_y = maxf(0.0, sprite_y)
+		pedestal_y = maxf(0.0, pedestal_y)
+
+		var sprite_container: Control = Control.new()
+		sprite_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		sprite_container.clip_contents = true
+
+		# Centered sprite positioned relative to pedestal.
+		var sprite_rect: TextureRect = TextureRect.new()
+		sprite_rect.texture = sprite_texture
+		sprite_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sprite_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		sprite_rect.position = Vector2(center_x - (sprite_size.x * 0.5), sprite_y)
+		sprite_rect.size = sprite_size
+		sprite_rect.z_index = 1
+		sprite_container.add_child(sprite_rect)
+
+		# Pedestal centered at the bottom of visual area.
 		if pedestal_texture:
 			var pedestal_rect: TextureRect = TextureRect.new()
 			pedestal_rect.texture = pedestal_texture
 			pedestal_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			pedestal_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			pedestal_rect.position = Vector2(0, TILE_H - PEDESTAL_H)
-			pedestal_rect.size = Vector2(TILE_W, PEDESTAL_H)
+			pedestal_rect.stretch_mode = TextureRect.STRETCH_SCALE
+			pedestal_rect.position = Vector2(center_x - (pedestal_size.x * 0.5), pedestal_y)
+			pedestal_rect.size = pedestal_size
 			pedestal_rect.z_index = 0
 			sprite_container.add_child(pedestal_rect)
-
-		sprite_rect.z_index = 1
-		sprite_container.add_child(sprite_rect)
 
 		var click_btn: Button = Button.new()
 		click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -123,11 +151,21 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 		container.add_child(sprite_container)
 
+		# Name label overlaid at bottom
 		var name_label: Label = Label.new()
 		name_label.text = unit_data.get("name", "Unknown")
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_label.add_theme_font_size_override("font_size", 12)
+		name_label.anchor_left = 0.0
+		name_label.anchor_right = 1.0
+		name_label.anchor_top = 1.0
+		name_label.anchor_bottom = 1.0
+		name_label.offset_left = 2
+		name_label.offset_right = -2
+		name_label.offset_top = -UNIT_NAME_H
+		name_label.offset_bottom = -2
+		name_label.z_index = 10
 		container.add_child(name_label)
 
 		units_list_container.add_child(container)

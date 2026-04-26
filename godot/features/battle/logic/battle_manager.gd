@@ -16,11 +16,14 @@ signal item_refunded(item_id: String)
 signal wave_changed(current_wave: int, total_waves: int)
 signal wave_transition_started(current_wave: int, next_wave: int, total_waves: int)
 signal item_dropped(enemy_index: int, item_id: String)
+signal limit_crystal_dropped(enemy_index: int, target_unit_index: int)
 
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
+const LIMIT_CRYSTAL_DROP_CHANCE: float = 0.20
+const LIMIT_CRYSTAL_GAIN: int = 1
 
 var action_processor
 var result_processor
@@ -107,6 +110,10 @@ func _physics_process(_delta: float) -> void:
 					# Hand hit receipt and target to result_processor
 					result_processor.apply_receipt(hit, target)
 
+					# Enemies can drop limit crystals when hit by player attacks.
+					if target_team == "enemy":
+						_try_drop_limit_crystal(target_index, attacker_team, hit, final_damage)
+
 					# If this hit killed them, roll for drops!
 					if previous_hp > 0 and target["current_hp"] == 0 and target_team == "enemy":
 						_roll_enemy_drops(target, target_index)
@@ -124,6 +131,57 @@ func _physics_process(_delta: float) -> void:
 			pending_hits.remove_at(i)
 
 	_check_turn_progression()
+
+func _get_living_player_party_indices() -> Array[int]:
+	var living_indices: Array[int] = []
+	for i in range(party_data.size()):
+		var unit_data: Dictionary = party_data[i]
+		if unit_data.is_empty():
+			continue
+		if int(unit_data.get("current_hp", 0)) > 0:
+			living_indices.append(i)
+	return living_indices
+
+func _grant_limit_to_unit(unit_index: int, amount: int) -> void:
+	if unit_index < 0 or unit_index >= party_data.size():
+		return
+
+	var unit_data: Dictionary = party_data[unit_index]
+	if unit_data.is_empty():
+		return
+
+	var current_limit: int = int(unit_data.get("limit_gauge", 0))
+	var max_limit: int = int(unit_data.get("max_limit", 0))
+	if max_limit <= 0:
+		return
+
+	var next_limit: int = clampi(current_limit + amount, 0, max_limit)
+	if next_limit == current_limit:
+		return
+
+	unit_data["limit_gauge"] = next_limit
+	request_unit_stats(unit_index)
+
+func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dictionary, final_damage: int) -> void:
+	if attacker_team != "player":
+		return
+	if final_damage <= 0:
+		return
+	if str(hit.get("type", "")) != "DAMAGE":
+		return
+	if enemy_index < 0 or enemy_index >= enemy_units.size():
+		return
+	if randf() > LIMIT_CRYSTAL_DROP_CHANCE:
+		return
+
+	var eligible_units: Array[int] = _get_living_player_party_indices()
+	if eligible_units.is_empty():
+		return
+
+	var random_target_slot: int = randi() % eligible_units.size()
+	var target_unit_index: int = eligible_units[random_target_slot]
+	_grant_limit_to_unit(target_unit_index, LIMIT_CRYSTAL_GAIN)
+	limit_crystal_dropped.emit(enemy_index, target_unit_index)
 
 
 func initialize_battle(mission_id: String) -> void:

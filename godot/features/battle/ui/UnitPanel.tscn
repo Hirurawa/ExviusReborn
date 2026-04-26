@@ -53,8 +53,9 @@ offset_right = 213.0
 offset_bottom = 54.0
 
 [node name="BattleUnitHpBar1" type="Sprite2D" parent="." unique_id=618544670]
-position = Vector2(114, 94)
+position = Vector2(24, 92)
 texture = ExtResource("4_vu3se")
+centered = false
 
 [node name="HPGage" type="TextureRect" parent="." unique_id=1671152418]
 layout_mode = 0
@@ -113,8 +114,9 @@ offset_right = 303.0
 offset_bottom = 93.0
 
 [node name="BattleUnitLimitBar" type="Sprite2D" parent="." unique_id=1915037813]
-position = Vector2(259, 62)
+position = Vector2(216, 59)
 texture = ExtResource("8_dc0hk")
+centered = false
 
 [node name="LimitGage" type="TextureRect" parent="." unique_id=755701380]
 layout_mode = 0
@@ -127,8 +129,9 @@ texture = ExtResource("6_limit_gage")
 expand_mode = 1
 
 [node name="BattleUnitMpBar" type="Sprite2D" parent="." unique_id=7522383]
-position = Vector2(259, 94)
+position = Vector2(217, 92)
 texture = ExtResource("10_msdk6")
+centered = false
 
 [node name="MPGage" type="TextureRect" parent="." unique_id=1872902920]
 layout_mode = 0

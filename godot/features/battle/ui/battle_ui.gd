@@ -3,6 +3,8 @@ extends Control
 const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
 const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
 const MagicScene = preload("res://features/shared/Skill.tscn")
+const LIMIT_CRYSTAL_TEXTURE: Texture2D = preload("res://assets/ui/battle/battle_limit_crystal.png")
+const LIMIT_CRYSTAL_ANIM_DURATION: float = 0.7
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -66,6 +68,7 @@ func _ready() -> void:
 	battle_manager.attack_landed.connect(_on_attack_landed)
 	battle_manager.wave_transition_started.connect(_on_wave_transition_started)
 	battle_manager.item_dropped.connect(_on_item_dropped)
+	battle_manager.limit_crystal_dropped.connect(_on_limit_crystal_dropped)
 	battle_manager.item_refunded.connect(_on_item_refunded)
 
 	DataManager.mission_completed.connect(_on_mission_completed)
@@ -877,6 +880,49 @@ func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 	tween.tween_interval(0.5)
 	tween.tween_property(drop_icon, "modulate:a", 0.0, 0.3)
 	tween.tween_callback(drop_icon.queue_free)
+
+func _find_player_combat_sprite(party_index: int) -> Control:
+	for slot in player_sprites_container.get_children():
+		for child in slot.get_children():
+			if int(child.get("party_index")) == party_index:
+				return child as Control
+	return null
+
+func _on_limit_crystal_dropped(enemy_index: int, target_unit_index: int) -> void:
+	if enemy_index < 0 or enemy_index >= enemies_container.get_child_count():
+		return
+
+	var enemy_wrapper: Node = enemies_container.get_child(enemy_index)
+	if enemy_wrapper.get_child_count() <= 0:
+		return
+
+	var enemy_sprite: Control = enemy_wrapper.get_child(0) as Control
+	if enemy_sprite == null:
+		return
+
+	var target_sprite: Control = _find_player_combat_sprite(target_unit_index)
+	if target_sprite == null:
+		return
+
+	var crystal_sprite := TextureRect.new()
+	crystal_sprite.texture = LIMIT_CRYSTAL_TEXTURE
+	crystal_sprite.custom_minimum_size = Vector2(28, 28)
+	crystal_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	crystal_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	crystal_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	add_child(crystal_sprite)
+
+	var start_pos: Vector2 = enemy_sprite.global_position + Vector2(36, -14)
+	var end_pos: Vector2 = target_sprite.global_position + Vector2(22, 14)
+	crystal_sprite.global_position = start_pos
+
+	var tween: Tween = create_tween()
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tween.parallel().tween_property(crystal_sprite, "global_position", end_pos, LIMIT_CRYSTAL_ANIM_DURATION)
+	tween.parallel().tween_property(crystal_sprite, "scale", Vector2(0.85, 0.85), LIMIT_CRYSTAL_ANIM_DURATION)
+	tween.tween_property(crystal_sprite, "modulate:a", 0.0, 0.15)
+	tween.tween_callback(crystal_sprite.queue_free)
 
 func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: int) -> void:
 	# Setup the labels

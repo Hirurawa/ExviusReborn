@@ -251,6 +251,18 @@ func set_queued_action(unit_index: int, new_action: CombatAction, action_name: S
 
 	action_queued.emit(unit_index, new_action, action_id)
 
+func _resolve_queued_action_data(action_id: String, payload: Dictionary) -> Dictionary:
+	var resolved_action_data: Dictionary = payload.get("resolved_action_data", {})
+	if not resolved_action_data.is_empty():
+		return {
+			"resolved_action_id": str(payload.get("resolved_action_id", action_id)),
+			"resolved_action_data": resolved_action_data,
+			"parsed_data": payload.get("parsed_data", {})
+		}
+
+	var resolved_action_id: String = str(payload.get("resolved_action_id", action_id))
+	return DataManager.resolve_combat_skill(resolved_action_id)
+
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
 		return
@@ -271,27 +283,29 @@ func execute_queued_action(attacker_index: int) -> void:
 	elif action == CombatAction.SKILL or action == CombatAction.ITEM:
 		var action_name: String = attacker_data.get("queued_action_name", "")
 		var action_id: String = attacker_data.get("queued_action_id", "")
+		var payload_data: Dictionary = attacker_data.get("queued_payload", {})
 		print("Executing: ", action_name)
 
 		unit_action_started.emit(attacker_index, action)
 
 		if action == CombatAction.ITEM:
-			var payload_data: Dictionary = attacker_data.get("queued_payload", {})
 			var item_id: String = payload_data.get("original_item_id", "")
 			if item_id != "":
 				used_items[item_id] = used_items.get(item_id, 0) + 1
 
 		if action == CombatAction.SKILL or action == CombatAction.ITEM:
-			var target_skill_data: Dictionary = DataManager.game_data_skills_magic.get(action_id, {})
-			if target_skill_data == {}:
-				target_skill_data = DataManager.game_data_skills_ability.get(action_id, {})
+			var resolved_action: Dictionary = _resolve_queued_action_data(action_id, payload_data)
+			var target_skill_data: Dictionary = resolved_action.get("resolved_action_data", {}) if not resolved_action.is_empty() else {}
 
 			if target_skill_data.is_empty():
 				push_error("Error: Skill/Item Ability not found in database: " + action_name)
 				return
 
-			#var parsed_data: Dictionary = OpcodeParser.parse_skill(target_skill_data)
-			var parsed_data: Dictionary = DataManager.parse_skill_effects(target_skill_data)
+			var parsed_data: Dictionary = payload_data.get("parsed_data", {})
+			if parsed_data.is_empty():
+				parsed_data = resolved_action.get("parsed_data", {}) if not resolved_action.is_empty() else {}
+			if parsed_data.is_empty():
+				parsed_data = DataManager.parse_skill_effects(target_skill_data)
 			print("Parsed Skill/Item: ", parsed_data)
 
 			# Attempt to get targeting data from the queue, fallback to enemy 0 for now

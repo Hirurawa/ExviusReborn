@@ -271,6 +271,101 @@ func parse_skill_effects(skill_data: Dictionary) -> Dictionary:
 
 	return OpcodeParser.parse_skill_improved(skill_data, opcode_skill_schema)
 
+func _find_item_ability_id(effects_raw: Array) -> String:
+	for effect in effects_raw:
+		if effect.size() < 4:
+			continue
+		if int(effect[2]) != 71:
+			continue
+
+		var payload: Variant = effect[3]
+		if typeof(payload) != TYPE_ARRAY or payload.size() == 0:
+			continue
+
+		return str(payload[0])
+
+	return ""
+
+func _get_active_skill_record(skill_id: String) -> Dictionary:
+	var skill_data: Dictionary = game_data_skills_magic.get(skill_id, {})
+	if not skill_data.is_empty():
+		return skill_data
+
+	return game_data_skills_ability.get(skill_id, {})
+
+func _build_targeting_metadata(parsed_data: Dictionary) -> Dictionary:
+	var metadata: Dictionary = {
+		"needs_ally_selection": false,
+		"targets_allies": false,
+		"targets_enemies": false,
+		"targets_self": false,
+		"has_aoe": false
+	}
+
+	for effect in parsed_data.get("effects", []):
+		var target_area: int = int(effect.get("target_area", 1))
+		var target_type: int = int(effect.get("target_type", 1))
+
+		if target_area == 2:
+			metadata["has_aoe"] = true
+
+		if target_type == 3:
+			metadata["targets_self"] = true
+		elif target_type == 1:
+			metadata["targets_enemies"] = true
+		elif target_type in [2, 6]:
+			metadata["targets_allies"] = true
+			if target_area == 1:
+				metadata["needs_ally_selection"] = true
+
+	return metadata
+
+func resolve_combat_skill(skill_id: String) -> Dictionary:
+	var resolved_skill: Dictionary = _get_active_skill_record(skill_id)
+	if resolved_skill.is_empty():
+		push_error("DataManager: Combat skill not found: %s" % skill_id)
+		return {}
+
+	var parsed_data: Dictionary = parse_skill_effects(resolved_skill)
+	return {
+		"source_type": "skill",
+		"source_id": skill_id,
+		"resolved_action_id": skill_id,
+		"resolved_action_name": resolved_skill.get("name", ""),
+		"resolved_action_data": resolved_skill,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata(parsed_data)
+	}
+
+func resolve_combat_item(item_id: String) -> Dictionary:
+	var item_data: Dictionary = game_data_items.get(item_id, {})
+	if item_data.is_empty():
+		push_error("DataManager: Combat item not found: %s" % item_id)
+		return {}
+
+	var resolved_ability_id: String = _find_item_ability_id(item_data.get("effects_raw", []))
+	if resolved_ability_id == "":
+		push_error("DataManager: Combat item missing opcode 71 ability reference: %s" % item_id)
+		return {}
+
+	var resolved_action_data: Dictionary = game_data_skills_ability.get(resolved_ability_id, {})
+	if resolved_action_data.is_empty():
+		push_error("DataManager: Combat item ability not found: %s -> %s" % [item_id, resolved_ability_id])
+		return {}
+
+	var parsed_data: Dictionary = parse_skill_effects(resolved_action_data)
+	return {
+		"source_type": "item",
+		"source_id": item_id,
+		"source_item_data": item_data,
+		"resolved_action_id": resolved_ability_id,
+		"resolved_action_name": resolved_action_data.get("name", item_data.get("name", "")),
+		"resolved_action_data": resolved_action_data,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata(parsed_data),
+		"original_item_id": item_id
+	}
+
 func _update_wallet_data(wallet: Dictionary) -> void:
 	assert(wallet.has("gil"), "CRITICAL ERROR: wallet is missing gil!")
 	if not wallet.has("gil"): push_error("CRITICAL ERROR: wallet is missing gil!")

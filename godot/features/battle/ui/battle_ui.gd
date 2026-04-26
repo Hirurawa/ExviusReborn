@@ -45,6 +45,7 @@ var _is_ally_targeting_mode: bool = false
 var _pending_skill_action_id: String = ""
 var _pending_skill_action_name: String = ""
 var _pending_skill_action_type: int = 0
+var _pending_action_payload: Dictionary = {}
 var _cancel_target_button: Button
 
 func _get_dynamic_texture(path: String) -> Texture2D:
@@ -82,11 +83,12 @@ func _ready() -> void:
 	_setup_cancel_target_button()
 	_init_combat_inventory()
 
-func _enter_ally_selection_state(action_type: int, action_name: String, action_id: String) -> void:
+func _enter_ally_selection_state(action_type: int, action_name: String, action_id: String, action_payload: Dictionary = {}) -> void:
 	_is_ally_targeting_mode = true
 	_pending_skill_action_type = action_type
 	_pending_skill_action_name = action_name
 	_pending_skill_action_id = action_id
+	_pending_action_payload = action_payload.duplicate(true)
 
 	if _cancel_target_button:
 		_cancel_target_button.show()
@@ -106,19 +108,12 @@ func _init_combat_inventory() -> void:
 			if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
 				combat_inventory[item_id] = quantity
 
-func _unwrap_item_ability_id(effects_raw: Array) -> String:
-	for effect in effects_raw:
-		if effect.size() >= 4 and effect[2] == 71:
-			var payload = effect[3]
-			if typeof(payload) == TYPE_ARRAY and payload.size() > 0:
-				return str(payload[0])
-	return ""
-
 func _exit_ally_selection_state() -> void:
 	_is_ally_targeting_mode = false
 	_pending_skill_action_type = 0
 	_pending_skill_action_name = ""
 	_pending_skill_action_id = ""
+	_pending_action_payload = {}
 
 	if _cancel_target_button:
 		_cancel_target_button.hide()
@@ -128,6 +123,41 @@ func _exit_ally_selection_state() -> void:
 		p.is_ally_targeting_mode = false
 		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		p.update_action_visuals()
+
+func _queue_resolved_action(unit_index: int, action_type: int, action_name: String, resolution: Dictionary, should_consume_item: bool = true) -> bool:
+	if resolution.is_empty():
+		return false
+
+	var action_payload: Dictionary = {
+		"source_type": resolution.get("source_type", "skill"),
+		"resolved_action_id": resolution.get("resolved_action_id", ""),
+		"resolved_action_data": resolution.get("resolved_action_data", {}),
+		"parsed_data": resolution.get("parsed_data", {})
+	}
+
+	if resolution.get("source_type", "") == "item":
+		var original_item_id: String = str(resolution.get("original_item_id", ""))
+		if should_consume_item:
+			if not combat_inventory.has(original_item_id) or combat_inventory[original_item_id] <= 0:
+				return false
+			combat_inventory[original_item_id] -= 1
+
+		action_payload["is_item"] = true
+		action_payload["original_item_id"] = original_item_id
+
+	battle_manager.set_queued_action(
+		unit_index,
+		action_type,
+		action_name,
+		str(resolution.get("resolved_action_id", "")),
+		action_payload
+	)
+
+	for p in _active_panels:
+		if p._my_index == unit_index:
+			p.update_action_visuals()
+
+	return true
 
 func _setup_cancel_target_button() -> void:
 	_cancel_target_button = Button.new()
@@ -357,23 +387,18 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)
 
 			btn.pressed.connect(func():
-				var parsed_data: Dictionary = DataManager.parse_skill_effects(skill_data)
-				var needs_ally_target = false
+				var resolution: Dictionary = DataManager.resolve_combat_skill(action_id)
+				if resolution.is_empty():
+					return
 
-				for effect in parsed_data.get("effects", []):
-					if effect.get("target_area", 1) == 1 and effect.get("target_type", 1) in [2, 6]:
-						needs_ally_target = true
-						break
-
-				if needs_ally_target:
-					_enter_ally_selection_state(action_type, opt.get("name", ""), action_id)
+				if resolution.get("targeting", {}).get("needs_ally_selection", false):
+					_enter_ally_selection_state(action_type, opt.get("name", ""), action_id, {
+						"resolution": resolution
+					})
 					_close_action_menu()
 				else:
-					battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
-					for p in _active_panels:
-						if p._my_index == _menu_target_unit_index:
-							p.update_action_visuals()
-					_close_action_menu()
+					if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), resolution, false):
+						_close_action_menu()
 			)
 			grid.add_child(btn)
 		else:
@@ -387,30 +412,22 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			var btn = _create_action_button(action_name, sub_text)
 			btn.pressed.connect(func():
 				if action_type == battle_manager.CombatAction.ITEM:
-					if combat_inventory.has(action_id) and combat_inventory[action_id] > 0:
-						combat_inventory[action_id] -= 1
-						var item_data = opt.get("item_data", {})
-						var effects_raw = item_data.get("effects_raw", [])
-						var unwrapped_ability_id = _unwrap_item_ability_id(effects_raw)
+					var resolution: Dictionary = DataManager.resolve_combat_item(action_id)
+					if resolution.is_empty():
+						return
 
-						var action_payload: Dictionary = {
-							"is_item": true,
-							"original_item_id": action_id
-						}
-						
-						battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), unwrapped_ability_id, action_payload)
-						for p in _active_panels:
-							if p._my_index == _menu_target_unit_index:
-								p.update_action_visuals()
-
-						# We should just close the menu. If we wanted to refresh it while open, we wouldn't call _close_action_menu.
+					if resolution.get("targeting", {}).get("needs_ally_selection", false):
+						_enter_ally_selection_state(action_type, opt.get("name", ""), str(resolution.get("resolved_action_id", "")), {
+							"resolution": resolution
+						})
 						_close_action_menu()
+					else:
+						if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), resolution):
+							_close_action_menu()
 				else:
-					battle_manager.set_queued_action(_menu_target_unit_index, action_type, opt.get("name", ""), action_id)
-					for p in _active_panels:
-						if p._my_index == _menu_target_unit_index:
-							p.update_action_visuals()
-					_close_action_menu()
+					var skill_resolution: Dictionary = DataManager.resolve_combat_skill(action_id)
+					if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), skill_resolution, false):
+						_close_action_menu()
 			)
 			grid.add_child(btn)
 
@@ -633,11 +650,8 @@ func _on_panel_tapped(unit_index: int) -> void:
 				unit_data["queued_target_team"] = "player"
 				unit_data["queued_target_index"] = unit_index
 
-				# Now queue the skill
-				battle_manager.set_queued_action(_menu_target_unit_index, _pending_skill_action_type, _pending_skill_action_name, _pending_skill_action_id)
-				for p in _active_panels:
-					if p._my_index == _menu_target_unit_index:
-						p.update_action_visuals()
+				var resolution: Dictionary = _pending_action_payload.get("resolution", {})
+				_queue_resolved_action(_menu_target_unit_index, _pending_skill_action_type, _pending_skill_action_name, resolution)
 
 		_exit_ally_selection_state()
 	else:

@@ -101,9 +101,9 @@ expand_mode = 1
 [node name="HPMax" type="Label" parent="." unique_id=654830653]
 layout_mode = 0
 offset_left = 143.0
-offset_top = 76.0
+offset_top = 70.0
 offset_right = 186.0
-offset_bottom = 99.0
+offset_bottom = 93.0
 
 [node name="MPNow" type="Label" parent="." unique_id=341165579]
 layout_mode = 0

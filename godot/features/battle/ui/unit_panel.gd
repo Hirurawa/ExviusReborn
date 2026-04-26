@@ -27,6 +27,7 @@ var _my_index: int = -1
 var _is_dragging: bool = false
 var _drag_start_position: Vector2 = Vector2.ZERO
 var _current_queued_action: int = 0
+var _current_queued_action_id: String = ""
 var _battle_manager: Node = null
 var _has_acted: bool = false
 var is_ally_targeting_mode: bool = false
@@ -118,6 +119,7 @@ func _on_unit_acted(index: int) -> void:
 func _on_turn_changed(_new_turn: int) -> void:
 	_has_acted = false
 	_current_queued_action = 0
+	_current_queued_action_id = ""
 	if _battle_manager:
 		_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)
 	_update_command_icon("attack")
@@ -138,6 +140,7 @@ func update_action_visuals() -> void:
 		return
 	var unit_data: Dictionary = _battle_manager.party_data[_my_index]
 	_current_queued_action = unit_data.get("queued_action", _battle_manager.CombatAction.ATTACK)
+	_current_queued_action_id = str(unit_data.get("queued_action_id", ""))
 	_update_visual_state()
 
 func _update_visual_state() -> void:
@@ -149,17 +152,26 @@ func _update_visual_state() -> void:
 		return
 
 	if _current_queued_action == _battle_manager.CombatAction.ATTACK:
-		modulate = Color(1.0, 1.0, 1.0, 1.0)
+		#modulate = Color(1.0, 1.0, 1.0, 1.0)
 		_update_command_icon("attack")
 	elif _current_queued_action == _battle_manager.CombatAction.DEFEND:
-		modulate = Color(0.5, 0.8, 1.0, 1.0)
+		#modulate = Color(0.5, 0.8, 1.0, 1.0)
 		_update_command_icon("defense")
 	elif _current_queued_action == _battle_manager.CombatAction.SKILL:
-		modulate = Color(1.0, 0.6, 0.6, 1.0)
-		_update_command_icon("magic")
+		#modulate = Color(1.0, 0.6, 0.6, 1.0)
+		_update_command_icon(_resolve_skill_command_icon())
 	elif _current_queued_action == _battle_manager.CombatAction.ITEM:
-		modulate = Color(0.6, 1.0, 0.6, 1.0)
+		#modulate = Color(0.6, 1.0, 0.6, 1.0)
 		_update_command_icon("item")
+
+func _resolve_skill_command_icon() -> String:
+	if _current_queued_action_id == "":
+		return "magic"
+	if DataManager.game_data_skills_magic.has(_current_queued_action_id):
+		return "magic"
+	if DataManager.game_data_skills_ability.has(_current_queued_action_id):
+		return "special"
+	return "magic"
 
 func set_hp_display(current_hp: int, max_hp: int) -> void:
 	if max_hp <= 0:
@@ -179,7 +191,6 @@ func set_limit_gauge(current_limit: int, max_limit: int) -> void:
 	if max_limit <= 0:
 		return
 	var fill_ratio: float = clampf(float(current_limit) / float(max_limit), 0.0, 1.0)
-	limit_gage.scale.x = fill_ratio
 	limit_bar.scale.x = fill_ratio
 
 func _update_command_icon(command: String) -> void:

@@ -21,7 +21,7 @@ func _ready() -> void:
 	level_label.hide()
 
 func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_button: bool = false, skill_level: int = -1) -> void:
-	if not is_inside_tree():
+	if not is_node_ready():
 		await ready
 
 	# button_limit1.tres <- in case of a limit break
@@ -63,6 +63,15 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 
 func _on_action_button_pressed() -> void:
 	pressed.emit()
+
+func set_action_enabled(enabled: bool) -> void:
+	if not is_node_ready():
+		await ready
+	if action_button == null:
+		push_error("Skill: action_button is missing, cannot update enabled state.")
+		return
+	action_button.disabled = not enabled
+	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
 
 func _build_badge_text(skill_data: Dictionary, source: String) -> String:
 	var magic_type: String = str(skill_data.get("magic_type", "Magic"))

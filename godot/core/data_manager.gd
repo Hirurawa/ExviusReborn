@@ -337,6 +337,50 @@ func resolve_combat_skill(skill_id: String) -> Dictionary:
 		"targeting": _build_targeting_metadata(parsed_data)
 	}
 
+func get_limitburst_max_gauge(limitburst_id: String) -> int:
+	var default_max_gauge: int = 100
+	if limitburst_id == "":
+		return default_max_gauge
+
+	var limitburst_data: Dictionary = game_data_limitbursts.get(limitburst_id, {})
+	if limitburst_data.is_empty():
+		push_error("DataManager: Limit burst data not found: %s" % limitburst_id)
+		return default_max_gauge
+
+	var levels: Variant = limitburst_data.get("levels", [])
+	if not (levels is Array) or (levels as Array).is_empty():
+		push_error("DataManager: Limit burst levels missing or invalid for id: %s" % limitburst_id)
+		return default_max_gauge
+
+	var first_level: Variant = (levels as Array)[0]
+	if not (first_level is Array) or (first_level as Array).is_empty():
+		push_error("DataManager: Limit burst first level invalid for id: %s" % limitburst_id)
+		return default_max_gauge
+
+	var gauge_value: Variant = (first_level as Array)[0]
+	if typeof(gauge_value) not in [TYPE_INT, TYPE_FLOAT]:
+		push_error("DataManager: Limit burst gauge value invalid for id: %s" % limitburst_id)
+		return default_max_gauge
+
+	return max(1, int(gauge_value))
+
+func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
+	var resolved_limitburst: Dictionary = game_data_limitbursts.get(limitburst_id, {})
+	if resolved_limitburst.is_empty():
+		push_error("DataManager: Combat limit burst not found: %s" % limitburst_id)
+		return {}
+
+	var parsed_data: Dictionary = parse_skill_effects(resolved_limitburst)
+	return {
+		"source_type": "limitburst",
+		"source_id": limitburst_id,
+		"resolved_action_id": limitburst_id,
+		"resolved_action_name": resolved_limitburst.get("name", ""),
+		"resolved_action_data": resolved_limitburst,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata(parsed_data)
+	}
+
 func resolve_combat_item(item_id: String) -> Dictionary:
 	var item_data: Dictionary = game_data_items.get(item_id, {})
 	if item_data.is_empty():

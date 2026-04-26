@@ -214,6 +214,17 @@ func _open_skill_menu(unit_index: int) -> void:
 			var unit_id = str(unit_inst.get("unit_id", ""))
 			var rarity = int(unit_inst.get("current_rarity", 1))
 			var level = int(unit_inst.get("level", 1))
+			var limitburst_id: String = str(unit_inst.get("limitburst_id", ""))
+
+			if limitburst_id != "" and DataManager.game_data_limitbursts.has(limitburst_id):
+				var limitburst_data: Dictionary = DataManager.game_data_limitbursts[limitburst_id]
+				options.append({
+					"id": limitburst_id,
+					"name": limitburst_data.get("name", "Unknown Limit Burst"),
+					"skill_data": limitburst_data,
+					"level": -1,
+					"source_type": "limitburst"
+				})
 
 			var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 			var skills: Array = unit_data.get("skills", [])
@@ -233,7 +244,8 @@ func _open_skill_menu(unit_index: int) -> void:
 								"id": sk_id,
 								"name": magic_data.get("name", "Unknown Magic"),
 								"skill_data": magic_data,
-								"level": req_rarity
+								"level": req_rarity,
+								"source_type": "skill"
 							})
 					elif sk_type == "ABILITY":
 						if DataManager.game_data_skills_ability.has(sk_id):
@@ -242,7 +254,8 @@ func _open_skill_menu(unit_index: int) -> void:
 								"id": sk_id,
 								"name": ability_data.get("name", "Unknown Ability"),
 								"skill_data": ability_data,
-								"level": req_rarity
+								"level": req_rarity,
+								"source_type": "skill"
 							})
 
 	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
@@ -377,17 +390,39 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			#var btn = SkillEntryButtonScene.instantiate()
 			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var skill_data = opt.get("skill_data", {})
-			var skill_level = opt.get("level", -1)
+			var skill_data: Dictionary = opt.get("skill_data", {})
+			var skill_level: int = int(opt.get("level", -1))
+			var source_type: String = str(opt.get("source_type", "skill"))
+			var can_use_limitburst: bool = true
+
+			if source_type == "limitburst":
+				can_use_limitburst = false
+				if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
+					var source_unit: Dictionary = battle_manager.party_data[_menu_target_unit_index]
+					if not source_unit.is_empty():
+						var current_limit: int = int(source_unit.get("limit_gauge", 0))
+						var max_limit: int = int(source_unit.get("max_limit", 0))
+						can_use_limitburst = max_limit > 0 and current_limit >= max_limit
 			
 			var btn = MagicScene.instantiate() #if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			grid.add_child(btn)
 			
 			btn.setup_from_skill_data(skill_data, "", true, skill_level)
+			if source_type == "limitburst" and not can_use_limitburst:
+				btn.modulate = Color(0.45, 0.45, 0.45, 1.0)
+				btn.set_action_enabled(false)
 
 			btn.pressed.connect(func():
-				var resolution: Dictionary = DataManager.resolve_combat_skill(action_id)
+				if source_type == "limitburst" and not can_use_limitburst:
+					return
+
+				var resolution: Dictionary = {}
+				if source_type == "limitburst":
+					resolution = DataManager.resolve_combat_limitburst(action_id)
+				else:
+					resolution = DataManager.resolve_combat_skill(action_id)
 				if resolution.is_empty():
 					return
 
@@ -400,7 +435,6 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 					if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), resolution, false):
 						_close_action_menu()
 			)
-			grid.add_child(btn)
 		else:
 			var sub_text: String = "MP: --"
 			# For items, extract the " (xCount)" part to be the subtext

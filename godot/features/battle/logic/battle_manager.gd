@@ -178,8 +178,11 @@ func initialize_battle(mission_id: String) -> void:
 				battle_unit["current_hp"] = max_hp
 				battle_unit["max_mp"] = max_mp
 				battle_unit["current_mp"] = max_mp
+				var limitburst_id: String = str(battle_unit.get("limitburst_id", ""))
+				battle_unit["limitburst_id"] = limitburst_id
+				var max_limit_gauge: int = DataManager.get_limitburst_max_gauge(limitburst_id)
 				battle_unit["limit_gauge"] = 0
-				battle_unit["max_limit"] = 100 # arbitrary placeholder
+				battle_unit["max_limit"] = max_limit_gauge
 				battle_unit["queued_action"] = CombatAction.ATTACK
 				battle_unit["queued_action_name"] = ""
 				battle_unit["queued_action_id"] = ""

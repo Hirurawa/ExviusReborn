@@ -30,6 +30,7 @@ func _ready() -> void:
 	prev_party_btn.pressed.connect(_on_prev_party)
 	next_party_btn.pressed.connect(_on_next_party)
 	view_units_btn.pressed.connect(_on_view_units)
+	enhance_units_btn.pressed.connect(_on_enhance_units)
 
 	_refresh_ui()
 
@@ -127,3 +128,25 @@ func _on_slot_clicked(slot_index: int, unit_inst: Dictionary) -> void:
 
 func _on_view_units() -> void:
 	UIManager.push("unit_selector_ui", {"mode": "view"})
+
+func _on_enhance_units() -> void:
+	UIManager.push("unit_selector_ui", {
+		"mode": "enhance_base_selection",
+		"selection_callback": Callable(self, "_on_enhance_base_selected")
+	})
+
+func _on_enhance_base_selected(unit_inst: Dictionary) -> void:
+	if unit_inst.is_empty():
+		return
+
+	var base_instance_id: String = str(unit_inst.get("instance_id", ""))
+	if base_instance_id == "":
+		return
+
+	call_deferred("_open_enhance_ui", base_instance_id, unit_inst)
+
+func _open_enhance_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
+	UIManager.push("enhance_ui", {
+		"base_unit_instance_id": base_instance_id,
+		"base_unit_inst": unit_inst
+	})

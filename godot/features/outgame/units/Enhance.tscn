@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://denjmps5s81og"]
 
+[ext_resource type="Script" path="res://features/outgame/units/enhance_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bevfdevw4yi4h" path="res://assets/ui/common/sell_info.tres" id="2_2m72s"]
 [ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="3_nodv1"]
 [ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="4_ai2op"]
@@ -41,6 +42,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_top = 635.0
 offset_bottom = 635.0
+script = ExtResource("1_script")
 
 [node name="unit_mix_ui_sell_info" type="TextureRect" parent="." unique_id=1388287591]
 layout_mode = 0
@@ -620,3 +622,190 @@ offset_left = 232.0
 offset_top = -423.0
 offset_right = 272.0
 offset_bottom = -400.0
+
+[node name="EnhanceFlowRoot" type="Control" parent="." unique_id=111200001]
+layout_mode = 0
+offset_top = -530.0
+offset_right = 640.0
+offset_bottom = 0.0
+
+[node name="BaseUnitIdLabel" type="Label" parent="EnhanceFlowRoot" unique_id=111200002]
+layout_mode = 0
+offset_left = 198.0
+offset_top = 40.0
+offset_right = 602.0
+offset_bottom = 72.0
+theme_override_font_sizes/font_size = 16
+text = "Base Instance ID:"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="BaseUnitDisplay" type="Control" parent="EnhanceFlowRoot" unique_id=111200003]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 98.0
+offset_right = 178.0
+offset_bottom = 274.0
+
+[node name="BaseUnitSprite" type="TextureRect" parent="EnhanceFlowRoot/BaseUnitDisplay" unique_id=111200004]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 144.0
+offset_bottom = 168.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MaterialPedestalsContainer" type="HBoxContainer" parent="EnhanceFlowRoot" unique_id=111200005]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 350.0
+offset_right = 622.0
+offset_bottom = 506.0
+theme_override_constants/separation = 8
+
+[node name="PedestalSlot1" type="Control" parent="EnhanceFlowRoot/MaterialPedestalsContainer" unique_id=111200006]
+custom_minimum_size = Vector2(112, 146)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PedestalSprite" type="Sprite2D" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot1" unique_id=111200007]
+position = Vector2(56, 108)
+texture = ExtResource("14_dvlsq")
+
+[node name="MaterialSprite" type="TextureRect" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot1" unique_id=111200008]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 106.0
+offset_bottom = 122.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HitButton" type="Button" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot1" unique_id=111200009]
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 146.0
+flat = true
+
+[node name="PedestalSlot2" type="Control" parent="EnhanceFlowRoot/MaterialPedestalsContainer" unique_id=111200010]
+custom_minimum_size = Vector2(112, 146)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PedestalSprite" type="Sprite2D" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot2" unique_id=111200011]
+position = Vector2(56, 108)
+texture = ExtResource("14_dvlsq")
+
+[node name="MaterialSprite" type="TextureRect" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot2" unique_id=111200012]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 106.0
+offset_bottom = 122.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HitButton" type="Button" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot2" unique_id=111200013]
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 146.0
+flat = true
+
+[node name="PedestalSlot3" type="Control" parent="EnhanceFlowRoot/MaterialPedestalsContainer" unique_id=111200014]
+custom_minimum_size = Vector2(112, 146)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PedestalSprite" type="Sprite2D" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot3" unique_id=111200015]
+position = Vector2(56, 108)
+texture = ExtResource("14_dvlsq")
+
+[node name="MaterialSprite" type="TextureRect" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot3" unique_id=111200016]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 106.0
+offset_bottom = 122.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HitButton" type="Button" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot3" unique_id=111200017]
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 146.0
+flat = true
+
+[node name="PedestalSlot4" type="Control" parent="EnhanceFlowRoot/MaterialPedestalsContainer" unique_id=111200018]
+custom_minimum_size = Vector2(112, 146)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PedestalSprite" type="Sprite2D" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot4" unique_id=111200019]
+position = Vector2(56, 108)
+texture = ExtResource("14_dvlsq")
+
+[node name="MaterialSprite" type="TextureRect" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot4" unique_id=111200020]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 106.0
+offset_bottom = 122.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HitButton" type="Button" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot4" unique_id=111200021]
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 146.0
+flat = true
+
+[node name="PedestalSlot5" type="Control" parent="EnhanceFlowRoot/MaterialPedestalsContainer" unique_id=111200022]
+custom_minimum_size = Vector2(112, 146)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PedestalSprite" type="Sprite2D" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot5" unique_id=111200023]
+position = Vector2(56, 108)
+texture = ExtResource("14_dvlsq")
+
+[node name="MaterialSprite" type="TextureRect" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot5" unique_id=111200024]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 8.0
+offset_right = 106.0
+offset_bottom = 122.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HitButton" type="Button" parent="EnhanceFlowRoot/MaterialPedestalsContainer/PedestalSlot5" unique_id=111200025]
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 146.0
+flat = true
+
+[node name="EnhanceActionBar" type="HBoxContainer" parent="EnhanceFlowRoot" unique_id=111200026]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 518.0
+offset_right = 612.0
+offset_bottom = 568.0
+theme_override_constants/separation = 12
+
+[node name="CancelButton" type="Button" parent="EnhanceFlowRoot/EnhanceActionBar" unique_id=111200027]
+custom_minimum_size = Vector2(140, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Back"
+
+[node name="ClearButton" type="Button" parent="EnhanceFlowRoot/EnhanceActionBar" unique_id=111200028]
+custom_minimum_size = Vector2(140, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Clear"
+
+[node name="ConfirmButton" type="Button" parent="EnhanceFlowRoot/EnhanceActionBar" unique_id=111200029]
+custom_minimum_size = Vector2(140, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OK"

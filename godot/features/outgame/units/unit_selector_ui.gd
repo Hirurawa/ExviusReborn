@@ -2,12 +2,17 @@ extends Control
 
 const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 
+@onready var vbox_container: VBoxContainer = $VBoxContainer
+@onready var title_label: Label = $VBoxContainer/TitleLabel
 @onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
 
 var mode: String = "view"
 var target_party_index: int = 0
 var target_slot_index: int = 0
+var exclude_list: Array = []
+var pre_selected_units: Array = []
+var selection_callback: Callable = Callable()
 
 const GRID_COLUMNS: int = 5
 const UNIT_CELL_W: int = 128
@@ -17,10 +22,19 @@ const PEDESTAL_BOTTOM_MARGIN: int = 2
 const UNIT_SIDE_PADDING: int = 4
 const UNIT_FEET_OFFSET_ESTIMATE: float = 5.0
 const V_SCROLLBAR_MIN_W: float = 12.0
+const MAX_MATERIAL_SELECTION: int = 5
 
 signal unit_selected(unit_inst: Dictionary)
+signal materials_selected(units_array: Array)
 
 var _texture_cache: Dictionary = {}
+var _exclude_instance_id_set: Dictionary = {}
+var _selected_units_map: Dictionary = {}
+var _material_checkboxes: Dictionary = {}
+var _action_row: HBoxContainer
+var _back_button: Button
+var _confirm_button: Button
+var _suppress_checkbox_signal: bool = false
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
@@ -50,15 +64,129 @@ func init_scene(params: Dictionary) -> void:
 		target_party_index = params.party_index
 	if params.has("slot_index"):
 		target_slot_index = params.slot_index
+	if params.has("exclude_list") and params.exclude_list is Array:
+		exclude_list = params.exclude_list.duplicate()
+	if params.has("pre_selected_units") and params.pre_selected_units is Array:
+		pre_selected_units = params.pre_selected_units.duplicate(true)
+	if params.has("selection_callback") and params.selection_callback is Callable:
+		selection_callback = params.selection_callback
+
+	_rebuild_exclude_set()
+	_seed_preselected_materials()
+	_apply_scene_params()
+
+func _apply_scene_params() -> void:
+	if not is_node_ready():
+		call_deferred("_apply_scene_params")
+		return
+
+	_ensure_action_row()
+	_update_mode_ui()
+	_refresh_units_list(DataManager.owned_units_ids)
+
+func _rebuild_exclude_set() -> void:
+	_exclude_instance_id_set.clear()
+	for entry in exclude_list:
+		if entry is String and entry != "":
+			_exclude_instance_id_set[entry] = true
+		elif entry is Dictionary:
+			var instance_id: String = str(entry.get("instance_id", ""))
+			if instance_id != "":
+				_exclude_instance_id_set[instance_id] = true
+
+func _seed_preselected_materials() -> void:
+	_selected_units_map.clear()
+	if mode != "enhance_material_selection":
+		return
+
+	for entry in pre_selected_units:
+		if not (entry is Dictionary):
+			continue
+		var instance_id: String = str(entry.get("instance_id", ""))
+		if instance_id == "":
+			continue
+		if _exclude_instance_id_set.has(instance_id):
+			continue
+		if _selected_units_map.size() >= MAX_MATERIAL_SELECTION:
+			break
+		_selected_units_map[instance_id] = entry
 
 func _ready() -> void:
 	units_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	units_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	_ensure_action_row()
+	_update_mode_ui()
 	_configure_vertical_scrollbar()
 	units_list_container.columns = GRID_COLUMNS
 	units_scroll_container.resized.connect(_on_scroll_metrics_changed)
 	DataManager.units_updated.connect(_on_units_updated)
 	_refresh_units_list(DataManager.owned_units_ids)
+
+func _ensure_action_row() -> void:
+	if _action_row != null:
+		return
+
+	_action_row = HBoxContainer.new()
+	_action_row.name = "ActionRow"
+	_action_row.anchor_left = 1.0
+	_action_row.anchor_top = 0.0
+	_action_row.anchor_right = 1.0
+	_action_row.anchor_bottom = 0.0
+	_action_row.offset_left = -220.0
+	_action_row.offset_top = 8.0
+	_action_row.offset_right = -8.0
+	_action_row.offset_bottom = 58.0
+	_action_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_action_row.alignment = BoxContainer.ALIGNMENT_END
+
+	_back_button = Button.new()
+	_back_button.name = "BackButton"
+	_back_button.text = "Back"
+	_back_button.custom_minimum_size = Vector2(100, 50)
+	_back_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_back_button.pressed.connect(func() -> void:
+		UIManager.pop()
+	)
+	_action_row.add_child(_back_button)
+
+	_confirm_button = Button.new()
+	_confirm_button.name = "ConfirmButton"
+	_confirm_button.text = "OK"
+	_confirm_button.custom_minimum_size = Vector2(100, 50)
+	_confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_confirm_button.pressed.connect(_on_confirm_material_selection)
+	_action_row.add_child(_confirm_button)
+
+	# Add action row as direct child of root (UnitSelectorUI) so it overlays on top
+	add_child(_action_row)
+	move_child(_action_row, -1)  # Move to end so it renders on top
+
+func _update_mode_ui() -> void:
+	if title_label == null:
+		return
+
+	match mode:
+		"enhance_base_selection":
+			title_label.text = "Select Base Unit"
+		"enhance_material_selection":
+			title_label.text = "Select Material Units"
+		_:
+			title_label.text = "Units"
+
+	if _action_row == null:
+		return
+
+	# Always show action row in selector modes
+	var selector_mode: bool = mode == "select" or mode == "enhance_base_selection" or mode == "enhance_material_selection"
+	_action_row.visible = selector_mode
+	
+	# Only show OK button in material selection mode
+	if _confirm_button != null:
+		_confirm_button.visible = mode == "enhance_material_selection"
+	
+	# Show Back button in all selector modes
+	if _back_button != null:
+		_back_button.visible = selector_mode
 
 func _on_units_updated(units: Array) -> void:
 	_refresh_units_list(units)
@@ -66,16 +194,10 @@ func _on_units_updated(units: Array) -> void:
 func _refresh_units_list(owned_units_ids: Array) -> void:
 	var cell_width: int = _get_effective_cell_width()
 	units_list_container.columns = GRID_COLUMNS
+	_material_checkboxes.clear()
 
 	for child in units_list_container.get_children():
 		child.queue_free()
-
-	# Back button if in select mode (should be added before early return)
-	if mode == "select":
-		var back_btn: Button = Button.new()
-		back_btn.text = "Back"
-		back_btn.pressed.connect(func(): UIManager.pop())
-		units_list_container.add_child(back_btn)
 
 	if owned_units_ids.is_empty():
 		var empty_label := Label.new()
@@ -85,6 +207,10 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 	for unit_inst in owned_units_ids:
 		if not unit_inst is Dictionary:
+			continue
+
+		var unit_instance_id: String = str(unit_inst.get("instance_id", ""))
+		if not _should_display_unit(unit_instance_id):
 			continue
 
 		var unit_id: String = unit_inst.get("unit_id", "")
@@ -139,8 +265,20 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		click_btn.focus_mode = Control.FOCUS_NONE
 		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		click_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))
-		click_btn.z_index = 20
+		click_btn.z_index = 18
 		container.add_child(click_btn)
+
+		if mode == "enhance_material_selection":
+			var check_box: CheckBox = CheckBox.new()
+			check_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+			check_box.position = Vector2(4, 4)
+			check_box.z_index = 25
+			check_box.mouse_filter = Control.MOUSE_FILTER_STOP
+			var checked: bool = _selected_units_map.has(unit_instance_id)
+			_set_checkbox_state(check_box, checked)
+			check_box.toggled.connect(_on_material_checkbox_toggled.bind(unit_inst))
+			container.add_child(check_box)
+			_material_checkboxes[unit_instance_id] = check_box
 
 		# Name label overlaid at bottom
 		var name_label: Label = Label.new()
@@ -160,6 +298,58 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		container.add_child(name_label)
 
 		units_list_container.add_child(container)
+
+func _should_display_unit(unit_instance_id: String) -> bool:
+	if unit_instance_id == "":
+		return false
+	return not _exclude_instance_id_set.has(unit_instance_id)
+
+func _set_checkbox_state(check_box: CheckBox, state: bool) -> void:
+	_suppress_checkbox_signal = true
+	check_box.button_pressed = state
+	_suppress_checkbox_signal = false
+
+func _on_material_checkbox_toggled(checked: bool, unit_inst: Dictionary) -> void:
+	if _suppress_checkbox_signal:
+		return
+	_apply_material_toggle(unit_inst, checked)
+
+func _apply_material_toggle(unit_inst: Dictionary, checked: bool) -> void:
+	var instance_id: String = str(unit_inst.get("instance_id", ""))
+	if instance_id == "":
+		return
+
+	if checked:
+		if _selected_units_map.has(instance_id):
+			return
+		if _selected_units_map.size() >= MAX_MATERIAL_SELECTION:
+			var check_box: CheckBox = _material_checkboxes.get(instance_id, null) as CheckBox
+			if check_box != null:
+				_set_checkbox_state(check_box, false)
+			return
+		_selected_units_map[instance_id] = unit_inst
+		return
+
+	_selected_units_map.erase(instance_id)
+
+func _on_confirm_material_selection() -> void:
+	if mode != "enhance_material_selection":
+		return
+
+	var ordered_selection: Array = []
+	for entry in DataManager.owned_units_ids:
+		if not (entry is Dictionary):
+			continue
+		var instance_id: String = str(entry.get("instance_id", ""))
+		if instance_id == "":
+			continue
+		if _selected_units_map.has(instance_id):
+			ordered_selection.append(entry)
+
+	UIManager.pop()
+	materials_selected.emit(ordered_selection)
+	if selection_callback.is_valid():
+		selection_callback.call(ordered_selection)
 
 func _on_scroll_metrics_changed() -> void:
 	_configure_vertical_scrollbar()
@@ -200,3 +390,16 @@ func _on_unit_clicked(unit_inst: Dictionary) -> void:
 		unit_selected.emit(unit_inst)
 		DataManager.assign_unit_to_party(target_party_index, target_slot_index, unit_inst.instance_id)
 		UIManager.pop()
+	elif mode == "enhance_base_selection":
+		unit_selected.emit(unit_inst)
+		UIManager.pop()
+		if selection_callback.is_valid():
+			selection_callback.call(unit_inst)
+	elif mode == "enhance_material_selection":
+		var instance_id: String = str(unit_inst.get("instance_id", ""))
+		var check_box: CheckBox = _material_checkboxes.get(instance_id, null) as CheckBox
+		if check_box == null:
+			return
+		var next_state: bool = not check_box.button_pressed
+		_set_checkbox_state(check_box, next_state)
+		_apply_material_toggle(unit_inst, next_state)

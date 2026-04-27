@@ -17,6 +17,7 @@ var _scenes_map: Dictionary = {
 	"shop_ui": "res://features/outgame/shop/ShopUI.tscn",
 	"map_ui": "res://features/outgame/map/MapUI.tscn",
 	"units_ui": "res://features/outgame/units/UnitsUI.tscn",
+	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
 	"unit_selector_ui": "res://features/outgame/units/UnitSelectorUI.tscn",
 	"unit_stats_popup": "res://features/outgame/units/UnitStatsPopup.tscn",
 	"unit_detail_ui": "res://features/outgame/units/UnitDetailUI.tscn",
@@ -193,3 +194,8 @@ func set_root(scene_name_key: String, params: Dictionary = {}) -> void:
 
 	# Push the new root
 	push(scene_name_key, params)
+
+func get_current_scene() -> Node:
+	if _menu_stack.is_empty():
+		return null
+	return _menu_stack.back()

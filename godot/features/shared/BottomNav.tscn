@@ -13,7 +13,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -60.0
+offset_top = -109.0
 grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1_script")
@@ -28,86 +28,45 @@ custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 icon = ExtResource("2_x3ov3")
-
-[node name="footer_home" type="TextureRect" parent="HBox/HomeButton" unique_id=2057113789]
-visible = false
-layout_mode = 0
-offset_right = 640.0
-offset_bottom = 60.0
-texture = ExtResource("2_x3ov3")
-expand_mode = 1
+flat = true
+expand_icon = true
 
 [node name="UnitsButton" type="Button" parent="HBox" unique_id=1259339309]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 icon = ExtResource("3_6517q")
-
-[node name="footer_unit" type="TextureRect" parent="HBox/UnitsButton" unique_id=512013600]
-visible = false
-layout_mode = 0
-offset_left = -108.0
-offset_right = 532.0
-offset_bottom = 60.0
-texture = ExtResource("3_6517q")
-expand_mode = 1
+flat = true
+expand_icon = true
 
 [node name="ItemsButton" type="Button" parent="HBox" unique_id=1471287579]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 icon = ExtResource("4_aq07v")
-
-[node name="footer_item" type="TextureRect" parent="HBox/ItemsButton" unique_id=695077259]
-visible = false
-layout_mode = 0
-offset_left = -216.0
-offset_right = 424.0
-offset_bottom = 60.0
-texture = ExtResource("4_aq07v")
-expand_mode = 1
+flat = true
+expand_icon = true
 
 [node name="ShopButton" type="Button" parent="HBox" unique_id=1438236453]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 icon = ExtResource("5_5shwa")
-
-[node name="footer_shop" type="TextureRect" parent="HBox/ShopButton" unique_id=2002615617]
-visible = false
-layout_mode = 0
-offset_left = -325.0
-offset_right = 315.0
-offset_bottom = 60.0
-texture = ExtResource("5_5shwa")
-expand_mode = 1
+flat = true
+expand_icon = true
 
 [node name="SummonButton" type="Button" parent="HBox" unique_id=1281281613]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 icon = ExtResource("6_kpnnm")
-
-[node name="footer_gacha" type="TextureRect" parent="HBox/SummonButton" unique_id=1146618175]
-visible = false
-layout_mode = 0
-offset_left = 73.0
-offset_right = 73.0
-offset_bottom = 108.0
-texture = ExtResource("6_kpnnm")
-expand_mode = 1
+flat = true
+expand_icon = true
 
 [node name="FriendsButton" type="Button" parent="HBox" unique_id=1010605599]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 icon = ExtResource("7_kpifw")
-
-[node name="footer_friend" type="TextureRect" parent="HBox/FriendsButton" unique_id=241099436]
-visible = false
-layout_mode = 0
-offset_left = -543.0
-offset_right = 97.0
-offset_bottom = 60.0
-texture = ExtResource("7_kpifw")
-expand_mode = 1
+flat = true
+expand_icon = true

@@ -1,12 +1,11 @@
 [gd_scene format=3 uid="uid://denjmps5s81og"]
 
-[ext_resource type="Script" path="res://features/outgame/units/enhance_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://c5ul5ffhrgju" path="res://features/outgame/units/enhance_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bevfdevw4yi4h" path="res://assets/ui/common/sell_info.tres" id="2_2m72s"]
 [ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="3_nodv1"]
 [ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="4_ai2op"]
 [ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="5_ggpkq"]
 [ext_resource type="Texture2D" uid="uid://bykj2bihjoutr" path="res://assets/ui/common/minibutton_label_selectclear.tres" id="6_4qsb5"]
-[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="7_wahd4"]
 [ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="8_48362"]
 [ext_resource type="Texture2D" uid="uid://cp5bdnf6n328g" path="res://assets/ui/unit/middlebutton_label_union.tres" id="9_egug2"]
 [ext_resource type="Texture2D" uid="uid://5s3qsb0gvgv0" path="res://assets/ui/common/middlebutton_label_ok.tres" id="10_midg1"]
@@ -83,10 +82,10 @@ vertical_alignment = 1
 
 [node name="unit_mix_need_money_number" type="Label" parent="unit_mix_ui_sell_info/unit_mix_need_money_label" unique_id=524007721]
 layout_mode = 0
-offset_left = 117.0
-offset_top = 22.0
-offset_right = 388.0
-offset_bottom = 48.0
+offset_left = 142.0
+offset_top = 17.0
+offset_right = 413.0
+offset_bottom = 43.0
 theme_override_font_sizes/font_size = 18
 text = "unit_mix_need_money_number"
 horizontal_alignment = 1
@@ -94,9 +93,9 @@ vertical_alignment = 1
 
 [node name="unit_mix_money_icon" type="TextureRect" parent="unit_mix_ui_sell_info/unit_mix_need_money_label" unique_id=1094517015]
 layout_mode = 0
-offset_left = 82.0
+offset_left = 106.0
 offset_top = 12.0
-offset_right = 114.0
+offset_right = 138.0
 offset_bottom = 44.0
 texture = ExtResource("14_qqmk7")
 expand_mode = 1
@@ -109,13 +108,23 @@ offset_bottom = 230.0
 texture = ExtResource("3_nodv1")
 expand_mode = 1
 
-[node name="unit_mix_button_clear" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1370802405]
+[node name="unit_mix_button_clear" type="Button" parent="unit_mix_ui_bg" unique_id=1140217689]
 layout_mode = 0
 offset_left = 454.0
 offset_top = 22.0
 offset_right = 606.0
 offset_bottom = 86.0
-texture = ExtResource("4_ai2op")
+icon = ExtResource("4_ai2op")
+flat = true
+
+[node name="unit_mix_button_clear_label" type="TextureRect" parent="unit_mix_ui_bg/unit_mix_button_clear" unique_id=2027536526]
+visible = false
+layout_mode = 0
+offset_left = 12.0
+offset_top = 18.0
+offset_right = 144.0
+offset_bottom = 42.0
+texture = ExtResource("6_4qsb5")
 expand_mode = 1
 
 [node name="unit_mix_button_clear_on" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2064535322]
@@ -128,23 +137,23 @@ offset_bottom = 84.0
 texture = ExtResource("5_ggpkq")
 expand_mode = 1
 
-[node name="unit_mix_button_clear_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2027536526]
-visible = false
-layout_mode = 0
-offset_left = 466.0
-offset_top = 40.0
-offset_right = 598.0
-offset_bottom = 64.0
-texture = ExtResource("6_4qsb5")
-expand_mode = 1
-
-[node name="unit_mix_button_union" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1198663290]
+[node name="unit_mix_button_union" type="Button" parent="unit_mix_ui_bg" unique_id=2102349084]
 layout_mode = 0
 offset_left = 224.0
 offset_top = 13.0
 offset_right = 416.0
-offset_bottom = 93.0
-texture = ExtResource("7_wahd4")
+offset_bottom = 102.0
+icon = ExtResource("11_033w3")
+flat = true
+expand_icon = true
+
+[node name="unit_mix_button_union_label" type="TextureRect" parent="unit_mix_ui_bg/unit_mix_button_union" unique_id=717156399]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 14.0
+offset_right = 179.0
+offset_bottom = 66.0
+texture = ExtResource("9_egug2")
 expand_mode = 1
 
 [node name="unit_mix_button_union_on" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2016485442]
@@ -155,15 +164,6 @@ offset_top = 13.0
 offset_right = 416.0
 offset_bottom = 93.0
 texture = ExtResource("8_48362")
-expand_mode = 1
-
-[node name="unit_mix_button_union_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=717156399]
-layout_mode = 0
-offset_left = 237.0
-offset_top = 27.0
-offset_right = 403.0
-offset_bottom = 79.0
-texture = ExtResource("9_egug2")
 expand_mode = 1
 
 [node name="unit_mix_button_ok_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2040912874]
@@ -185,6 +185,15 @@ offset_bottom = 86.0
 texture = ExtResource("11_033w3")
 expand_mode = 1
 
+[node name="unit_mix_button_classup_label" type="TextureRect" parent="unit_mix_ui_bg/unit_mix_button_classup" unique_id=1208347959]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 20.0
+offset_right = 140.0
+offset_bottom = 44.0
+texture = ExtResource("13_py6ig")
+expand_mode = 1
+
 [node name="unit_mix_button_classup_on" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1060779861]
 visible = false
 layout_mode = 0
@@ -194,35 +203,6 @@ offset_right = 186.0
 offset_bottom = 86.0
 texture = ExtResource("12_l0rcy")
 expand_mode = 1
-
-[node name="unit_mix_button_classup_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1208347959]
-layout_mode = 0
-offset_left = 44.0
-offset_top = 42.0
-offset_right = 176.0
-offset_bottom = 66.0
-texture = ExtResource("13_py6ig")
-expand_mode = 1
-
-[node name="UnitCharastandCommonSmall" type="Sprite2D" parent="." unique_id=1435534474]
-position = Vector2(74, -51)
-texture = ExtResource("14_dvlsq")
-
-[node name="UnitCharastandCommonSmall2" type="Sprite2D" parent="." unique_id=1365854820]
-position = Vector2(205, -51)
-texture = ExtResource("14_dvlsq")
-
-[node name="UnitCharastandCommonSmall3" type="Sprite2D" parent="." unique_id=136745878]
-position = Vector2(326, -51)
-texture = ExtResource("14_dvlsq")
-
-[node name="UnitCharastandCommonSmall4" type="Sprite2D" parent="." unique_id=965672400]
-position = Vector2(447, -51)
-texture = ExtResource("14_dvlsq")
-
-[node name="UnitCharastandCommonSmall5" type="Sprite2D" parent="." unique_id=1645203631]
-position = Vector2(566, -51)
-texture = ExtResource("14_dvlsq")
 
 [node name="unit_statusbg" type="TextureRect" parent="." unique_id=1863324426]
 layout_mode = 0
@@ -252,7 +232,6 @@ texture = ExtResource("17_0ij6u")
 expand_mode = 1
 
 [node name="unit_status_ext_hp_now_number" type="Label" parent="unit_statusbg/unit_status_label_hp" unique_id=725408659]
-visible = false
 layout_mode = 0
 offset_left = 71.0
 offset_top = 1.0
@@ -281,7 +260,6 @@ texture = ExtResource("18_2c7m1")
 expand_mode = 1
 
 [node name="unit_status_ext_mp_now_number" type="Label" parent="unit_statusbg/unit_status_label_mp" unique_id=864401139]
-visible = false
 layout_mode = 0
 offset_left = 81.0
 offset_top = 1.0
@@ -310,7 +288,6 @@ texture = ExtResource("19_47ltg")
 expand_mode = 1
 
 [node name="unit_status_ext_attack_now_number" type="Label" parent="unit_statusbg/unit_status_label_attack" unique_id=775626561]
-visible = false
 layout_mode = 0
 offset_left = 71.0
 offset_top = 1.0
@@ -339,7 +316,6 @@ texture = ExtResource("20_p5wqb")
 expand_mode = 1
 
 [node name="unit_status_ext_defense_now_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=401019128]
-visible = false
 layout_mode = 0
 offset_left = 81.0
 offset_top = 1.0
@@ -347,8 +323,6 @@ offset_right = 411.0
 offset_bottom = 27.0
 theme_override_font_sizes/font_size = 18
 text = "unit_status_ext_defense_now_number"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="unit_status_ext_defense_max_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=676697727]
 visible = false
@@ -370,7 +344,6 @@ texture = ExtResource("21_5t2gi")
 expand_mode = 1
 
 [node name="unit_status_ext_magic_now_number" type="Label" parent="unit_statusbg/unit_status_label_magic" unique_id=650174502]
-visible = false
 layout_mode = 0
 offset_left = 71.0
 offset_top = 1.0
@@ -399,7 +372,6 @@ texture = ExtResource("22_3ad8q")
 expand_mode = 1
 
 [node name="unit_status_ext_mnd_now_number" type="Label" parent="unit_statusbg/unit_status_label_mnd" unique_id=362009266]
-visible = false
 layout_mode = 0
 offset_left = 81.0
 offset_top = 1.0
@@ -452,38 +424,6 @@ offset_bottom = -382.0
 texture = ExtResource("25_dox0t")
 expand_mode = 1
 
-[node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=2013820409]
-layout_mode = 0
-offset_left = -1.0
-offset_top = -527.0
-offset_right = 559.0
-offset_bottom = -455.0
-texture = ExtResource("30_5t2gi")
-
-[node name="UnitMinibutton1" type="TextureRect" parent="UnitNamebgChara" unique_id=1509643478]
-layout_mode = 0
-offset_left = 46.0
-offset_top = -18.0
-offset_right = 142.0
-offset_bottom = 42.0
-texture = ExtResource("28_2c7m1")
-
-[node name="Back" type="Label" parent="UnitNamebgChara/UnitMinibutton1" unique_id=1287525305]
-layout_mode = 0
-offset_left = 28.0
-offset_top = 17.0
-offset_right = 68.0
-offset_bottom = 40.0
-text = "Back"
-
-[node name="EnhanceUnits" type="Label" parent="UnitNamebgChara" unique_id=1323517889]
-layout_mode = 0
-offset_left = 224.0
-offset_top = 25.0
-offset_right = 335.0
-offset_bottom = 48.0
-text = "Enhance Units"
-
 [node name="UnitLbframe" type="TextureRect" parent="." unique_id=991776219]
 layout_mode = 0
 offset_left = 201.0
@@ -535,9 +475,9 @@ offset_bottom = 40.0
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.35
-anchor_top = 0.375
+anchor_top = 0.55
 anchor_right = 0.35
-anchor_bottom = 0.375
+anchor_bottom = 0.55
 offset_left = 370.0
 offset_top = -247.0
 offset_right = 570.0
@@ -549,27 +489,25 @@ metadata/_edit_use_anchors_ = true
 [node name="unit_mix_bonds_rate" type="Label" parent="TM" unique_id=1071907140]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.35
-anchor_top = 0.375
-anchor_right = 0.35
-anchor_bottom = 0.375
+anchor_left = 0.275
+anchor_top = 0.125
+anchor_right = 0.275
+anchor_bottom = 0.125
 offset_left = 467.0
 offset_top = -229.0
 offset_right = 706.0
 offset_bottom = -195.0
 theme_override_font_sizes/font_size = 24
 text = "unit_mix_bonds_rate"
-horizontal_alignment = 1
-vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
 [node name="unit_mix_bonds_name_plate" type="TextureRect" parent="TM" unique_id=2146929000]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.35
-anchor_top = 0.375
+anchor_top = 0.125
 anchor_right = 0.35
-anchor_bottom = 0.375
+anchor_bottom = 0.125
 offset_left = 433.0
 offset_top = -201.0
 offset_right = 567.0
@@ -582,17 +520,13 @@ metadata/_edit_use_anchors_ = true
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.35
-anchor_top = 0.375
 anchor_right = 0.35
-anchor_bottom = 0.375
 offset_left = 446.0
 offset_top = -196.0
 offset_right = 618.0
 offset_bottom = -173.0
 theme_override_font_sizes/font_size = 16
 text = "unit_mix_bonds_name"
-horizontal_alignment = 1
-vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
 [node name="UnitLevel" type="Control" parent="." unique_id=228411843]
@@ -624,12 +558,12 @@ offset_right = 272.0
 offset_bottom = -400.0
 
 [node name="EnhanceFlowRoot" type="Control" parent="." unique_id=111200001]
-layout_mode = 0
+anchors_preset = 0
 offset_top = -530.0
 offset_right = 640.0
-offset_bottom = 0.0
 
 [node name="BaseUnitIdLabel" type="Label" parent="EnhanceFlowRoot" unique_id=111200002]
+visible = false
 layout_mode = 0
 offset_left = 198.0
 offset_top = 40.0
@@ -637,11 +571,10 @@ offset_right = 602.0
 offset_bottom = 72.0
 theme_override_font_sizes/font_size = 16
 text = "Base Instance ID:"
-horizontal_alignment = 0
 vertical_alignment = 1
 
 [node name="BaseUnitDisplay" type="Control" parent="EnhanceFlowRoot" unique_id=111200003]
-layout_mode = 0
+anchors_preset = 0
 offset_left = 26.0
 offset_top = 98.0
 offset_right = 178.0
@@ -784,28 +717,37 @@ offset_right = 112.0
 offset_bottom = 146.0
 flat = true
 
-[node name="EnhanceActionBar" type="HBoxContainer" parent="EnhanceFlowRoot" unique_id=111200026]
+[node name="UnitNamebgChara" type="TextureRect" parent="EnhanceFlowRoot" unique_id=2013820409]
 layout_mode = 0
-offset_left = 28.0
-offset_top = 518.0
-offset_right = 612.0
-offset_bottom = 568.0
-theme_override_constants/separation = 12
+offset_left = -1.0
+offset_top = 3.0
+offset_right = 559.0
+offset_bottom = 75.0
+texture = ExtResource("30_5t2gi")
 
-[node name="CancelButton" type="Button" parent="EnhanceFlowRoot/EnhanceActionBar" unique_id=111200027]
-custom_minimum_size = Vector2(140, 50)
-layout_mode = 2
-size_flags_horizontal = 3
+[node name="EnhanceUnits" type="Label" parent="EnhanceFlowRoot/UnitNamebgChara" unique_id=1323517889]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Enhance Units"
+
+[node name="UnitMinibutton1" type="Button" parent="EnhanceFlowRoot/UnitNamebgChara" unique_id=1716975666]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+icon = ExtResource("28_2c7m1")
+flat = true
+
+[node name="Back" type="Label" parent="EnhanceFlowRoot/UnitNamebgChara/UnitMinibutton1" unique_id=1287525305]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 23.0
+offset_right = 72.0
+offset_bottom = 46.0
 text = "Back"
-
-[node name="ClearButton" type="Button" parent="EnhanceFlowRoot/EnhanceActionBar" unique_id=111200028]
-custom_minimum_size = Vector2(140, 50)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Clear"
-
-[node name="ConfirmButton" type="Button" parent="EnhanceFlowRoot/EnhanceActionBar" unique_id=111200029]
-custom_minimum_size = Vector2(140, 50)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "OK"
+horizontal_alignment = 1
+vertical_alignment = 1

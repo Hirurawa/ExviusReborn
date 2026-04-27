@@ -1,0 +1,622 @@
+[gd_scene format=3 uid="uid://denjmps5s81og"]
+
+[ext_resource type="Texture2D" uid="uid://bevfdevw4yi4h" path="res://assets/ui/common/sell_info.tres" id="2_2m72s"]
+[ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="3_nodv1"]
+[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="4_ai2op"]
+[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="5_ggpkq"]
+[ext_resource type="Texture2D" uid="uid://bykj2bihjoutr" path="res://assets/ui/common/minibutton_label_selectclear.tres" id="6_4qsb5"]
+[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="7_wahd4"]
+[ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="8_48362"]
+[ext_resource type="Texture2D" uid="uid://cp5bdnf6n328g" path="res://assets/ui/unit/middlebutton_label_union.tres" id="9_egug2"]
+[ext_resource type="Texture2D" uid="uid://5s3qsb0gvgv0" path="res://assets/ui/common/middlebutton_label_ok.tres" id="10_midg1"]
+[ext_resource type="Texture2D" uid="uid://w2uxym7qq71r" path="res://assets/ui/common/button_mini_long1.tres" id="11_033w3"]
+[ext_resource type="Texture2D" uid="uid://cor65d50a6byy" path="res://assets/ui/common/button_mini_long2.tres" id="12_l0rcy"]
+[ext_resource type="Texture2D" uid="uid://fffxuk37sacs" path="res://assets/ui/unit/minibutton_label_toevo.tres" id="13_py6ig"]
+[ext_resource type="Texture2D" uid="uid://dtoppmwdrf22d" path="res://assets/ui/unit/unit_charastand_common_small.tres" id="14_dvlsq"]
+[ext_resource type="Texture2D" uid="uid://c0kimka5uneid" path="res://assets/ui/common/icon_coin.tres" id="14_qqmk7"]
+[ext_resource type="Texture2D" uid="uid://dr806ftiwnelt" path="res://assets/ui/unit/unit_statusbg.tres" id="15_qqmk7"]
+[ext_resource type="Texture2D" uid="uid://bgh4m64l2vetk" path="res://assets/ui/unit/unit_statusframe.tres" id="16_kmyfv"]
+[ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="17_0ij6u"]
+[ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="18_2c7m1"]
+[ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="19_47ltg"]
+[ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="20_p5wqb"]
+[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="21_5t2gi"]
+[ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="22_3ad8q"]
+[ext_resource type="Texture2D" uid="uid://bfrilw2hm3w8v" path="res://assets/ui/unit/unit_charastand_large.tres" id="23_oo6e2"]
+[ext_resource type="Texture2D" uid="uid://cqnaqr2hufdlq" path="res://assets/ui/unit/unit_statusbottomline.tres" id="24_hik2k"]
+[ext_resource type="Texture2D" uid="uid://csl1y13mp5fhe" path="res://assets/ui/unit/ability_awake_unitstatus.tres" id="25_dox0t"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="28_2c7m1"]
+[ext_resource type="Texture2D" uid="uid://dbys00uemtltk" path="res://assets/ui/unit/unit_bonds_icon.tres" id="28_47ltg"]
+[ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="29_oo6e2"]
+[ext_resource type="Texture2D" uid="uid://cd0ytoi8pg642" path="res://assets/ui/unit/unit_bondsname_bg.tres" id="29_p5wqb"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="30_5t2gi"]
+[ext_resource type="Texture2D" uid="uid://nkbw3vsua3ps" path="res://assets/ui/unit/unit_limit_exp_bar.tres" id="30_hik2k"]
+[ext_resource type="Texture2D" uid="uid://bax1b5kuda14" path="res://assets/ui/unit/unit_lbframe.tres" id="31_3ad8q"]
+[ext_resource type="Texture2D" uid="uid://cyc1yl2d75bvy" path="res://assets/ui/unit/unit_exp_gauge.tres" id="31_dox0t"]
+[ext_resource type="Texture2D" uid="uid://cmdstbc5siynl" path="res://assets/ui/unit/unit_skill_info.tres" id="32_o6f46"]
+[ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="35_3n2xg"]
+
+[node name="Enhance" type="Control" unique_id=174978603]
+layout_mode = 3
+anchors_preset = 0
+offset_top = 635.0
+offset_bottom = 635.0
+
+[node name="unit_mix_ui_sell_info" type="TextureRect" parent="." unique_id=1388287591]
+layout_mode = 0
+offset_top = 69.0
+offset_right = 640.0
+offset_bottom = 133.0
+texture = ExtResource("2_2m72s")
+expand_mode = 1
+
+[node name="unit_mix_get_exp_label" type="Label" parent="unit_mix_ui_sell_info" unique_id=2143282467]
+layout_mode = 0
+offset_left = 39.0
+offset_right = 260.0
+offset_bottom = 64.0
+theme_override_font_sizes/font_size = 20
+text = "EXP Obtained"
+vertical_alignment = 1
+
+[node name="unit_mix_get_exp_number" type="Label" parent="unit_mix_ui_sell_info/unit_mix_get_exp_label" unique_id=238039354]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 22.0
+offset_right = 309.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 18
+text = "unit_mix_get_exp_number"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_mix_need_money_label" type="Label" parent="unit_mix_ui_sell_info" unique_id=863822414]
+layout_mode = 0
+offset_left = 350.0
+offset_right = 620.0
+offset_bottom = 64.0
+theme_override_font_sizes/font_size = 20
+text = "Gil needed"
+vertical_alignment = 1
+
+[node name="unit_mix_need_money_number" type="Label" parent="unit_mix_ui_sell_info/unit_mix_need_money_label" unique_id=524007721]
+layout_mode = 0
+offset_left = 117.0
+offset_top = 22.0
+offset_right = 388.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 18
+text = "unit_mix_need_money_number"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_mix_money_icon" type="TextureRect" parent="unit_mix_ui_sell_info/unit_mix_need_money_label" unique_id=1094517015]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 12.0
+offset_right = 114.0
+offset_bottom = 44.0
+texture = ExtResource("14_qqmk7")
+expand_mode = 1
+
+[node name="unit_mix_ui_bg" type="TextureRect" parent="." unique_id=735493894]
+layout_mode = 0
+offset_top = 124.0
+offset_right = 640.0
+offset_bottom = 230.0
+texture = ExtResource("3_nodv1")
+expand_mode = 1
+
+[node name="unit_mix_button_clear" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1370802405]
+layout_mode = 0
+offset_left = 454.0
+offset_top = 22.0
+offset_right = 606.0
+offset_bottom = 86.0
+texture = ExtResource("4_ai2op")
+expand_mode = 1
+
+[node name="unit_mix_button_clear_on" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2064535322]
+visible = false
+layout_mode = 0
+offset_left = 456.0
+offset_top = 20.0
+offset_right = 608.0
+offset_bottom = 84.0
+texture = ExtResource("5_ggpkq")
+expand_mode = 1
+
+[node name="unit_mix_button_clear_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2027536526]
+visible = false
+layout_mode = 0
+offset_left = 466.0
+offset_top = 40.0
+offset_right = 598.0
+offset_bottom = 64.0
+texture = ExtResource("6_4qsb5")
+expand_mode = 1
+
+[node name="unit_mix_button_union" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1198663290]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 13.0
+offset_right = 416.0
+offset_bottom = 93.0
+texture = ExtResource("7_wahd4")
+expand_mode = 1
+
+[node name="unit_mix_button_union_on" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2016485442]
+visible = false
+layout_mode = 0
+offset_left = 224.0
+offset_top = 13.0
+offset_right = 416.0
+offset_bottom = 93.0
+texture = ExtResource("8_48362")
+expand_mode = 1
+
+[node name="unit_mix_button_union_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=717156399]
+layout_mode = 0
+offset_left = 237.0
+offset_top = 27.0
+offset_right = 403.0
+offset_bottom = 79.0
+texture = ExtResource("9_egug2")
+expand_mode = 1
+
+[node name="unit_mix_button_ok_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=2040912874]
+visible = false
+layout_mode = 0
+offset_left = 237.0
+offset_top = 27.0
+offset_right = 403.0
+offset_bottom = 79.0
+texture = ExtResource("10_midg1")
+expand_mode = 1
+
+[node name="unit_mix_button_classup" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1741197743]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 22.0
+offset_right = 188.0
+offset_bottom = 86.0
+texture = ExtResource("11_033w3")
+expand_mode = 1
+
+[node name="unit_mix_button_classup_on" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1060779861]
+visible = false
+layout_mode = 0
+offset_left = 34.0
+offset_top = 22.0
+offset_right = 186.0
+offset_bottom = 86.0
+texture = ExtResource("12_l0rcy")
+expand_mode = 1
+
+[node name="unit_mix_button_classup_label" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1208347959]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 42.0
+offset_right = 176.0
+offset_bottom = 66.0
+texture = ExtResource("13_py6ig")
+expand_mode = 1
+
+[node name="UnitCharastandCommonSmall" type="Sprite2D" parent="." unique_id=1435534474]
+position = Vector2(74, -51)
+texture = ExtResource("14_dvlsq")
+
+[node name="UnitCharastandCommonSmall2" type="Sprite2D" parent="." unique_id=1365854820]
+position = Vector2(205, -51)
+texture = ExtResource("14_dvlsq")
+
+[node name="UnitCharastandCommonSmall3" type="Sprite2D" parent="." unique_id=136745878]
+position = Vector2(326, -51)
+texture = ExtResource("14_dvlsq")
+
+[node name="UnitCharastandCommonSmall4" type="Sprite2D" parent="." unique_id=965672400]
+position = Vector2(447, -51)
+texture = ExtResource("14_dvlsq")
+
+[node name="UnitCharastandCommonSmall5" type="Sprite2D" parent="." unique_id=1645203631]
+position = Vector2(566, -51)
+texture = ExtResource("14_dvlsq")
+
+[node name="unit_statusbg" type="TextureRect" parent="." unique_id=1863324426]
+layout_mode = 0
+offset_left = -1.0
+offset_top = -524.0
+offset_right = 639.0
+offset_bottom = -192.0
+texture = ExtResource("15_qqmk7")
+expand_mode = 1
+
+[node name="unit_sublimation_statusframe_offset" type="TextureRect" parent="unit_statusbg" unique_id=473600768]
+layout_mode = 0
+offset_left = 199.0
+offset_top = 135.0
+offset_right = 639.0
+offset_bottom = 269.0
+texture = ExtResource("16_kmyfv")
+expand_mode = 1
+
+[node name="unit_status_label_hp" type="TextureRect" parent="unit_statusbg" unique_id=78820462]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 162.0
+offset_right = 256.0
+offset_bottom = 182.0
+texture = ExtResource("17_0ij6u")
+expand_mode = 1
+
+[node name="unit_status_ext_hp_now_number" type="Label" parent="unit_statusbg/unit_status_label_hp" unique_id=725408659]
+visible = false
+layout_mode = 0
+offset_left = 71.0
+offset_top = 1.0
+offset_right = 355.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_hp_now_number"
+
+[node name="unit_status_ext_hp_max_number" type="Label" parent="unit_statusbg/unit_status_label_hp" unique_id=411248562]
+visible = false
+layout_mode = 0
+offset_left = 122.0
+offset_top = 5.0
+offset_right = 375.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_hp_max_number"
+
+[node name="unit_status_label_mp" type="TextureRect" parent="unit_statusbg" unique_id=453381372]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 162.0
+offset_right = 459.0
+offset_bottom = 182.0
+texture = ExtResource("18_2c7m1")
+expand_mode = 1
+
+[node name="unit_status_ext_mp_now_number" type="Label" parent="unit_statusbg/unit_status_label_mp" unique_id=864401139]
+visible = false
+layout_mode = 0
+offset_left = 81.0
+offset_top = 1.0
+offset_right = 371.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_mp_now_number"
+
+[node name="unit_status_ext_mp_max_number" type="Label" parent="unit_statusbg/unit_status_label_mp" unique_id=133718250]
+visible = false
+layout_mode = 0
+offset_left = 132.0
+offset_top = 5.0
+offset_right = 390.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_mp_max_number"
+
+[node name="unit_status_label_attack" type="TextureRect" parent="unit_statusbg" unique_id=1929050236]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 190.0
+offset_right = 256.0
+offset_bottom = 210.0
+texture = ExtResource("19_47ltg")
+expand_mode = 1
+
+[node name="unit_status_ext_attack_now_number" type="Label" parent="unit_statusbg/unit_status_label_attack" unique_id=775626561]
+visible = false
+layout_mode = 0
+offset_left = 71.0
+offset_top = 1.0
+offset_right = 387.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_attack_now_number"
+
+[node name="unit_status_ext_attack_max_number" type="Label" parent="unit_statusbg/unit_status_label_attack" unique_id=526953269]
+visible = false
+layout_mode = 0
+offset_left = 122.0
+offset_top = 5.0
+offset_right = 403.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_attack_max_number"
+
+[node name="unit_status_label_defense" type="TextureRect" parent="unit_statusbg" unique_id=342333181]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 190.0
+offset_right = 459.0
+offset_bottom = 210.0
+texture = ExtResource("20_p5wqb")
+expand_mode = 1
+
+[node name="unit_status_ext_defense_now_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=401019128]
+visible = false
+layout_mode = 0
+offset_left = 81.0
+offset_top = 1.0
+offset_right = 411.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_defense_now_number"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_ext_defense_max_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=676697727]
+visible = false
+layout_mode = 0
+offset_left = 132.0
+offset_top = 5.0
+offset_right = 426.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_defense_max_number"
+
+[node name="unit_status_label_magic" type="TextureRect" parent="unit_statusbg" unique_id=191881983]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 218.0
+offset_right = 256.0
+offset_bottom = 238.0
+texture = ExtResource("21_5t2gi")
+expand_mode = 1
+
+[node name="unit_status_ext_magic_now_number" type="Label" parent="unit_statusbg/unit_status_label_magic" unique_id=650174502]
+visible = false
+layout_mode = 0
+offset_left = 71.0
+offset_top = 1.0
+offset_right = 384.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_magic_now_number"
+
+[node name="unit_status_ext_magic_max_number" type="Label" parent="unit_statusbg/unit_status_label_magic" unique_id=1161284226]
+visible = false
+layout_mode = 0
+offset_left = 122.0
+offset_top = 5.0
+offset_right = 401.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_magic_max_number"
+
+[node name="unit_status_label_mnd" type="TextureRect" parent="unit_statusbg" unique_id=801433962]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 218.0
+offset_right = 459.0
+offset_bottom = 238.0
+texture = ExtResource("22_3ad8q")
+expand_mode = 1
+
+[node name="unit_status_ext_mnd_now_number" type="Label" parent="unit_statusbg/unit_status_label_mnd" unique_id=362009266]
+visible = false
+layout_mode = 0
+offset_left = 81.0
+offset_top = 1.0
+offset_right = 382.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_mnd_now_number"
+
+[node name="unit_status_ext_mnd_max_number" type="Label" parent="unit_statusbg/unit_status_label_mnd" unique_id=988758082]
+visible = false
+layout_mode = 0
+offset_left = 132.0
+offset_top = 5.0
+offset_right = 400.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_mnd_max_number"
+
+[node name="unit_charastand_large" type="TextureRect" parent="." unique_id=1486071134]
+layout_mode = 0
+offset_left = 22.0
+offset_top = -410.0
+offset_right = 182.0
+offset_bottom = -242.0
+texture = ExtResource("23_oo6e2")
+expand_mode = 1
+
+[node name="unit_chara" type="TextureRect" parent="unit_charastand_large" unique_id=314677858]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 48.0
+offset_right = 122.0
+offset_bottom = 128.0
+
+[node name="unit_sublimation_bottom_line" type="TextureRect" parent="." unique_id=1656297636]
+layout_mode = 0
+offset_left = -1.0
+offset_top = -235.0
+offset_right = 639.0
+offset_bottom = -155.0
+texture = ExtResource("24_hik2k")
+expand_mode = 1
+
+[node name="unit_sublimation_name_bg" type="TextureRect" parent="." unique_id=87352101]
+layout_mode = 0
+offset_left = 151.0
+offset_top = -430.0
+offset_right = 639.0
+offset_bottom = -382.0
+texture = ExtResource("25_dox0t")
+expand_mode = 1
+
+[node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=2013820409]
+layout_mode = 0
+offset_left = -1.0
+offset_top = -527.0
+offset_right = 559.0
+offset_bottom = -455.0
+texture = ExtResource("30_5t2gi")
+
+[node name="UnitMinibutton1" type="TextureRect" parent="UnitNamebgChara" unique_id=1509643478]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture = ExtResource("28_2c7m1")
+
+[node name="Back" type="Label" parent="UnitNamebgChara/UnitMinibutton1" unique_id=1287525305]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 17.0
+offset_right = 68.0
+offset_bottom = 40.0
+text = "Back"
+
+[node name="EnhanceUnits" type="Label" parent="UnitNamebgChara" unique_id=1323517889]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Enhance Units"
+
+[node name="UnitLbframe" type="TextureRect" parent="." unique_id=991776219]
+layout_mode = 0
+offset_left = 201.0
+offset_top = -284.0
+offset_right = 641.0
+offset_bottom = -221.0
+texture = ExtResource("31_3ad8q")
+
+[node name="LBName" type="Label" parent="UnitLbframe" unique_id=794107210]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 3.0
+offset_right = 56.0
+offset_bottom = 26.0
+
+[node name="LBLevel" type="Label" parent="UnitLbframe" unique_id=1938843096]
+layout_mode = 0
+offset_left = 389.0
+offset_top = 4.0
+offset_right = 429.0
+offset_bottom = 27.0
+
+[node name="UnitMagicLv" type="TextureRect" parent="UnitLbframe" unique_id=576512344]
+layout_mode = 0
+offset_left = 352.0
+offset_top = 5.0
+offset_right = 380.0
+offset_bottom = 25.0
+texture = ExtResource("29_oo6e2")
+
+[node name="UnitLimitExpBar" type="Sprite2D" parent="UnitLbframe" unique_id=797773728]
+position = Vector2(213, 38)
+texture = ExtResource("30_hik2k")
+
+[node name="UnitExpGauge" type="Sprite2D" parent="UnitLbframe" unique_id=1959993576]
+position = Vector2(212, 38)
+texture = ExtResource("31_dox0t")
+
+[node name="UnitSkillInfo" type="Sprite2D" parent="UnitLbframe" unique_id=1884176809]
+position = Vector2(82, 52)
+texture = ExtResource("32_o6f46")
+
+[node name="TM" type="Control" parent="." unique_id=471649301]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="unit_mix_bonds_icon" type="TextureRect" parent="TM" unique_id=1583957378]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.35
+anchor_top = 0.375
+anchor_right = 0.35
+anchor_bottom = 0.375
+offset_left = 370.0
+offset_top = -247.0
+offset_right = 570.0
+offset_bottom = -173.0
+texture = ExtResource("28_47ltg")
+expand_mode = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="unit_mix_bonds_rate" type="Label" parent="TM" unique_id=1071907140]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.35
+anchor_top = 0.375
+anchor_right = 0.35
+anchor_bottom = 0.375
+offset_left = 467.0
+offset_top = -229.0
+offset_right = 706.0
+offset_bottom = -195.0
+theme_override_font_sizes/font_size = 24
+text = "unit_mix_bonds_rate"
+horizontal_alignment = 1
+vertical_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="unit_mix_bonds_name_plate" type="TextureRect" parent="TM" unique_id=2146929000]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.35
+anchor_top = 0.375
+anchor_right = 0.35
+anchor_bottom = 0.375
+offset_left = 433.0
+offset_top = -201.0
+offset_right = 567.0
+offset_bottom = -175.0
+texture = ExtResource("29_p5wqb")
+expand_mode = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="unit_mix_bonds_name" type="Label" parent="TM" unique_id=1396274004]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.35
+anchor_top = 0.375
+anchor_right = 0.35
+anchor_bottom = 0.375
+offset_left = 446.0
+offset_top = -196.0
+offset_right = 618.0
+offset_bottom = -173.0
+theme_override_font_sizes/font_size = 16
+text = "unit_mix_bonds_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="UnitLevel" type="Control" parent="." unique_id=228411843]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="UnitMagicLv" type="TextureRect" parent="UnitLevel" unique_id=2064550244]
+layout_mode = 0
+offset_left = 201.0
+offset_top = -422.0
+offset_right = 229.0
+offset_bottom = -402.0
+texture = ExtResource("29_oo6e2")
+
+[node name="UnitExpBar" type="Sprite2D" parent="UnitLevel" unique_id=1138539788]
+position = Vector2(403, -398)
+texture = ExtResource("35_3n2xg")
+
+[node name="UnitExpGauge" type="Sprite2D" parent="UnitLevel" unique_id=704774694]
+position = Vector2(403, -398)
+texture = ExtResource("31_dox0t")
+
+[node name="UnitLevel" type="Label" parent="UnitLevel" unique_id=1013082980]
+layout_mode = 0
+offset_left = 232.0
+offset_top = -423.0
+offset_right = 272.0
+offset_bottom = -400.0

@@ -84,8 +84,10 @@ function Units.summon_units(context, payload)
     -- TODO: Add currency/ticket deduction logic here before summoning
 
     local available_unit_ids = {}
-    for id, _ in pairs(StaticData.units_data) do
-        table.insert(available_unit_ids, id)
+        for id, unit_data in pairs(StaticData.units_data) do
+            if unit_data.is_summonable == true then
+                table.insert(available_unit_ids, id)
+            end
     end
 
     if #available_unit_ids == 0 then

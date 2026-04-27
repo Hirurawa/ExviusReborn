@@ -1,0 +1,310 @@
+[gd_scene format=3 uid="uid://1iho7igshnjk"]
+
+[ext_resource type="Texture2D" uid="uid://dv3a2baao2odf" path="res://assets/ui/common/button_item1.tres" id="2_o2qul"]
+[ext_resource type="Texture2D" uid="uid://dnvvltr5ln86v" path="res://assets/ui/unit/unit_equip_category_rhand.tres" id="3_4q53s"]
+[ext_resource type="Texture2D" uid="uid://ju4pp8dmpdui" path="res://assets/ui/unit/equip_category_axe.tres" id="4_jt4v3"]
+[ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="5_rseaf"]
+[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="6_k6s3a"]
+[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="7_2y7na"]
+[ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="8_xc5sw"]
+[ext_resource type="Texture2D" uid="uid://b6dpdvtqt85yx" path="res://assets/ui/unit/middlebutton_label_strongest.tres" id="9_tsdy0"]
+[ext_resource type="Texture2D" uid="uid://w2uxym7qq71r" path="res://assets/ui/common/button_mini_long1.tres" id="10_8s38n"]
+[ext_resource type="Texture2D" uid="uid://cor65d50a6byy" path="res://assets/ui/common/button_mini_long2.tres" id="11_fowuk"]
+[ext_resource type="Texture2D" uid="uid://b0axiacbqiccf" path="res://assets/ui/common/button_middle1.tres" id="12_4pcdv"]
+[ext_resource type="Texture2D" uid="uid://dvmmetrxpvob8" path="res://assets/ui/common/button_middle2.tres" id="13_tsu4h"]
+
+[node name="EquipPanel" type="Control" unique_id=174978603]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="unit_equip_bg" type="TextureRect" parent="." unique_id=1393187975]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 7.0
+offset_right = 319.0
+offset_bottom = 115.0
+texture = ExtResource("2_o2qul")
+expand_mode = 1
+
+[node name="unit_equip_part" type="TextureRect" parent="." unique_id=580266435]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 7.0
+offset_right = 113.0
+offset_bottom = 29.0
+texture = ExtResource("3_4q53s")
+expand_mode = 1
+
+[node name="unit_equip_item_icon" type="Label" parent="." unique_id=1493227487]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 27.0
+offset_right = 193.0
+offset_bottom = 99.0
+text = "unit_equip_item_icon"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_equip_item_name" type="Label" parent="." unique_id=1126808121]
+layout_mode = 0
+offset_left = 115.0
+offset_top = 22.0
+offset_right = 290.0
+offset_bottom = 45.0
+theme_override_font_sizes/font_size = 18
+text = "unit_equip_item_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_equip_item_category" type="TextureRect" parent="." unique_id=225509003]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 16.0
+offset_right = 310.0
+offset_bottom = 46.0
+texture = ExtResource("4_jt4v3")
+expand_mode = 1
+
+[node name="unit_equip_property1_label_rhand" type="TextureRect" parent="." unique_id=657585455]
+layout_mode = 0
+offset_left = 115.0
+offset_top = 51.0
+offset_right = 157.0
+offset_bottom = 71.0
+texture = ExtResource("5_rseaf")
+expand_mode = 1
+
+[node name="unit_equip_property1_number_rhand" type="Label" parent="." unique_id=409126615]
+layout_mode = 0
+offset_left = 158.0
+offset_top = 53.0
+offset_right = 446.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 18
+text = "unit_equip_property1_number_rhand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_equip_property2_label_rhand" type="TextureRect" parent="." unique_id=1620581229]
+layout_mode = 0
+offset_left = 209.0
+offset_top = 51.0
+offset_right = 251.0
+offset_bottom = 71.0
+texture = ExtResource("6_k6s3a")
+expand_mode = 1
+
+[node name="unit_equip_property2_number_rhand" type="Label" parent="." unique_id=501577997]
+layout_mode = 0
+offset_left = 254.0
+offset_top = 53.0
+offset_right = 542.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 18
+text = "unit_equip_property2_number_rhand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_equip_property3_text_rhand" type="Label" parent="." unique_id=1113190962]
+layout_mode = 0
+offset_left = 115.0
+offset_top = 78.0
+offset_right = 372.0
+offset_bottom = 101.0
+theme_override_font_sizes/font_size = 18
+text = "unit_equip_property3_text_rhand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_equip_strongest_off" type="TextureRect" parent="." unique_id=1460673408]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 344.0
+offset_right = 416.0
+offset_bottom = 424.0
+texture = ExtResource("7_2y7na")
+expand_mode = 1
+
+[node name="unit_equip_strongest_on" type="TextureRect" parent="." unique_id=1588046856]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 344.0
+offset_right = 416.0
+offset_bottom = 424.0
+texture = ExtResource("8_xc5sw")
+expand_mode = 1
+
+[node name="unit_equip_strongest_label" type="TextureRect" parent="." unique_id=698304857]
+layout_mode = 0
+offset_left = 237.0
+offset_top = 358.0
+offset_right = 403.0
+offset_bottom = 410.0
+texture = ExtResource("9_tsdy0")
+expand_mode = 1
+
+[node name="unit_equip_button_remove" type="TextureRect" parent="." unique_id=1401680027]
+layout_mode = 0
+offset_left = 39.0
+offset_top = 353.0
+offset_right = 191.0
+offset_bottom = 417.0
+texture = ExtResource("10_8s38n")
+expand_mode = 1
+
+[node name="unit_equip_button_remove_on" type="TextureRect" parent="." unique_id=56379431]
+layout_mode = 0
+offset_left = 39.0
+offset_top = 353.0
+offset_right = 191.0
+offset_bottom = 417.0
+texture = ExtResource("11_fowuk")
+expand_mode = 1
+
+[node name="unit_equip_switch_property" type="TextureRect" parent="." unique_id=1757949204]
+layout_mode = 0
+offset_left = 447.0
+offset_top = 353.0
+offset_right = 599.0
+offset_bottom = 417.0
+texture = ExtResource("10_8s38n")
+expand_mode = 1
+
+[node name="unit_equip_switch_property_on" type="TextureRect" parent="." unique_id=206310140]
+layout_mode = 0
+offset_left = 447.0
+offset_top = 353.0
+offset_right = 599.0
+offset_bottom = 417.0
+texture = ExtResource("11_fowuk")
+expand_mode = 1
+
+[node name="unit_equip_button_remove_mini" type="TextureRect" parent="." unique_id=717767052]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 345.0
+offset_right = 126.0
+offset_bottom = 425.0
+texture = ExtResource("12_4pcdv")
+expand_mode = 1
+
+[node name="unit_equip_button_remove_mini_on" type="TextureRect" parent="." unique_id=1251516380]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 345.0
+offset_right = 126.0
+offset_bottom = 425.0
+texture = ExtResource("13_tsu4h")
+expand_mode = 1
+
+[node name="unit_equip_button_remove_mini_label" type="TextureRect" parent="." unique_id=724303474]
+layout_mode = 0
+offset_left = 27.0
+offset_top = 359.0
+offset_right = 113.0
+offset_bottom = 411.0
+expand_mode = 1
+
+[node name="unit_equip_button_strongest_mini" type="TextureRect" parent="." unique_id=1141160350]
+layout_mode = 0
+offset_left = 139.0
+offset_top = 345.0
+offset_right = 251.0
+offset_bottom = 425.0
+texture = ExtResource("12_4pcdv")
+expand_mode = 1
+
+[node name="unit_equip_button_strongest_mini_on" type="TextureRect" parent="." unique_id=491149626]
+layout_mode = 0
+offset_left = 139.0
+offset_top = 345.0
+offset_right = 251.0
+offset_bottom = 425.0
+texture = ExtResource("13_tsu4h")
+expand_mode = 1
+
+[node name="unit_equip_button_strongest_mini_label" type="TextureRect" parent="." unique_id=1160405248]
+layout_mode = 0
+offset_left = 152.0
+offset_top = 359.0
+offset_right = 238.0
+offset_bottom = 411.0
+expand_mode = 1
+
+[node name="unit_equip_button_favorite_mini" type="TextureRect" parent="." unique_id=1294675956]
+layout_mode = 0
+offset_left = 389.0
+offset_top = 345.0
+offset_right = 501.0
+offset_bottom = 425.0
+texture = ExtResource("12_4pcdv")
+expand_mode = 1
+
+[node name="unit_equip_button_favorite_mini_on" type="TextureRect" parent="." unique_id=1206381224]
+layout_mode = 0
+offset_left = 389.0
+offset_top = 345.0
+offset_right = 501.0
+offset_bottom = 425.0
+texture = ExtResource("13_tsu4h")
+expand_mode = 1
+
+[node name="unit_equip_button_favorite_mini_label" type="TextureRect" parent="." unique_id=189059223]
+layout_mode = 0
+offset_left = 402.0
+offset_top = 359.0
+offset_right = 488.0
+offset_bottom = 411.0
+expand_mode = 1
+
+[node name="unit_equip_button_display_mini" type="TextureRect" parent="." unique_id=633642859]
+layout_mode = 0
+offset_left = 514.0
+offset_top = 345.0
+offset_right = 626.0
+offset_bottom = 425.0
+texture = ExtResource("12_4pcdv")
+expand_mode = 1
+
+[node name="unit_equip_button_display_mini_on" type="TextureRect" parent="." unique_id=1439302216]
+layout_mode = 0
+offset_left = 514.0
+offset_top = 345.0
+offset_right = 626.0
+offset_bottom = 425.0
+texture = ExtResource("13_tsu4h")
+expand_mode = 1
+
+[node name="unit_equip_button_display_mini_label" type="TextureRect" parent="." unique_id=689358316]
+layout_mode = 0
+offset_left = 527.0
+offset_top = 359.0
+offset_right = 613.0
+offset_bottom = 411.0
+expand_mode = 1
+
+[node name="unit_equip_button_copy_mini" type="TextureRect" parent="." unique_id=865239183]
+layout_mode = 0
+offset_left = 264.0
+offset_top = 345.0
+offset_right = 376.0
+offset_bottom = 425.0
+texture = ExtResource("12_4pcdv")
+expand_mode = 1
+
+[node name="unit_equip_button_copy_mini_on" type="TextureRect" parent="." unique_id=2083621472]
+layout_mode = 0
+offset_left = 264.0
+offset_top = 345.0
+offset_right = 376.0
+offset_bottom = 425.0
+texture = ExtResource("13_tsu4h")
+expand_mode = 1
+
+[node name="unit_equip_button_copy_mini_label" type="TextureRect" parent="." unique_id=956243039]
+layout_mode = 0
+offset_left = 277.0
+offset_top = 359.0
+offset_right = 363.0
+offset_bottom = 411.0
+expand_mode = 1

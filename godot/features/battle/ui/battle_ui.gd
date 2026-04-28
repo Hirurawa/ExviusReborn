@@ -1,6 +1,5 @@
 extends Control
 
-const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
 const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
 const MagicScene = preload("res://features/shared/Skill.tscn")
 const LIMIT_CRYSTAL_TEXTURE: Texture2D = preload("res://assets/ui/battle/battle_limit_crystal.png")

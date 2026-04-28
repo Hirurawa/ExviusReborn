@@ -1,6 +1,5 @@
 extends Control
 
-const SkillEntryButtonScene = preload("res://shared/ui/skill_entry/SkillEntryButton.tscn")
 const MagicScene = preload("res://features/shared/Skill.tscn")
 
 @onready var illustration_button: TextureButton = $VBoxContainer/CharInfoHBox/IllustrationButton

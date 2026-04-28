@@ -23,7 +23,7 @@ offset_bottom = 809.0
 script = ExtResource("1_nh7tg")
 
 [node name="MypageBgBottom" type="Sprite2D" parent="." unique_id=302592526]
-position = Vector2(318, 236)
+position = Vector2(320, 236)
 scale = Vector2(1, 1.0363636)
 texture = ExtResource("2_ofgpd")
 

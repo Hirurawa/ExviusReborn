@@ -177,14 +177,14 @@ func set_hp_display(current_hp: int, max_hp: int) -> void:
 	if max_hp <= 0:
 		return
 	var fill_ratio: float = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
-	hp_gage.scale.x = fill_ratio
+	#hp_gage.scale.x = fill_ratio
 	hp_bar.scale.x = fill_ratio
 
 func set_mp_display(current_mp: int, max_mp: int) -> void:
 	if max_mp <= 0:
 		return
 	var fill_ratio: float = clampf(float(current_mp) / float(max_mp), 0.0, 1.0)
-	mp_gage.scale.x = fill_ratio
+	#mp_gage.scale.x = fill_ratio
 	mp_bar.scale.x = fill_ratio
 
 func set_limit_gauge(current_limit: int, max_limit: int) -> void:

@@ -82,6 +82,18 @@ func _apply_heal(parsed_effect: Dictionary, caster: Dictionary, targets: Array) 
 
 	return all_hit_payloads
 
+func _apply_hp_restore(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var effect = parsed_effect.get("effect", {})
+	var amount = effect.get("amount", 100)
+	
+	var all_hit_payloads: Array[Dictionary] = []
+	for target in targets:
+		var hit_payloads = EffectProcessor.generate_effect_payloads("HEAL", amount, all_attack_damage, all_attack_frames, caster, target)
+		all_hit_payloads.append_array(hit_payloads)
+	return all_hit_payloads
+
 func _apply_stat_boost_pct(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
 	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
 	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])

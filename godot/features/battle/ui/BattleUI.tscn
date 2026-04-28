@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://mqlys6vct5rg" path="res://features/battle/ui/battle_ui.gd" id="1_f7b2x"]
 [ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
-[ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/ActionProcessor.gd" id="3_yiesy"]
+[ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/action_processor.gd" id="3_yiesy"]
 [ext_resource type="PackedScene" uid="uid://eupai3x1p8wt" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
 [ext_resource type="Texture2D" uid="uid://cnhfbhvsnu0ar" path="res://assets/ui/battle/battle_bg_ally.tres" id="5_party_bg"]
 [ext_resource type="Texture2D" uid="uid://4iruksxhhilr" path="res://assets/ui/battle/battle_com_bg.tres" id="6_bottom_bar"]

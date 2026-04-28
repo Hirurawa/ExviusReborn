@@ -49,7 +49,7 @@ var challenge_results: Array[bool] = []
 
 func _ready() -> void:
 	# 1. Instantiate the script purely in code
-	action_processor = preload("res://features/battle/logic/ActionProcessor.gd").new()
+	action_processor = preload("res://features/battle/logic/action_processor.gd").new()
 	result_processor = preload("res://features/battle/logic/result_processor.gd").new()
 	
 	# 2. Give it a name so it shows up cleanly in the debugger
@@ -59,7 +59,6 @@ func _ready() -> void:
 	# 3. Add it as a child to the BattleManager
 	add_child(action_processor)
 	add_child(result_processor)
-	#pass
 
 func _physics_process(_delta: float) -> void:
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
@@ -182,7 +181,6 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 	var target_unit_index: int = eligible_units[random_target_slot]
 	_grant_limit_to_unit(target_unit_index, LIMIT_CRYSTAL_GAIN)
 	limit_crystal_dropped.emit(enemy_index, target_unit_index)
-
 
 func initialize_battle(mission_id: String) -> void:
 	
@@ -535,7 +533,6 @@ func request_unit_stats(index: int) -> void:
 
 	unit_stats_updated.emit(index, unit_name, cur_hp, max_hp, cur_mp, max_mp, cur_limit, max_limit)
 
-
 func _are_all_units_dead(team: Array) -> bool:
 	if team.size() == 0:
 		return true # Prevent edge cases where an empty wave triggers a soft-lock
@@ -663,7 +660,6 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	# 3. Add to escrow and emit
 	mission_drops.append(selected_item_id)
 	item_dropped.emit(enemy_index, selected_item_id)
-
 
 func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 	enemy_units.clear()

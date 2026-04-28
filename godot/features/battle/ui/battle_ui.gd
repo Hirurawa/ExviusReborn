@@ -679,15 +679,21 @@ func _on_unit_info_tapped(unit_index: int) -> void:
 
 func _on_panel_tapped(unit_index: int) -> void:
 	if _is_ally_targeting_mode:
-		# Finalize targeting
-		if unit_index >= 0 and unit_index < battle_manager.party_data.size():
-			var unit_data = battle_manager.party_data[_menu_target_unit_index]
-			if not unit_data.is_empty():
-				unit_data["queued_target_team"] = "player"
-				unit_data["queued_target_index"] = unit_index
+		# Validate both source and target indices before touching party_data
+		if _menu_target_unit_index < 0 or _menu_target_unit_index >= battle_manager.party_data.size():
+			_exit_ally_selection_state()
+			return
+		if unit_index < 0 or unit_index >= battle_manager.party_data.size():
+			_exit_ally_selection_state()
+			return
 
-				var resolution: Dictionary = _pending_action_payload.get("resolution", {})
-				_queue_resolved_action(_menu_target_unit_index, _pending_skill_action_type, _pending_skill_action_name, resolution)
+		var unit_data: Dictionary = battle_manager.party_data[_menu_target_unit_index]
+		if not unit_data.is_empty():
+			unit_data["queued_target_team"] = "player"
+			unit_data["queued_target_index"] = unit_index
+
+			var resolution: Dictionary = _pending_action_payload.get("resolution", {})
+			_queue_resolved_action(_menu_target_unit_index, _pending_skill_action_type, _pending_skill_action_name, resolution)
 
 		_exit_ally_selection_state()
 	else:

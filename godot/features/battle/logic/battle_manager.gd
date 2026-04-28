@@ -59,6 +59,7 @@ func _ready() -> void:
 	# 3. Add it as a child to the BattleManager
 	add_child(action_processor)
 	add_child(result_processor)
+	#pass
 
 func _physics_process(_delta: float) -> void:
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
@@ -182,6 +183,7 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 	_grant_limit_to_unit(target_unit_index, LIMIT_CRYSTAL_GAIN)
 	limit_crystal_dropped.emit(enemy_index, target_unit_index)
 
+
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
@@ -231,7 +233,7 @@ func initialize_battle(mission_id: String) -> void:
 				var max_mp = final_stats.get("MP", 10)
 
 				battle_unit["max_hp"] = max_hp
-				battle_unit["current_hp"] = max_hp
+				battle_unit["current_hp"] = max_hp/2
 				battle_unit["max_mp"] = max_mp
 				battle_unit["current_mp"] = max_mp
 				var limitburst_id: String = str(battle_unit.get("limitburst_id", ""))
@@ -352,35 +354,35 @@ func execute_queued_action(attacker_index: int) -> void:
 			if item_id != "":
 				used_items[item_id] = used_items.get(item_id, 0) + 1
 
-		if action == CombatAction.SKILL or action == CombatAction.ITEM:
-			var resolved_action: Dictionary = _resolve_queued_action_data(action_id, payload_data)
-			var target_skill_data: Dictionary = resolved_action.get("resolved_action_data", {}) if not resolved_action.is_empty() else {}
+		var resolved_action: Dictionary = _resolve_queued_action_data(action_id, payload_data)
+		var target_skill_data: Dictionary = resolved_action.get("resolved_action_data", {}) if not resolved_action.is_empty() else {}
 
-			if target_skill_data.is_empty():
-				push_error("Error: Skill/Item Ability not found in database: " + action_name)
-				return
+		if target_skill_data.is_empty():
+			push_error("Error: Skill/Item Ability not found in database: " + action_name)
+			return
 
-			var parsed_data: Dictionary = payload_data.get("parsed_data", {})
-			if parsed_data.is_empty():
-				parsed_data = resolved_action.get("parsed_data", {}) if not resolved_action.is_empty() else {}
-			if parsed_data.is_empty():
-				parsed_data = DataManager.parse_skill_effects(target_skill_data)
-			print("Parsed Skill/Item: ", parsed_data)
+		var parsed_data: Dictionary = payload_data.get("parsed_data", {})
+		if parsed_data.is_empty():
+			parsed_data = resolved_action.get("parsed_data", {}) if not resolved_action.is_empty() else {}
+		if parsed_data.is_empty():
+			parsed_data = DataManager.parse_skill_effects(target_skill_data)
+		print("Parsed Skill/Item: ", parsed_data)
 
-			# Attempt to get targeting data from the queue, fallback to enemy 0 for now
-			var target_team: String = attacker_data.get("queued_target_team", "enemy")
-			var target_idx: int = attacker_data.get("queued_target_index", 0)
+		# queued_target_index is always a party_data index (stable slot reference)
+		var target_team: String = attacker_data.get("queued_target_team", "enemy")
+		var target_idx: int = attacker_data.get("queued_target_index", 0)
 
-			var primary_target: Dictionary = {}
-			if target_team == "enemy":
-				if target_idx < 0 or target_idx >= enemy_units.size(): target_idx = 0
-				if enemy_units.size() > 0: primary_target = enemy_units[target_idx]
-			else:
-				if target_idx < 0 or target_idx >= player_units.size(): target_idx = 0
-				if player_units.size() > 0: primary_target = player_units[target_idx]
+		var primary_target: Dictionary = {}
+		if target_team == "enemy":
+			if target_idx < 0 or target_idx >= enemy_units.size(): target_idx = 0
+			if enemy_units.size() > 0: primary_target = enemy_units[target_idx]
+		else:
+			# Ally targets store party_data indices; player_units is a compact subset whose positions differ when slots are empty
+			if target_idx < 0 or target_idx >= party_data.size(): target_idx = 0
+			if party_data.size() > 0: primary_target = party_data[target_idx]
 
-			# Route the skill to the execution pipeline
-			execute_parsed_skill(parsed_data, attacker_data, primary_target)
+		# Route the skill to the execution pipeline
+		execute_parsed_skill(parsed_data, attacker_data, primary_target)
 
 		_check_turn_progression()
 		return
@@ -397,8 +399,8 @@ func execute_queued_action(attacker_index: int) -> void:
 		}
 		
 		# Retrieve the actual queued target index
-		var target_index = attacker_data.get("queued_target_index", 0)
-		var target_team = attacker_data.get("queued_target_team", "enemy")
+		var target_index: int = attacker_data.get("queued_target_index", 0)
+		var target_team: String = attacker_data.get("queued_target_team", "enemy")
 		
 		var attack_frames = attacker_data.get("attack_frames", [30])
 		var attack_damage = attacker_data.get("attack_damage", [[100]])
@@ -408,8 +410,9 @@ func execute_queued_action(attacker_index: int) -> void:
 			if target_index < 0 or target_index >= enemy_units.size(): target_index = 0
 			if enemy_units.size() > 0: target_data = enemy_units[target_index]
 		else:
-			if target_index < 0 or target_index >= player_units.size(): target_index = 0
-			if player_units.size() > 0: target_data = player_units[target_index]
+			# Ally targets store party_data indices; player_units is a compact subset whose positions differ when slots are empty
+			if target_index < 0 or target_index >= party_data.size(): target_index = 0
+			if party_data.size() > 0: target_data = party_data[target_index]
 
 		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
 		dummy_effect["attack_frames"] = attack_frames
@@ -532,6 +535,7 @@ func request_unit_stats(index: int) -> void:
 	var max_limit: int = unit_data.get("max_limit", 100)
 
 	unit_stats_updated.emit(index, unit_name, cur_hp, max_hp, cur_mp, max_mp, cur_limit, max_limit)
+
 
 func _are_all_units_dead(team: Array) -> bool:
 	if team.size() == 0:
@@ -661,6 +665,7 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	mission_drops.append(selected_item_id)
 	item_dropped.emit(enemy_index, selected_item_id)
 
+
 func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
 	enemy_units.clear()
 	var monsters_in_dungeon = dungeon_data.get("monsters", [])
@@ -688,19 +693,21 @@ static func _get_living_units(team_array: Array) -> Array[Dictionary]:
 	return living
 
 func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, primary_target: Dictionary) -> Array[Dictionary]:
-	var targets: Array[Dictionary] = []
-	var enemy_pool = enemy_units
-	var ally_pool = player_units if caster.get("team") == "player" else enemy_units # Adjust if enemies cast buffs on themselves
-	
+	var is_player_caster: bool = caster.get("team", "") == "player"
+	# Pools are relative to the caster: enemy_pool is the opposing team, ally_pool is the caster's own team.
+	# For player casters, allies are all party_data slots (stable indices, includes empty/dead slots).
+	var enemy_pool: Array = enemy_units if is_player_caster else player_units
+	var ally_pool: Array = party_data if is_player_caster else enemy_units
+
 	# TYPE 3: SELF
 	if target_type == 3:
 		return [caster]
-	
-	# TYPE 1: ENEMY
+
+	# TYPE 1: ENEMY (opposing team) - never target dead enemies
 	if target_type == 1:
-		var living_enemies = _get_living_units(enemy_pool)
+		var living_enemies: Array[Dictionary] = _get_living_units(enemy_pool)
 		if living_enemies.is_empty(): return [] # Win condition safety
-		
+
 		if target_area == 2: # AOE
 			return living_enemies
 		else: # Single Target
@@ -708,21 +715,19 @@ func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, pr
 				return [primary_target]
 			else:
 				return [living_enemies[0]] # Fallback to first alive if target died
-				
-	# TYPE 2: ALLY
+
+	# TYPE 2: ALLY (own team)
 	if target_type in [2, 6]:
-		var living_allies = _get_living_units(ally_pool)
-		if living_allies.is_empty(): return [] # Game over safety
-		
-		if target_area == 2: # AOE
+		if target_area == 2: # AOE - living allies only
+			var living_allies: Array[Dictionary] = _get_living_units(ally_pool)
+			if living_allies.is_empty(): return []
 			return living_allies
-		else: # Single Target
-			if primary_target.get("current_hp", 0) > 0:
+		else: # Single Target - dead allies are valid targets (e.g. revive)
+			if not primary_target.is_empty():
 				return [primary_target]
 			else:
-				# Fallback to self if the targeted ally somehow died
-				return [caster] 
-				
+				return [caster]
+
 	# Fallback catch-all
 	return []
 

@@ -233,7 +233,7 @@ func initialize_battle(mission_id: String) -> void:
 				var max_mp = final_stats.get("MP", 10)
 
 				battle_unit["max_hp"] = max_hp
-				battle_unit["current_hp"] = max_hp/2
+				battle_unit["current_hp"] = max_hp
 				battle_unit["max_mp"] = max_mp
 				battle_unit["current_mp"] = max_mp
 				var limitburst_id: String = str(battle_unit.get("limitburst_id", ""))
@@ -448,16 +448,46 @@ func _check_turn_progression() -> void:
 			current_state = BattleState.ENEMY_TURN
 			_execute_enemy_turn()
 	elif current_state == BattleState.ENEMY_TURN:
+		_tick_active_effect_durations(party_data)
+		_tick_active_effect_durations(enemy_units)
 		# Transition back to PLAYER_TURN
 		player_units_acted_this_turn.clear()
 		for unit in player_units:
 			if not unit.is_empty():
 				unit["is_defending"] = false
 				unit.erase("queued_payload")
+				# Reset target so stale per-skill targets (e.g. self-targeting) don't bleed into next turn's basic attack
+				unit["queued_target_team"] = "enemy"
+				unit["queued_target_index"] = 0
 				
 		turn_count += 1
 		turn_changed.emit(turn_count)
 		current_state = BattleState.PLAYER_TURN
+
+func _tick_active_effect_durations(units: Array) -> void:
+	for unit in units:
+		if unit.is_empty():
+			continue
+		if not unit.has("active_effects"):
+			continue
+
+		var active_effects: Array = unit.get("active_effects", [])
+		if active_effects.is_empty():
+			continue
+
+		var remaining_effects: Array = []
+		for effect in active_effects:
+			if typeof(effect) != TYPE_DICTIONARY:
+				continue
+
+			var next_duration: int = int(effect.get("duration", 0)) - 1
+			if next_duration > 0:
+				var updated_effect: Dictionary = effect.duplicate(true)
+				updated_effect["duration"] = next_duration
+				remaining_effects.append(updated_effect)
+
+		unit["active_effects"] = remaining_effects
+		unit["final_stats"] = StatCalculator.calculate_final_stats(unit)
 
 func _execute_enemy_turn() -> void:
 	var living_player_indices: Array[int] = []

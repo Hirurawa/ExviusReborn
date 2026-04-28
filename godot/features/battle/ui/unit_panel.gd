@@ -150,6 +150,7 @@ func _update_visual_state() -> void:
 	if _has_acted:
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 		return
+	modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 	if _current_queued_action == _battle_manager.CombatAction.ATTACK:
 		#modulate = Color(1.0, 1.0, 1.0, 1.0)

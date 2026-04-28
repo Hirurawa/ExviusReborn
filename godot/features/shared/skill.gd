@@ -8,6 +8,7 @@ const ICON_BASE_PATH: String = "res://assets/abilities/"
 @onready var icon: TextureRect = $unit_magic_icon_1
 @onready var name_label: Label = $unit_magic_name_text_1
 @onready var mp_label: Label = $unit_magic_mp_number_1
+@onready var mp_icon:TextureRect = $unit_magic_mp_1
 @onready var detail_label: Label = $unit_magic_detail_text_1
 @onready var level_icon: TextureRect = $unit_magic_icon
 @onready var level_banner: TextureRect = $unit_magic_lv
@@ -20,7 +21,7 @@ func _ready() -> void:
 	level_banner.hide()
 	level_label.hide()
 
-func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_button: bool = false, skill_level: int = -1) -> void:
+func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_button: bool = false) -> void:
 	if not is_node_ready():
 		await ready
 
@@ -34,20 +35,22 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 	if icon_tex:
 		icon.texture = icon_tex
 		
-	var texname = source
-	if texname == "Trait":
-		texname = "chara"
-	var cat_icon_path = "res://assets/ui/unit/unit_magic_category_" + texname + ".tres"
-	var cat_tex = load(cat_icon_path)
-	if cat_tex:
-		category_rect.texture = cat_tex
-	mp_label.text = _build_mp_text(skill_data)
-	var orb_icon_path = "res://assets/ui/unit/unit_magic_icon_" + str(skill_data.get("magic_type", "")).to_lower() + ".tres"
-	var orb_tex = load(orb_icon_path)
-	if orb_tex:
-		level_icon.texture = orb_tex
-	detail_label.text = _build_effect_text(skill_data)
-
+	if source != "":
+		var texname = source
+		if texname == "Trait":
+			texname = "chara"
+		var cat_icon_path = "res://assets/ui/unit/unit_magic_category_" + texname + ".tres"
+		var cat_tex = load(cat_icon_path)
+		if cat_tex:
+			category_rect.texture = cat_tex
+	
+	var mp_value = _build_mp_text(skill_data)
+	if mp_value != "--":
+		mp_label.text = mp_value
+	else:
+		mp_label.hide()
+		mp_icon.hide()
+	
 	if skill_data.get("rarity", -1) > 0:
 		level_label.text = str(skill_data.get("rarity"))
 		level_label.show()
@@ -57,7 +60,19 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 		level_icon.hide()
 		level_banner.hide()
 		level_label.hide()
-
+	
+	var orb_icon_path = "res://assets/ui/unit/unit_magic_icon_" + str(skill_data.get("magic_type", "")).to_lower() + ".tres"
+	if ResourceLoader.exists(orb_icon_path):
+		var orb_tex = load(orb_icon_path)
+		if orb_tex:
+			level_icon.texture = orb_tex
+	else:
+		level_icon.hide()
+		level_banner.hide()
+		level_label.hide()
+		
+	detail_label.text = _build_effect_text(skill_data)
+	
 	action_button.visible = is_button
 	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if is_button else Control.MOUSE_FILTER_IGNORE
 

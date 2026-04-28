@@ -163,6 +163,10 @@
         "type": "FATAL_PREVENT",
         "keys": ["HP_threshold", "pct", "???", "times"]
     },
+    "52": {
+        "type": "MULTICAST",
+        "keys": ["magic_type", "cast_amount", "ability_id"]
+    },
     "54": {
         "type": "MAGIC_EVASION",
         "keys": ["", "pct"]

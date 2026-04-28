@@ -36,6 +36,7 @@ position = Vector2(3, 11.315796)
 texture = ExtResource("4_osm8x")
 
 [node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1307647434]
+unique_name_in_owner = true
 layout_mode = 2
 
 [node name="WorldMap" type="TextureButton" parent="ButtonRow" unique_id=1056244153]

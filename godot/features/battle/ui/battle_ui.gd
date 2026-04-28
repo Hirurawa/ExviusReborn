@@ -411,7 +411,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			grid.add_child(btn)
 			
-			btn.setup_from_skill_data(skill_data, "", true, skill_level)
+			btn.setup_from_skill_data(skill_data, "", true)
 			if source_type == "limitburst" and not can_use_limitburst:
 				btn.modulate = Color(0.45, 0.45, 0.45, 1.0)
 				btn.set_action_enabled(false)
@@ -805,9 +805,19 @@ func _spawn_damage_number(damage: int, target_index: int) -> void:
 func _on_turn_changed(new_turn: int) -> void:
 	turn_label.text = "Turn %d" % new_turn
 	chain_count_label.text = "Chain: 0"
+	# Reset panels visually
+	for p in _active_panels:
+		p.is_ally_targeting_mode = false
+		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		p.update_action_visuals()
 
 func _on_wave_changed(current_wave: int, total_waves: int) -> void:
 	chain_count_label.text = "Chain: 0"
+	# Reset panels visually
+	for p in _active_panels:
+		p.is_ally_targeting_mode = false
+		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		p.update_action_visuals()
 
 func _play_wave_one_intro(total_waves: int) -> void:
 	# Setup the labels

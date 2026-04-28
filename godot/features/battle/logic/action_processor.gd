@@ -18,6 +18,37 @@ func _get_stat_safe(stats: Dictionary, stat_name: String, default_value: int = 1
 		return default_value
 	return stats[stat_name]
 
+
+static func generate_effect_payloads(effect_type: String, raw_amount: int, attack_damage: Array, attack_frames: Array, caster: Dictionary, target: Dictionary, extra_data: Dictionary = {}) -> Array:
+	var generated_payloads = []
+
+	var dmg_array = attack_damage[0] if typeof(attack_damage[0]) == TYPE_ARRAY else attack_damage
+	var frame_array = attack_frames[0] if typeof(attack_frames[0]) == TYPE_ARRAY else attack_frames
+
+	for i in range(dmg_array.size()):
+		var percent = float(dmg_array[i]) / 100.0
+		var split_amount = int(max(1, raw_amount * percent)) if raw_amount > 0 else 0
+
+		var payload = {
+			"type": effect_type,
+			"frame_to_execute": frame_array[i],
+			"amount": split_amount,
+			"attacker_team": caster.get("team", ""),
+			"attacker_index": caster.get("index", 0),
+			"target_team": target.get("team", ""),
+			"target_index": target.get("index", 0)
+		}
+		
+		for key in extra_data.keys():
+			payload[key] = extra_data[key]
+
+		generated_payloads.append(payload)
+		
+		if effect_type in ["BUFF", "DEBUFF"]:
+			break 
+
+	return generated_payloads
+
 # --- ---
 func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
 	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
@@ -34,7 +65,7 @@ func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targe
 		var DEF = _get_stat_safe(target_stats, "DEF", 10)
 
 		var raw_damage = (float(ATK * ATK) / float(max(1, DEF))) * modifier
-		var hit_payloads = EffectProcessor.generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
+		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
 		
 		all_hit_payloads.append_array(hit_payloads)
 
@@ -55,7 +86,7 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 		var SPR = _get_stat_safe(target_stats, "SPR", 10)
 			
 		var raw_damage = (float(MAG * MAG) / float(max(1, SPR))) * modifier
-		var hit_payloads = EffectProcessor.generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
+		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
 
 		all_hit_payloads.append_array(hit_payloads)
 
@@ -77,7 +108,7 @@ func _apply_heal(parsed_effect: Dictionary, caster: Dictionary, targets: Array) 
 	var raw_heal = effect.get("amount", 0) + (float(0.5 * SPR + 0.1 * MAG)) * modifier
 	
 	for target in targets:
-		var hit_payloads = EffectProcessor.generate_effect_payloads(parsed_effect.get("type"), raw_heal, all_attack_damage, all_attack_frames, caster, target)
+		var hit_payloads = generate_effect_payloads(parsed_effect.get("type"), raw_heal, all_attack_damage, all_attack_frames, caster, target)
 		all_hit_payloads.append_array(hit_payloads)
 
 	return all_hit_payloads
@@ -90,7 +121,19 @@ func _apply_hp_restore(parsed_effect: Dictionary, caster: Dictionary, targets: A
 	
 	var all_hit_payloads: Array[Dictionary] = []
 	for target in targets:
-		var hit_payloads = EffectProcessor.generate_effect_payloads("HEAL", amount, all_attack_damage, all_attack_frames, caster, target)
+		var hit_payloads = generate_effect_payloads("HEAL", amount, all_attack_damage, all_attack_frames, caster, target)
+		all_hit_payloads.append_array(hit_payloads)
+	return all_hit_payloads
+
+func _apply_mp_restore(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var effect = parsed_effect.get("effect", {})
+	var amount = effect.get("amount", 100)
+	
+	var all_hit_payloads: Array[Dictionary] = []
+	for target in targets:
+		var hit_payloads = generate_effect_payloads("MP_RESTORE", amount, all_attack_damage, all_attack_frames, caster, target)
 		all_hit_payloads.append_array(hit_payloads)
 	return all_hit_payloads
 
@@ -112,7 +155,7 @@ func _apply_stat_boost_pct(parsed_effect: Dictionary, caster: Dictionary, target
 	var all_hit_payloads: Array[Dictionary] = []
 	
 	for target in targets:
-		var hit_payloads = EffectProcessor.generate_effect_payloads("BUFF", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
+		var hit_payloads = generate_effect_payloads("BUFF", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
 		all_hit_payloads.append_array(hit_payloads)
 	
 	return all_hit_payloads
@@ -138,7 +181,7 @@ func _apply_dodge(parsed_effect: Dictionary, caster: Dictionary, targets: Array)
 	var all_hit_payloads: Array[Dictionary] = []
 	
 	for target in targets:
-		var hit_payloads = EffectProcessor.generate_effect_payloads("DODGE", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
+		var hit_payloads = generate_effect_payloads("DODGE", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
 		all_hit_payloads.append_array(hit_payloads)
 	
 	return all_hit_payloads

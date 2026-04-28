@@ -269,7 +269,7 @@ func parse_skill_effects(skill_data: Dictionary) -> Dictionary:
 			"effects": []
 		}
 
-	return OpcodeParser.parse_skill_improved(skill_data, opcode_skill_schema)
+	return OpcodeParser.parse_skill(skill_data, opcode_skill_schema)
 
 func _find_item_ability_id(effects_raw: Array) -> String:
 	for effect in effects_raw:

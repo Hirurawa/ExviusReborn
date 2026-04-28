@@ -25,6 +25,12 @@ func _resolve_heal(receipt: Dictionary, target: Dictionary) -> void:
 	var max_hp = target.get("max_hp", 0)
 	target["current_hp"] = mini(max_hp, current_hp + amount)
 
+func _resolve_mp_restore(receipt: Dictionary, target: Dictionary) -> void:
+	var amount = receipt.get("amount", 0)
+	var current_mp = target.get("current_mp", 0)
+	var max_mp = target.get("max_mp", 0)
+	target["current_mp"] = mini(max_mp, current_mp + amount)
+
 func _resolve_buff(receipt: Dictionary, target: Dictionary) -> void:
 	if not target.has("active_effects"):
 		target["active_effects"] = []

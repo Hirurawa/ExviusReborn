@@ -35,7 +35,7 @@ static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) ->
 			
 	return parsed_action
 
-static func parse_skill_improved(skill_data: Dictionary, skill_schema: Dictionary) -> Dictionary:
+static func parse_skill(skill_data: Dictionary, skill_schema: Dictionary) -> Dictionary:
 	
 	var parsed_action: Dictionary = {
 		"element_inflict": skill_data.get("element_inflict", []),

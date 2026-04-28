@@ -5,7 +5,7 @@ var _menu_stack: Array[Node] = []
 
 var top_header: Node = null
 var bottom_nav: Node = null
-var world_map_button: Node = null
+var home_buttons: Node = null
 var user_menu_button: Node = null
 
 # Add standard menu mappings for easier instancing
@@ -50,12 +50,12 @@ func _load_persistent_overlays() -> void:
 		bottom_nav.hide()
 		canvas_layer.add_child(bottom_nav)
 
-	if ResourceLoader.exists("res://features/shared/WorldMapButton.tscn"):
-		var map_btn_scene: PackedScene = preload("res://features/shared/WorldMapButton.tscn")
-		world_map_button = map_btn_scene.instantiate()
-		world_map_button.hide()
-		world_map_button.pressed.connect(_on_world_map_pressed)
-		canvas_layer.add_child(world_map_button)
+	if ResourceLoader.exists("res://features/shared/HomeButtons.tscn"):
+		var home_buttons_scene: PackedScene = preload("res://features/shared/HomeButtons.tscn")
+		home_buttons = home_buttons_scene.instantiate()
+		home_buttons.hide()
+		home_buttons.world_map_pressed.connect(_on_world_map_pressed)
+		canvas_layer.add_child(home_buttons)
 
 	if ResourceLoader.exists("res://features/shared/UserMenuButton.tscn"):
 		var user_menu_scene: PackedScene = preload("res://features/shared/UserMenuButton.tscn")
@@ -96,11 +96,11 @@ func _update_overlays() -> void:
 		else:
 			bottom_nav.show()
 
-	if world_map_button:
+	if home_buttons:
 		if current_scene_name in hide_top_and_bottom or current_scene_name in hide_bottom or (current_scene_name != "game_ui" and current_scene_name != "gameui"):
-			world_map_button.hide()
+			home_buttons.hide()
 		else:
-			world_map_button.show()
+			home_buttons.show()
 
 	if user_menu_button:
 		if current_scene_name in hide_top_and_bottom:
@@ -113,8 +113,8 @@ func _update_overlays() -> void:
 		canvas_layer.move_child(top_header, -1)
 	if bottom_nav and bottom_nav.get_parent():
 		canvas_layer.move_child(bottom_nav, -1)
-	if world_map_button and world_map_button.get_parent():
-		canvas_layer.move_child(world_map_button, -1)
+	if home_buttons and home_buttons.get_parent():
+		canvas_layer.move_child(home_buttons, -1)
 	if user_menu_button and user_menu_button.get_parent():
 		canvas_layer.move_child(user_menu_button, -1)
 

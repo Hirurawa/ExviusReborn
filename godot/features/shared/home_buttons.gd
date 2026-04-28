@@ -1,9 +1,18 @@
 extends ScrollContainer
 
+signal world_map_pressed
+
 @export var snap_duration: float = 0.2
 @onready var button_row: HBoxContainer = %ButtonRow
+@onready var world_map_button: TextureButton = $ButtonRow/WorldMap
 
 var _is_dragging: bool = false
+
+func _ready() -> void:
+	world_map_button.pressed.connect(_on_world_map_pressed)
+
+func _on_world_map_pressed() -> void:
+	world_map_pressed.emit()
 
 func _gui_input(event: InputEvent) -> void:
 	# Detect when the user touches or lifts their finger/mouse

@@ -35,27 +35,27 @@ texture = ExtResource("3_0nn3b")
 position = Vector2(3, 11.315796)
 texture = ExtResource("4_osm8x")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1307647434]
+[node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1307647434]
 layout_mode = 2
 
-[node name="WorldMap" type="TextureButton" parent="HBoxContainer" unique_id=1056244153]
+[node name="WorldMap" type="TextureButton" parent="ButtonRow" unique_id=1056244153]
 layout_mode = 2
 texture_normal = ExtResource("1_8j4vc")
 texture_pressed = ExtResource("2_nh7tg")
 
-[node name="Espers" type="TextureButton" parent="HBoxContainer" unique_id=1358896996]
+[node name="Espers" type="TextureButton" parent="ButtonRow" unique_id=1358896996]
 layout_mode = 2
 texture_normal = ExtResource("3_1tilv")
 texture_pressed = ExtResource("4_n2ex2")
 texture_disabled = ExtResource("5_ofgpd")
 
-[node name="Craft" type="TextureButton" parent="HBoxContainer" unique_id=484697049]
+[node name="Craft" type="TextureButton" parent="ButtonRow" unique_id=484697049]
 layout_mode = 2
 texture_normal = ExtResource("6_0nn3b")
 texture_pressed = ExtResource("7_osm8x")
 texture_disabled = ExtResource("8_cuay8")
 
-[node name="Arena" type="TextureButton" parent="HBoxContainer" unique_id=1987525561]
+[node name="Arena" type="TextureButton" parent="ButtonRow" unique_id=1987525561]
 layout_mode = 2
 texture_normal = ExtResource("9_lqah2")
 texture_pressed = ExtResource("10_fjgrq")

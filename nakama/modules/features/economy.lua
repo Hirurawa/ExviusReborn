@@ -5,39 +5,6 @@ local Utilities = require("core.utilities")
 
 local Economy = {}
 
-function Economy.add_currency(context, payload)
-    local request = Utilities.parse_payload(payload)
-    if not request then
-        return nk.json_encode({error = "Invalid JSON payload"})
-    end
-    local gil = request.gil or 0
-    local lapis = request.lapis or 0
-
-    if gil > 10000 or lapis > 10000 then
-        return nk.json_encode({error = "Amount exceeds debug limits"})
-    end
-
-    if gil == 0 and lapis == 0 then
-        return nk.json_encode({error = "No currency to add"})
-    end
-
-    local changeset = {}
-    if gil ~= 0 then changeset.gil = gil end
-    if lapis ~= 0 then changeset.lapis = lapis end
-
-    local metadata = { source = "debug_add" }
-
-    local status, result = pcall(nk.wallet_update, context.user_id, changeset, metadata, true)
-
-    if not status then
-        return nk.json_encode({error = "Failed to update wallet: " .. tostring(result)})
-    end
-
-    -- Return the updated wallet to the client
-    local account = nk.account_get_id(context.user_id)
-    return nk.json_encode({success = true, wallet = account.wallet})
-end
-
 function Economy.buy_item(context, payload)
     local request = Utilities.parse_payload(payload)
     if not request then

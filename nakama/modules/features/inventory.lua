@@ -90,45 +90,6 @@ function Inventory.get_player_items_rpc(context, payload)
     })
 end
 
-function Inventory.add_item(context, payload)
-    local request = Utilities.parse_payload(payload)
-    if not request then
-        return nk.json_encode({error = "Invalid JSON payload"})
-    end
-    local item_id = request.item_id
-    local quantity = request.quantity or 1
-
-    if quantity > 10000 then
-        return nk.json_encode({error = "Amount exceeds debug limits"})
-    end
-
-    if not item_id or quantity <= 0 then
-        return nk.json_encode({error = "Invalid parameters"})
-    end
-
-    if StaticData.equipment_data and StaticData.equipment_data[item_id] then
-        -- It's an equipment
-        local new_equips = {}
-        for i = 1, quantity do
-            table.insert(new_equips, {
-                instance_id = nk.uuid_v4(),
-                template_id = item_id,
-                equipped_to = ""
-            })
-        end
-        Inventory.save_equipment(context.user_id, new_equips)
-        return nk.json_encode({success = true, added_equipment = new_equips})
-    elseif StaticData.items_data and StaticData.items_data[item_id] then
-        -- It's a stackable
-        local stackables = Inventory.get_stackables(context.user_id)
-        stackables[item_id] = (stackables[item_id] or 0) + quantity
-        Inventory.save_stackables(context.user_id, stackables)
-        return nk.json_encode({success = true, stackables = stackables})
-    else
-        return nk.json_encode({error = "Item data not found"})
-    end
-end
-
 function Inventory.rpc_equip_item(context, payload)
     local request = Utilities.parse_payload(payload)
     if not request then

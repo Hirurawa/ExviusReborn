@@ -120,9 +120,64 @@ func _on_clear_pressed() -> void:
 	_redraw_material_slots()
 
 func _on_confirm_pressed() -> void:
-	print("CONFIRM")
-	# UI state only for now. Backend enhancement processing will be wired later.
-	pass
+	if base_unit_instance_id == "" or material_units_array.is_empty():
+		_show_result_popup("Select a base unit and at least one material unit.")
+		return
+
+	var material_ids: Array = []
+	for entry: Variant in material_units_array:
+		if not (entry is Dictionary):
+			continue
+		var iid: String = str(entry.get("instance_id", ""))
+		if iid != "":
+			material_ids.append(iid)
+
+	if material_ids.is_empty():
+		_show_result_popup("No valid material units selected.")
+		return
+
+	confirm_button.disabled = true
+
+	var result: Dictionary = await DataManager.enhance_unit(base_unit_instance_id, material_ids)
+
+	confirm_button.disabled = false
+
+	if result.get("success", false):
+		var updated: Dictionary = result.get("updated_base_unit", {})
+		var consumed_count: int = (result.get("consumed_material_ids", []) as Array).size()
+		var gil: int = int(result.get("updated_currency", {}).get("gil", 0))
+		var msg: String = (
+			"Enhancement successful!\n"
+			+ "Level: %d   XP: %d\n"
+			+ "Trust: %.1f%%   LB Level: %d   LB XP: %d\n"
+			+ "Consumed: %d unit(s)\n"
+			+ "Gil remaining: %d"
+		) % [
+			int(updated.get("level", 0)),
+			int(updated.get("xp", 0)),
+			float(updated.get("trust_value", 0.0)),
+			int(updated.get("limitburst_level", 0)),
+			int(updated.get("limitburst_xp", 0)),
+			consumed_count,
+			gil
+		]
+		base_unit_inst.merge(updated, true)
+		_refresh_base_unit_ui()
+		material_units_array.clear()
+		_redraw_material_slots()
+		_show_result_popup(msg)
+	else:
+		var error_msg: String = result.get("error", "Enhancement failed. Please try again.")
+		_show_result_popup("Enhancement failed:\n%s" % error_msg)
+
+func _show_result_popup(message: String) -> void:
+	var dialog: AcceptDialog = AcceptDialog.new()
+	dialog.title = "Enhancement Result"
+	dialog.dialog_text = message
+	add_child(dialog)
+	dialog.popup_centered()
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
 
 func _on_cancel_pressed() -> void:
 	UIManager.pop()

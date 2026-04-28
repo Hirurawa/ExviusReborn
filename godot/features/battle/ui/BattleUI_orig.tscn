@@ -1,0 +1,419 @@
+[gd_scene format=3 uid="uid://kyi2qoe4sdli"]
+
+[ext_resource type="Texture2D" uid="uid://cnhfbhvsnu0ar" path="res://assets/ui/battle/battle_bg_ally.tres" id="1_bbkf6"]
+[ext_resource type="Texture2D" uid="uid://bw4t1ihyfbfm1" path="res://assets/ui/battle/battle_gaugebg.tres" id="1_yi0rw"]
+[ext_resource type="Texture2D" uid="uid://dh06plcinm7yu" path="res://assets/ui/battle/battle_com_mini_baloon.tres" id="2_bbkf6"]
+[ext_resource type="Texture2D" uid="uid://nhvxrfhk3ysl" path="res://assets/ui/battle/battle_com_mini_attack.tres" id="3_tdefo"]
+[ext_resource type="Texture2D" uid="uid://4iruksxhhilr" path="res://assets/ui/battle/battle_com_bg.tres" id="4_3l5rm"]
+[ext_resource type="Texture2D" uid="uid://758l4gko0axu" path="res://assets/ui/battle/battle_com_memory_btn1.tres" id="5_mdugi"]
+[ext_resource type="Texture2D" uid="uid://chf6c26j4khh" path="res://assets/ui/battle/battle_com_menu_btn1.tres" id="6_6bcbl"]
+[ext_resource type="Texture2D" uid="uid://oehdw2s3eo6r" path="res://assets/ui/battle/battle_unit_barrier_gauge.tres" id="7_277vc"]
+[ext_resource type="Texture2D" uid="uid://bjmms2xio563p" path="res://assets/ui/battle/battle_bg_enemy.tres" id="8_76qdh"]
+[ext_resource type="Texture2D" uid="uid://cyifnjpf1mkx5" path="res://assets/ui/battle/battle_enemy_hp_gauge.tres" id="9_uf1qa"]
+[ext_resource type="Texture2D" uid="uid://cnen6fkifco8v" path="res://assets/ui/battle/battle_bg_break.tres" id="10_mfkp8"]
+[ext_resource type="Texture2D" uid="uid://b3nr4vqojmo12" path="res://assets/ui/battle/quest_raid_enemyhpbg2.tres" id="11_umyu7"]
+[ext_resource type="Texture2D" uid="uid://b1xc44d0e5jkg" path="res://assets/ui/battle/battle_unit_wait.tres" id="12_bxisw"]
+[ext_resource type="Texture2D" uid="uid://duoususx3s63y" path="res://assets/ui/battle/battle_unit_mp_gauge.tres" id="13_j1bp6"]
+[ext_resource type="Texture2D" uid="uid://bvy8i1eujmh1y" path="res://assets/ui/battle/battle_unit_hp_gauge.tres" id="14_sd3wt"]
+[ext_resource type="Texture2D" uid="uid://bmyerm57rdmxk" path="res://assets/ui/battle/battle_unit_limit_gauge.tres" id="15_wktxq"]
+[ext_resource type="Texture2D" uid="uid://d15l401rgr85" path="res://assets/ui/battle/battle_summon_gaugebg.tres" id="16_qu2ee"]
+[ext_resource type="Texture2D" uid="uid://ddp473bv0h4bs" path="res://assets/ui/battle/battle_summon_gauge.tres" id="17_pdcx2"]
+[ext_resource type="Texture2D" uid="uid://djig3iii4odtj" path="res://assets/ui/battle/battle_com_auto_btn1.tres" id="18_2ggcb"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f000d"]
+bg_color = Color(1, 0, 0, 0.2)
+
+[node name="BattleUi" type="Node2D" unique_id=152411712]
+
+[node name="enemy_area" type="Label" parent="." unique_id=865363484]
+visible = false
+offset_top = 1.0
+offset_right = 320.0
+offset_bottom = 441.0
+theme_override_styles/normal = SubResource("StyleBoxFlat_f000d")
+text = "enemy_area"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="party_panel" type="TextureRect" parent="." unique_id=1793461961]
+offset_top = 468.0
+offset_right = 640.0
+offset_bottom = 964.0
+texture = ExtResource("1_bbkf6")
+expand_mode = 1
+
+[node name="summon_gage_bg" type="TextureRect" parent="." unique_id=176015000]
+offset_left = 379.0
+offset_top = 469.0
+offset_right = 643.0
+offset_bottom = 533.0
+texture = ExtResource("1_yi0rw")
+expand_mode = 1
+
+[node name="unit_summon_name" type="TextureRect" parent="." unique_id=607022446]
+offset_left = 835.0
+offset_top = 664.0
+offset_right = 1015.0
+offset_bottom = 685.0
+expand_mode = 1
+
+[node name="Image_18" type="TextureRect" parent="." unique_id=316383034]
+offset_top = 878.0
+offset_right = 640.0
+offset_bottom = 960.0
+texture = ExtResource("4_3l5rm")
+expand_mode = 1
+
+[node name="status_center" type="TextureRect" parent="." unique_id=2054925822]
+offset_left = 243.0
+offset_top = 533.0
+offset_right = 283.0
+offset_bottom = 573.0
+expand_mode = 1
+
+[node name="status_left" type="TextureRect" parent="." unique_id=1676917481]
+offset_left = 210.0
+offset_top = 533.0
+offset_right = 250.0
+offset_bottom = 573.0
+expand_mode = 1
+
+[node name="status_right" type="TextureRect" parent="." unique_id=1441049527]
+offset_left = 276.0
+offset_top = 533.0
+offset_right = 316.0
+offset_bottom = 573.0
+expand_mode = 1
+
+[node name="memory_btn" type="TextureRect" parent="." unique_id=1262845136]
+offset_left = 156.0
+offset_top = 880.0
+offset_right = 320.0
+offset_bottom = 960.0
+texture = ExtResource("5_mdugi")
+expand_mode = 1
+
+[node name="reset_btn" type="TextureRect" parent="." unique_id=1609509178]
+offset_left = 313.0
+offset_top = 880.0
+offset_right = 477.0
+offset_bottom = 960.0
+expand_mode = 1
+
+[node name="menu_btn" type="TextureRect" parent="." unique_id=565299840]
+offset_left = 473.0
+offset_top = 876.0
+offset_right = 641.0
+offset_bottom = 964.0
+texture = ExtResource("6_6bcbl")
+expand_mode = 1
+
+[node name="monster_name_base_break" type="TextureRect" parent="." unique_id=1291712402]
+offset_top = 381.0
+offset_right = 396.0
+offset_bottom = 489.0
+texture = ExtResource("8_76qdh")
+expand_mode = 1
+
+[node name="monster_hp_gage_break" type="TextureRect" parent="." unique_id=1366821499]
+offset_left = 3.0
+offset_top = 435.0
+offset_right = 419.0
+offset_bottom = 475.0
+texture = ExtResource("9_uf1qa")
+expand_mode = 1
+
+[node name="monster_name_break" type="TextureRect" parent="." unique_id=977452787]
+offset_left = 49.0
+offset_top = 406.0
+offset_right = 197.0
+offset_bottom = 434.0
+expand_mode = 1
+
+[node name="monster_break_gage_back" type="TextureRect" parent="." unique_id=887172134]
+visible = false
+offset_left = 7.0
+offset_top = 479.0
+offset_right = 399.0
+offset_bottom = 505.0
+texture = ExtResource("10_mfkp8")
+expand_mode = 1
+
+[node name="monster_break_gage" type="TextureRect" parent="." unique_id=731694111]
+visible = false
+offset_left = 3.0
+offset_top = 475.0
+offset_right = 419.0
+offset_bottom = 515.0
+texture = ExtResource("9_uf1qa")
+expand_mode = 1
+
+[node name="monster_break" type="TextureRect" parent="." unique_id=936048566]
+visible = false
+offset_left = 49.0
+offset_top = 451.0
+offset_right = 197.0
+offset_bottom = 479.0
+expand_mode = 1
+
+[node name="monster_name_base_raid" type="TextureRect" parent="." unique_id=1031979239]
+visible = false
+offset_top = 428.0
+offset_right = 637.0
+offset_bottom = 526.0
+texture = ExtResource("11_umyu7")
+expand_mode = 1
+
+[node name="monster_name_raid" type="Label" parent="." unique_id=834458028]
+visible = false
+offset_left = 40.0
+offset_top = 479.0
+offset_right = 320.0
+offset_bottom = 502.0
+theme_override_font_sizes/font_size = 22
+text = "monster_name_raid"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="monster_hp_base_raid" type="TextureRect" parent="." unique_id=1760857345]
+visible = false
+offset_left = 145.0
+offset_top = 441.0
+offset_right = 625.0
+offset_bottom = 473.0
+expand_mode = 1
+
+[node name="monster_hp_bar_raid" type="TextureRect" parent="." unique_id=1159001161]
+visible = false
+offset_left = 162.0
+offset_top = 449.0
+offset_right = 610.0
+offset_bottom = 465.0
+expand_mode = 1
+
+[node name="monster_hp_gauge_raid" type="TextureRect" parent="." unique_id=1619029338]
+visible = false
+offset_left = 145.0
+offset_top = 441.0
+offset_right = 625.0
+offset_bottom = 473.0
+expand_mode = 1
+
+[node name="monster_raid_lv_label" type="TextureRect" parent="." unique_id=93867732]
+visible = false
+offset_left = 40.0
+offset_top = 445.0
+offset_right = 64.0
+offset_bottom = 469.0
+expand_mode = 1
+
+[node name="monster_raid_lv_param" type="Label" parent="." unique_id=1613565282]
+visible = false
+offset_left = 75.0
+offset_top = 440.0
+offset_right = 256.0
+offset_bottom = 474.0
+theme_override_font_sizes/font_size = 34
+text = "monster_raid_lv_param"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_panel3" type="TextureRect" parent="." unique_id=1648828036]
+offset_top = 757.0
+offset_right = 320.0
+offset_bottom = 873.0
+texture = ExtResource("12_bxisw")
+expand_mode = 1
+
+[node name="unit_panel1" type="TextureRect" parent="." unique_id=605436353]
+offset_left = 2.0
+offset_top = 527.0
+offset_right = 322.0
+offset_bottom = 643.0
+texture = ExtResource("12_bxisw")
+expand_mode = 1
+
+[node name="unit_panel2" type="TextureRect" parent="." unique_id=633799378]
+offset_top = 642.0
+offset_right = 320.0
+offset_bottom = 758.0
+texture = ExtResource("12_bxisw")
+expand_mode = 1
+
+[node name="unit_panel4" type="TextureRect" parent="." unique_id=1173595763]
+offset_left = 317.0
+offset_top = 527.0
+offset_right = 637.0
+offset_bottom = 643.0
+texture = ExtResource("12_bxisw")
+expand_mode = 1
+
+[node name="unit_panel5" type="TextureRect" parent="." unique_id=2095023280]
+offset_left = 317.0
+offset_top = 642.0
+offset_right = 637.0
+offset_bottom = 758.0
+texture = ExtResource("12_bxisw")
+expand_mode = 1
+
+[node name="unit_panel6" type="TextureRect" parent="." unique_id=342477869]
+offset_left = 318.0
+offset_top = 757.0
+offset_right = 638.0
+offset_bottom = 873.0
+texture = ExtResource("12_bxisw")
+expand_mode = 1
+
+[node name="unit_mp_gage" type="TextureRect" parent="." unique_id=1501548962]
+offset_left = 214.0
+offset_top = 600.0
+offset_right = 304.0
+offset_bottom = 626.0
+texture = ExtResource("13_j1bp6")
+expand_mode = 1
+
+[node name="unit_hp_gage" type="TextureRect" parent="." unique_id=160241912]
+offset_left = 21.0
+offset_top = 600.0
+offset_right = 207.0
+offset_bottom = 626.0
+texture = ExtResource("14_sd3wt")
+expand_mode = 1
+
+[node name="unit_hp_max" type="TextureRect" parent="." unique_id=208678606]
+offset_left = 143.0
+offset_top = 603.0
+offset_right = 186.0
+offset_bottom = 616.0
+expand_mode = 1
+
+[node name="unit_hp_now" type="TextureRect" parent="." unique_id=116606649]
+offset_left = 62.0
+offset_top = 597.0
+offset_right = 129.0
+offset_bottom = 616.0
+expand_mode = 1
+
+[node name="unit_thum" type="TextureRect" parent="." unique_id=248508019]
+offset_left = 10.0
+offset_top = 542.0
+offset_right = 66.0
+offset_bottom = 580.0
+expand_mode = 1
+
+[node name="unit_name" type="TextureRect" parent="." unique_id=1093583355]
+offset_left = 65.0
+offset_top = 553.0
+offset_right = 213.0
+offset_bottom = 581.0
+expand_mode = 1
+
+[node name="unit_mp_now" type="TextureRect" parent="." unique_id=83535350]
+offset_left = 255.0
+offset_top = 597.0
+offset_right = 303.0
+offset_bottom = 615.0
+expand_mode = 1
+
+[node name="unit_hp_slash" type="TextureRect" parent="." unique_id=1793416806]
+offset_left = 133.0
+offset_top = 597.0
+offset_right = 141.0
+offset_bottom = 616.0
+expand_mode = 1
+
+[node name="unit_limit_gage" type="TextureRect" parent="." unique_id=1954026522]
+offset_left = 207.0
+offset_top = 569.0
+offset_right = 311.0
+offset_bottom = 601.0
+texture = ExtResource("15_wktxq")
+expand_mode = 1
+
+[node name="unit_dot1" type="TextureRect" parent="." unique_id=1441771731]
+offset_left = 403.0
+offset_top = 185.0
+offset_right = 505.0
+offset_bottom = 287.0
+expand_mode = 1
+
+[node name="unit_dot2" type="TextureRect" parent="." unique_id=415327152]
+offset_left = 364.0
+offset_top = 254.0
+offset_right = 466.0
+offset_bottom = 356.0
+expand_mode = 1
+
+[node name="unit_dot3" type="TextureRect" parent="." unique_id=1387635738]
+offset_left = 398.0
+offset_top = 329.0
+offset_right = 500.0
+offset_bottom = 431.0
+expand_mode = 1
+
+[node name="unit_dot4" type="TextureRect" parent="." unique_id=1374195767]
+offset_left = 515.0
+offset_top = 206.0
+offset_right = 617.0
+offset_bottom = 308.0
+expand_mode = 1
+
+[node name="unit_dot5" type="TextureRect" parent="." unique_id=1107403010]
+offset_left = 479.0
+offset_top = 273.0
+offset_right = 581.0
+offset_bottom = 375.0
+expand_mode = 1
+
+[node name="unit_dot6" type="TextureRect" parent="." unique_id=1853566303]
+offset_left = 511.0
+offset_top = 350.0
+offset_right = 613.0
+offset_bottom = 452.0
+expand_mode = 1
+
+[node name="summon_gage_base" type="TextureRect" parent="." unique_id=1427257186]
+offset_left = 396.0
+offset_top = 475.0
+offset_right = 640.0
+offset_bottom = 531.0
+texture = ExtResource("17_pdcx2")
+expand_mode = 1
+
+[node name="summon_gage" type="TextureRect" parent="." unique_id=987827928]
+offset_left = 464.0
+offset_top = 495.0
+offset_right = 630.0
+offset_bottom = 511.0
+texture = ExtResource("16_qu2ee")
+expand_mode = 1
+
+[node name="auto_btn" type="TextureRect" parent="." unique_id=395752721]
+offset_top = 880.0
+offset_right = 164.0
+offset_bottom = 960.0
+texture = ExtResource("18_2ggcb")
+expand_mode = 1
+
+[node name="unit_barrier_gage" type="TextureRect" parent="." unique_id=2119811977]
+offset_left = 13.0
+offset_top = 600.0
+offset_right = 213.0
+offset_bottom = 636.0
+texture = ExtResource("7_277vc")
+expand_mode = 1
+
+[node name="cmd_baloon" type="TextureRect" parent="." unique_id=1093956408]
+offset_left = 1.0
+offset_top = 503.0
+offset_right = 51.0
+offset_bottom = 559.0
+texture = ExtResource("2_bbkf6")
+expand_mode = 1
+
+[node name="cmd_mini" type="TextureRect" parent="." unique_id=267630069]
+offset_top = 502.0
+offset_right = 56.0
+offset_bottom = 558.0
+texture = ExtResource("3_tdefo")
+expand_mode = 1

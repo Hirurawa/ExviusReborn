@@ -17,9 +17,9 @@
 [ext_resource type="Texture2D" uid="uid://cl770oi7x2ft4" path="res://assets/ui/home/mypage_colosseum3.tres" id="11_rbtoe"]
 
 [node name="ScrollContainer" type="ScrollContainer" unique_id=1464874160]
-offset_top = 528.0
+offset_top = 570.0
 offset_right = 640.0
-offset_bottom = 809.0
+offset_bottom = 851.0
 script = ExtResource("1_nh7tg")
 
 [node name="MypageBgBottom" type="Sprite2D" parent="." unique_id=302592526]

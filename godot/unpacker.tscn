@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://bd78epwgbu8v4"]
+
+[ext_resource type="Script" uid="uid://cjsrnvu6mitj" path="res://unpacker.gd" id="1_sawas"]
+
+[node name="Unpacker" type="Control" unique_id=955013817]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_sawas")
+source_directory = "res://assets/ui/header"
+output_directory = "res://assets/ui/header"
+overwrite_existing = true

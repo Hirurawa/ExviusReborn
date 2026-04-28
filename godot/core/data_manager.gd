@@ -414,44 +414,10 @@ func _update_wallet_data(wallet: Dictionary) -> void:
 	assert(wallet.has("gil"), "CRITICAL ERROR: wallet is missing gil!")
 	if not wallet.has("gil"): push_error("CRITICAL ERROR: wallet is missing gil!")
 	gil = int(wallet["gil"])
-	assert(wallet.has("lapis"), "CRITICAL ERROR: wallet is missing lapis!")
-	if not wallet.has("lapis"): push_error("CRITICAL ERROR: wallet is missing lapis!")
-	lapis = int(wallet["lapis"])
+	#assert(wallet.has("lapis"), "CRITICAL ERROR: wallet is missing lapis!")
+	#if not wallet.has("lapis"): push_error("CRITICAL ERROR: wallet is missing lapis!")
+	#lapis = int(wallet["lapis"])
 	currency_updated.emit(gil, lapis)
-
-func add_rank_xp(xp_to_add: int) -> void:
-	var result: Dictionary = await server_connection.add_rank_xp_async(xp_to_add)
-	if not result.is_empty():
-		assert(result.has("rank"), "CRITICAL ERROR: result is missing rank!")
-		if not result.has("rank"): push_error("CRITICAL ERROR: result is missing rank!")
-		current_rank = int(result["rank"])
-		assert(result.has("xp"), "CRITICAL ERROR: result is missing xp!")
-		if not result.has("xp"): push_error("CRITICAL ERROR: result is missing xp!")
-		current_xp = int(result["xp"])
-		assert(result.has("next_rank_xp"), "CRITICAL ERROR: result is missing next_rank_xp!")
-		if not result.has("next_rank_xp"): push_error("CRITICAL ERROR: result is missing next_rank_xp!")
-		next_rank_xp = int(result["next_rank_xp"])
-		assert(result.has("current_nrg"), "CRITICAL ERROR: result is missing current_nrg!")
-		if not result.has("current_nrg"): push_error("CRITICAL ERROR: result is missing current_nrg!")
-		current_nrg = int(result["current_nrg"])
-		assert(result.has("max_nrg"), "CRITICAL ERROR: result is missing max_nrg!")
-		if not result.has("max_nrg"): push_error("CRITICAL ERROR: result is missing max_nrg!")
-		max_nrg = int(result["max_nrg"])
-		assert(result.has("nrg_regen_rate_seconds"), "CRITICAL ERROR: result is missing nrg_regen_rate_seconds!")
-		if not result.has("nrg_regen_rate_seconds"): push_error("CRITICAL ERROR: result is missing nrg_regen_rate_seconds!")
-		nrg_regen_rate_seconds = int(result["nrg_regen_rate_seconds"])
-		assert(result.has("seconds_until_next_nrg"), "CRITICAL ERROR: result is missing seconds_until_next_nrg!")
-		if not result.has("seconds_until_next_nrg"): push_error("CRITICAL ERROR: result is missing seconds_until_next_nrg!")
-		seconds_until_next_nrg = float(result["seconds_until_next_nrg"])
-		last_entered_mission_id = str(result.get("last_entered_mission_id", last_entered_mission_id))
-		rank_updated.emit(current_rank, current_xp, next_rank_xp)
-		nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
-
-func add_currency(gil_to_add: int, lapis_to_add: int) -> void:
-	var result: Dictionary = await server_connection.add_currency_async(gil_to_add, lapis_to_add)
-	if result.has("wallet"):
-		var wallet: Variant = JSON.parse_string(result.wallet) if result.wallet is String else result.wallet
-		_update_wallet_data(wallet)
 
 func request_buy_item(item_id: String, quantity: int) -> void:
 	var result: Dictionary = await server_connection.buy_item_async(item_id, quantity)
@@ -651,7 +617,17 @@ func awaken_unit(instance_id: String) -> Dictionary:
 		owned_units_ids = _hydrate_owned_units(owned_units_ids)
 		units_updated.emit(owned_units_ids)
 	return result
-
+	
+func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Array) -> Dictionary:
+	var result: Dictionary = await server_connection.enhance_unit_async(base_unit_instance_id, material_unit_instance_ids)
+	if result.get("success", false):
+		owned_units_ids = await server_connection.read_player_units_async()
+		owned_units_ids = _hydrate_owned_units(owned_units_ids)
+		units_updated.emit(owned_units_ids)
+		if result.has("updated_currency"):
+			_update_wallet_data(result["updated_currency"])
+	return result
+	
 func request_equip_item(instance_id: String, slot_id: String, item_id: String) -> void:
 	if item_id != "" and slot_id in ["r_hand", "l_hand"]:
 		var item_data_dict: Dictionary = {}

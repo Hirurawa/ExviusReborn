@@ -89,26 +89,6 @@ func list_friends_async() -> NakamaAPI.ApiFriendList:
 
 	return result as NakamaAPI.ApiFriendList
 
-func add_rank_xp_async(xp_amount: int) -> Dictionary:
-	if _session == null or _session.is_expired():
-		return {}
-
-	var payload = JSON.stringify({
-		"xp_amount": xp_amount
-	})
-
-	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_rank_xp", payload)
-
-	if result.is_exception():
-		push_error("Failed to add rank xp: %s" % result.get_exception().message)
-		return {}
-
-	var dict = JSON.parse_string(result.payload)
-	if dict and dict is Dictionary:
-		return dict
-
-	return {}
-
 func read_player_stats_async() -> Dictionary:
 	var default_stats := {"rank": 1, "xp": 0, "energy": 41, "max_energy": 41}
 
@@ -266,6 +246,26 @@ func awaken_unit_async(instance_id: String) -> Dictionary:
 
 	return {}
 
+func enhance_unit_async(base_unit_instance_id: String, material_unit_instance_ids: Array) -> Dictionary:
+	if _session == null or _session.is_expired():
+		return {}
+
+	var payload = JSON.stringify({
+		"base_unit_instance_id": base_unit_instance_id,
+		"material_unit_instance_ids": material_unit_instance_ids
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "enhance_unit", payload)
+
+	if result.is_exception():
+		push_error("Failed to enhance unit: %s" % result.get_exception().message)
+		return {}
+
+	var dict = JSON.parse_string(result.payload)
+	if dict and dict is Dictionary:
+		return dict
+
+	return {}
+
 func get_parties_async() -> Array:
 	if not _session:
 		return []
@@ -316,46 +316,6 @@ func read_player_items_async() -> Dictionary:
 		return dict
 
 	return {"stackables": {}, "equipment": []}
-
-func add_item_async(item_id: String, quantity: int = 1) -> Dictionary:
-	if _session == null or _session.is_expired():
-		return {}
-
-	var payload = JSON.stringify({
-		"item_id": item_id,
-		"quantity": quantity
-	})
-	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_item", payload)
-
-	if result.is_exception():
-		push_error("Failed to add item: %s" % result.get_exception().message)
-		return {}
-
-	var dict = JSON.parse_string(result.payload)
-	if dict and dict is Dictionary:
-		return dict
-
-	return {}
-
-func add_currency_async(gil: int, lapis: int) -> Dictionary:
-	if _session == null or _session.is_expired():
-		return {}
-
-	var payload = JSON.stringify({
-		"gil": gil,
-		"lapis": lapis
-	})
-	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "add_currency", payload)
-
-	if result.is_exception():
-		push_error("Failed to add currency: %s" % result.get_exception().message)
-		return {}
-
-	var dict = JSON.parse_string(result.payload)
-	if dict and dict is Dictionary:
-		return dict
-
-	return {}
 
 func buy_item_async(item_id: String, quantity: int = 1) -> Dictionary:
 	if _session == null or _session.is_expired():

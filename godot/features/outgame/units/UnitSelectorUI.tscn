@@ -1,6 +1,17 @@
 [gd_scene format=3 uid="uid://s5cq0mjthh05"]
 
 [ext_resource type="Script" uid="uid://b7vankwgbga6o" path="res://features/outgame/units/unit_selector_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="2_80sf1"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_kqu5q"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_dkus8"]
+[ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="4_quclg"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="5_g4uvh"]
+[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="5_kqu5q"]
+[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="6_g4uvh"]
+[ext_resource type="Texture2D" uid="uid://5s3qsb0gvgv0" path="res://assets/ui/common/middlebutton_label_ok.tres" id="7_w32bh"]
+[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="8_w32bh"]
+[ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="10_u6sy6"]
+[ext_resource type="Texture2D" uid="uid://d2tw36ct1c5td" path="res://assets/ui/common/button_middle_long_off.tres" id="11_3i2jn"]
 
 [node name="UnitSelectorUI" type="Control" unique_id=155837347]
 layout_mode = 3
@@ -12,6 +23,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=1682114413]
+position = Vector2(320, 448)
+texture = ExtResource("2_kqu5q")
+
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1542984]
 layout_mode = 1
 anchors_preset = 15
@@ -21,17 +36,74 @@ offset_bottom = -110.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=1693916020]
+[node name="UnitNamebgChara" type="TextureRect" parent="VBoxContainer" unique_id=1523982311]
 layout_mode = 2
-text = "Units"
+texture = ExtResource("2_80sf1")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/UnitNamebgChara" unique_id=210705169]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "View Units"
+
+[node name="BackButton" type="TextureButton" parent="VBoxContainer/UnitNamebgChara" unique_id=1370726073]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("3_dkus8")
+texture_pressed = ExtResource("5_g4uvh")
+
+[node name="Back" type="Label" parent="VBoxContainer/UnitNamebgChara/BackButton" unique_id=581372541]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1874225308]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
 
 [node name="UnitsListContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer" unique_id=1387667519]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 5
+
+[node name="unit_mix_ui_bg_0" type="TextureRect" parent="VBoxContainer" unique_id=1376158504]
+layout_mode = 2
+texture = ExtResource("4_quclg")
+stretch_mode = 2
+
+[node name="unit_mix_button_clear" type="TextureButton" parent="VBoxContainer/unit_mix_ui_bg_0" unique_id=977752694]
+layout_mode = 0
+offset_left = 449.0
+offset_top = 19.0
+offset_right = 609.0
+offset_bottom = 91.0
+texture_normal = ExtResource("5_kqu5q")
+texture_pressed = ExtResource("8_w32bh")
+
+[node name="unit_mix_button_union" type="TextureButton" parent="VBoxContainer/unit_mix_ui_bg_0" unique_id=2127714613]
+layout_mode = 0
+offset_left = 223.0
+offset_top = 11.0
+offset_right = 423.0
+offset_bottom = 99.0
+texture_normal = ExtResource("6_g4uvh")
+texture_pressed = ExtResource("10_u6sy6")
+texture_disabled = ExtResource("11_3i2jn")
+
+[node name="MiddlebuttonLabelOk" type="Sprite2D" parent="VBoxContainer/unit_mix_ui_bg_0/unit_mix_button_union" unique_id=972016976]
+position = Vector2(100, 43)
+texture = ExtResource("7_w32bh")

@@ -1,9 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://duvsyjyy2uwqj"]
 
-[ext_resource type="Script" path="res://features/outgame/summon/summon_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://no33mv8dcu7h" path="res://features/outgame/summon/summon_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://d2rlyjgyx57t5" path="res://assets/ui/common/gacha_cosmos_bg.png" id="2_roeup"]
 
-[node name="SummonUI" type="Control"]
-script = ExtResource("1_script")
+[node name="SummonUI" type="Control" unique_id=1078550173]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -12,8 +12,13 @@ anchor_bottom = 1.0
 offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="GachaCosmosBg" type="Sprite2D" parent="." unique_id=1996293765]
+position = Vector2(320, 572)
+texture = ExtResource("2_roeup")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=52421160]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -27,16 +32,16 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=2081797486]
 layout_mode = 2
 text = "Summon"
 horizontal_alignment = 1
 
-[node name="PerformSummonButton" type="Button" parent="VBoxContainer"]
+[node name="PerformSummonButton" type="Button" parent="VBoxContainer" unique_id=216101240]
 layout_mode = 2
 text = "Summon 3 Units"
 
-[node name="SummonOverlay" type="ColorRect" parent="."]
+[node name="SummonOverlay" type="ColorRect" parent="." unique_id=1647780593]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -46,7 +51,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.8)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SummonOverlay"]
+[node name="VBoxContainer" type="VBoxContainer" parent="SummonOverlay" unique_id=201311344]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -60,20 +65,20 @@ offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="SummonOverlay/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="SummonOverlay/VBoxContainer" unique_id=1792991688]
 layout_mode = 2
 text = "Summon Results"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="SummonOverlay/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="SummonOverlay/VBoxContainer" unique_id=814462950]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ResultsListContainer" type="VBoxContainer" parent="SummonOverlay/VBoxContainer/ScrollContainer"]
+[node name="ResultsListContainer" type="VBoxContainer" parent="SummonOverlay/VBoxContainer/ScrollContainer" unique_id=697020233]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="CloseOverlayButton" type="Button" parent="SummonOverlay/VBoxContainer"]
+[node name="CloseOverlayButton" type="Button" parent="SummonOverlay/VBoxContainer" unique_id=826094200]
 layout_mode = 2
 text = "Close"

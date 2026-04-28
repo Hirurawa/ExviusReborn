@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://dnxp7pyoa18do"]
+
+[ext_resource type="Texture2D" uid="uid://5cndnjio2un2" path="res://assets/ui/common/pagetitlebg.tres" id="2_mckwu"]
+[ext_resource type="Texture2D" uid="uid://b0axiacbqiccf" path="res://assets/ui/common/button_middle1.tres" id="3_lmflr"]
+[ext_resource type="Texture2D" uid="uid://c2q6g3it7asec" path="res://assets/ui/common/middlebutton_label_return.tres" id="4_xnd7x"]
+
+[node name="HeaderTitle" type="Control" unique_id=174978603]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="header_offset" type="TextureRect" parent="." unique_id=1288984834]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 154.0
+expand_mode = 1
+
+[node name="sub_header" type="TextureRect" parent="." unique_id=1790907747]
+layout_mode = 0
+offset_top = 143.0
+offset_right = 424.0
+offset_bottom = 215.0
+texture = ExtResource("2_mckwu")
+expand_mode = 1
+
+[node name="sub_header_back_btn" type="TextureRect" parent="." unique_id=1488917544]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 119.0
+offset_right = 120.0
+offset_bottom = 199.0
+texture = ExtResource("3_lmflr")
+expand_mode = 1
+
+[node name="sub_header_back_btn_label" type="TextureRect" parent="." unique_id=1902060509]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 139.0
+offset_right = 111.0
+offset_bottom = 171.0
+texture = ExtResource("4_xnd7x")
+expand_mode = 1
+
+[node name="sub_header_label" type="Label" parent="." unique_id=301027476]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 160.0
+offset_right = 350.0
+offset_bottom = 191.0
+theme_override_font_sizes/font_size = 26
+text = "sub_header_label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_header_logo" type="TextureRect" parent="." unique_id=67858535]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 95.0
+offset_right = 410.0
+offset_bottom = 203.0
+expand_mode = 1
+
+[node name="sub_header_result_label" type="Label" parent="." unique_id=1149197993]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 161.0
+offset_right = 310.0
+offset_bottom = 192.0
+theme_override_font_sizes/font_size = 24
+text = "sub_header_result_label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_header_dvtimer" type="TextureRect" parent="." unique_id=613359945]
+layout_mode = 0
+offset_top = 210.0
+offset_right = 572.0
+offset_bottom = 232.0
+expand_mode = 1

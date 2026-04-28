@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://bkg3xegumy0mc"]
+
+[ext_resource type="Texture2D" uid="uid://wk3q088i57y6" path="res://assets/ui/home/mypage_world1.tres" id="1_8j4vc"]
+[ext_resource type="Script" uid="uid://b04v1tyi61s3f" path="res://features/shared/home_buttons.gd" id="1_nh7tg"]
+[ext_resource type="Texture2D" uid="uid://eu7dw85y6rjs" path="res://assets/ui/home/mypage_world2.tres" id="2_nh7tg"]
+[ext_resource type="Texture2D" uid="uid://b37aofw6o2yy4" path="res://assets/ui/home/mypage_bg_bottom.tres" id="2_ofgpd"]
+[ext_resource type="Texture2D" uid="uid://bil1vqbji7sic" path="res://assets/ui/home/mypage_center_frame_bottom.tres" id="3_0nn3b"]
+[ext_resource type="Texture2D" uid="uid://wd56600rrirf" path="res://assets/ui/home/mypage_summon1.tres" id="3_1tilv"]
+[ext_resource type="Texture2D" uid="uid://byt87eq33lsvp" path="res://assets/ui/home/mypage_summon2.tres" id="4_n2ex2"]
+[ext_resource type="Texture2D" uid="uid://b3ycejlgfrmmq" path="res://assets/ui/home/mypage_center_frame_top.tres" id="4_osm8x"]
+[ext_resource type="Texture2D" uid="uid://cffhbxot568ih" path="res://assets/ui/home/mypage_summon3.tres" id="5_ofgpd"]
+[ext_resource type="Texture2D" uid="uid://bou271xcxvkha" path="res://assets/ui/home/mypage_craft1.tres" id="6_0nn3b"]
+[ext_resource type="Texture2D" uid="uid://1xxjfhssmrvc" path="res://assets/ui/home/mypage_craft2.tres" id="7_osm8x"]
+[ext_resource type="Texture2D" uid="uid://bqn802q1v7u8d" path="res://assets/ui/home/mypage_craft3.tres" id="8_cuay8"]
+[ext_resource type="Texture2D" uid="uid://cf0jp1ib4l0fs" path="res://assets/ui/home/mypage_colosseum1.tres" id="9_lqah2"]
+[ext_resource type="Texture2D" uid="uid://6a463hx3dhmx" path="res://assets/ui/home/mypage_colosseum2.tres" id="10_fjgrq"]
+[ext_resource type="Texture2D" uid="uid://cl770oi7x2ft4" path="res://assets/ui/home/mypage_colosseum3.tres" id="11_rbtoe"]
+
+[node name="ScrollContainer" type="ScrollContainer" unique_id=1464874160]
+offset_top = 528.0
+offset_right = 640.0
+offset_bottom = 809.0
+script = ExtResource("1_nh7tg")
+
+[node name="MypageBgBottom" type="Sprite2D" parent="." unique_id=302592526]
+position = Vector2(318, 236)
+scale = Vector2(1, 1.0363636)
+texture = ExtResource("2_ofgpd")
+
+[node name="MypageCenterFrameBottom" type="Sprite2D" parent="MypageBgBottom" unique_id=37703639]
+position = Vector2(0, -190)
+texture = ExtResource("3_0nn3b")
+
+[node name="MypageCenterFrameTop" type="Sprite2D" parent="MypageBgBottom" unique_id=1726150501]
+position = Vector2(3, 11.315796)
+texture = ExtResource("4_osm8x")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1307647434]
+layout_mode = 2
+
+[node name="WorldMap" type="TextureButton" parent="HBoxContainer" unique_id=1056244153]
+layout_mode = 2
+texture_normal = ExtResource("1_8j4vc")
+texture_pressed = ExtResource("2_nh7tg")
+
+[node name="Espers" type="TextureButton" parent="HBoxContainer" unique_id=1358896996]
+layout_mode = 2
+texture_normal = ExtResource("3_1tilv")
+texture_pressed = ExtResource("4_n2ex2")
+texture_disabled = ExtResource("5_ofgpd")
+
+[node name="Craft" type="TextureButton" parent="HBoxContainer" unique_id=484697049]
+layout_mode = 2
+texture_normal = ExtResource("6_0nn3b")
+texture_pressed = ExtResource("7_osm8x")
+texture_disabled = ExtResource("8_cuay8")
+
+[node name="Arena" type="TextureButton" parent="HBoxContainer" unique_id=1987525561]
+layout_mode = 2
+texture_normal = ExtResource("9_lqah2")
+texture_pressed = ExtResource("10_fjgrq")
+texture_disabled = ExtResource("11_rbtoe")

@@ -45,9 +45,9 @@ script = ExtResource("1_script")
 
 [node name="unit_mix_ui_sell_info" type="TextureRect" parent="." unique_id=1388287591]
 layout_mode = 0
-offset_top = 69.0
+offset_top = 56.0
 offset_right = 640.0
-offset_bottom = 133.0
+offset_bottom = 120.0
 texture = ExtResource("2_2m72s")
 expand_mode = 1
 
@@ -102,9 +102,9 @@ expand_mode = 1
 
 [node name="unit_mix_ui_bg" type="TextureRect" parent="." unique_id=735493894]
 layout_mode = 0
-offset_top = 124.0
+offset_top = 110.0
 offset_right = 640.0
-offset_bottom = 230.0
+offset_bottom = 216.0
 texture = ExtResource("3_nodv1")
 expand_mode = 1
 
@@ -207,9 +207,9 @@ expand_mode = 1
 [node name="unit_statusbg" type="TextureRect" parent="." unique_id=1863324426]
 layout_mode = 0
 offset_left = -1.0
-offset_top = -524.0
+offset_top = -510.0
 offset_right = 639.0
-offset_bottom = -192.0
+offset_bottom = -178.0
 texture = ExtResource("15_qqmk7")
 expand_mode = 1
 
@@ -393,9 +393,9 @@ text = "unit_status_ext_mnd_max_number"
 [node name="unit_charastand_large" type="TextureRect" parent="." unique_id=1486071134]
 layout_mode = 0
 offset_left = 22.0
-offset_top = -410.0
+offset_top = -396.0
 offset_right = 182.0
-offset_bottom = -242.0
+offset_bottom = -228.0
 texture = ExtResource("23_oo6e2")
 expand_mode = 1
 
@@ -409,27 +409,27 @@ offset_bottom = 128.0
 [node name="unit_sublimation_bottom_line" type="TextureRect" parent="." unique_id=1656297636]
 layout_mode = 0
 offset_left = -1.0
-offset_top = -235.0
+offset_top = -221.0
 offset_right = 639.0
-offset_bottom = -155.0
+offset_bottom = -141.0
 texture = ExtResource("24_hik2k")
 expand_mode = 1
 
 [node name="unit_sublimation_name_bg" type="TextureRect" parent="." unique_id=87352101]
 layout_mode = 0
 offset_left = 151.0
-offset_top = -430.0
+offset_top = -416.0
 offset_right = 639.0
-offset_bottom = -382.0
+offset_bottom = -368.0
 texture = ExtResource("25_dox0t")
 expand_mode = 1
 
 [node name="UnitLbframe" type="TextureRect" parent="." unique_id=991776219]
 layout_mode = 0
 offset_left = 201.0
-offset_top = -284.0
+offset_top = -270.0
 offset_right = 641.0
-offset_bottom = -221.0
+offset_bottom = -207.0
 texture = ExtResource("31_3ad8q")
 
 [node name="LBName" type="Label" parent="UnitLbframe" unique_id=794107210]
@@ -468,8 +468,9 @@ texture = ExtResource("32_o6f46")
 
 [node name="TM" type="Control" parent="." unique_id=471649301]
 anchors_preset = 0
+offset_top = 14.0
 offset_right = 40.0
-offset_bottom = 40.0
+offset_bottom = 54.0
 
 [node name="unit_mix_bonds_icon" type="TextureRect" parent="TM" unique_id=1583957378]
 layout_mode = 1
@@ -531,8 +532,9 @@ metadata/_edit_use_anchors_ = true
 
 [node name="UnitLevel" type="Control" parent="." unique_id=228411843]
 anchors_preset = 0
+offset_top = 14.0
 offset_right = 40.0
-offset_bottom = 40.0
+offset_bottom = 54.0
 
 [node name="UnitMagicLv" type="TextureRect" parent="UnitLevel" unique_id=2064550244]
 layout_mode = 0
@@ -559,8 +561,9 @@ offset_bottom = -400.0
 
 [node name="EnhanceFlowRoot" type="Control" parent="." unique_id=111200001]
 anchors_preset = 0
-offset_top = -530.0
+offset_top = -514.0
 offset_right = 640.0
+offset_bottom = 16.0
 
 [node name="BaseUnitIdLabel" type="Label" parent="EnhanceFlowRoot" unique_id=111200002]
 visible = false
@@ -720,10 +723,11 @@ flat = true
 [node name="UnitNamebgChara" type="TextureRect" parent="EnhanceFlowRoot" unique_id=2013820409]
 layout_mode = 0
 offset_left = -1.0
-offset_top = 3.0
-offset_right = 559.0
-offset_bottom = 75.0
+offset_top = 4.0
+offset_right = 640.0
+offset_bottom = 85.0
 texture = ExtResource("30_5t2gi")
+stretch_mode = 2
 
 [node name="EnhanceUnits" type="Label" parent="EnhanceFlowRoot/UnitNamebgChara" unique_id=1323517889]
 layout_mode = 0

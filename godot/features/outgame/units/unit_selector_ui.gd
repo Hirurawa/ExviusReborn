@@ -3,9 +3,15 @@ extends Control
 const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 
 @onready var vbox_container: VBoxContainer = $VBoxContainer
-@onready var title_label: Label = $VBoxContainer/TitleLabel
+@onready var title_label: Label = $VBoxContainer/UnitNamebgChara/Title
 @onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
+
+@onready var back_button: TextureButton = $VBoxContainer/UnitNamebgChara/BackButton
+
+@onready var action_row: TextureRect = $VBoxContainer/unit_mix_ui_bg_0
+@onready var clear_button: TextureButton = $VBoxContainer/unit_mix_ui_bg_0/unit_mix_button_clear
+@onready var confirm_button: TextureButton = $VBoxContainer/unit_mix_ui_bg_0/unit_mix_button_union
 
 var mode: String = "view"
 var target_party_index: int = 0
@@ -20,7 +26,6 @@ const UNIT_CELL_H: int = 164
 const UNIT_NAME_H: int = 34
 const PEDESTAL_BOTTOM_MARGIN: int = 2
 const UNIT_SIDE_PADDING: int = 4
-const UNIT_FEET_OFFSET_ESTIMATE: float = 5.0
 const V_SCROLLBAR_MIN_W: float = 12.0
 const MAX_MATERIAL_SELECTION: int = 5
 
@@ -31,9 +36,6 @@ var _texture_cache: Dictionary = {}
 var _exclude_instance_id_set: Dictionary = {}
 var _selected_units_map: Dictionary = {}
 var _material_checkboxes: Dictionary = {}
-var _action_row: HBoxContainer
-var _back_button: Button
-var _confirm_button: Button
 var _suppress_checkbox_signal: bool = false
 
 func _get_dynamic_texture(path: String) -> Texture2D:
@@ -123,43 +125,16 @@ func _ready() -> void:
 	_refresh_units_list(DataManager.owned_units_ids)
 
 func _ensure_action_row() -> void:
-	if _action_row != null:
-		return
-
-	_action_row = HBoxContainer.new()
-	_action_row.name = "ActionRow"
-	_action_row.anchor_left = 1.0
-	_action_row.anchor_top = 0.0
-	_action_row.anchor_right = 1.0
-	_action_row.anchor_bottom = 0.0
-	_action_row.offset_left = -220.0
-	_action_row.offset_top = 8.0
-	_action_row.offset_right = -8.0
-	_action_row.offset_bottom = 58.0
-	_action_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_action_row.alignment = BoxContainer.ALIGNMENT_END
-
-	_back_button = Button.new()
-	_back_button.name = "BackButton"
-	_back_button.text = "Back"
-	_back_button.custom_minimum_size = Vector2(100, 50)
-	_back_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	_back_button.pressed.connect(func() -> void:
+	back_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	back_button.pressed.connect(func() -> void:
 		UIManager.pop()
 	)
-	_action_row.add_child(_back_button)
 
-	_confirm_button = Button.new()
-	_confirm_button.name = "ConfirmButton"
-	_confirm_button.text = "OK"
-	_confirm_button.custom_minimum_size = Vector2(100, 50)
-	_confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	_confirm_button.pressed.connect(_on_confirm_material_selection)
-	_action_row.add_child(_confirm_button)
+	clear_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	clear_button.pressed.connect(_on_clear_material_selection)
 
-	# Add action row as direct child of root (UnitSelectorUI) so it overlays on top
-	add_child(_action_row)
-	move_child(_action_row, -1)  # Move to end so it renders on top
+	confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	confirm_button.pressed.connect(_on_confirm_material_selection)
 
 func _update_mode_ui() -> void:
 	if title_label == null:
@@ -167,26 +142,25 @@ func _update_mode_ui() -> void:
 
 	match mode:
 		"enhance_base_selection":
-			title_label.text = "Select Base Unit"
+			title_label.text = "Select Base"
 		"enhance_material_selection":
 			title_label.text = "Select Material Units"
 		_:
-			title_label.text = "Units"
+			title_label.text = "View Units"
 
-	if _action_row == null:
+	if action_row == null:
 		return
 
 	# Always show action row in selector modes
-	var selector_mode: bool = mode == "select" or mode == "enhance_base_selection" or mode == "enhance_material_selection"
-	_action_row.visible = selector_mode
-	
-	# Only show OK button in material selection mode
-	if _confirm_button != null:
-		_confirm_button.visible = mode == "enhance_material_selection"
-	
-	# Show Back button in all selector modes
-	if _back_button != null:
-		_back_button.visible = selector_mode
+	var selector_mode: bool = mode == "select" or mode == "enhance_material_selection"
+	action_row.visible = selector_mode
+
+func _on_clear_material_selection() -> void:
+	_selected_units_map.clear()
+	for key in _material_checkboxes.keys():
+		var check_box: CheckBox = _material_checkboxes.get(key, null) as CheckBox
+		if check_box != null:
+			_set_checkbox_state(check_box, false)
 
 func _on_units_updated(units: Array) -> void:
 	_refresh_units_list(units)
@@ -223,7 +197,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		container.clip_contents = true
 
-		# Load textures first to determine pixel-perfect sizing.
+		# Load textures for the Unit scene and let it fit itself inside this cell.
 		var sprite_texture: Texture2D = null
 		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
 		if ResourceLoader.exists(img_path):
@@ -232,30 +206,28 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var pedestal_texture: Texture2D = _get_pedestal_texture(unit_inst.get("rarity", 1))
 
 		var visual_area_h: int = UNIT_CELL_H
-		var center_x: float = float(cell_width) * 0.5
-		var available_w: float = float(cell_width - (UNIT_SIDE_PADDING * 2))
 
 		var visual_container: Control = Control.new()
 		visual_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		visual_container.clip_contents = true
 
 		if sprite_texture and pedestal_texture:
-			var sprite_source_size: Vector2 = sprite_texture.get_size()
-			var pedestal_source_size: Vector2 = pedestal_texture.get_size()
-			var width_reference: float = maxf(sprite_source_size.x, pedestal_source_size.x)
-			var height_reference: float = maxf(pedestal_source_size.y, sprite_source_size.y + UNIT_FEET_OFFSET_ESTIMATE)
-			var width_limit_scale: float = available_w / maxf(1.0, width_reference)
-			var height_limit_scale: float = float(visual_area_h - PEDESTAL_BOTTOM_MARGIN) / maxf(1.0, height_reference)
-			var final_scale: float = maxf(0.05, minf(width_limit_scale, height_limit_scale))
-
 			var unit_visual: Control = UNIT_SCENE.instantiate() as Control
 			if unit_visual:
 				unit_visual.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-				unit_visual.scale = Vector2(final_scale, final_scale)
 				visual_container.add_child(unit_visual)
-				var pedestal_half_h: float = (pedestal_source_size.y * final_scale) * 0.5
-				unit_visual.position = Vector2(center_x, float(visual_area_h - PEDESTAL_BOTTOM_MARGIN) - pedestal_half_h)
-				unit_visual.call_deferred("setup", sprite_texture, pedestal_texture)
+				if unit_visual.has_method("setup_in_cell"):
+					unit_visual.call(
+						"setup_in_cell",
+						sprite_texture,
+						pedestal_texture,
+						float(cell_width),
+						float(visual_area_h),
+						float(UNIT_SIDE_PADDING),
+						float(PEDESTAL_BOTTOM_MARGIN)
+					)
+				else:
+					unit_visual.call_deferred("setup", sprite_texture, pedestal_texture)
 
 		container.add_child(visual_container)
 

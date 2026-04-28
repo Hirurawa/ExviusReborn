@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://0asavbr8srkg"]
 
 [ext_resource type="Script" uid="uid://vs86o64p62t3" path="res://features/shared/bottom_nav.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b8emx5xjrrxmb" path="res://assets/ui/footer/mypage_under_ticker.tres" id="2_aq07v"]
 [ext_resource type="Texture2D" uid="uid://bfishqxuohrdw" path="res://assets/ui/footer/footer_btn_home_off.tres" id="2_x3ov3"]
+[ext_resource type="Texture2D" uid="uid://26lepbpolht6" path="res://assets/ui/footer/mypage_under_bg.tres" id="3_5shwa"]
 [ext_resource type="Texture2D" uid="uid://c1w53fu18wsgg" path="res://assets/ui/footer/footer_btn_unit_off.tres" id="3_6517q"]
 [ext_resource type="Texture2D" uid="uid://ctqh6puq2l8rm" path="res://assets/ui/footer/footer_btn_item_off.tres" id="4_aq07v"]
 [ext_resource type="Texture2D" uid="uid://cs8gh12p47q7f" path="res://assets/ui/footer/footer_btn_shop_off.tres" id="5_5shwa"]
@@ -17,6 +19,16 @@ offset_top = -109.0
 grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1_script")
+
+[node name="footer_bg" type="TextureRect" parent="." unique_id=1876496217]
+layout_mode = 2
+texture = ExtResource("3_5shwa")
+expand_mode = 1
+
+[node name="ticker_area" type="TextureRect" parent="." unique_id=601702486]
+layout_mode = 2
+texture = ExtResource("2_aq07v")
+expand_mode = 1
 
 [node name="HBox" type="HBoxContainer" parent="." unique_id=431978597]
 layout_mode = 2

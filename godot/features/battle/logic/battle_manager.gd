@@ -59,7 +59,6 @@ func _ready() -> void:
 	# 3. Add it as a child to the BattleManager
 	add_child(action_processor)
 	add_child(result_processor)
-	#pass
 
 func _physics_process(_delta: float) -> void:
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
@@ -761,14 +760,59 @@ func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, pr
 	# Fallback catch-all
 	return []
 
+func _evaluate_cover_interception(intended_targets: Array[Dictionary], effect: Dictionary, defending_pool: Array) -> Array[Dictionary]:
+	# 1. We only cover damaging attacks (Physical/Magical). Do not cover heals or buffs!
+	var effect_type = effect.get("type", "")
+	if effect_type not in ["physical_damage", "magic_damage"]:
+		return intended_targets
+
+	var is_aoe = intended_targets.size() > 1
+
+	# 2. Loop through the defending team to see if anyone is acting as a bodyguard
+	for defender in defending_pool:
+		# Dead units can't cover
+		if defender.get("current_hp", 0) <= 0: continue
+		
+		# 3. Check their active_effects for the right cover type
+		for active_effect in defender.get("runtime_state", {}).get("active_effects", []):
+			var buff_type = active_effect.get("type", "")
+			
+			# Check for AoE Cover
+			if is_aoe and buff_type == "aoe_cover":
+				var chance = active_effect.get("params", {}).get("pct_chance", 0)
+				if randi() % 100 < chance:
+					# COVER PROC SUCCESS! 
+					#_flag_cover_mitigation(defender, active_effect)
+					return [defender] # The tank absorbs the entire AoE
+					
+			# Check for Single Target Cover
+			elif not is_aoe and buff_type == "single_cover":
+				# Make sure the tank isn't trying to cover themselves
+				if defender != intended_targets[0]:
+					var chance = active_effect.get("params", {}).get("pct_chance", 0)
+					if randi() % 100 < chance:
+						# COVER PROC SUCCESS!
+						#_flag_cover_mitigation(defender, active_effect)
+						return [defender] # The tank pushes the target out of the way
+						
+	# If no one covered, return the original targets
+	return intended_targets
+
 func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var effects = parsed_skill.get("effects", [])
 
 	for i in range(effects.size()):
 		var effect = effects[i]
+		
+		# STEP 1: Intent (Aiming)
 		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster, primary_target)
 		
-		# Delegate to the Action Processor
+		# STEP 2: Interception (Cover / Taunt)
+		if effect.get("target_type", 1) == 1: # Only check cover on enemy-targeted skills
+			#actual_targets = _evaluate_cover_interception(actual_targets, effect, defending_pool)
+			pass
+		
+		# STEP 3: Execution (Delegate to the Action Processor)
 		var hit_payloads = action_processor.execute_parsed_effect(effect, caster, actual_targets)
 
 		# Process the returned receipts

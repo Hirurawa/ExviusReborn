@@ -185,3 +185,32 @@ func _apply_dodge(parsed_effect: Dictionary, caster: Dictionary, targets: Array)
 		all_hit_payloads.append_array(hit_payloads)
 	
 	return all_hit_payloads
+
+func _apply_aoe_cover(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	if(all_attack_damage == []): all_attack_damage = [[100]]
+	if(all_attack_frames == []): all_attack_frames = [[0]]
+	
+	var effect = parsed_effect.get("effect", {})
+	
+	var duration = effect.get("turn_count", 1)
+
+	var eff = effect.duplicate()
+	eff.erase("turn_count") 
+
+	var extra_data = {
+		"duration": duration,
+		"dmg_reduce_min": eff["dmg_reduce_min"],
+		"dmg_reduce_max": eff["dmg_reduce_max"],
+		"pct_chance": eff["pct_chance"],
+		"phys_mag": eff["phys_mag"]
+	}
+	
+	var all_hit_payloads: Array[Dictionary] = []
+	
+	for target in targets:
+		var hit_payloads = generate_effect_payloads("AOE_COVER", 0, all_attack_damage, all_attack_frames, caster, target, extra_data)
+		all_hit_payloads.append_array(hit_payloads)
+	
+	return all_hit_payloads

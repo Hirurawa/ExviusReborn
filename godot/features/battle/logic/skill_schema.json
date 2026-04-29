@@ -111,6 +111,10 @@
         "type": "PHYS_ELEMENT",
         "keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "turn_count", ""]
     },
+    "96": {
+        "type": "AOE_COVER",
+        "keys": ["", "", "dmg_reduce_min", "dmg_reduce_max", "pct_chance", "???", "turn_count", "???", "phys_mag"]
+    },
     "101": {
         "type": "DAMAGE_REDUCE",
         "keys": ["pct", "turn_count", "", ""]

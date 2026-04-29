@@ -63,3 +63,17 @@ func _resolve_dodge(receipt: Dictionary, target: Dictionary) -> void:
 	}
 	target["active_effects"].append(effect)
 	
+func _resolve_aoe_cover(receipt: Dictionary, target: Dictionary) -> void:
+	if not target.has("active_effects"):
+		target["active_effects"] = []
+
+	var effect = {
+		"type": "AOE_COVER",
+		"duration": receipt.get("duration", 3),
+		"dmg_reduce_min": receipt.get("dmg_reduce_min"),
+		"dmg_reduce_max": receipt.get("dmg_reduce_max"),
+		"pct_chance": receipt.get("pct_chance"),
+		"phys_mag": receipt.get("phys_mag")
+	}
+	target["active_effects"].append(effect)
+	

@@ -12,8 +12,8 @@
         "keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"]
     },
     "4": {
-        "type": "",
-        "keys": [""]
+        "type": "HP_DEPENDENT_STAT_BOOST",
+        "keys": ["stat_id", "pct", "times", "hp_threshold", "", "turn_count"]
     },
     "5": {
         "type": "ENABLE_EQUIP",
@@ -161,7 +161,7 @@
     },
     "51": {
         "type": "FATAL_PREVENT",
-        "keys": ["HP_threshold", "pct", "???", "times"]
+        "keys": ["hp_threshold", "pct", "???", "times"]
     },
     "52": {
         "type": "MULTICAST",

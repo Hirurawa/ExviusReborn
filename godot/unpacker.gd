@@ -60,7 +60,7 @@ func _extract_all() -> void:
 		var sprites: Array[Dictionary] = _parse_plist_sprites(plist_path)
 		if sprites.is_empty():
 			continue
-
+			
 		for sprite in sprites:
 			total_sprites += 1
 			var sprite_name: String = sprite.get("name", "")
@@ -107,7 +107,7 @@ func _parse_plist_sprites(plist_path: String) -> Array[Dictionary]:
 
 		if line.begins_with("<key>") and line.ends_with("</key>"):
 			var key_name: String = line.replace("<key>", "").replace("</key>", "").strip_edges()
-
+			
 			if _is_sprite_key(key_name):
 				current_sprite_name = key_name
 				is_next_line_rect = false
@@ -125,7 +125,7 @@ func _parse_plist_sprites(plist_path: String) -> Array[Dictionary]:
 		if region.size.x <= 0.0 or region.size.y <= 0.0:
 			current_sprite_name = ""
 			continue
-
+		
 		sprites.append({
 			"name": current_sprite_name,
 			"region": region

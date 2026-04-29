@@ -4,6 +4,11 @@ const CORE_STATS = ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]
 const ELEMENTS = ["FIRE", "ICE", "LIGHTNING", "WATER", "WIND", "EARTH", "LIGHT", "DARK"]
 const STATUSES = ["POISON", "BLIND", "SLEEP", "SILENCE", "PARALYSIS", "CONFUSION", "DISEASE", "PETRIFY"]
 
+const RESIST_KEY_ALIASES: Dictionary = {
+	"PARALYZE": "PARALYSIS",
+	"PETRIFICATION": "PETRIFY"
+}
+
 const RARITY_MAX_LEVELS: Dictionary = {
 	1: 15,
 	2: 30,
@@ -25,6 +30,30 @@ func _apply_parsed_passives(parsed_effects: Array) -> void:
 			call(func_name, effect.effect)
 		else:
 			push_warning("StatCalculator: No logic built for passive type: " + effect.type)
+
+func _normalize_resist_key(raw_key: String) -> String:
+	var normalized = raw_key.strip_edges().to_upper().replace(" ", "_").replace("-", "_")
+	return RESIST_KEY_ALIASES.get(normalized, normalized)
+
+func _accumulate_named_resists(source: Variant, targets: Dictionary, ordered_keys: Array) -> void:
+	if source == null:
+		return
+
+	if typeof(source) == TYPE_DICTIONARY:
+		for key in source.keys():
+			var normalized_key = _normalize_resist_key(str(key))
+			if targets.has(normalized_key):
+				var resist_value = source[key]
+				if typeof(resist_value) in [TYPE_INT, TYPE_FLOAT]:
+					targets[normalized_key] += int(resist_value)
+			else:
+				push_warning("StatCalculator: Unknown resist key in equipment stats -> " + str(key))
+	elif typeof(source) == TYPE_ARRAY:
+		for i in range(min(source.size(), ordered_keys.size())):
+			var target_key = ordered_keys[i]
+			var resist_value = source[i]
+			if typeof(resist_value) in [TYPE_INT, TYPE_FLOAT]:
+				targets[target_key] += int(resist_value)
 
 func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var final_profile = {
@@ -144,6 +173,9 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			
 			for stat_name in final_profile["stats"].keys():
 				flat_mods[stat_name] += item_stats.get(stat_name, 0)
+
+			_accumulate_named_resists(item_stats.get("element_resist", null), element_resists, ELEMENTS)
+			_accumulate_named_resists(item_stats.get("status_resist", null), status_resists, STATUSES)
 				
 			var equip_skills = item_data.get("skills", [])
 			if equip_skills != null:

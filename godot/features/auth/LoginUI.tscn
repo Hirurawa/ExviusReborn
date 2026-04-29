@@ -1,17 +1,90 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://vxs4qmo8w1lc"]
 
-[ext_resource type="Script" path="res://features/auth/login_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dlu5ac31yj28m" path="res://features/auth/login_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dtqokbvj34pdq" path="res://assets/ui/title/ffbe_logo.tres" id="2_l3sk2"]
+[ext_resource type="Texture2D" uid="uid://f2kl45oulutu" path="res://assets/ui/title/copyright.tres" id="3_et3dy"]
+[ext_resource type="Texture2D" uid="uid://vc8xmfrobytc" path="res://assets/ui/title/sqex_button.tres" id="4_wi7ej"]
+[ext_resource type="Texture2D" uid="uid://c52m5max8mcny" path="res://assets/ui/title/title_button_mini1.tres" id="5_eyk3j"]
 
-[node name="LoginUI" type="Control"]
-script = ExtResource("1_script")
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p4s6d"]
+bg_color = Color(1, 0, 0, 0.2)
+
+[node name="LoginUI" type="Control" unique_id=696917923]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="ffbe_logo" type="TextureRect" parent="." unique_id=1811329842]
+layout_mode = 0
+offset_top = 42.0
+offset_right = 640.0
+offset_bottom = 698.0
+texture = ExtResource("2_l3sk2")
+expand_mode = 1
+
+[node name="img_copyright" type="TextureRect" parent="." unique_id=436127599]
+layout_mode = 0
+offset_left = 66.0
+offset_top = 901.0
+offset_right = 386.0
+offset_bottom = 949.0
+texture = ExtResource("3_et3dy")
+expand_mode = 1
+
+[node name="btn_sqex" type="TextureRect" parent="." unique_id=761380180]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 896.0
+offset_right = 64.0
+offset_bottom = 953.0
+texture = ExtResource("4_wi7ej")
+expand_mode = 1
+
+[node name="btn_info" type="TextureRect" parent="." unique_id=2008049227]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 896.0
+offset_right = 520.0
+offset_bottom = 960.0
+texture = ExtResource("5_eyk3j")
+expand_mode = 1
+
+[node name="btn_restore" type="TextureRect" parent="." unique_id=1991661773]
+layout_mode = 0
+offset_left = 519.0
+offset_top = 896.0
+offset_right = 639.0
+offset_bottom = 960.0
+texture = ExtResource("5_eyk3j")
+expand_mode = 1
+
+[node name="touch_start" type="Label" parent="." unique_id=1168344827]
+visible = false
+layout_mode = 0
+offset_top = 745.0
+offset_right = 640.0
+offset_bottom = 845.0
+theme_override_styles/normal = SubResource("StyleBoxFlat_p4s6d")
+text = "touch_start"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="label_ver" type="Label" parent="." unique_id=1140945508]
+layout_mode = 0
+offset_left = 523.0
+offset_top = 877.0
+offset_right = 629.0
+offset_bottom = 905.0
+theme_override_font_sizes/font_size = 20
+text = "label_ver"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1097795607]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -19,36 +92,36 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -100.0
+offset_top = 226.0
 offset_right = 150.0
-offset_bottom = 100.0
+offset_bottom = 426.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FeedbackLabel" type="Label" parent="VBoxContainer"]
+[node name="FeedbackLabel" type="Label" parent="VBoxContainer" unique_id=926418573]
 layout_mode = 2
 text = "Please Login"
 horizontal_alignment = 1
 
-[node name="EmailInput" type="LineEdit" parent="VBoxContainer"]
+[node name="EmailInput" type="LineEdit" parent="VBoxContainer" unique_id=489568172]
 layout_mode = 2
 text = "qwe@qwe.com"
 placeholder_text = "Email"
 
-[node name="PasswordInput" type="LineEdit" parent="VBoxContainer"]
+[node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=874706628]
 layout_mode = 2
 text = "Qweqweqwe"
 placeholder_text = "Password"
 secret = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1396620204]
 layout_mode = 2
 alignment = 1
 
-[node name="LoginButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="LoginButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=93700707]
 layout_mode = 2
 text = "Login"
 
-[node name="GoToRegisterButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="GoToRegisterButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1425397868]
 layout_mode = 2
 text = "Go to Register"

@@ -105,7 +105,7 @@ function Inventory.rpc_equip_item(context, payload)
 
     local valid_slots = {
         r_hand = true, l_hand = true, head = true,
-        body = true, accessory1 = true, accessory2 = true
+        body = true, acc_1 = true, acc_2 = true
     }
 
     if not valid_slots[slot] then

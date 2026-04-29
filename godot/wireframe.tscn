@@ -1,84 +1,46 @@
 [gd_scene format=3 uid="uid://dnbyjkd8gw51i"]
 
 [ext_resource type="Script" uid="uid://faaeonaoeta2" path="res://wireframe.gd" id="1_5oock"]
-[ext_resource type="Texture2D" uid="uid://5cndnjio2un2" path="res://assets/ui/common/pagetitlebg.tres" id="2_763lm"]
-[ext_resource type="Texture2D" uid="uid://b0axiacbqiccf" path="res://assets/ui/common/button_middle1.tres" id="3_tqa17"]
-[ext_resource type="Texture2D" uid="uid://c2q6g3it7asec" path="res://assets/ui/common/middlebutton_label_return.tres" id="4_mh506"]
+[ext_resource type="Texture2D" uid="uid://dvj1adbih78jd" path="res://assets/ui/common/button_large1.tres" id="2_x2a20"]
 
 [node name="Wireframe" type="Control" unique_id=174978603]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_5oock")
-layout_csv = "c:\\Users\\David\\Downloads\\com-square-enix-android-googleplay-ffbeww-6201-58165676-e95f90d11de4d19d6894735aaaf69905\\assets\\cpk\\common_lang\\sd\\resources\\resources_common_pretutorial\\layout\\header\\layout_header_640x960.csv"
+layout_csv = "uid://23dharpo4y8b"
 plist_directory = "res://assets/ui"
 atlas_texture_directory = "res://assets/ui"
 tres_directory = "res://assets/ui"
 
-[node name="header_offset" type="TextureRect" parent="." unique_id=1288984834]
+[node name="sample" type="TextureRect" parent="." unique_id=1846199747]
 layout_mode = 0
 offset_right = 640.0
-offset_bottom = 154.0
+offset_bottom = 960.0
 expand_mode = 1
 
-[node name="sub_header" type="TextureRect" parent="." unique_id=1790907747]
+[node name="unit_sublimation_base" type="Label" parent="." unique_id=954159113]
 layout_mode = 0
-offset_top = 143.0
-offset_right = 424.0
-offset_bottom = 215.0
-texture = ExtResource("2_763lm")
-expand_mode = 1
-
-[node name="sub_header_back_btn" type="TextureRect" parent="." unique_id=1488917544]
-layout_mode = 0
-offset_left = 8.0
-offset_top = 119.0
-offset_right = 120.0
-offset_bottom = 199.0
-texture = ExtResource("3_tqa17")
-expand_mode = 1
-
-[node name="sub_header_back_btn_label" type="TextureRect" parent="." unique_id=1902060509]
-layout_mode = 0
-offset_left = 15.0
-offset_top = 139.0
-offset_right = 111.0
-offset_bottom = 171.0
-texture = ExtResource("4_mh506")
-expand_mode = 1
-
-[node name="sub_header_label" type="Label" parent="." unique_id=301027476]
-layout_mode = 0
-offset_left = 130.0
-offset_top = 160.0
-offset_right = 350.0
-offset_bottom = 191.0
-theme_override_font_sizes/font_size = 26
-text = "sub_header_label"
+offset_top = 212.0
+offset_right = 640.0
+offset_bottom = 812.0
+text = "unit_sublimation_base"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="sub_header_logo" type="TextureRect" parent="." unique_id=67858535]
+[node name="unit_sublimation_btn1" type="TextureRect" parent="." unique_id=1858971701]
 layout_mode = 0
-offset_left = 260.0
-offset_top = 95.0
-offset_right = 410.0
-offset_bottom = 203.0
+offset_left = 172.0
+offset_top = 360.0
+offset_right = 468.0
+offset_bottom = 464.0
+texture = ExtResource("2_x2a20")
 expand_mode = 1
 
-[node name="sub_header_result_label" type="Label" parent="." unique_id=1149197993]
+[node name="unit_sublimation_btn2" type="TextureRect" parent="." unique_id=871438123]
 layout_mode = 0
-offset_left = 50.0
-offset_top = 161.0
-offset_right = 310.0
-offset_bottom = 192.0
-theme_override_font_sizes/font_size = 24
-text = "sub_header_result_label"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="sub_header_dvtimer" type="TextureRect" parent="." unique_id=613359945]
-layout_mode = 0
-offset_top = 210.0
-offset_right = 572.0
-offset_bottom = 232.0
+offset_left = 172.0
+offset_top = 560.0
+offset_right = 468.0
+offset_bottom = 664.0
+texture = ExtResource("2_x2a20")
 expand_mode = 1

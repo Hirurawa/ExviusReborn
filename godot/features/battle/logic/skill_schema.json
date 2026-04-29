@@ -95,6 +95,10 @@
         "type": "DISPEL",
         "keys": [""]
     },
+    "61": {
+        "type": "AGGRO_INCREASE",
+        "keys": ["pct", "turn_count"]
+    },
     "63": {
         "type": "LB_FILLRATE",
         "keys": ["pct", "turn_count"]

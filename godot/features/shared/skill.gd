@@ -39,6 +39,8 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 		var texname = source
 		if texname == "Trait":
 			texname = "chara"
+		if texname == "Equip":
+			texname = "weapon"
 		var cat_icon_path = "res://assets/ui/unit/unit_magic_category_" + texname + ".tres"
 		var cat_tex = load(cat_icon_path)
 		if cat_tex:
@@ -88,12 +90,6 @@ func set_action_enabled(enabled: bool) -> void:
 	action_button.disabled = not enabled
 	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
 
-func _build_badge_text(skill_data: Dictionary, source: String) -> String:
-	var magic_type: String = str(skill_data.get("magic_type", "Magic"))
-	if source.strip_edges().is_empty():
-		return magic_type
-	return magic_type + " / " + source
-
 func _build_mp_text(skill_data: Dictionary) -> String:
 	var cost: Variant = skill_data.get("cost", {})
 	if cost is Dictionary and cost.has("MP"):
@@ -109,14 +105,3 @@ func _build_effect_text(skill_data: Dictionary) -> String:
 		if first_effect is String:
 			return str(first_effect)
 	return "No description."
-
-func _get_magic_type_color(magic_type: String) -> Color:
-	match magic_type.to_lower():
-		"white":
-			return Color("dce8ff")
-		"black":
-			return Color("7a8db5")
-		"green":
-			return Color("b7e7b5")
-		_:
-			return Color("c8d1ff")

@@ -175,7 +175,10 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var active_debuffs = {}
 
 	for effect in unit_instance.get("active_effects", []):
-		var modifiers = effect.get("modifiers", {})
+		var effect_type: String = str(effect.get("type", "")).to_lower()
+		if effect_type not in ["buff", "debuff"]:
+			continue
+		var modifiers: Dictionary = effect.get("params", {})
 		for key in modifiers.keys():
 			var val = modifiers[key]
 

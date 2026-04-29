@@ -82,7 +82,6 @@ func _apply_scene_params() -> void:
 		call_deferred("_apply_scene_params")
 		return
 
-	_ensure_action_row()
 	_update_mode_ui()
 	_refresh_units_list(DataManager.owned_units_ids)
 
@@ -116,7 +115,16 @@ func _seed_preselected_materials() -> void:
 func _ready() -> void:
 	units_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	units_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
-	_ensure_action_row()
+	
+	back_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	back_button.pressed.connect(_on_back_pressed)
+
+	clear_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	clear_button.pressed.connect(_on_clear_material_selection)
+
+	confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	confirm_button.pressed.connect(_on_confirm_material_selection)
+	
 	_update_mode_ui()
 	_configure_vertical_scrollbar()
 	units_list_container.columns = GRID_COLUMNS
@@ -124,17 +132,8 @@ func _ready() -> void:
 	DataManager.units_updated.connect(_on_units_updated)
 	_refresh_units_list(DataManager.owned_units_ids)
 
-func _ensure_action_row() -> void:
-	back_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	back_button.pressed.connect(func() -> void:
-		UIManager.pop()
-	)
-
-	clear_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	clear_button.pressed.connect(_on_clear_material_selection)
-
-	confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	confirm_button.pressed.connect(_on_confirm_material_selection)
+func _on_back_pressed() -> void:
+	UIManager.pop()
 
 func _update_mode_ui() -> void:
 	if title_label == null:

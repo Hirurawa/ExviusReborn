@@ -4,7 +4,7 @@ signal battle_state_ready
 signal enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int)
 signal turn_changed(new_turn: int)
 signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int)
-signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int)
+signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int, receipt_type: String)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
 signal action_queued(unit_index: int, action: CombatAction, action_id: String)
@@ -132,7 +132,7 @@ func _physics_process(_delta: float) -> void:
 						if p_idx != -1:
 							request_unit_stats(p_idx)
 
-			attack_landed.emit(attacker_team, attacker_index, target_team, target_index, final_damage, chain_count_emitted)
+			attack_landed.emit(attacker_team, attacker_index, target_team, target_index, final_damage, chain_count_emitted, hit.get("type", ""))
 			pending_hits.remove_at(i)
 
 	_check_turn_progression()

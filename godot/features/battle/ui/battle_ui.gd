@@ -4,6 +4,7 @@ const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_w
 const MagicScene = preload("res://features/shared/Skill.tscn")
 const LIMIT_CRYSTAL_TEXTURE: Texture2D = preload("res://assets/ui/battle/battle_limit_crystal.png")
 const LIMIT_CRYSTAL_ANIM_DURATION: float = 0.7
+const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -567,10 +568,9 @@ func _on_battle_state_ready() -> void:
 	# UnitDot3 (Mid Right)    -> Party index 4
 	# UnitDot4 (Bot Left)     -> Party index 2
 	# UnitDot5 (Bot Right)    -> Empty / -1
-	var grid_to_party_map: Array[int] = [0, 3, 1, 4, 2, -1]
 
 	for grid_idx in range(6):
-		var party_idx = grid_to_party_map[grid_idx]
+		var party_idx = GRID_TO_PARTY_MAP[grid_idx]
 		var has_unit = false
 
 		var unit_data = {}
@@ -605,6 +605,12 @@ func _on_battle_state_ready() -> void:
 			combat_sprite.setup(party_idx, template_id)
 
 			player_sprites_container.get_child(grid_idx).add_child(combat_sprite)
+
+			var damage_container := Control.new()
+			damage_container.name = "DamageContainer"
+			damage_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+			damage_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			player_sprites_container.get_child(grid_idx).add_child(damage_container)
 
 func _create_slot_placeholder() -> TextureRect:
 	var placeholder := TextureRect.new()
@@ -749,7 +755,7 @@ func _shake_enemy(enemy_node: Node) -> void:
 	tween.tween_property(enemy_node, "position:x", orig_x + offset, 0.05)
 	tween.tween_property(enemy_node, "position:x", orig_x, 0.05)
 
-func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int) -> void:
+func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int, receipt_type: String) -> void:
 	chain_count_label.text = "Chain: %d" % chain_count
 	if target_team == "enemy":
 		if target_index >= 0 and target_index < enemies_container.get_child_count():
@@ -758,6 +764,13 @@ func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: 
 				var enemy_sprite = wrapper.get_child(0)
 				_shake_enemy(enemy_sprite)
 		_spawn_damage_number(damage, target_index)
+	elif target_team == "player":
+		var player_sprite: Control = _find_player_combat_sprite(target_index)
+		if receipt_type == "DAMAGE":
+			_spawn_damage_number(damage, target_index)
+			if player_sprite != null:
+				_shake_enemy(player_sprite)
+			_spawn_player_damage_number(damage, target_index)
 
 func _spawn_damage_number(damage: int, target_index: int) -> void:
 	if target_index < 0 or target_index >= enemies_container.get_child_count():
@@ -767,6 +780,35 @@ func _spawn_damage_number(damage: int, target_index: int) -> void:
 	var damage_container = wrapper.get_node_or_null("DamageContainer")
 	if not damage_container:
 		return
+	_spawn_damage_number_in_container(damage, damage_container)
+
+func _spawn_player_damage_number(damage: int, party_index: int) -> void:
+	if party_index < 0:
+		return
+
+	var damage_container: Control = _find_player_damage_container(party_index)
+	if damage_container == null:
+		return
+
+	_spawn_damage_number_in_container(damage, damage_container)
+
+func _find_player_damage_container(party_index: int) -> Control:
+	for grid_idx in range(min(player_sprites_container.get_child_count(), GRID_TO_PARTY_MAP.size())):
+		if GRID_TO_PARTY_MAP[grid_idx] != party_index:
+			continue
+		var slot: Node = player_sprites_container.get_child(grid_idx)
+		var damage_container: Control = slot.get_node_or_null("DamageContainer") as Control
+		if damage_container == null:
+			damage_container = Control.new()
+			damage_container.name = "DamageContainer"
+			damage_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+			damage_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(damage_container)
+		return damage_container
+		break
+	return null
+
+func _spawn_damage_number_in_container(damage: int, damage_container: Control) -> void:
 
 	var label = Label.new()
 	label.text = str(damage)
@@ -899,7 +941,7 @@ func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 func _find_player_combat_sprite(party_index: int) -> Control:
 	for slot in player_sprites_container.get_children():
 		for child in slot.get_children():
-			if int(child.get("party_index")) == party_index:
+			if child.get("party_index") == party_index:
 				return child as Control
 	return null
 

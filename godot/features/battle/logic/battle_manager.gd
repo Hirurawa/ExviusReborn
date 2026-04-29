@@ -24,6 +24,9 @@ enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
 const LIMIT_CRYSTAL_DROP_CHANCE: float = 0.20
 const LIMIT_CRYSTAL_GAIN: int = 1
+const COVER_STATE_AOE: String = "is_aoe_covering"
+const COVER_STATE_ST: String = "is_st_covering"
+const COVER_STATE_MITIGATION: String = "active_cover_mitigation"
 
 var action_processor
 var result_processor
@@ -96,6 +99,9 @@ func _physics_process(_delta: float) -> void:
 
 					var chain_multiplier = 1.0 + (target["chain_count"] * 0.3)
 					final_damage = int(base_damage * chain_multiplier)
+
+					if str(hit.get("type", "")).to_lower() == "damage":
+						final_damage = _apply_active_cover_mitigation(target, final_damage)
 
 					# Update the hit amount before passing it to the ResultProcessor
 					hit["amount"] = final_damage
@@ -416,13 +422,7 @@ func execute_queued_action(attacker_index: int) -> void:
 		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
 		dummy_effect["attack_frames"] = attack_frames
 		dummy_effect["attack_damage"] = attack_damage
-
-		var hit_payloads = action_processor.execute_parsed_effect(dummy_effect, attacker_data, [target_data])
-		for hit in hit_payloads:
-			hit["frame_to_execute"] += current_battle_frame
-			hit["execute_on_frame"] = hit["frame_to_execute"]
-			hit.erase("frame_to_execute")
-			pending_hits.append(hit)
+		_queue_effect_hits(dummy_effect, attacker_data, target_data)
 
 func _check_turn_progression() -> void:
 	if not pending_hits.is_empty():
@@ -447,6 +447,7 @@ func _check_turn_progression() -> void:
 			current_state = BattleState.ENEMY_TURN
 			_execute_enemy_turn()
 	elif current_state == BattleState.ENEMY_TURN:
+		_on_turn_end("enemy")
 		_tick_active_effect_durations(party_data)
 		_tick_active_effect_durations(enemy_units)
 		# Transition back to PLAYER_TURN
@@ -539,13 +540,7 @@ func _execute_enemy_turn() -> void:
 		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
 		dummy_effect["attack_frames"] = attack_frames
 		dummy_effect["attack_damage"] = attack_damage
-
-		var hit_payloads = action_processor.execute_parsed_effect(dummy_effect, caster_data, [target_unit])
-		for hit in hit_payloads:
-			hit["frame_to_execute"] += current_battle_frame
-			hit["execute_on_frame"] = hit["frame_to_execute"]
-			hit.erase("frame_to_execute")
-			pending_hits.append(hit)
+		_queue_effect_hits(dummy_effect, caster_data, target_unit)
 
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():
@@ -760,64 +755,227 @@ func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, pr
 	# Fallback catch-all
 	return []
 
-func _evaluate_cover_interception(intended_targets: Array[Dictionary], effect: Dictionary, defending_pool: Array) -> Array[Dictionary]:
-	# 1. We only cover damaging attacks (Physical/Magical). Do not cover heals or buffs!
-	var effect_type = effect.get("type", "")
+func _queue_effect_hits(effect: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
+	var actual_targets: Array[Dictionary] = _resolve_targets(
+		effect.get("target_area", 1),
+		effect.get("target_type", 1),
+		caster,
+		primary_target
+	)
+
+	if effect.get("target_type", 1) == 1:
+		actual_targets = _evaluate_cover_interception(actual_targets, effect, _get_defending_pool(caster))
+
+	var hit_payloads: Array[Dictionary] = action_processor.execute_parsed_effect(effect, caster, actual_targets)
+	for hit in hit_payloads:
+		hit["frame_to_execute"] += current_battle_frame
+		hit["execute_on_frame"] = hit["frame_to_execute"]
+		hit.erase("frame_to_execute")
+		pending_hits.append(hit)
+
+func _get_defending_pool(caster: Dictionary) -> Array:
+	var caster_team: String = str(caster.get("team", "")).to_lower()
+	return player_units if caster_team == "enemy" else enemy_units
+
+func _is_cover_interceptable_effect(effect: Dictionary) -> bool:
+	var effect_type: String = str(effect.get("type", "")).to_lower()
+	return effect_type in ["physical_damage", "magic_damage"]
+
+func _ensure_transient_turn_state(unit: Dictionary) -> Dictionary:
+	var transient: Dictionary = unit.get("transient_turn_state", {})
+	if transient.is_empty():
+		transient = {}
+		unit["transient_turn_state"] = transient
+	return transient
+
+func _find_active_aoe_coverer(defending_pool: Array) -> Dictionary:
+	for unit_data in defending_pool:
+		var unit: Dictionary = unit_data
+		if unit.is_empty() or int(unit.get("current_hp", 0)) <= 0:
+			continue
+		var transient: Dictionary = unit.get("transient_turn_state", {})
+		if bool(transient.get(COVER_STATE_AOE, false)):
+			return unit
+	return {}
+
+func _cover_supports_effect_type(cover_effect: Dictionary, incoming_effect_type: String) -> bool:
+	var effect_type: String = incoming_effect_type.to_lower()
 	if effect_type not in ["physical_damage", "magic_damage"]:
+		return false
+
+	var params: Dictionary = cover_effect.get("params", {})
+	var phys_mag_mode = params.get("phys_mag", "both")
+
+	if typeof(phys_mag_mode) == TYPE_STRING:
+		var mode_text: String = str(phys_mag_mode).to_lower()
+		if mode_text in ["physical", "phys"]:
+			return effect_type == "physical_damage"
+		if mode_text in ["magic", "mag"]:
+			return effect_type == "magic_damage"
+		return true
+
+	if typeof(phys_mag_mode) in [TYPE_INT, TYPE_FLOAT]:
+		var mode_id: int = int(phys_mag_mode)
+		if mode_id == 1:
+			return effect_type == "physical_damage"
+		if mode_id == 2:
+			return effect_type == "magic_damage"
+
+	return true
+
+func _get_best_aoe_cover_effect(defender: Dictionary, incoming_effect_type: String) -> Dictionary:
+	var best_effect: Dictionary = {}
+	var best_chance: float = -1.0
+
+	for active_effect_data in defender.get("active_effects", []):
+		var active_effect: Dictionary = active_effect_data
+		if str(active_effect.get("type", "")).to_lower() != "aoe_cover":
+			continue
+		if not _cover_supports_effect_type(active_effect, incoming_effect_type):
+			continue
+
+		var chance: float = clampf(float(active_effect.get("params", {}).get("pct_chance", 0.0)), 0.0, 100.0)
+		if chance > best_chance:
+			best_chance = chance
+			best_effect = active_effect
+
+	return best_effect
+
+func _is_unit_currently_st_covered(unit: Dictionary, defending_pool: Array) -> bool:
+	var unit_identity: String = str(unit.get("identity", ""))
+	if unit_identity == "":
+		return false
+
+	for other_data in defending_pool:
+		var other: Dictionary = other_data
+		if other == unit:
+			continue
+		if other.is_empty() or int(other.get("current_hp", 0)) <= 0:
+			continue
+		var transient: Dictionary = other.get("transient_turn_state", {})
+		if str(transient.get(COVER_STATE_ST, "")) == unit_identity:
+			return true
+
+	return false
+
+func _flag_cover_mitigation(defender: Dictionary, cover_effect: Dictionary) -> void:
+	var transient: Dictionary = _ensure_transient_turn_state(defender)
+	var params: Dictionary = cover_effect.get("params", {})
+
+	var mitigation_min: int = int(params.get("dmg_reduce_min", 0))
+	var mitigation_max: int = int(params.get("dmg_reduce_max", mitigation_min))
+
+	if mitigation_max < mitigation_min:
+		var swap_value: int = mitigation_min
+		mitigation_min = mitigation_max
+		mitigation_max = swap_value
+
+	mitigation_min = clampi(mitigation_min, 0, 100)
+	mitigation_max = clampi(mitigation_max, 0, 100)
+
+	var rolled_mitigation: int = mitigation_min
+	if mitigation_max > mitigation_min:
+		rolled_mitigation = (randi() % ((mitigation_max - mitigation_min) + 1)) + mitigation_min
+
+	transient[COVER_STATE_MITIGATION] = rolled_mitigation
+	defender["transient_turn_state"] = transient
+
+func _apply_active_cover_mitigation(target: Dictionary, incoming_damage: int) -> int:
+	if incoming_damage <= 0:
+		return incoming_damage
+
+	var transient: Dictionary = target.get("transient_turn_state", {})
+	if transient.is_empty() or not transient.has(COVER_STATE_MITIGATION):
+		return incoming_damage
+
+	var mitigation_pct: int = clampi(int(transient.get(COVER_STATE_MITIGATION, 0)), 0, 100)
+	var mitigated_damage: int = int(round(float(incoming_damage) * (100.0 - float(mitigation_pct)) / 100.0))
+	return maxi(0, mitigated_damage)
+
+func _evaluate_cover_interception(intended_targets: Array[Dictionary], effect: Dictionary, defending_pool: Array) -> Array[Dictionary]:
+	if intended_targets.is_empty():
+		return intended_targets
+	if not _is_cover_interceptable_effect(effect):
 		return intended_targets
 
-	var is_aoe = intended_targets.size() > 1
+	var active_aoe_coverer: Dictionary = _find_active_aoe_coverer(defending_pool)
+	if not active_aoe_coverer.is_empty():
+		var already_covered_targets: Array[Dictionary] = []
+		for i in range(intended_targets.size()):
+			already_covered_targets.append(active_aoe_coverer)
+		return already_covered_targets
 
-	# 2. Loop through the defending team to see if anyone is acting as a bodyguard
-	for defender in defending_pool:
-		# Dead units can't cover
-		if defender.get("current_hp", 0) <= 0: continue
-		
-		# 3. Check their active_effects for the right cover type
-		for active_effect in defender.get("runtime_state", {}).get("active_effects", []):
-			var buff_type = active_effect.get("type", "")
-			
-			# Check for AoE Cover
-			if is_aoe and buff_type == "aoe_cover":
-				var chance = active_effect.get("params", {}).get("pct_chance", 0)
-				if randi() % 100 < chance:
-					# COVER PROC SUCCESS! 
-					#_flag_cover_mitigation(defender, active_effect)
-					return [defender] # The tank absorbs the entire AoE
-					
-			# Check for Single Target Cover
-			elif not is_aoe and buff_type == "single_cover":
-				# Make sure the tank isn't trying to cover themselves
-				if defender != intended_targets[0]:
-					var chance = active_effect.get("params", {}).get("pct_chance", 0)
-					if randi() % 100 < chance:
-						# COVER PROC SUCCESS!
-						#_flag_cover_mitigation(defender, active_effect)
-						return [defender] # The tank pushes the target out of the way
-						
-	# If no one covered, return the original targets
+	var incoming_effect_type: String = str(effect.get("type", "")).to_lower()
+
+	for defender_data in defending_pool:
+		var defender: Dictionary = defender_data
+		if defender.is_empty() or int(defender.get("current_hp", 0)) <= 0:
+			continue
+		if _is_unit_currently_st_covered(defender, defending_pool):
+			continue
+
+		var cover_effect: Dictionary = _get_best_aoe_cover_effect(defender, incoming_effect_type)
+		if cover_effect.is_empty():
+			continue
+
+		var allies_in_danger: int = 0
+		for target in intended_targets:
+			if target != defender:
+				allies_in_danger += 1
+
+		if allies_in_danger <= 0:
+			continue
+
+		var chance: float = clampf(float(cover_effect.get("params", {}).get("pct_chance", 0.0)), 0.0, 100.0)
+		if chance <= 0.0:
+			continue
+
+		var procced: bool = false
+		for i in range(allies_in_danger):
+			if randf() * 100.0 < chance:
+				procced = true
+				break
+
+		if not procced:
+			continue
+
+		var transient: Dictionary = _ensure_transient_turn_state(defender)
+		transient[COVER_STATE_AOE] = true
+		defender["transient_turn_state"] = transient
+		_flag_cover_mitigation(defender, cover_effect)
+
+		var covered_targets: Array[Dictionary] = []
+		for i in range(intended_targets.size()):
+			covered_targets.append(defender)
+		return covered_targets
+
 	return intended_targets
+
+func _clear_cover_transient_state(defending_pool: Array) -> void:
+	for unit_data in defending_pool:
+		var unit: Dictionary = unit_data
+		if unit.is_empty():
+			continue
+		var transient: Dictionary = unit.get("transient_turn_state", {})
+		if transient.is_empty():
+			continue
+
+		transient.erase(COVER_STATE_AOE)
+		transient.erase(COVER_STATE_ST)
+		transient.erase(COVER_STATE_MITIGATION)
+
+		if transient.is_empty():
+			unit.erase("transient_turn_state")
+		else:
+			unit["transient_turn_state"] = transient
+
+func _on_turn_end(active_team: String) -> void:
+	var defending_pool: Array = player_units if active_team.to_lower() == "enemy" else enemy_units
+	_clear_cover_transient_state(defending_pool)
 
 func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var effects = parsed_skill.get("effects", [])
 
 	for i in range(effects.size()):
 		var effect = effects[i]
-		
-		# STEP 1: Intent (Aiming)
-		var actual_targets = _resolve_targets(effect.get("target_area", 1), effect.get("target_type", 1), caster, primary_target)
-		
-		# STEP 2: Interception (Cover / Taunt)
-		if effect.get("target_type", 1) == 1: # Only check cover on enemy-targeted skills
-			#actual_targets = _evaluate_cover_interception(actual_targets, effect, defending_pool)
-			pass
-		
-		# STEP 3: Execution (Delegate to the Action Processor)
-		var hit_payloads = action_processor.execute_parsed_effect(effect, caster, actual_targets)
-
-		# Process the returned receipts
-		for hit in hit_payloads:
-			hit["frame_to_execute"] += current_battle_frame
-			hit["execute_on_frame"] = hit["frame_to_execute"]
-			hit.erase("frame_to_execute")
-			pending_hits.append(hit)
+		_queue_effect_hits(effect, caster, primary_target)

@@ -329,6 +329,34 @@ func _resolve_queued_action_data(action_id: String, payload: Dictionary) -> Dict
 	var resolved_action_id: String = str(payload.get("resolved_action_id", action_id))
 	return DataManager.resolve_combat_skill(resolved_action_id)
 
+func _extract_skill_mp_cost(skill_data: Dictionary) -> int:
+	var cost_value: Variant = skill_data.get("cost", {})
+	if cost_value is Dictionary:
+		var cost_dict: Dictionary = cost_value
+		if cost_dict.has("MP"):
+			return maxi(0, int(cost_dict.get("MP", 0)))
+	return 0
+
+func _try_spend_skill_mp(unit_index: int, unit_data: Dictionary, payload_data: Dictionary, skill_data: Dictionary) -> bool:
+	if unit_data.is_empty():
+		return false
+
+	var source_type: String = str(payload_data.get("source_type", "skill"))
+	if source_type == "limitburst":
+		return true
+
+	var mp_cost: int = _extract_skill_mp_cost(skill_data)
+	if mp_cost <= 0:
+		return true
+
+	var current_mp: int = int(unit_data.get("current_mp", 0))
+	if current_mp < mp_cost:
+		return false
+
+	unit_data["current_mp"] = maxi(0, current_mp - mp_cost)
+	request_unit_stats(unit_index)
+	return true
+
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
 		return
@@ -365,6 +393,12 @@ func execute_queued_action(attacker_index: int) -> void:
 		if target_skill_data.is_empty():
 			push_error("Error: Skill/Item Ability not found in database: " + action_name)
 			return
+
+		if action == CombatAction.SKILL:
+			if not _try_spend_skill_mp(attacker_index, attacker_data, payload_data, target_skill_data):
+				print("BattleManager: Not enough MP to execute skill: ", action_name)
+				_check_turn_progression()
+				return
 
 		var parsed_data: Dictionary = payload_data.get("parsed_data", {})
 		if parsed_data.is_empty():

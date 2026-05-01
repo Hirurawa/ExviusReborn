@@ -5,6 +5,9 @@ const MagicScene = preload("res://features/shared/Skill.tscn")
 const LIMIT_CRYSTAL_TEXTURE: Texture2D = preload("res://assets/ui/battle/battle_limit_crystal.png")
 const LIMIT_CRYSTAL_ANIM_DURATION: float = 0.7
 const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
+const SKILL_DISABLE_REASON_NONE: String = ""
+const SKILL_DISABLE_REASON_LACK_MP: String = "lack_mp"
+const SKILL_DISABLE_REASON_LACK_LIMIT: String = "lack_limit"
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -397,15 +400,28 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			var skill_level: int = int(opt.get("level", -1))
 			var source_type: String = str(opt.get("source_type", "skill"))
 			var can_use_limitburst: bool = true
+			var can_use_mp: bool = true
+			var can_use_action: bool = true
+			var disabled_reason: String = SKILL_DISABLE_REASON_NONE
+			var source_unit: Dictionary = {}
+
+			if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
+				source_unit = battle_manager.party_data[_menu_target_unit_index]
 
 			if source_type == "limitburst":
 				can_use_limitburst = false
-				if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
-					var source_unit: Dictionary = battle_manager.party_data[_menu_target_unit_index]
-					if not source_unit.is_empty():
-						var current_limit: int = int(source_unit.get("limit_gauge", 0))
-						var max_limit: int = int(source_unit.get("max_limit", 0))
-						can_use_limitburst = max_limit > 0 and current_limit >= max_limit
+				if not source_unit.is_empty():
+					var current_limit: int = int(source_unit.get("limit_gauge", 0))
+					var max_limit: int = int(source_unit.get("max_limit", 0))
+					can_use_limitburst = max_limit > 0 and current_limit >= max_limit
+				can_use_action = can_use_limitburst
+				if not can_use_action:
+					disabled_reason = SKILL_DISABLE_REASON_LACK_LIMIT
+			else:
+				can_use_mp = _can_unit_pay_skill_mp(source_unit, skill_data)
+				can_use_action = can_use_mp
+				if not can_use_action:
+					disabled_reason = SKILL_DISABLE_REASON_LACK_MP
 			
 			var btn = MagicScene.instantiate() #if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -413,12 +429,11 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			grid.add_child(btn)
 			
 			btn.setup_from_skill_data(skill_data, "", true)
-			if source_type == "limitburst" and not can_use_limitburst:
-				btn.modulate = Color(0.45, 0.45, 0.45, 1.0)
-				btn.set_action_enabled(false)
+			btn.set_skill_role_style(source_type == "limitburst")
+			btn.set_action_availability(can_use_action, disabled_reason)
 
 			btn.pressed.connect(func():
-				if source_type == "limitburst" and not can_use_limitburst:
+				if not can_use_action:
 					return
 
 				var resolution: Dictionary = {}
@@ -478,6 +493,22 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 		_close_action_menu()
 	)
 	bottom_hbox.add_child(cancel_btn)
+
+func _can_unit_pay_skill_mp(unit_data: Dictionary, skill_data: Dictionary) -> bool:
+	if unit_data.is_empty():
+		return false
+
+	var current_mp: int = int(unit_data.get("current_mp", 0))
+	var mp_cost: int = _extract_skill_mp_cost(skill_data)
+	return current_mp >= mp_cost
+
+func _extract_skill_mp_cost(skill_data: Dictionary) -> int:
+	var cost_value: Variant = skill_data.get("cost", {})
+	if cost_value is Dictionary:
+		var cost_dict: Dictionary = cost_value
+		if cost_dict.has("MP"):
+			return maxi(0, int(cost_dict.get("MP", 0)))
+	return 0
 
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")

@@ -414,9 +414,10 @@ func _update_wallet_data(wallet: Dictionary) -> void:
 	assert(wallet.has("gil"), "CRITICAL ERROR: wallet is missing gil!")
 	if not wallet.has("gil"): push_error("CRITICAL ERROR: wallet is missing gil!")
 	gil = int(wallet["gil"])
-	#assert(wallet.has("lapis"), "CRITICAL ERROR: wallet is missing lapis!")
-	#if not wallet.has("lapis"): push_error("CRITICAL ERROR: wallet is missing lapis!")
-	#lapis = int(wallet["lapis"])
+	if wallet.has("lapis"):
+		lapis = int(wallet["lapis"])
+	else:
+		push_warning("wallet is missing lapis; keeping previous value")
 	currency_updated.emit(gil, lapis)
 
 func request_buy_item(item_id: String, quantity: int) -> void:

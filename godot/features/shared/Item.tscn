@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://b5a16m8hv325b" path="res://assets/ui/unit/equip_category_accessory.tres" id="5_kacut"]
 
 [node name="Item" type="Control" unique_id=1955217114]
+custom_minimum_size = Vector2(306, 108)
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_kacut")
@@ -25,6 +26,8 @@ offset_left = 18.0
 offset_top = 18.0
 offset_right = 91.0
 offset_bottom = 90.0
+expand_mode = 1
+stretch_mode = 4
 
 [node name="unit_equip_list_item_count" type="Label" parent="." unique_id=1322872352]
 visible = false
@@ -46,8 +49,6 @@ offset_right = 327.0
 offset_bottom = 41.0
 theme_override_font_sizes/font_size = 18
 text = "unit_equip_list_name_text"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="unit_equip_list_property1_label" type="TextureRect" parent="." unique_id=2134609707]
 layout_mode = 0
@@ -66,8 +67,6 @@ offset_right = 442.0
 offset_bottom = 73.0
 theme_override_font_sizes/font_size = 18
 text = "unit_equip_list_property1_number"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="unit_equip_list_property2_label" type="TextureRect" parent="." unique_id=740497157]
 layout_mode = 0
@@ -86,8 +85,6 @@ offset_right = 536.0
 offset_bottom = 73.0
 theme_override_font_sizes/font_size = 18
 text = "unit_equip_list_property2_number"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="unit_equip_list_property3_text" type="Label" parent="." unique_id=1153212208]
 layout_mode = 0
@@ -97,8 +94,6 @@ offset_right = 365.0
 offset_bottom = 98.0
 theme_override_font_sizes/font_size = 18
 text = "unit_equip_list_property3_text"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="UnitEquipCategory" type="TextureRect" parent="." unique_id=1391968888]
 layout_mode = 0
@@ -117,3 +112,9 @@ offset_bottom = 39.0
 texture = ExtResource("5_kacut")
 expand_mode = 1
 stretch_mode = 4
+
+[node name="ClickArea" type="Button" parent="." unique_id=1647311002]
+layout_mode = 0
+offset_right = 306.0
+offset_bottom = 108.0
+flat = true

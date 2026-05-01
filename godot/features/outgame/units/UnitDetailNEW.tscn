@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://dgto5l2b0kqpv"]
 
+[ext_resource type="Script" uid="uid://cr3xlq3qhyyjj" path="res://features/outgame/units/unit_detail_new.gd" id="1_omn6i"]
 [ext_resource type="Texture2D" uid="uid://dr806ftiwnelt" path="res://assets/ui/unit/unit_statusbg.tres" id="1_r0tc3"]
 [ext_resource type="Texture2D" uid="uid://bfrilw2hm3w8v" path="res://assets/ui/unit/unit_charastand_large.tres" id="2_trjmn"]
 [ext_resource type="Texture2D" uid="uid://b4a2fbpjw7631" path="res://assets/ui/unit/unit_chara_label_type.tres" id="3_b7kau"]
@@ -53,6 +54,8 @@
 [ext_resource type="Texture2D" uid="uid://c7o6y216403oq" path="res://assets/icons/ailments/confuse.png" id="49_u8l2f"]
 [ext_resource type="Texture2D" uid="uid://ch4a8cy8v3hd5" path="res://assets/icons/ailments/disease.png" id="50_3mumb"]
 [ext_resource type="Texture2D" uid="uid://biepxqh8pf5ni" path="res://assets/icons/ailments/petrification.png" id="51_dliab"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="55_845m6"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="56_s8d6h"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tp4qt"]
 bg_color = Color(0, 0, 0, 0)
@@ -76,9 +79,20 @@ border_color = Color(0.3, 0.3, 0.5, 1)
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[node name="Node2D" type="Control" unique_id=1858227993]
+[node name="UnitDetailNEW" type="Control" unique_id=1858227993]
 layout_mode = 3
 anchors_preset = 0
+offset_top = 44.0
+offset_bottom = 44.0
+script = ExtResource("1_omn6i")
+
+[node name="unit_sublimation_bottom_line" type="TextureRect" parent="." unique_id=1667447430]
+layout_mode = 0
+offset_top = 243.0
+offset_right = 640.0
+offset_bottom = 323.0
+texture = ExtResource("12_obk0j")
+expand_mode = 1
 
 [node name="unit_status_button_bg" type="TextureRect" parent="." unique_id=8699601]
 layout_mode = 0
@@ -107,9 +121,9 @@ expand_mode = 1
 [node name="unit_status_label_hp" type="TextureRect" parent="unit_statusbg" unique_id=2112762728]
 layout_mode = 0
 offset_left = 214.0
-offset_top = 162.0
+offset_top = 189.0
 offset_right = 256.0
-offset_bottom = 182.0
+offset_bottom = 209.0
 texture = ExtResource("19_x24et")
 expand_mode = 1
 
@@ -134,9 +148,9 @@ text = "unit_status_ext_hp_max_number"
 [node name="unit_status_label_mp" type="TextureRect" parent="unit_statusbg" unique_id=1488598542]
 layout_mode = 0
 offset_left = 417.0
-offset_top = 162.0
+offset_top = 189.0
 offset_right = 459.0
-offset_bottom = 182.0
+offset_bottom = 209.0
 texture = ExtResource("20_6gmev")
 expand_mode = 1
 
@@ -161,9 +175,9 @@ text = "unit_status_ext_mp_max_number"
 [node name="unit_status_label_attack" type="TextureRect" parent="unit_statusbg" unique_id=1928331601]
 layout_mode = 0
 offset_left = 214.0
-offset_top = 190.0
+offset_top = 217.0
 offset_right = 256.0
-offset_bottom = 210.0
+offset_bottom = 237.0
 texture = ExtResource("21_5xpj8")
 expand_mode = 1
 
@@ -188,9 +202,9 @@ text = "unit_status_ext_attack_max_number"
 [node name="unit_status_label_defense" type="TextureRect" parent="unit_statusbg" unique_id=1984750841]
 layout_mode = 0
 offset_left = 417.0
-offset_top = 190.0
+offset_top = 217.0
 offset_right = 459.0
-offset_bottom = 210.0
+offset_bottom = 237.0
 texture = ExtResource("22_oxtnf")
 expand_mode = 1
 
@@ -202,8 +216,6 @@ offset_right = 411.0
 offset_bottom = 27.0
 theme_override_font_sizes/font_size = 18
 text = "unit_status_ext_defense_now_number"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="unit_status_ext_defense_max_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=2047240319]
 layout_mode = 0
@@ -217,9 +229,9 @@ text = "unit_status_ext_defense_max_number"
 [node name="unit_status_label_magic" type="TextureRect" parent="unit_statusbg" unique_id=1727977697]
 layout_mode = 0
 offset_left = 214.0
-offset_top = 218.0
+offset_top = 245.0
 offset_right = 256.0
-offset_bottom = 238.0
+offset_bottom = 265.0
 texture = ExtResource("23_71bb5")
 expand_mode = 1
 
@@ -244,9 +256,9 @@ text = "unit_status_ext_magic_max_number"
 [node name="unit_status_label_mnd" type="TextureRect" parent="unit_statusbg" unique_id=1835200245]
 layout_mode = 0
 offset_left = 417.0
-offset_top = 218.0
+offset_top = 245.0
 offset_right = 459.0
-offset_bottom = 238.0
+offset_bottom = 265.0
 texture = ExtResource("24_2jgiv")
 expand_mode = 1
 
@@ -268,21 +280,42 @@ offset_bottom = 28.0
 theme_override_font_sizes/font_size = 14
 text = "unit_status_ext_mnd_max_number"
 
-[node name="unit_charastand_large" type="TextureRect" parent="." unique_id=1051092289]
+[node name="EquipIconsGrid" type="GridContainer" parent="unit_statusbg" unique_id=1860803113]
 layout_mode = 0
-offset_left = 23.0
-offset_top = 114.0
-offset_right = 183.0
-offset_bottom = 282.0
+offset_left = 206.0
+offset_top = 268.0
+offset_right = 632.0
+offset_bottom = 315.0
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+columns = 16
+
+[node name="IllustrationButton" type="TextureButton" parent="." unique_id=71262874]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 130.0
+offset_right = 146.0
+offset_bottom = 242.0
+
+[node name="unit_charastand_large" type="TextureRect" parent="IllustrationButton" unique_id=1051092289]
+layout_mode = 0
+offset_left = -38.0
+offset_top = -16.0
+offset_right = 122.0
+offset_bottom = 152.0
 texture = ExtResource("2_trjmn")
 expand_mode = 1
 
-[node name="unit_chara" type="TextureRect" parent="unit_charastand_large" unique_id=1081471192]
+[node name="unit_chara" type="TextureRect" parent="IllustrationButton/unit_charastand_large" unique_id=1081471192]
 layout_mode = 0
 offset_left = 40.0
 offset_top = 48.0
 offset_right = 122.0
 offset_bottom = 128.0
+
+[node name="AnimSprite" type="Sprite2D" parent="IllustrationButton" unique_id=307711002]
+visible = false
+position = Vector2(42, 57)
 
 [node name="unit_role_bg" type="TextureRect" parent="." unique_id=160359160]
 visible = false
@@ -327,59 +360,64 @@ text = "unit_job_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_status_button_equip" type="TextureRect" parent="." unique_id=330246215]
+[node name="unit_status_button_equip" type="TextureButton" parent="." unique_id=330246215]
 layout_mode = 0
 offset_left = 19.0
 offset_top = 292.0
 offset_right = 189.0
 offset_bottom = 364.0
-texture = ExtResource("6_luk7k")
+texture_normal = ExtResource("6_luk7k")
+texture_pressed = ExtResource("7_0e10s")
+
+[node name="unit_status_button_label_equip" type="TextureRect" parent="unit_status_button_equip" unique_id=246394241]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 10.0
+offset_right = 144.0
+offset_bottom = 62.0
+mouse_filter = 2
+texture = ExtResource("8_yv0r3")
 expand_mode = 1
 
-[node name="unit_status_button_equip_on" type="TextureRect" parent="." unique_id=1528411839]
+[node name="unit_status_button_label_status" type="TextureRect" parent="unit_status_button_equip" unique_id=1245721543]
 visible = false
 layout_mode = 0
-offset_left = 19.0
-offset_top = 292.0
-offset_right = 189.0
-offset_bottom = 364.0
-texture = ExtResource("7_0e10s")
+offset_left = 2.0
+offset_top = 10.0
+offset_right = 168.0
+offset_bottom = 62.0
+mouse_filter = 2
+texture = ExtResource("9_gdnlu")
 expand_mode = 1
 
 [node name="unit_status_button_label_category" type="Label" parent="." unique_id=1563314129]
+visible = false
 layout_mode = 0
 offset_left = 533.0
 offset_top = 323.0
 offset_right = 629.0
 offset_bottom = 355.0
 
-[node name="unit_sublimation_bottom_line" type="TextureRect" parent="." unique_id=1667447430]
-layout_mode = 0
-offset_top = 200.0
-offset_right = 640.0
-offset_bottom = 280.0
-texture = ExtResource("12_obk0j")
-expand_mode = 1
-
 [node name="unit_sublimation_name_bg" type="TextureRect" parent="." unique_id=934269587]
 layout_mode = 0
 offset_left = 152.0
-offset_top = 94.0
+offset_top = 127.0
 offset_right = 640.0
-offset_bottom = 142.0
+offset_bottom = 175.0
 texture = ExtResource("14_rwkqv")
 expand_mode = 1
 
 [node name="unit_sublimation_favorite" type="TextureRect" parent="." unique_id=258505590]
 layout_mode = 0
 offset_left = 424.0
-offset_top = 102.0
+offset_top = 135.0
 offset_right = 456.0
-offset_bottom = 134.0
+offset_bottom = 167.0
 texture = ExtResource("15_vd0he")
 expand_mode = 1
 
 [node name="unit_sublimation_rarity_star" type="TextureRect" parent="." unique_id=293361395]
+visible = false
 layout_mode = 0
 offset_left = 514.0
 offset_top = 111.0
@@ -388,12 +426,22 @@ offset_bottom = 127.0
 texture = ExtResource("16_x61d2")
 expand_mode = 1
 
+[node name="RarityStarsLabel" type="Label" parent="." unique_id=52391001]
+layout_mode = 0
+offset_left = 534.0
+offset_top = 139.0
+offset_right = 632.0
+offset_bottom = 165.0
+theme_override_font_sizes/font_size = 18
+text = "★★★★★"
+vertical_alignment = 1
+
 [node name="unit_sublimation_name" type="Label" parent="." unique_id=338552210]
 layout_mode = 0
 offset_left = 229.0
-offset_top = 104.0
+offset_top = 137.0
 offset_right = 478.0
-offset_bottom = 136.0
+offset_bottom = 169.0
 theme_override_font_sizes/font_size = 22
 text = "unit_sublimation_name"
 horizontal_alignment = 1
@@ -401,10 +449,10 @@ vertical_alignment = 1
 
 [node name="unit_sublimation_number" type="Label" parent="." unique_id=1592278817]
 layout_mode = 0
-offset_left = 252.0
-offset_top = 85.0
-offset_right = 451.0
-offset_bottom = 108.0
+offset_left = 71.0
+offset_top = 142.0
+offset_right = 270.0
+offset_bottom = 165.0
 theme_override_font_sizes/font_size = 14
 text = "unit_sublimation_number"
 horizontal_alignment = 1
@@ -413,17 +461,17 @@ vertical_alignment = 1
 [node name="unit_sublimation_change_arrow_r" type="TextureRect" parent="." unique_id=567104663]
 layout_mode = 0
 offset_left = 599.0
-offset_top = 122.0
+offset_top = 198.0
 offset_right = 645.0
-offset_bottom = 200.0
+offset_bottom = 276.0
 texture = ExtResource("17_esevs")
 expand_mode = 1
 
 [node name="unit_sublimation_change_arrow_l" type="TextureRect" parent="." unique_id=1604420999]
 layout_mode = 0
-offset_top = 122.0
+offset_top = 198.0
 offset_right = 46.0
-offset_bottom = 200.0
+offset_bottom = 276.0
 texture = ExtResource("18_606v4")
 expand_mode = 1
 
@@ -433,22 +481,14 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="unit_status_button_label_status" type="TextureRect" parent="EquipHeader" unique_id=1245721543]
-layout_mode = 0
-offset_left = 21.0
-offset_top = 302.0
-offset_right = 187.0
-offset_bottom = 354.0
-texture = ExtResource("9_gdnlu")
-expand_mode = 1
-
-[node name="unit_status_tab_button_equipment" type="TextureRect" parent="EquipHeader" unique_id=734988441]
+[node name="unit_status_tab_button_equipment" type="TextureButton" parent="EquipHeader" unique_id=734988441]
 layout_mode = 0
 offset_left = 187.0
 offset_top = 306.0
 offset_right = 421.0
 offset_bottom = 372.0
-texture = ExtResource("22_luk7k")
+texture_normal = ExtResource("22_luk7k")
+texture_pressed = ExtResource("22_luk7k")
 
 [node name="unit_status_tab_button_label_equip" type="TextureRect" parent="EquipHeader/unit_status_tab_button_equipment" unique_id=1244040600]
 layout_mode = 0
@@ -459,13 +499,14 @@ offset_bottom = 50.0
 texture = ExtResource("23_0e10s")
 expand_mode = 1
 
-[node name="unit_status_tab_button_ability" type="TextureRect" parent="EquipHeader" unique_id=1326016767]
+[node name="unit_status_tab_button_ability" type="TextureButton" parent="EquipHeader" unique_id=1326016767]
 layout_mode = 0
 offset_left = 407.0
 offset_top = 307.0
 offset_right = 641.0
 offset_bottom = 373.0
-texture = ExtResource("22_luk7k")
+texture_normal = ExtResource("22_luk7k")
+texture_pressed = ExtResource("22_luk7k")
 
 [node name="unit_status_tab_button_label_ability" type="TextureRect" parent="EquipHeader/unit_status_tab_button_ability" unique_id=1708799052]
 layout_mode = 0
@@ -481,67 +522,563 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="unit_status_button_label_equip" type="TextureRect" parent="StatusHeader" unique_id=246394241]
-layout_mode = 0
-offset_left = 45.0
-offset_top = 302.0
-offset_right = 163.0
-offset_bottom = 354.0
-texture = ExtResource("8_yv0r3")
-expand_mode = 1
-
-[node name="unit_status_tab_button_trait" type="TextureRect" parent="StatusHeader" unique_id=575104657]
+[node name="unit_status_tab_button_trait" type="TextureButton" parent="StatusHeader" unique_id=575104657]
 layout_mode = 0
 offset_left = 188.0
 offset_top = 307.0
 offset_right = 348.0
 offset_bottom = 373.0
-texture = ExtResource("26_gdnlu")
-expand_mode = 1
+texture_normal = ExtResource("26_gdnlu")
+texture_pressed = ExtResource("26_gdnlu")
 
 [node name="UnitStatusButtonLabelChara" type="Sprite2D" parent="StatusHeader/unit_status_tab_button_trait" unique_id=1077186604]
 position = Vector2(84, 34)
 texture = ExtResource("27_5b2x4")
 
-[node name="unit_status_tab_button_magic" type="TextureRect" parent="StatusHeader" unique_id=1485557758]
+[node name="unit_status_tab_button_magic" type="TextureButton" parent="StatusHeader" unique_id=1485557758]
 layout_mode = 0
 offset_left = 335.0
 offset_top = 307.0
 offset_right = 495.0
 offset_bottom = 373.0
-texture = ExtResource("26_gdnlu")
-expand_mode = 1
+texture_normal = ExtResource("26_gdnlu")
+texture_pressed = ExtResource("26_gdnlu")
 
 [node name="UnitStatusButtonLabelMagic" type="Sprite2D" parent="StatusHeader/unit_status_tab_button_magic" unique_id=1686221247]
 position = Vector2(85, 34)
 texture = ExtResource("28_6mfme")
 
-[node name="unit_status_tab_button_special" type="TextureRect" parent="StatusHeader" unique_id=112224268]
+[node name="unit_status_tab_button_special" type="TextureButton" parent="StatusHeader" unique_id=112224268]
 layout_mode = 0
 offset_left = 482.0
 offset_top = 307.0
 offset_right = 642.0
 offset_bottom = 373.0
-texture = ExtResource("26_gdnlu")
-expand_mode = 1
+texture_normal = ExtResource("26_gdnlu")
+texture_pressed = ExtResource("26_gdnlu")
 
 [node name="UnitStatusButtonLabelSpecial" type="Sprite2D" parent="StatusHeader/unit_status_tab_button_special" unique_id=1372049625]
 position = Vector2(84, 32)
 texture = ExtResource("29_obk0j")
 
-[node name="unit_detail_limit_offset" type="TextureRect" parent="." unique_id=886522050]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=572729399]
 layout_mode = 0
-offset_top = 589.0
+offset_top = 362.0
 offset_right = 640.0
-offset_bottom = 717.0
-texture = ExtResource("30_0e10s")
-expand_mode = 1
+offset_bottom = 836.0
 
-[node name="UnitBondsbg" type="Sprite2D" parent="." unique_id=1554177870]
-position = Vector2(318, 762)
+[node name="TraitContent" type="VBoxContainer" parent="VBoxContainer" unique_id=54648342]
+layout_mode = 2
+
+[node name="UnitResistbg" type="TextureRect" parent="VBoxContainer/TraitContent" unique_id=1307708448]
+layout_mode = 2
+texture = ExtResource("35_rwkqv")
+
+[node name="ElementResistGrid" type="GridContainer" parent="VBoxContainer/TraitContent/UnitResistbg" unique_id=1166819712]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 48.0
+offset_right = 363.0
+offset_bottom = 99.0
+theme_override_constants/h_separation = 5
+columns = 8
+
+[node name="FIRE" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=1616574338]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/FIRE" unique_id=1024768559]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/FIRE/VBox" unique_id=611676203]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("36_gjsom")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/FIRE/VBox" unique_id=237951508]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/FIRE/VBox/ValPanel" unique_id=1361134287]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ICE" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=2075128480]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/ICE" unique_id=15323524]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/ICE/VBox" unique_id=462862952]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("37_omn6i")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/ICE/VBox" unique_id=983244371]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/ICE/VBox/ValPanel" unique_id=267065267]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LIGHTNING" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=755962434]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHTNING" unique_id=366527332]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHTNING/VBox" unique_id=1781882227]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("38_o4c08")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHTNING/VBox" unique_id=1271201726]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHTNING/VBox/ValPanel" unique_id=901768766]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WATER" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=1493982764]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WATER" unique_id=671163273]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WATER/VBox" unique_id=819576274]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("39_845m6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WATER/VBox" unique_id=1313596952]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WATER/VBox/ValPanel" unique_id=325314210]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WIND" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=51485992]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WIND" unique_id=1504829462]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WIND/VBox" unique_id=567449334]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("40_s8d6h")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WIND/VBox" unique_id=1864376709]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/WIND/VBox/ValPanel" unique_id=1056211373]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EARTH" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=94218180]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/EARTH" unique_id=1411289293]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/EARTH/VBox" unique_id=914752815]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("41_x54lp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/EARTH/VBox" unique_id=37015348]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/EARTH/VBox/ValPanel" unique_id=177942728]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LIGHT" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=830481317]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHT" unique_id=1161899537]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHT/VBox" unique_id=623310928]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("42_rg7al")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHT/VBox" unique_id=678000052]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/LIGHT/VBox/ValPanel" unique_id=1766705734]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DARK" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid" unique_id=1145951095]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/DARK" unique_id=132418364]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/DARK/VBox" unique_id=1365129291]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("43_4t73d")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/DARK/VBox" unique_id=159796114]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid/DARK/VBox/ValPanel" unique_id=1294766788]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusResistGrid" type="GridContainer" parent="VBoxContainer/TraitContent/UnitResistbg" unique_id=570971450]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 152.0
+offset_right = 363.0
+offset_bottom = 203.0
+theme_override_constants/h_separation = 5
+columns = 8
+
+[node name="POISON" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=1735764402]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/POISON" unique_id=514296697]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/POISON/VBox" unique_id=1863977206]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("44_s2yt8")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/POISON/VBox" unique_id=1818239833]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/POISON/VBox/ValPanel" unique_id=1946607158]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BLIND" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=1300039552]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/BLIND" unique_id=867203258]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/BLIND/VBox" unique_id=896137351]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("45_84hsl")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/BLIND/VBox" unique_id=40556134]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/BLIND/VBox/ValPanel" unique_id=109522090]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SLEEP" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=165222267]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SLEEP" unique_id=610791251]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SLEEP/VBox" unique_id=104780526]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("46_wd60o")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SLEEP/VBox" unique_id=1940800408]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SLEEP/VBox/ValPanel" unique_id=2039729310]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SILENCE" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=710402899]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SILENCE" unique_id=229898120]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SILENCE/VBox" unique_id=562249348]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("47_qi0lh")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SILENCE/VBox" unique_id=1929204794]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/SILENCE/VBox/ValPanel" unique_id=58667590]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PARALYSIS" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=1602124246]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PARALYSIS" unique_id=2007161258]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PARALYSIS/VBox" unique_id=1093202032]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("48_e6bvn")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PARALYSIS/VBox" unique_id=1431605948]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PARALYSIS/VBox/ValPanel" unique_id=489628829]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CONFUSION" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=901309526]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/CONFUSION" unique_id=1688884270]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/CONFUSION/VBox" unique_id=90559274]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("49_u8l2f")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/CONFUSION/VBox" unique_id=2027310772]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/CONFUSION/VBox/ValPanel" unique_id=530446141]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DISEASE" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=1563962247]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/DISEASE" unique_id=109507813]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/DISEASE/VBox" unique_id=1886352722]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("50_3mumb")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/DISEASE/VBox" unique_id=1273934218]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/DISEASE/VBox/ValPanel" unique_id=208043367]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PETRIFY" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid" unique_id=1659194397]
+custom_minimum_size = Vector2(40, 50)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PETRIFY" unique_id=1544009465]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PETRIFY/VBox" unique_id=338821297]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("51_dliab")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValPanel" type="PanelContainer" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PETRIFY/VBox" unique_id=998434204]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
+
+[node name="Label" type="Label" parent="VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid/PETRIFY/VBox/ValPanel" unique_id=1822002650]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_detail_limit_offset" type="TextureRect" parent="VBoxContainer/TraitContent" unique_id=886522050]
+layout_mode = 2
+texture = ExtResource("30_0e10s")
+
+[node name="LimitBurstLabel" type="Label" parent="VBoxContainer/TraitContent/unit_detail_limit_offset" unique_id=532894020]
+layout_mode = 0
+offset_top = 4.0
+offset_right = 640.0
+offset_bottom = 24.0
+theme_override_font_sizes/font_size = 14
+text = "Limit Burst: None"
+
+[node name="UnitBondsbg" type="TextureRect" parent="VBoxContainer/TraitContent" unique_id=1129697874]
+layout_mode = 2
 texture = ExtResource("31_5b2x4")
 
-[node name="unit_mix_bonds_icon" type="TextureRect" parent="UnitBondsbg" unique_id=207585777]
+[node name="unit_mix_bonds_icon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitBondsbg" unique_id=207585777]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6265625
+anchor_top = 0.43396226
+anchor_right = 0.6265625
+anchor_bottom = 0.43396226
 offset_left = -281.0
 offset_top = -34.0
 offset_right = -81.0
@@ -550,7 +1087,13 @@ texture = ExtResource("32_6mfme")
 expand_mode = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="unit_mix_bonds_rate" type="Label" parent="UnitBondsbg" unique_id=1848710051]
+[node name="unit_mix_bonds_rate" type="Label" parent="VBoxContainer/TraitContent/UnitBondsbg" unique_id=1848710051]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6265625
+anchor_top = 0.43396226
+anchor_right = 0.6265625
+anchor_bottom = 0.43396226
 offset_left = -184.0
 offset_top = -16.0
 offset_right = 55.0
@@ -561,7 +1104,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="unit_mix_bonds_name_plate" type="TextureRect" parent="UnitBondsbg" unique_id=1371540792]
+[node name="unit_mix_bonds_name_plate" type="TextureRect" parent="VBoxContainer/TraitContent/UnitBondsbg" unique_id=1371540792]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6265625
+anchor_top = 0.43396226
+anchor_right = 0.6265625
+anchor_bottom = 0.43396226
 offset_left = -218.0
 offset_top = 12.0
 offset_right = -84.0
@@ -570,509 +1119,122 @@ texture = ExtResource("33_obk0j")
 expand_mode = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="unit_mix_bonds_name" type="Label" parent="UnitBondsbg" unique_id=1243621887]
+[node name="unit_mix_bonds_name" type="Label" parent="VBoxContainer/TraitContent/UnitBondsbg" unique_id=1243621887]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6265625
+anchor_top = 0.38679245
+anchor_right = 0.6265625
+anchor_bottom = 0.38679245
 offset_left = -205.0
 offset_top = 17.0
 offset_right = -33.0
 offset_bottom = 40.0
 theme_override_font_sizes/font_size = 16
 text = "unit_mix_bonds_name"
-horizontal_alignment = 1
-vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="UnitLbframe" type="Sprite2D" parent="." unique_id=791738500]
+[node name="TrustMasterIcon" type="TextureRect" parent="VBoxContainer/TraitContent/UnitBondsbg" unique_id=1302381413]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 0
+offset_left = 19.0
+offset_top = 19.0
+offset_right = 71.0
+offset_bottom = 71.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="UnitLbframe" type="Sprite2D" parent="VBoxContainer/TraitContent" unique_id=791738500]
+visible = false
 position = Vector2(895, 623)
 texture = ExtResource("34_ldnwr")
 
-[node name="UnitResistbg" type="Sprite2D" parent="." unique_id=1095117354]
-position = Vector2(319, 491)
-texture = ExtResource("35_rwkqv")
-
-[node name="ElementResistGrid" type="GridContainer" parent="UnitResistbg" unique_id=1166819712]
-offset_left = -305.0
-offset_top = -64.0
-offset_right = 50.0
-offset_bottom = -13.0
-theme_override_constants/h_separation = 5
-columns = 8
-
-[node name="FIRE" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=1616574338]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/FIRE" unique_id=1024768559]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/FIRE/VBox" unique_id=611676203]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("36_gjsom")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/FIRE/VBox" unique_id=237951508]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/FIRE/VBox/ValPanel" unique_id=1361134287]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ICE" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=2075128480]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/ICE" unique_id=15323524]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/ICE/VBox" unique_id=462862952]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("37_omn6i")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/ICE/VBox" unique_id=983244371]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/ICE/VBox/ValPanel" unique_id=267065267]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="LIGHTNING" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=755962434]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/LIGHTNING" unique_id=366527332]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/LIGHTNING/VBox" unique_id=1781882227]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("38_o4c08")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/LIGHTNING/VBox" unique_id=1271201726]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/LIGHTNING/VBox/ValPanel" unique_id=901768766]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="WATER" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=1493982764]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/WATER" unique_id=671163273]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/WATER/VBox" unique_id=819576274]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("39_845m6")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/WATER/VBox" unique_id=1313596952]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/WATER/VBox/ValPanel" unique_id=325314210]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="WIND" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=51485992]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/WIND" unique_id=1504829462]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/WIND/VBox" unique_id=567449334]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("40_s8d6h")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/WIND/VBox" unique_id=1864376709]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/WIND/VBox/ValPanel" unique_id=1056211373]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="EARTH" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=94218180]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/EARTH" unique_id=1411289293]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/EARTH/VBox" unique_id=914752815]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("41_x54lp")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/EARTH/VBox" unique_id=37015348]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/EARTH/VBox/ValPanel" unique_id=177942728]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="LIGHT" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=830481317]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/LIGHT" unique_id=1161899537]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/LIGHT/VBox" unique_id=623310928]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("42_rg7al")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/LIGHT/VBox" unique_id=678000052]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/LIGHT/VBox/ValPanel" unique_id=1766705734]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="DARK" type="PanelContainer" parent="UnitResistbg/ElementResistGrid" unique_id=1145951095]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/ElementResistGrid/DARK" unique_id=132418364]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/ElementResistGrid/DARK/VBox" unique_id=1365129291]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("43_4t73d")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/ElementResistGrid/DARK/VBox" unique_id=159796114]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/ElementResistGrid/DARK/VBox/ValPanel" unique_id=1294766788]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="StatusResistGrid" type="GridContainer" parent="UnitResistbg" unique_id=570971450]
-offset_left = -312.0
-offset_top = 40.0
-offset_right = 43.0
-offset_bottom = 91.0
-theme_override_constants/h_separation = 5
-columns = 8
-
-[node name="POISON" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=1735764402]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/POISON" unique_id=514296697]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/POISON/VBox" unique_id=1863977206]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("44_s2yt8")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/POISON/VBox" unique_id=1818239833]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/POISON/VBox/ValPanel" unique_id=1946607158]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="BLIND" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=1300039552]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/BLIND" unique_id=867203258]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/BLIND/VBox" unique_id=896137351]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("45_84hsl")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/BLIND/VBox" unique_id=40556134]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/BLIND/VBox/ValPanel" unique_id=109522090]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="SLEEP" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=165222267]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/SLEEP" unique_id=610791251]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/SLEEP/VBox" unique_id=104780526]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("46_wd60o")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/SLEEP/VBox" unique_id=1940800408]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/SLEEP/VBox/ValPanel" unique_id=2039729310]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="SILENCE" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=710402899]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/SILENCE" unique_id=229898120]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/SILENCE/VBox" unique_id=562249348]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("47_qi0lh")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/SILENCE/VBox" unique_id=1929204794]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/SILENCE/VBox/ValPanel" unique_id=58667590]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="PARALYSIS" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=1602124246]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/PARALYSIS" unique_id=2007161258]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/PARALYSIS/VBox" unique_id=1093202032]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("48_e6bvn")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/PARALYSIS/VBox" unique_id=1431605948]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/PARALYSIS/VBox/ValPanel" unique_id=489628829]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="CONFUSION" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=901309526]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/CONFUSION" unique_id=1688884270]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/CONFUSION/VBox" unique_id=90559274]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("49_u8l2f")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/CONFUSION/VBox" unique_id=2027310772]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/CONFUSION/VBox/ValPanel" unique_id=530446141]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="DISEASE" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=1563962247]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/DISEASE" unique_id=109507813]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/DISEASE/VBox" unique_id=1886352722]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("50_3mumb")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/DISEASE/VBox" unique_id=1273934218]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/DISEASE/VBox/ValPanel" unique_id=208043367]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="PETRIFY" type="PanelContainer" parent="UnitResistbg/StatusResistGrid" unique_id=1659194397]
-custom_minimum_size = Vector2(40, 50)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_tp4qt")
-
-[node name="VBox" type="VBoxContainer" parent="UnitResistbg/StatusResistGrid/PETRIFY" unique_id=1544009465]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Icon" type="TextureRect" parent="UnitResistbg/StatusResistGrid/PETRIFY/VBox" unique_id=338821297]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("51_dliab")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ValPanel" type="PanelContainer" parent="UnitResistbg/StatusResistGrid/PETRIFY/VBox" unique_id=998434204]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_u50dp")
-
-[node name="Label" type="Label" parent="UnitResistbg/StatusResistGrid/PETRIFY/VBox/ValPanel" unique_id=1822002650]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "-"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="UnitSkillbgMini" type="Sprite2D" parent="." unique_id=1941397902]
+[node name="UnitSkillbgMini" type="Sprite2D" parent="VBoxContainer/TraitContent" unique_id=1941397902]
+visible = false
 position = Vector2(986, 696)
 texture = ExtResource("36_vd0he")
 
-[node name="UnitNamebgChara" type="Sprite2D" parent="." unique_id=1023587688]
-position = Vector2(931, 75)
+[node name="ContentLayer" type="Control" parent="." unique_id=2017411328]
+anchors_preset = 0
+offset_top = 380.0
+offset_right = 640.0
+offset_bottom = 780.0
+
+[node name="MagicContent" type="ScrollContainer" parent="ContentLayer" unique_id=133412355]
+visible = false
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 380.0
+
+[node name="MagicGrid" type="GridContainer" parent="ContentLayer/MagicContent" unique_id=2043502198]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="SpecialContent" type="ScrollContainer" parent="ContentLayer" unique_id=1670362549]
+visible = false
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 380.0
+
+[node name="SpecialGrid" type="GridContainer" parent="ContentLayer/SpecialContent" unique_id=1413027715]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="EquipmentContent" type="ScrollContainer" parent="ContentLayer" unique_id=1694230688]
+visible = false
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 380.0
+
+[node name="EquipmentGrid" type="GridContainer" parent="ContentLayer/EquipmentContent" unique_id=2071567020]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="AbilityContent" type="ScrollContainer" parent="ContentLayer" unique_id=443201287]
+visible = false
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 380.0
+
+[node name="AbilityGrid" type="GridContainer" parent="ContentLayer/AbilityContent" unique_id=187826311]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="UnitNamebgChara2" type="TextureRect" parent="." unique_id=391290603]
+layout_mode = 0
+offset_top = 76.0
+offset_right = 560.0
+offset_bottom = 148.0
 texture = ExtResource("37_rwkqv")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="UnitNamebgChara2" unique_id=417843896]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Unit details"
+
+[node name="BackButton" type="TextureButton" parent="UnitNamebgChara2" unique_id=837826852]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("55_845m6")
+texture_pressed = ExtResource("56_s8d6h")
+
+[node name="Back" type="Label" parent="UnitNamebgChara2/BackButton" unique_id=1733208999]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1

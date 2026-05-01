@@ -20,7 +20,7 @@ var _scenes_map: Dictionary = {
 	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
 	"unit_selector_ui": "res://features/outgame/units/UnitSelectorUI.tscn",
 	"unit_stats_popup": "res://features/outgame/units/UnitStatsPopup.tscn",
-	"unit_detail_ui": "res://features/outgame/units/UnitDetailUI.tscn",
+	"unit_detail_ui": "res://features/outgame/units/UnitDetailNEW.tscn",
 	"items_ui": "res://features/outgame/inventory/ItemsUI.tscn",
 	"friends_ui": "res://features/outgame/friends/FriendsUI.tscn",
 	"summon_ui": "res://features/outgame/summon/SummonUI.tscn",

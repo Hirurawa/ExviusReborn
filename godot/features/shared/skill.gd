@@ -3,9 +3,19 @@ extends Control
 signal pressed
 
 const ICON_BASE_PATH: String = "res://assets/abilities/"
+const BUTTON_ITEM_BACKGROUND: Texture2D = preload("res://assets/ui/common/button_item1.tres")
+const BUTTON_LIMIT_BACKGROUND: Texture2D = preload("res://assets/ui/common/button_limit1.tres")
+const LACK_MP_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_mp.tres")
+const LACK_LIMIT_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_limit.tres")
 
+const REASON_NONE: String = ""
+const REASON_LACK_MP: String = "lack_mp"
+const REASON_LACK_LIMIT: String = "lack_limit"
+
+@onready var background_rect: TextureRect = $unit_magic_bg_1
 @onready var category_rect: TextureRect = $unit_magic_category_1
 @onready var icon: TextureRect = $unit_magic_icon_1
+@onready var unavailable_reason_rect: TextureRect = $unit_magic_unavailable_reason_1
 @onready var name_label: Label = $unit_magic_name_text_1
 @onready var mp_label: Label = $unit_magic_mp_number_1
 @onready var mp_icon:TextureRect = $unit_magic_mp_1
@@ -15,18 +25,22 @@ const ICON_BASE_PATH: String = "res://assets/abilities/"
 @onready var level_label: Label = $unit_magic_lv_num
 @onready var action_button: Button = $Button
 
+var _disabled_reason: String = REASON_NONE
+
 func _ready() -> void:
 	action_button.pressed.connect(_on_action_button_pressed)
 	level_icon.hide()
 	level_banner.hide()
 	level_label.hide()
+	_apply_skill_role_style(false)
+	_apply_action_state(true, REASON_NONE)
 
 func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_button: bool = false) -> void:
 	if not is_node_ready():
 		await ready
 
-	# button_limit1.tres <- in case of a limit break
-	# button_item1.tres <- in case of a regular skill
+	_apply_skill_role_style(false)
+	_apply_action_state(true, REASON_NONE)
 
 	name_label.text = str(skill_data.get("name", "Unknown Magic"))
 	
@@ -87,8 +101,42 @@ func set_action_enabled(enabled: bool) -> void:
 	if action_button == null:
 		push_error("Skill: action_button is missing, cannot update enabled state.")
 		return
-	action_button.disabled = not enabled
-	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+	if enabled:
+		_disabled_reason = REASON_NONE
+	_apply_action_state(enabled, _disabled_reason)
+
+func set_skill_role_style(is_limitburst: bool) -> void:
+	if not is_node_ready():
+		await ready
+	_apply_skill_role_style(is_limitburst)
+
+func set_action_availability(enabled: bool, disabled_reason: String = REASON_NONE) -> void:
+	if not is_node_ready():
+		await ready
+	_disabled_reason = disabled_reason if not enabled else REASON_NONE
+	_apply_action_state(enabled, _disabled_reason)
+
+func _apply_skill_role_style(is_limitburst: bool) -> void:
+	if background_rect == null:
+		return
+	background_rect.texture = BUTTON_LIMIT_BACKGROUND if is_limitburst else BUTTON_ITEM_BACKGROUND
+
+func _apply_action_state(enabled: bool, disabled_reason: String) -> void:
+	if action_button != null:
+		action_button.disabled = not enabled
+		action_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+
+	if unavailable_reason_rect != null:
+		if enabled or disabled_reason == REASON_NONE:
+			unavailable_reason_rect.hide()
+		elif disabled_reason == REASON_LACK_LIMIT:
+			unavailable_reason_rect.texture = LACK_LIMIT_TEXTURE
+			unavailable_reason_rect.show()
+		else:
+			unavailable_reason_rect.texture = LACK_MP_TEXTURE
+			unavailable_reason_rect.show()
+
+	modulate = Color(1.0, 1.0, 1.0, 1.0) if enabled else Color(0.45, 0.45, 0.45, 1.0)
 
 func _build_mp_text(skill_data: Dictionary) -> String:
 	var cost: Variant = skill_data.get("cost", {})

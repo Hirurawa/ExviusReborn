@@ -1,5 +1,7 @@
 extends Control
 
+const ItemScene = preload("res://features/shared/Item.tscn")
+
 @onready var equip_selection_list: GridContainer = $VBoxContainer/ScrollContainer/EquipListContainer
 @onready var close_btn: Button = $VBoxContainer/CloseButton
 
@@ -21,12 +23,12 @@ func _populate_list() -> void:
 	for child in equip_selection_list.get_children():
 		child.queue_free()
 
-	var remove_btn: Button = Button.new()
-	remove_btn.text = "Remove"
-	remove_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	remove_btn.custom_minimum_size = Vector2(0, 60)
-	remove_btn.pressed.connect(_on_equip_item_selected.bind(""))
-	equip_selection_list.add_child(remove_btn)
+	var remove_cell: Control = ItemScene.instantiate()
+	remove_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	equip_selection_list.add_child(remove_cell)
+	remove_cell.setup_placeholder("Remove", "")
+	remove_cell.set_clickable(true)
+	remove_cell.pressed.connect(_on_equip_item_selected.bind(""))
 
 	var unit_data: Dictionary = DataManager.game_data_units.get(current_unit_inst.get("unit_id", ""), {})
 	var allowed_equips: Array = unit_data.get("equip", [])
@@ -34,13 +36,13 @@ func _populate_list() -> void:
 	var available_items: Array = DataManager.get_available_equipment_for_slot(current_slot_id, allowed_equips)
 
 	for item_dict in available_items:
-		var item_instance_id: String = item_dict.get("instance_id", "")
-		var btn: Button = Button.new()
-		btn.text = item_dict.get("name", "Unknown")
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.custom_minimum_size = Vector2(0, 60)
-		btn.pressed.connect(_on_equip_item_selected.bind(item_instance_id))
-		equip_selection_list.add_child(btn)
+		var item_instance_id: String = str(item_dict.get("instance_id", ""))
+		var item_cell: Control = ItemScene.instantiate()
+		item_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		equip_selection_list.add_child(item_cell)
+		item_cell.setup_from_item_data(item_dict, {})
+		item_cell.set_clickable(true)
+		item_cell.pressed.connect(_on_equip_item_selected.bind(item_instance_id))
 
 func _on_equip_item_selected(item_id: String) -> void:
 	var instance_id: String = current_unit_inst.get("instance_id", "")

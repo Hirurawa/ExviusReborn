@@ -23,7 +23,6 @@ var selection_callback: Callable = Callable()
 const GRID_COLUMNS: int = 5
 const UNIT_CELL_W: int = 128
 const UNIT_CELL_H: int = 164
-const UNIT_NAME_H: int = 34
 const PEDESTAL_BOTTOM_MARGIN: int = 2
 const UNIT_SIDE_PADDING: int = 4
 const V_SCROLLBAR_MIN_W: float = 12.0
@@ -193,7 +192,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var container: Control = Control.new()
 		container.custom_minimum_size = Vector2(cell_width, UNIT_CELL_H)
 		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		container.size_flags_vertical = Control.SIZE_FILL
 		container.clip_contents = true
 
 		# Load textures for the Unit scene and let it fit itself inside this cell.
@@ -223,7 +222,8 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 						float(cell_width),
 						float(visual_area_h),
 						float(UNIT_SIDE_PADDING),
-						float(PEDESTAL_BOTTOM_MARGIN)
+						float(PEDESTAL_BOTTOM_MARGIN),
+						str(unit_data.get("name", "Unknown"))
 					)
 				else:
 					unit_visual.call_deferred("setup", sprite_texture, pedestal_texture)
@@ -250,23 +250,6 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			check_box.toggled.connect(_on_material_checkbox_toggled.bind(unit_inst))
 			container.add_child(check_box)
 			_material_checkboxes[unit_instance_id] = check_box
-
-		# Name label overlaid at bottom
-		var name_label: Label = Label.new()
-		name_label.text = unit_data.get("name", "Unknown")
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		name_label.add_theme_font_size_override("font_size", 12)
-		name_label.anchor_left = 0.0
-		name_label.anchor_right = 1.0
-		name_label.anchor_top = 1.0
-		name_label.anchor_bottom = 1.0
-		name_label.offset_left = 2
-		name_label.offset_right = -2
-		name_label.offset_top = -UNIT_NAME_H
-		name_label.offset_bottom = -2
-		name_label.z_index = 10
-		container.add_child(name_label)
 
 		units_list_container.add_child(container)
 

@@ -509,12 +509,28 @@ func _update_last_played_dungeon_from_mission(mission_id: String) -> void:
 func _get_or_load_mission_data(mission_id: String) -> Dictionary:
 	var mission_key: String = str(mission_id)
 	var mission_data: Dictionary = game_data_missions.get(mission_key, {})
+	mission_data = _normalize_mission_data(mission_data)
+	if not mission_data.is_empty():
+		game_data_missions[mission_key] = mission_data
 
 	if mission_data.is_empty():
 		var fetched_missions: Dictionary = await server_connection.get_dungeon_missions_async([mission_key])
 		if fetched_missions.has(mission_key):
-			mission_data = fetched_missions[mission_key]
+			mission_data = _normalize_mission_data(fetched_missions[mission_key])
 			game_data_missions[mission_key] = mission_data
+
+	return mission_data
+
+func _normalize_mission_data(mission_data: Dictionary) -> Dictionary:
+	if mission_data.is_empty():
+		return mission_data
+
+	if mission_data.has("challenges"):
+		var raw_challenges: Variant = mission_data.get("challenges")
+		if raw_challenges is Dictionary and raw_challenges.is_empty():
+			mission_data["challenges"] = []
+		elif raw_challenges == null:
+			mission_data["challenges"] = []
 
 	return mission_data
 

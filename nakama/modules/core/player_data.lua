@@ -4,6 +4,206 @@ local Utilities = require("core.utilities")
 
 local PlayerData = {}
 
+local ACCOUNT_BOOTSTRAP_KEY = "account_bootstrap_v1"
+local STARTER_RAIN_UNIT_ID = "100000102"
+local STARTER_LASSWELL_UNIT_ID = "100000202"
+local STARTER_RAIN_INSTANCE_ID = "starter_100000102"
+local STARTER_LASSWELL_INSTANCE_ID = "starter_100000202"
+
+local function build_starter_unit(unit_id, instance_id)
+    local unit_data = StaticData.units_data[unit_id]
+    if not unit_data then
+        return nil
+    end
+
+    local exp_pattern = unit_data.exp_pattern or 5
+    local next_xp = StaticData.calculate_xp_for_level(2, exp_pattern)
+
+    return {
+        instance_id = instance_id,
+        unit_id = unit_id,
+        level = 1,
+        xp = 0,
+        current_rarity = unit_data.rarity_min or 1,
+        next_xp = next_xp,
+        equipment = {},
+        trust_value = 0.0,
+        limitburst_level = 1,
+        limitburst_xp = 0,
+        is_locked = false
+    }
+end
+
+local function build_default_parties(rain_instance_id, lasswell_instance_id)
+    local parties = {}
+    for i = 1, 5 do
+        table.insert(parties, {
+            name = "Party " .. i,
+            units = {"", "", "", "", ""}
+        })
+    end
+
+    parties[1].units[1] = rain_instance_id
+    parties[1].units[2] = lasswell_instance_id
+
+    return parties
+end
+
+function PlayerData.ensure_new_account_initialized(user_id)
+    local bootstrap_object = nk.storage_read({
+        {
+            collection = "user_data",
+            key = ACCOUNT_BOOTSTRAP_KEY,
+            user_id = user_id
+        }
+    })
+    if #bootstrap_object > 0 then
+        return
+    end
+
+    local wallet_ok, wallet_err = pcall(
+        nk.wallet_update,
+        user_id,
+        { gil = 0, lapis = 0 },
+        { source = "new_account_bootstrap" },
+        true
+    )
+    if not wallet_ok then
+        nk.logger_error("Failed to initialize wallet for user " .. tostring(user_id) .. ": " .. tostring(wallet_err))
+    end
+
+    local rain_unit = build_starter_unit(STARTER_RAIN_UNIT_ID, STARTER_RAIN_INSTANCE_ID)
+    local lasswell_unit = build_starter_unit(STARTER_LASSWELL_UNIT_ID, STARTER_LASSWELL_INSTANCE_ID)
+    if not rain_unit or not lasswell_unit then
+        nk.logger_error("Failed to build starter units for user " .. tostring(user_id))
+        return
+    end
+
+    local unit_objects = nk.storage_read({
+        { collection = "unit", key = STARTER_RAIN_INSTANCE_ID, user_id = user_id },
+        { collection = "unit", key = STARTER_LASSWELL_INSTANCE_ID, user_id = user_id }
+    })
+    local has_rain = false
+    local has_lasswell = false
+    for _, unit_object in ipairs(unit_objects) do
+        if unit_object.key == STARTER_RAIN_INSTANCE_ID then
+            has_rain = true
+        elseif unit_object.key == STARTER_LASSWELL_INSTANCE_ID then
+            has_lasswell = true
+        end
+    end
+
+    local starter_writes = {}
+    if not has_rain then
+        table.insert(starter_writes, {
+            collection = "unit",
+            key = STARTER_RAIN_INSTANCE_ID,
+            user_id = user_id,
+            value = rain_unit,
+            permission_read = 1,
+            permission_write = 1
+        })
+    end
+    if not has_lasswell then
+        table.insert(starter_writes, {
+            collection = "unit",
+            key = STARTER_LASSWELL_INSTANCE_ID,
+            user_id = user_id,
+            value = lasswell_unit,
+            permission_read = 1,
+            permission_write = 1
+        })
+    end
+    if #starter_writes > 0 then
+        nk.storage_write(starter_writes)
+    end
+
+    local parties_object = nk.storage_read({
+        {
+            collection = "user_data",
+            key = "parties",
+            user_id = user_id
+        }
+    })
+
+    if #parties_object == 0 then
+        nk.storage_write({
+            {
+                collection = "user_data",
+                key = "parties",
+                user_id = user_id,
+                value = { parties = build_default_parties(STARTER_RAIN_INSTANCE_ID, STARTER_LASSWELL_INSTANCE_ID) },
+                permission_read = 1,
+                permission_write = 1
+            }
+        })
+    else
+        local current_value = parties_object[1].value or {}
+        local current_parties = current_value.parties
+        local changed = false
+
+        if type(current_parties) ~= "table" then
+            current_parties = build_default_parties(STARTER_RAIN_INSTANCE_ID, STARTER_LASSWELL_INSTANCE_ID)
+            changed = true
+        else
+            if type(current_parties[1]) ~= "table" then
+                current_parties[1] = { name = "Party 1", units = {"", "", "", "", ""} }
+                changed = true
+            end
+            if type(current_parties[1].units) ~= "table" then
+                current_parties[1].units = {"", "", "", "", ""}
+                changed = true
+            end
+            for i = #current_parties + 1, 5 do
+                current_parties[i] = { name = "Party " .. i, units = {"", "", "", "", ""} }
+                changed = true
+            end
+            for i = 1, 5 do
+                if type(current_parties[i].units) ~= "table" then
+                    current_parties[i].units = {"", "", "", "", ""}
+                    changed = true
+                end
+                for slot = #current_parties[i].units + 1, 5 do
+                    current_parties[i].units[slot] = ""
+                    changed = true
+                end
+            end
+            if current_parties[1].units[1] ~= STARTER_RAIN_INSTANCE_ID then
+                current_parties[1].units[1] = STARTER_RAIN_INSTANCE_ID
+                changed = true
+            end
+            if current_parties[1].units[2] ~= STARTER_LASSWELL_INSTANCE_ID then
+                current_parties[1].units[2] = STARTER_LASSWELL_INSTANCE_ID
+                changed = true
+            end
+        end
+
+        if changed then
+            nk.storage_write({
+                {
+                    collection = "user_data",
+                    key = "parties",
+                    user_id = user_id,
+                    value = { parties = current_parties },
+                    permission_read = 1,
+                    permission_write = 1
+                }
+            })
+        end
+    end
+
+    nk.storage_write({
+        {
+            collection = "user_data",
+            key = ACCOUNT_BOOTSTRAP_KEY,
+            user_id = user_id,
+            value = { initialized = true, initialized_at = math.floor(nk.time() / 1000) },
+            permission_read = 0,
+            permission_write = 0
+        }
+    })
+end
+
 function PlayerData.get_player_stats(context, payload)
     local object_ids = {
         {collection = "stats", key = "player_stats", user_id = context.user_id}
@@ -30,6 +230,7 @@ function PlayerData.get_player_stats(context, payload)
         end
     else
         -- Brand new account: lazy initialization
+        PlayerData.ensure_new_account_initialized(context.user_id)
         nk.storage_write({
             {
                 collection = "stats",

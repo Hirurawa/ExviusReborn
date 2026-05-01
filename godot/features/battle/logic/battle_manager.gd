@@ -198,7 +198,8 @@ func initialize_battle(mission_id: String) -> void:
 	current_wave = 1
 	mission_drops.clear()
 	used_items.clear()
-	var challenge_count: int = (mission_data.get("challenges", []) as Array).size()
+	var mission_challenges: Variant = mission_data.get("challenges", [])
+	var challenge_count: int = mission_challenges.size() if mission_challenges is Array else 0
 	challenge_results.resize(challenge_count)
 	challenge_results.fill(false)
 
@@ -270,7 +271,7 @@ func initialize_battle(mission_id: String) -> void:
 	# Load enemy data
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
-	_spawn_enemies_for_wave(dungeon_data)
+	_spawn_enemies_for_wave(mission_data, dungeon_data)
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()
@@ -665,7 +666,7 @@ func _spawn_next_wave() -> void:
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 
-	_spawn_enemies_for_wave(dungeon_data)
+	_spawn_enemies_for_wave(mission_data, dungeon_data)
 
 	wave_changed.emit(current_wave, total_waves)
 
@@ -724,9 +725,41 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	item_dropped.emit(enemy_index, selected_item_id)
 
 
-func _spawn_enemies_for_wave(dungeon_data: Dictionary) -> void:
+func _build_monster_spawn_pool(mission_data: Dictionary, dungeon_data: Dictionary) -> Array:
+	var mission_monsters: Variant = mission_data.get("monsters", [])
+	var dungeon_monsters: Variant = dungeon_data.get("monsters", [])
+
+	var mission_pool: Array = []
+	var dungeon_by_name: Dictionary = {}
+	if dungeon_monsters is Array:
+		for dungeon_monster in dungeon_monsters:
+			if dungeon_monster is Dictionary:
+				var monster_name: String = str((dungeon_monster as Dictionary).get("name", ""))
+				if monster_name != "":
+					dungeon_by_name[monster_name] = (dungeon_monster as Dictionary)
+
+	if mission_monsters is Array and mission_monsters.size() > 0:
+		for mission_monster in mission_monsters:
+			if mission_monster is Dictionary:
+				mission_pool.append((mission_monster as Dictionary).duplicate(true))
+			elif mission_monster is String:
+				var mission_monster_name: String = str(mission_monster)
+				if dungeon_by_name.has(mission_monster_name):
+					mission_pool.append((dungeon_by_name[mission_monster_name] as Dictionary).duplicate(true))
+				else:
+					mission_pool.append({"name": mission_monster_name})
+
+	if mission_pool.size() > 0:
+		return mission_pool
+
+	if dungeon_monsters is Array:
+		return dungeon_monsters
+
+	return []
+
+func _spawn_enemies_for_wave(mission_data: Dictionary, dungeon_data: Dictionary) -> void:
 	enemy_units.clear()
-	var monsters_in_dungeon = dungeon_data.get("monsters", [])
+	var monsters_in_dungeon: Array = _build_monster_spawn_pool(mission_data, dungeon_data)
 
 	if monsters_in_dungeon.size() > 0:
 		var spawn_count = randi() % 3 + 1 # Random number between 1 and 3

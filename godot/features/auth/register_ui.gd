@@ -1,5 +1,7 @@
 extends Control
 
+const INTRO_MISSION_ID: String = "1110100"
+
 @onready var username_input: LineEdit = $VBoxContainer/UsernameInput
 @onready var email_input: LineEdit = $VBoxContainer/EmailInput
 @onready var password_input: LineEdit = $VBoxContainer/PasswordInput
@@ -28,6 +30,12 @@ func _on_register_button_pressed() -> void:
 func _on_register_success() -> void:
 	feedback_label.text = "Registration successful!"
 	UIManager.push("game_ui")
+
+	var mission_result: Dictionary = await DataManager.request_start_mission(INTRO_MISSION_ID)
+	if mission_result.get("success", false) == true:
+		UIManager.push("combat_ui", {"mission_id": INTRO_MISSION_ID})
+	else:
+		push_warning("Intro mission failed to start after registration: %s" % mission_result.get("error", mission_result.get("error_message", "Unknown error")))
 
 func _on_register_failed(error_code: int) -> void:
 	feedback_label.text = "Registration failed. Error code: %d" % error_code

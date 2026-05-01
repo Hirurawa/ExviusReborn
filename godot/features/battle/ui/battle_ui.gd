@@ -510,21 +510,39 @@ func _extract_skill_mp_cost(skill_data: Dictionary) -> int:
 			return maxi(0, int(cost_dict.get("MP", 0)))
 	return 0
 
+func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String) -> void:
+	if formatted_name == "":
+		return
+
+	var bg_path = "res://assets/battle_bg/%s.jpg" % formatted_name
+	if ResourceLoader.exists(bg_path):
+		background.texture = load(bg_path)
+	else:
+		print("CombatUI: Background not found at ", bg_path)
+
 func init_scene(params: Dictionary) -> void:
 	current_mission_id = params.get("mission_id", "")
 	var dungeon_id: String = params.get("dungeon_id", "")
+	var formatted_name: String = ""
 
 	if dungeon_id != "":
 		var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
 		if dungeon_data.has("names"):
 			var dungeon_name = str(dungeon_data["names"][0])
-			var formatted_name = dungeon_name.replace(" ", "_")
+			formatted_name = dungeon_name.replace(" ", "_")
 
-			var bg_path = "res://assets/battle_bg/%s.jpg" % formatted_name
-			if ResourceLoader.exists(bg_path):
-				background.texture = load(bg_path)
-			else:
-				print("CombatUI: Background not found at ", bg_path)
+	if formatted_name == "" and current_mission_id != "":
+		var mission_data: Dictionary = DataManager.game_data_missions.get(str(current_mission_id), {})
+		var mission_dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
+		if mission_dungeon_id != "":
+			var mission_dungeon_data: Dictionary = DataManager.game_data_dungeons.get(mission_dungeon_id, {})
+			if mission_dungeon_data.has("names") and mission_dungeon_data["names"] is Array and mission_dungeon_data["names"].size() > 0:
+				formatted_name = str(mission_dungeon_data["names"][0]).replace(" ", "_")
+
+	if formatted_name == "":
+		formatted_name = DataManager.last_played_dungeon_name
+
+	_apply_battle_background_from_formatted_dungeon_name(formatted_name)
 
 	battle_manager.initialize_battle(current_mission_id)
 

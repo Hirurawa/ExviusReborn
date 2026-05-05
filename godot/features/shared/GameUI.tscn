@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://bxxc7pktal8rf" path="res://features/shared/game_ui.gd" id="1_script"]
 
 [node name="GameUI" type="Control" unique_id=323836925]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,3 +29,73 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
 stretch_mode = 3
+
+[node name="UserMenuButton" type="MenuButton" parent="." unique_id=127501113]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 41.0
+grow_horizontal = 0
+text = "User Options"
+item_count = 2
+popup/item_0/text = "Edit Profile"
+popup/item_0/id = 0
+popup/item_1/text = "Logout"
+popup/item_1/id = 1
+
+[node name="PlayerSpritesContainer" type="Control" parent="." unique_id=15368604]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="UnitDot0" type="Control" parent="PlayerSpritesContainer" unique_id=627351177]
+anchors_preset = 0
+offset_left = 403.0
+offset_top = 185.0
+offset_right = 505.0
+offset_bottom = 287.0
+mouse_filter = 2
+
+[node name="UnitDot1" type="Control" parent="PlayerSpritesContainer" unique_id=445693788]
+anchors_preset = 0
+offset_left = 515.0
+offset_top = 206.0
+offset_right = 617.0
+offset_bottom = 308.0
+mouse_filter = 2
+
+[node name="UnitDot2" type="Control" parent="PlayerSpritesContainer" unique_id=923894529]
+anchors_preset = 0
+offset_left = 364.0
+offset_top = 254.0
+offset_right = 466.0
+offset_bottom = 356.0
+mouse_filter = 2
+
+[node name="UnitDot3" type="Control" parent="PlayerSpritesContainer" unique_id=714573509]
+anchors_preset = 0
+offset_left = 479.0
+offset_top = 273.0
+offset_right = 581.0
+offset_bottom = 375.0
+mouse_filter = 2
+
+[node name="UnitDot4" type="Control" parent="PlayerSpritesContainer" unique_id=968568311]
+anchors_preset = 0
+offset_left = 398.0
+offset_top = 329.0
+offset_right = 500.0
+offset_bottom = 431.0
+mouse_filter = 2
+
+[node name="UnitDot5" type="Control" parent="PlayerSpritesContainer" unique_id=1773989064]
+anchors_preset = 0
+offset_left = 511.0
+offset_top = 350.0
+offset_right = 613.0
+offset_bottom = 452.0
+mouse_filter = 2

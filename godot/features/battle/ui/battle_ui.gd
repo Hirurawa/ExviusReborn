@@ -106,13 +106,22 @@ func _enter_ally_selection_state(action_type: int, action_name: String, action_i
 func _init_combat_inventory() -> void:
 	combat_inventory.clear()
 	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
+	var selected_slots: Array = DataManager.combat_items
 
-	for item_id in stackables.keys():
-		var quantity: int = stackables[item_id]
-		if quantity > 0 and DataManager.game_data_items.has(item_id):
-			var item_data: Dictionary = DataManager.game_data_items[item_id]
-			if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
-				combat_inventory[item_id] = quantity
+	for slot_value in selected_slots:
+		var item_id: String = str(slot_value)
+		if item_id == "":
+			continue
+
+		var quantity: int = int(stackables.get(item_id, 0))
+		if quantity <= 0:
+			continue
+		if not DataManager.game_data_items.has(item_id):
+			continue
+
+		var item_data: Dictionary = DataManager.game_data_items[item_id]
+		if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
+			combat_inventory[item_id] = quantity
 
 func _exit_ally_selection_state() -> void:
 	_is_ally_targeting_mode = false

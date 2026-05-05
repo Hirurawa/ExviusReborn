@@ -6,7 +6,6 @@ var _menu_stack: Array[Node] = []
 var top_header: Node = null
 var bottom_nav: Node = null
 var home_buttons: Node = null
-var user_menu_button: Node = null
 
 # Add standard menu mappings for easier instancing
 var _scenes_map: Dictionary = {
@@ -20,8 +19,9 @@ var _scenes_map: Dictionary = {
 	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
 	"unit_selector_ui": "res://features/outgame/units/UnitSelectorUI.tscn",
 	"unit_stats_popup": "res://features/outgame/units/UnitStatsPopup.tscn",
-	"unit_detail_ui": "res://features/outgame/units/UnitDetailNEW.tscn",
+	"unit_detail_ui": "res://features/outgame/units/UnitDetail.tscn",
 	"items_ui": "res://features/outgame/inventory/ItemsUI.tscn",
+	"item_category_list_ui": "res://features/outgame/inventory/ItemCategoryListUI.tscn",
 	"friends_ui": "res://features/outgame/friends/FriendsUI.tscn",
 	"summon_ui": "res://features/outgame/summon/SummonUI.tscn",
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
@@ -57,22 +57,8 @@ func _load_persistent_overlays() -> void:
 		home_buttons.world_map_pressed.connect(_on_world_map_pressed)
 		canvas_layer.add_child(home_buttons)
 
-	if ResourceLoader.exists("res://features/shared/UserMenuButton.tscn"):
-		var user_menu_scene: PackedScene = preload("res://features/shared/UserMenuButton.tscn")
-		user_menu_button = user_menu_scene.instantiate()
-		user_menu_button.hide()
-		user_menu_button.get_popup().id_pressed.connect(_on_user_menu_pressed)
-		canvas_layer.add_child(user_menu_button)
-
 func _on_world_map_pressed() -> void:
 	push("map_ui")
-
-func _on_user_menu_pressed(id: int) -> void:
-	if id == 0:
-		push("edit_profile_ui")
-	elif id == 1:
-		DataManager.logout()
-		set_root("login_ui")
 
 func _update_overlays() -> void:
 	if _menu_stack.is_empty():
@@ -102,12 +88,6 @@ func _update_overlays() -> void:
 		else:
 			home_buttons.show()
 
-	if user_menu_button:
-		if current_scene_name in hide_top_and_bottom:
-			user_menu_button.hide()
-		else:
-			user_menu_button.show()
-
 	# Enforce persistent nodes stay on top by moving them to end
 	if top_header and top_header.get_parent():
 		canvas_layer.move_child(top_header, -1)
@@ -115,8 +95,6 @@ func _update_overlays() -> void:
 		canvas_layer.move_child(bottom_nav, -1)
 	if home_buttons and home_buttons.get_parent():
 		canvas_layer.move_child(home_buttons, -1)
-	if user_menu_button and user_menu_button.get_parent():
-		canvas_layer.move_child(user_menu_button, -1)
 
 func push(scene_name_key: String, params: Dictionary = {}) -> void:
 	if not _scenes_map.has(scene_name_key):

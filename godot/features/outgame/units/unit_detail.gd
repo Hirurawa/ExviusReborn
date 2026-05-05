@@ -2,6 +2,7 @@ extends Control
 
 const MagicScene: PackedScene = preload("res://features/shared/Skill.tscn")
 const ItemScene: PackedScene = preload("res://features/shared/Item.tscn")
+const UNIT_ANIM_TARGET_HEIGHT: float = 128.0
 
 @onready var illustration_button: TextureButton = $IllustrationButton
 @onready var unit_detail_sprite: TextureRect = $IllustrationButton/unit_charastand_large/unit_chara
@@ -50,13 +51,14 @@ const ItemScene: PackedScene = preload("res://features/shared/Item.tscn")
 @onready var lb_name_label: Label = $VBoxContainer/TraitContent/unit_detail_limit_offset/LimitBurstLabel
 @onready var tm_name_label: Label = $VBoxContainer/TraitContent/UnitBondsbg/unit_mix_bonds_name
 @onready var tm_icon_rect: TextureRect = $VBoxContainer/TraitContent/UnitBondsbg/TrustMasterIcon
+@onready var tm_percent_value: Label = $VBoxContainer/TraitContent/UnitBondsbg/unit_mix_bonds_rate
 
 var current_unit_inst: Dictionary = {}
 
 var _current_major_mode: String = "Equip"
 var _current_stats_sub_tab: String = "Equipment"
 var _current_equip_sub_tab: String = "Traits"
-var _is_animating: bool = false
+var _idle_anim_token: int = 0
 
 var _texture_cache: Dictionary = {}
 
@@ -83,6 +85,7 @@ func _ready() -> void:
 	_apply_current_mode_state()
 
 func _exit_tree() -> void:
+	_stop_idle_animation()
 	if DataManager.units_updated.is_connected(_on_units_updated):
 		DataManager.units_updated.disconnect(_on_units_updated)
 
@@ -103,6 +106,8 @@ func _on_units_updated(units: Array) -> void:
 				break
 
 func _show_unit_detail(unit_inst: Dictionary) -> void:
+	_stop_idle_animation()
+
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
 	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 
@@ -111,6 +116,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
 	var tex: Texture2D = load(img_path) as Texture2D
 	unit_detail_sprite.texture = tex
+	_show_idle_or_static(unit_id)
 
 	var rarity: int = int(unit_inst.get("current_rarity", 1))
 	var max_rarity: int = int(unit_data.get("rarity_max", 5))
@@ -153,6 +159,110 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_populate_resistances(unit_inst)
 	_populate_lb_and_tmr(unit_inst, unit_data)
 	_apply_current_mode_state()
+
+func _show_idle_or_static(unit_id: String) -> void:
+	if unit_id == "":
+		_show_static_illustration()
+		return
+
+	var anim_data: Dictionary = TextureBuilder.load_unit_animation_data(unit_id, "idle")
+	var payload: Dictionary = _get_animation_payload(anim_data)
+	if payload.is_empty():
+		_show_static_illustration()
+		return
+
+	_idle_anim_token += 1
+	var token: int = _idle_anim_token
+
+	unit_detail_sprite.hide()
+	anim_sprite.texture = payload["frames"][0] as Texture2D
+	anim_sprite.show()
+	_fit_anim_sprite(int(payload["frame_width"]), int(payload["frame_height"]))
+	_run_idle_loop(token, payload["frames"], payload["delays"])
+
+func _play_attack_then_resume_idle(unit_id: String) -> void:
+	if unit_id == "":
+		return
+
+	var anim_data: Dictionary = TextureBuilder.load_unit_animation_data(unit_id, "atk")
+	var payload: Dictionary = _get_animation_payload(anim_data)
+	if payload.is_empty():
+		_show_idle_or_static(unit_id)
+		return
+
+	_idle_anim_token += 1
+	var token: int = _idle_anim_token
+
+	unit_detail_sprite.hide()
+	anim_sprite.texture = payload["frames"][0] as Texture2D
+	anim_sprite.show()
+	_fit_anim_sprite(int(payload["frame_width"]), int(payload["frame_height"]))
+	_run_attack_once(token, unit_id, payload["frames"], payload["delays"])
+
+func _get_animation_payload(anim_data: Dictionary) -> Dictionary:
+	if anim_data.is_empty():
+		return {}
+
+	var raw_frames: Array = anim_data.get("frames", [])
+	var frames: Array[Texture2D] = []
+	for frame in raw_frames:
+		var frame_tex: Texture2D = frame as Texture2D
+		if frame_tex != null:
+			frames.append(frame_tex)
+
+	var frame_width: int = int(anim_data.get("frame_width", 0))
+	var frame_height: int = int(anim_data.get("frame_height", 0))
+	if frame_width <= 0 or frame_height <= 0 or frames.is_empty():
+		return {}
+
+	return {
+		"frames": frames,
+		"delays": anim_data.get("delays", []),
+		"frame_width": frame_width,
+		"frame_height": frame_height
+	}
+
+func _show_static_illustration() -> void:
+	anim_sprite.hide()
+	anim_sprite.texture = null
+	unit_detail_sprite.show()
+
+func _fit_anim_sprite(frame_width: int, frame_height: int) -> void:
+	var fit_w: float = maxf(1.0, illustration_button.size.x)
+	var fit_h: float = maxf(1.0, illustration_button.size.y)
+	var scale_factor: float = UNIT_ANIM_TARGET_HEIGHT / float(frame_height)
+	if scale_factor <= 0.0:
+		scale_factor = min(fit_w / float(frame_width), fit_h / float(frame_height))
+	anim_sprite.scale = Vector2(scale_factor, scale_factor)
+	anim_sprite.position = Vector2(fit_w * 0.5, fit_h * 0.5)
+
+func _run_idle_loop(token: int, frames: Array[Texture2D], frame_delays: Array) -> void:
+	while is_instance_valid(self) and is_inside_tree() and token == _idle_anim_token:
+		for i in range(frames.size()):
+			if not is_instance_valid(self) or token != _idle_anim_token:
+				return
+			anim_sprite.texture = frames[i]
+			var delay: float = 0.05
+			if i < frame_delays.size():
+				delay = float(frame_delays[i]) / 60.0
+			await get_tree().create_timer(delay).timeout
+
+func _run_attack_once(token: int, unit_id: String, frames: Array[Texture2D], frame_delays: Array) -> void:
+	for i in range(frames.size()):
+		if not is_instance_valid(self) or token != _idle_anim_token:
+			return
+		anim_sprite.texture = frames[i]
+		var delay: float = 0.05
+		if i < frame_delays.size():
+			delay = float(frame_delays[i]) / 60.0
+		await get_tree().create_timer(delay).timeout
+
+	if not is_instance_valid(self) or token != _idle_anim_token:
+		return
+	_show_idle_or_static(unit_id)
+
+func _stop_idle_animation() -> void:
+	_idle_anim_token += 1
 
 func _populate_resistances(unit_inst: Dictionary) -> void:
 	var element_resist: Dictionary = unit_inst.get("final_stats", {}).get("element_resist", {})
@@ -198,7 +308,9 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		tm_name_label.text = "Trust Master: None"
 		tm_icon_rect.texture = null
 		return
-
+	
+	tm_percent_value.text = str(unit_inst.get("trust_value"))
+	
 	var tmr_type: String = str(tmr_data[0])
 	var tmr_id: String = str(int(tmr_data[1]))
 	var tmr_name: String = "Unknown Reward"
@@ -328,15 +440,30 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			"detail_text": ""
 		}
 
+		var _is_materia_slot_item: bool = false
 		if item_id != "":
 			var template_id: String = DataManager.get_equipment_template_id(item_id)
-			item_data = DataManager.game_data_equipment.get(template_id, {}).duplicate()
+			if DataManager.game_data_equipment.has(template_id):
+				item_data = DataManager.game_data_equipment.get(template_id, {}).duplicate()
+			elif DataManager.game_data_materia.has(template_id):
+				item_data = DataManager.game_data_materia.get(template_id, {}).duplicate()
+				_is_materia_slot_item = true
+			else:
+				item_data = {"name": "", "slot": "", "type": "", "stats": {}}
+				display_options["detail_text"] = "Empty"
 		else:
 			item_data = {"name": "", "slot": "", "type": "", "stats": {}}
 			display_options["detail_text"] = "Empty"
 
 		unit_detail_ability_grid.add_child(slot_cell)
-		slot_cell.setup_from_item_data(item_data, display_options)
+		if _is_materia_slot_item:
+			var icon_name: String = str(item_data.get("icon", ""))
+			var icon_path: String = "res://assets/abilities/" + icon_name if icon_name != "" else ""
+			var effects: Array = item_data.get("effects", [])
+			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
+			slot_cell.setup_placeholder(str(item_data.get("name", "Unknown Materia")), detail_text, {"icon_path": icon_path})
+		else:
+			slot_cell.setup_from_item_data(item_data, display_options)
 		slot_cell.set_clickable(true)
 		slot_cell.pressed.connect(_on_equip_slot_clicked.bind(unit_inst, slot_id, ["Materia"]))
 
@@ -455,47 +582,8 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 		unit_detail_equip_icons_grid.add_child(tex_rect)
 
 func _on_illustration_pressed() -> void:
-	if _is_animating or current_unit_inst.is_empty():
+	if current_unit_inst.is_empty():
 		return
 
 	var unit_id: String = str(current_unit_inst.get("unit_id", ""))
-	if unit_id == "":
-		return
-
-	var anim_data: Dictionary = TextureBuilder.load_unit_animation_data(unit_id)
-	if anim_data.is_empty():
-		return
-
-	var frames: Array = anim_data.get("frames", [])
-	var frame_delays: Array = anim_data.get("delays", [])
-	var frame_width: int = int(anim_data.get("frame_width", 0))
-	var frame_height: int = int(anim_data.get("frame_height", 0))
-	var num_frames: int = int(anim_data.get("num_frames", 0))
-	if frame_width <= 0 or frame_height <= 0 or num_frames <= 0 or frames.is_empty():
-		return
-
-	_is_animating = true
-	unit_detail_sprite.hide()
-
-	anim_sprite.texture = frames[0] as Texture2D
-	anim_sprite.show()
-
-	var fit_w: float = maxf(1.0, illustration_button.size.x)
-	var fit_h: float = maxf(1.0, illustration_button.size.y)
-	var scale_factor: float = min(fit_w / float(frame_width), fit_h / float(frame_height))
-	anim_sprite.scale = Vector2(scale_factor, scale_factor)
-	anim_sprite.position = Vector2(fit_w * 0.5, fit_h * 0.5)
-
-	for i in range(num_frames):
-		if i < frames.size():
-			anim_sprite.texture = frames[i] as Texture2D
-		var delay: float = 0.05
-		if i < frame_delays.size():
-			delay = float(frame_delays[i]) / 60.0
-		await get_tree().create_timer(delay).timeout
-		if not is_instance_valid(self):
-			return
-
-	anim_sprite.hide()
-	unit_detail_sprite.show()
-	_is_animating = false
+	_play_attack_then_resume_idle(unit_id)

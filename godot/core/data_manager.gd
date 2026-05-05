@@ -11,10 +11,14 @@ signal nrg_updated(current_nrg: int, max_nrg: int, time_until_next: float)
 signal currency_updated(gil: int, lapis: int)
 signal units_updated(units: Array)
 signal items_updated(items: Dictionary)
+signal combat_items_updated(slots: Array)
+signal combat_items_loaded(slots: Array)
+signal combat_items_saved(slots: Array)
 signal friends_updated(friends: Object)
 signal friend_action_result(success: bool, message: String)
 signal parties_updated(parties: Array)
 signal party_save_requested(new_parties: Array)
+signal active_party_changed(party_index: int)
 signal purchase_successful()
 signal purchase_failed(error_message: String)
 
@@ -45,7 +49,10 @@ var last_played_dungeon_name: String = ""
 var cleared_missions: Dictionary = {}
 var latest_cleared_mission_id: String = ""
 var owned_items: Dictionary = {"stackables": {}, "equipment": []}
+const COMBAT_ITEM_SLOT_COUNT: int = 10
+var combat_items: Array = ["", "", "", "", "", "", "", "", "", ""]
 var parties: Array = []
+var selected_party_index: int = 0
 
 var game_data_units: Dictionary = {}
 var game_data_items: Dictionary = {}
@@ -69,6 +76,10 @@ const OPCODE_SKILL_SCHEMA_PATH: String = "res://features/battle/logic/skill_sche
 const OPCODE_PASSIVE_SCHEMA_PATH: String = "res://features/battle/logic/passive_schema.json"
 
 var account_info: NakamaAPI.ApiAccount = null
+var _static_data_ready: bool = false
+var _static_data_loading: bool = false
+
+signal _static_data_primed
 
 func _ready() -> void:
 	var server_script: GDScript = preload("res://core/server_connection.gd")
@@ -77,6 +88,7 @@ func _ready() -> void:
 	add_child(server_connection)
 
 	party_save_requested.connect(save_parties)
+	call_deferred("_prime_static_data_cache")
 
 func _process(delta: float) -> void:
 	if max_nrg > 0 and current_nrg < max_nrg:
@@ -110,6 +122,40 @@ func logout() -> void:
 	account_info = null
 	last_entered_mission_id = ""
 	last_played_dungeon_name = ""
+	selected_party_index = 0
+
+func set_combat_item(slot_index: int, item_id: String) -> void:
+	if slot_index < 0 or slot_index >= COMBAT_ITEM_SLOT_COUNT:
+		return
+
+	var normalized_item_id: String = item_id.strip_edges()
+	if normalized_item_id != "":
+		if not game_data_items.has(normalized_item_id):
+			normalized_item_id = ""
+		else:
+			var stackables: Dictionary = owned_items.get("stackables", {})
+			if int(stackables.get(normalized_item_id, 0)) <= 0:
+				normalized_item_id = ""
+
+	if str(combat_items[slot_index]) == normalized_item_id:
+		return
+
+	combat_items[slot_index] = normalized_item_id
+	combat_items_updated.emit(combat_items.duplicate())
+	_save_combat_items_to_server()
+
+func clear_all_combat_items() -> void:
+	for i in range(COMBAT_ITEM_SLOT_COUNT):
+		combat_items[i] = ""
+	combat_items_updated.emit(combat_items.duplicate())
+	_save_combat_items_to_server()
+
+func _save_combat_items_to_server() -> void:
+	var result: Dictionary = await server_connection.save_combat_items_async(combat_items.duplicate())
+	if not result.has("error"):
+		combat_items_saved.emit(combat_items.duplicate())
+	else:
+		push_error("Failed to save combat items: %s" % result.get("error", "Unknown error"))
 
 func update_account(new_username: String) -> bool:
 	var result: int = await server_connection.update_account_async(new_username)
@@ -120,15 +166,8 @@ func update_account(new_username: String) -> bool:
 	return false
 
 func _load_initial_data(email: String) -> void:
-	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
-		AssetPatcher.patch_progress.connect(func(file_name, status):
-			pass
-		)
-		AssetPatcher.patch_complete.connect(_on_patch_complete)
+	await _ensure_static_data_ready()
 
-	AssetPatcher.server_connection = server_connection
-	AssetPatcher.start_patching()
-	await AssetPatcher.patch_complete
 	var stats: Dictionary = await server_connection.read_player_stats_async()
 	assert(stats.has("rank"), "CRITICAL ERROR: stats is missing rank!")
 	if not stats.has("rank"): push_error("CRITICAL ERROR: stats is missing rank!")
@@ -156,6 +195,7 @@ func _load_initial_data(email: String) -> void:
 		await _update_last_played_dungeon_from_mission(last_entered_mission_id)
 	else:
 		last_played_dungeon_name = ""
+
 	await load_mission_progress()
 	rank_updated.emit(current_rank, current_xp, next_rank_xp)
 	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
@@ -163,12 +203,18 @@ func _load_initial_data(email: String) -> void:
 	owned_items = await server_connection.read_player_items_async()
 	items_updated.emit(owned_items)
 
+	combat_items = await server_connection.get_combat_items_async()
+	combat_items_loaded.emit(combat_items.duplicate())
+
 	owned_units_ids = await server_connection.read_player_units_async()
 	owned_units_ids = _hydrate_owned_units(owned_units_ids)
 	units_updated.emit(owned_units_ids)
 	
-	parties = await server_connection.get_parties_async()
+	var parties_payload: Dictionary = await server_connection.get_parties_async()
+	parties = parties_payload.get("parties", [])
+	selected_party_index = _clamp_selected_party_index(int(parties_payload.get("selected_party_index", 0)))
 	parties_updated.emit(parties)
+	active_party_changed.emit(selected_party_index)
 	
 	account_info = await server_connection.get_account_async()
 	if account_info:
@@ -179,6 +225,45 @@ func _load_initial_data(email: String) -> void:
 				_update_wallet_data(wallet)
 
 	data_loaded.emit()
+
+func _ensure_static_data_ready() -> void:
+	if _static_data_ready:
+		return
+
+	if _static_data_loading:
+		await _static_data_primed
+		return
+
+	await _prime_static_data_cache()
+
+func _prime_static_data_cache() -> void:
+	if _static_data_ready or _static_data_loading:
+		return
+
+	_static_data_loading = true
+
+	# Fast path: if sanitized cache matches on-disk versions, skip patcher entirely
+	var early_sig: String = _build_static_data_signature()
+	if early_sig != "" and _try_load_sanitized_cache(early_sig):
+		_load_opcode_schemas()
+		_static_data_ready = true
+		_static_data_loading = false
+		_static_data_primed.emit()
+		return
+
+	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
+		AssetPatcher.patch_progress.connect(func(file_name, status):
+			pass
+		)
+		AssetPatcher.patch_complete.connect(_on_patch_complete)
+
+	AssetPatcher.server_connection = server_connection
+	AssetPatcher.start_patching()
+	await AssetPatcher.patch_complete
+
+	_static_data_ready = true
+	_static_data_loading = false
+	_static_data_primed.emit()
 
 func _sanitize_floats_to_ints(data: Variant) -> Variant:
 	if typeof(data) == TYPE_DICTIONARY:
@@ -197,6 +282,12 @@ func _sanitize_floats_to_ints(data: Variant) -> Variant:
 	return data
 
 func _on_patch_complete() -> void:
+	var cache_signature: String = _build_static_data_signature()
+
+	if _try_load_sanitized_cache(cache_signature):
+		_load_opcode_schemas()
+		return
+
 	game_data_units = _sanitize_floats_to_ints(AssetPatcher.get_data("units"))
 	game_data_items = _sanitize_floats_to_ints(AssetPatcher.get_data("items"))
 	game_data_equipment = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment"))
@@ -209,7 +300,98 @@ func _on_patch_complete() -> void:
 	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
 	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))
 	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
+
+	_save_sanitized_cache(cache_signature)
 	_load_opcode_schemas()
+
+func _build_static_data_signature() -> String:
+	if not AssetPatcher or not AssetPatcher.has_method("get_versions_snapshot"):
+		return ""
+
+	var versions: Dictionary = AssetPatcher.get_versions_snapshot()
+	var parts: Array[String] = []
+
+	for file_type in AssetPatcher.files_to_patch:
+		parts.append("%s=%s" % [file_type, str(versions.get(file_type, ""))])
+
+	return "|".join(parts)
+
+func _try_load_sanitized_cache(signature: String) -> bool:
+	if signature == "":
+		return false
+
+	# Check signature file first — it's tiny, fast to read
+	var sig_path: String = "user://data/sanitized_cache_sig.txt"
+	var bin_path: String = "user://data/sanitized_data_cache.bin"
+	if not FileAccess.file_exists(sig_path) or not FileAccess.file_exists(bin_path):
+		return false
+
+	var sig_file: FileAccess = FileAccess.open(sig_path, FileAccess.READ)
+	if not sig_file:
+		return false
+	var stored_sig: String = sig_file.get_as_text().strip_edges()
+	sig_file.close()
+
+	if stored_sig != signature:
+		return false
+
+	# Signature matches — load binary blob
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(bin_path)
+	if bytes.is_empty():
+		return false
+
+	var decoded: Variant = bytes_to_var(bytes)
+	if not (decoded is Dictionary):
+		return false
+
+	var datasets: Dictionary = decoded
+	game_data_units = datasets.get("units", {})
+	game_data_items = datasets.get("items", {})
+	game_data_equipment = datasets.get("equipment", {})
+	game_data_worlds = datasets.get("worlds", {})
+	game_data_dungeons = datasets.get("dungeons", {})
+	game_data_skills_magic = datasets.get("skills_magic", {})
+	game_data_skills_ability = datasets.get("skills_ability", {})
+	game_data_skills_passive = datasets.get("skills_passive", {})
+	game_data_limitbursts = datasets.get("limitbursts", {})
+	game_data_materia = datasets.get("materia", {})
+	game_data_equipment_icons = datasets.get("equipment-icons", {})
+	game_data_monsters = datasets.get("monsters", [])
+	return true
+
+func _save_sanitized_cache(signature: String) -> void:
+	if signature == "":
+		return
+
+	var datasets: Dictionary = {
+		"units": game_data_units,
+		"items": game_data_items,
+		"equipment": game_data_equipment,
+		"worlds": game_data_worlds,
+		"dungeons": game_data_dungeons,
+		"skills_magic": game_data_skills_magic,
+		"skills_ability": game_data_skills_ability,
+		"skills_passive": game_data_skills_passive,
+		"limitbursts": game_data_limitbursts,
+		"materia": game_data_materia,
+		"equipment-icons": game_data_equipment_icons,
+		"monsters": game_data_monsters
+	}
+
+	# Write binary data blob
+	var bin_path: String = "user://data/sanitized_data_cache.bin"
+	var bin_file: FileAccess = FileAccess.open(bin_path, FileAccess.WRITE)
+	if not bin_file:
+		return
+	bin_file.store_buffer(var_to_bytes(datasets))
+	bin_file.close()
+
+	# Write signature as separate tiny file
+	var sig_path: String = "user://data/sanitized_cache_sig.txt"
+	var sig_file: FileAccess = FileAccess.open(sig_path, FileAccess.WRITE)
+	if sig_file:
+		sig_file.store_string(signature)
+		sig_file.close()
 
 func _load_opcode_schemas() -> void:
 	opcode_schemas_ready = false
@@ -599,11 +781,49 @@ func _subregion_contains_dungeon(dungeons: Variant, dungeon_id: String) -> bool:
 
 	return false
 
+func _clamp_selected_party_index(candidate_index: int) -> int:
+	if parties.is_empty():
+		return 0
+	return clampi(candidate_index, 0, parties.size() - 1)
+
+func get_selected_party_index() -> int:
+	return _clamp_selected_party_index(selected_party_index)
+
+func set_selected_party_index(new_index: int) -> bool:
+	var next_index: int = _clamp_selected_party_index(new_index)
+	if selected_party_index == next_index:
+		return false
+
+	selected_party_index = next_index
+	active_party_changed.emit(selected_party_index)
+	return true
+
+func get_active_party() -> Dictionary:
+	if parties.is_empty():
+		return {}
+
+	var index: int = _clamp_selected_party_index(selected_party_index)
+	if index < 0 or index >= parties.size():
+		return {}
+
+	var party_entry: Variant = parties[index]
+	if party_entry is Dictionary:
+		return party_entry
+	return {}
+
 func save_parties(new_parties: Array) -> Dictionary:
-	var result: Dictionary = await server_connection.save_parties_async(new_parties)
+	var selected_for_save: int = 0
+	if not new_parties.is_empty():
+		selected_for_save = clampi(selected_party_index, 0, new_parties.size() - 1)
+
+	var result: Dictionary = await server_connection.save_parties_async(new_parties, selected_for_save)
 	if not result.has("error"):
+		var previous_selected: int = selected_party_index
 		parties = new_parties
+		selected_party_index = _clamp_selected_party_index(int(result.get("selected_party_index", selected_for_save)))
 		parties_updated.emit(parties)
+		if selected_party_index != previous_selected:
+			active_party_changed.emit(selected_party_index)
 	return result
 
 func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String) -> void:
@@ -614,6 +834,17 @@ func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String
 
 func summon_units(amount: int) -> Array:
 	var summoned_units: Array = await server_connection.summon_units_async(amount)
+	return _handle_summoned_units(summoned_units)
+
+func summon_exp_boost_units(amount: int = 3) -> Array:
+	var summoned_units: Array = await server_connection.summon_exp_boost_units_async(amount)
+	return _handle_summoned_units(summoned_units)
+
+func summon_trust_units(amount: int = 3) -> Array:
+	var summoned_units: Array = await server_connection.summon_trust_units_async(amount)
+	return _handle_summoned_units(summoned_units)
+
+func _handle_summoned_units(summoned_units: Array) -> Array:
 	summoned_units = _hydrate_owned_units(summoned_units)
 	owned_units_ids.append_array(summoned_units)
 	units_updated.emit(owned_units_ids)
@@ -641,6 +872,9 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		owned_units_ids = await server_connection.read_player_units_async()
 		owned_units_ids = _hydrate_owned_units(owned_units_ids)
 		units_updated.emit(owned_units_ids)
+		if result.has("granted_trust_reward") and result.get("granted_trust_reward") is Dictionary:
+			owned_items = await server_connection.read_player_items_async()
+			items_updated.emit(owned_items)
 		if result.has("updated_currency"):
 			_update_wallet_data(result["updated_currency"])
 	return result
@@ -738,8 +972,8 @@ func delete_friend(username: String) -> void:
 	else:
 		friend_action_result.emit(false, "Error code: %d" % result)
 
-func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = []) -> Dictionary:
-	var result: Dictionary = await server_connection.finish_mission_async(win_status, used_items, challenge_results)
+func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = [], mission_drops: Array = []) -> Dictionary:
+	var result: Dictionary = await server_connection.finish_mission_async(win_status, used_items, challenge_results, mission_drops)
 	if not result.has("error") and result.get("success", false) == true:
 		if result.has("rewards"):
 			var rewards = result.rewards
@@ -773,8 +1007,9 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		if win_status:
 			mission_failed.emit(str(result.get("error", "Unknown error finishing mission")))
 	
-	# Update items since they might have been deducted
-	#request_player_items()
+	# Refresh inventory after used-item deductions and mission drops are persisted server-side.
+	owned_items = await server_connection.read_player_items_async()
+	items_updated.emit(owned_items)
 	
 	return result
 
@@ -816,6 +1051,18 @@ func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) ->
 		assert(item.has("template_id"), "CRITICAL ERROR: item is missing template_id!")
 		if not item.has("template_id"): push_error("CRITICAL ERROR: item is missing template_id!")
 		var template_id: String = item["template_id"]
+
+		# Materia instances are stored in the equipment collection; route them separately
+		if str(item.get("item_type", "")) == "MATERIA":
+			if "ability_" in slot_id and game_data_materia.has(template_id):
+				var mat_data: Dictionary = game_data_materia.get(template_id, {})
+				var combined: Dictionary = mat_data.duplicate()
+				combined["instance_id"] = instance_id
+				combined["template_id"] = template_id
+				combined["item_type"] = "MATERIA"
+				combined["equipped_to"] = item.get("equipped_to", null)
+				available_items.append(combined)
+			continue
 
 		assert(game_data_equipment.has(template_id), "CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
 		if not game_data_equipment.has(template_id): push_error("CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)

@@ -1,151 +1,144 @@
 extends Control
 
-@onready var items_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/VBoxContainer/ItemsListContainer
-@onready var equipment_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/VBoxContainer/EquipmentListContainer
+enum ItemCategory {
+	ITEMS,
+	MATERIALS,
+	EQUIPMENT,
+	ABILITIES,
+	VISION_CARD,
+	CRAFT
+}
 
-var _texture_cache: Dictionary = {}
+const ITEMS_ICON_BASE_PATH: String = "res://assets/items/"
+const COMBAT_SLOT_COUNT: int = 10
 
-func _get_dynamic_texture(path: String) -> Texture2D:
-	if _texture_cache.has(path):
-		return _texture_cache[path]
-	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
-	_texture_cache[path] = tex
-	return tex
+@onready var items_button: TextureButton = $Items
+@onready var materials_button: TextureButton = $Materials
+@onready var equipment_button: TextureButton = $Equipment
+@onready var abilities_button: TextureButton = $Abilities
+@onready var vision_card_button: TextureButton = $VisionCard
+@onready var craft_button: TextureButton = $Craft
+@onready var reset_button: TextureButton = $btn_reset
+
+@onready var _frame_buttons: Array[TextureButton] = [
+	$item_bg/item_frame1,
+	$item_bg/item_frame2,
+	$item_bg/item_frame3,
+	$item_bg/item_frame4,
+	$item_bg/item_frame5,
+	$item_bg/item_frame6,
+	$item_bg/item_frame7,
+	$item_bg/item_frame8,
+	$item_bg/item_frame9,
+	$item_bg/item_frame10
+]
+
+@onready var _frame_icons: Array[TextureRect] = [
+	$item_bg/item_frame1/ItemIcon,
+	$item_bg/item_frame2/ItemIcon,
+	$item_bg/item_frame3/ItemIcon,
+	$item_bg/item_frame4/ItemIcon,
+	$item_bg/item_frame5/ItemIcon,
+	$item_bg/item_frame6/ItemIcon,
+	$item_bg/item_frame7/ItemIcon,
+	$item_bg/item_frame8/ItemIcon,
+	$item_bg/item_frame9/ItemIcon,
+	$item_bg/item_frame10/ItemIcon
+]
 
 func _ready() -> void:
-	DataManager.items_updated.connect(_on_items_updated)
-	_refresh_items_list(DataManager.owned_items)
+	items_button.pressed.connect(_on_category_button_pressed.bind(ItemCategory.ITEMS))
+	materials_button.pressed.connect(_on_category_button_pressed.bind(ItemCategory.MATERIALS))
+	equipment_button.pressed.connect(_on_category_button_pressed.bind(ItemCategory.EQUIPMENT))
+	abilities_button.pressed.connect(_on_category_button_pressed.bind(ItemCategory.ABILITIES))
+	vision_card_button.pressed.connect(_on_category_button_pressed.bind(ItemCategory.VISION_CARD))
+	craft_button.pressed.connect(_on_category_button_pressed.bind(ItemCategory.CRAFT))
+	reset_button.pressed.connect(_on_reset_pressed)
 
-func _on_items_updated(items: Dictionary) -> void:
-	_refresh_items_list(items)
+	for i in range(min(COMBAT_SLOT_COUNT, _frame_buttons.size())):
+		_frame_buttons[i].pressed.connect(_on_item_frame_pressed.bind(i))
 
-func _refresh_items_list(owned_items: Dictionary) -> void:
-	for child in items_list_container.get_children():
-		child.queue_free()
-	for child in equipment_list_container.get_children():
-		child.queue_free()
+	if not DataManager.combat_items_updated.is_connected(_on_combat_items_updated):
+		DataManager.combat_items_updated.connect(_on_combat_items_updated)
+	if not DataManager.items_updated.is_connected(_on_items_updated):
+		DataManager.items_updated.connect(_on_items_updated)
 
-	if owned_items.is_empty():
-		var empty_label := Label.new()
-		empty_label.text = "No items owned."
-		items_list_container.add_child(empty_label)
-		
-		var empty_equip := Label.new()
-		empty_equip.text = "No equipment owned."
-		equipment_list_container.add_child(empty_equip)
-		return
+	_refresh_slot_icons()
 
-	var has_items: bool = false
-	var has_equipment: bool = false
+func _exit_tree() -> void:
+	if DataManager.combat_items_updated.is_connected(_on_combat_items_updated):
+		DataManager.combat_items_updated.disconnect(_on_combat_items_updated)
+	if DataManager.items_updated.is_connected(_on_items_updated):
+		DataManager.items_updated.disconnect(_on_items_updated)
 
-	# Format for owned_items is: {"stackables": {"item_id": count}, "equipment": [{"instance_id": x, "template_id": x}]}
+func _on_category_button_pressed(category: ItemCategory) -> void:
+	UIManager.push("item_category_list_ui", {"category": _get_category_key(category)})
 
-	# Process stackables
-	var stackables: Dictionary = owned_items.get("stackables", {})
-	for item_id in stackables.keys():
-		var quantity: int = stackables[item_id]
+func _on_item_frame_pressed(slot_index: int) -> void:
+	UIManager.push("item_category_list_ui", {
+		"category": "items",
+		"mode": "select_combat",
+		"slot_index": slot_index
+	})
 
-		# Determine if it's an item, equipment, or weapon
-		var is_item: bool = DataManager.game_data_items.has(item_id)
-		var is_equipment: bool = DataManager.game_data_equipment.has(item_id)
+func _on_reset_pressed() -> void:
+	DataManager.clear_all_combat_items()
 
-		var item_data: Dictionary = {}
-		var container_to_use: VBoxContainer = null
+func _on_combat_items_updated(slots: Array) -> void:
+	_refresh_slot_icons(slots)
 
-		if is_item:
-			item_data = DataManager.game_data_items.get(item_id, {})
-			container_to_use = items_list_container
-			has_items = true
-		elif is_equipment:
-			item_data = DataManager.game_data_equipment.get(item_id, {})
-			container_to_use = equipment_list_container
-			has_equipment = true
+func _on_items_updated(_items: Dictionary) -> void:
+	_refresh_slot_icons()
 
-		if item_data.is_empty() or container_to_use == null:
+func _refresh_slot_icons(slots: Array = []) -> void:
+	var selected_slots: Array = slots if not slots.is_empty() else DataManager.combat_items
+	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
+
+	for i in range(min(COMBAT_SLOT_COUNT, _frame_icons.size())):
+		var icon_rect: TextureRect = _frame_icons[i]
+		icon_rect.texture = null
+		icon_rect.hide()
+
+		if i >= selected_slots.size():
 			continue
 
-		var hbox := HBoxContainer.new()
-		container_to_use.add_child(hbox)
-
-		var icon_name: String = item_data.get("icon", "")
-		if icon_name != "":
-			var tex_rect := TextureRect.new()
-			var tex: Texture2D = null
-			if is_item:
-				tex = _get_dynamic_texture("res://assets/items/" + icon_name) if ResourceLoader.exists("res://assets/items/" + icon_name) else null
-			elif is_equipment:
-				tex = _get_dynamic_texture("res://assets/equip/" + icon_name) if ResourceLoader.exists("res://assets/equip/" + icon_name) else null
-
-			if tex:
-				tex_rect.texture = tex
-				tex_rect.custom_minimum_size = Vector2(40, 40)
-				tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-				tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			hbox.add_child(tex_rect)
-
-		var label := Label.new()
-		label.text = "%s x%d" % [item_data.get("name", "Unknown Item"), quantity]
-		label.add_theme_font_size_override("font_size", 18)
-		hbox.add_child(label)
-
-	# Process equipment
-	var equipment_arr: Array = owned_items.get("equipment", [])
-	for equip in equipment_arr:
-		if not equip is Dictionary:
+		var item_id: String = str(selected_slots[i])
+		if item_id == "":
+			continue
+		if int(stackables.get(item_id, 0)) <= 0:
+			continue
+		if not DataManager.game_data_items.has(item_id):
 			continue
 
-		var item_id: String = equip.get("template_id", "")
-		var quantity: int = 1 # Equipment is individual, count is 1
-		
-		# Determine if it's an item, equipment, or weapon
-		var is_item: bool = DataManager.game_data_items.has(item_id)
-		var is_equipment: bool = DataManager.game_data_equipment.has(item_id)
-		
-		var item_data: Dictionary = {}
-		var container_to_use: VBoxContainer = null
-		
-		if is_item:
-			item_data = DataManager.game_data_items.get(item_id, {})
-			container_to_use = items_list_container
-			has_items = true
-		elif is_equipment:
-			item_data = DataManager.game_data_equipment.get(item_id, {})
-			container_to_use = equipment_list_container
-			has_equipment = true
-
-		if item_data.is_empty() or container_to_use == null:
+		var item_data: Dictionary = DataManager.game_data_items.get(item_id, {})
+		var icon_name: String = str(item_data.get("icon", ""))
+		if icon_name == "":
 			continue
 
-		var hbox := HBoxContainer.new()
-		container_to_use.add_child(hbox)
+		var icon_path: String = ITEMS_ICON_BASE_PATH + icon_name
+		if not ResourceLoader.exists(icon_path):
+			continue
 
-		var icon_name: String = item_data.get("icon", "")
-		if icon_name != "":
-			var tex_rect := TextureRect.new()
-			var tex: Texture2D = null
-			if is_item:
-				tex = _get_dynamic_texture("res://assets/items/" + icon_name) if ResourceLoader.exists("res://assets/items/" + icon_name) else null
-			elif is_equipment:
-				tex = _get_dynamic_texture("res://assets/equip/" + icon_name) if ResourceLoader.exists("res://assets/equip/" + icon_name) else null
-				
-			if tex:
-				tex_rect.texture = tex
-				tex_rect.custom_minimum_size = Vector2(40, 40)
-				tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-				tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			hbox.add_child(tex_rect)
+		var icon_texture: Texture2D = ResourceLoader.load(icon_path) as Texture2D
+		if icon_texture == null:
+			continue
 
-		var label := Label.new()
-		label.text = "%s x%d" % [item_data.get("name", "Unknown Item"), quantity]
-		label.add_theme_font_size_override("font_size", 18)
-		hbox.add_child(label)
-		
-	if not has_items:
-		var empty_label := Label.new()
-		empty_label.text = "No items owned."
-		items_list_container.add_child(empty_label)
+		icon_rect.texture = icon_texture
+		icon_rect.show()
 
-	if not has_equipment:
-		var empty_label := Label.new()
-		empty_label.text = "No equipment owned."
-		equipment_list_container.add_child(empty_label)
+func _get_category_key(category: ItemCategory) -> String:
+	match category:
+		ItemCategory.ITEMS:
+			return "items"
+		ItemCategory.MATERIALS:
+			return "materials"
+		ItemCategory.EQUIPMENT:
+			return "equipment"
+		ItemCategory.ABILITIES:
+			return "abilities"
+		ItemCategory.VISION_CARD:
+			return "vision_card"
+		ItemCategory.CRAFT:
+			return "craft"
+		_:
+			return "items"

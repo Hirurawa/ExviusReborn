@@ -30,7 +30,8 @@ local function build_starter_unit(unit_id, instance_id)
         trust_value = 0.0,
         limitburst_level = 1,
         limitburst_xp = 0,
-        is_locked = false
+        is_locked = false,
+        current_accumulated_exp = 0
     }
 end
 
@@ -132,7 +133,10 @@ function PlayerData.ensure_new_account_initialized(user_id)
                 collection = "user_data",
                 key = "parties",
                 user_id = user_id,
-                value = { parties = build_default_parties(STARTER_RAIN_INSTANCE_ID, STARTER_LASSWELL_INSTANCE_ID) },
+                value = {
+                    parties = build_default_parties(STARTER_RAIN_INSTANCE_ID, STARTER_LASSWELL_INSTANCE_ID),
+                    selected_party_index = 0
+                },
                 permission_read = 1,
                 permission_write = 1
             }
@@ -140,6 +144,8 @@ function PlayerData.ensure_new_account_initialized(user_id)
     else
         local current_value = parties_object[1].value or {}
         local current_parties = current_value.parties
+        local selected_party_index = tonumber(current_value.selected_party_index) or 0
+        selected_party_index = math.floor(selected_party_index)
         local changed = false
 
         if type(current_parties) ~= "table" then
@@ -178,13 +184,27 @@ function PlayerData.ensure_new_account_initialized(user_id)
             end
         end
 
+        local max_index = #current_parties - 1
+        if max_index < 0 then
+            max_index = 0
+        end
+        if selected_party_index < 0 then
+            selected_party_index = 0
+            changed = true
+        elseif selected_party_index > max_index then
+            selected_party_index = max_index
+            changed = true
+        elseif current_value.selected_party_index == nil then
+            changed = true
+        end
+
         if changed then
             nk.storage_write({
                 {
                     collection = "user_data",
                     key = "parties",
                     user_id = user_id,
-                    value = { parties = current_parties },
+                    value = { parties = current_parties, selected_party_index = selected_party_index },
                     permission_read = 1,
                     permission_write = 1
                 }

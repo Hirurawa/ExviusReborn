@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://cp68rawsw1b8u"]
+
+[ext_resource type="Script" uid="uid://cduhj343pctg" path="res://features/outgame/inventory/item_category_list_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bc5s030hkaxtr" path="res://assets/ui/item/item_bg.tres" id="2_item_bg"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="3_header_bg"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="4_back_normal"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="5_back_pressed"]
+
+[node name="ItemCategoryListUI" type="Control" unique_id=60255317]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="UnitNamebgChara2" type="TextureRect" parent="." unique_id=379129501]
+layout_mode = 0
+offset_top = 1.0
+offset_right = 560.0
+offset_bottom = 73.0
+texture = ExtResource("3_header_bg")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="UnitNamebgChara2" unique_id=1962461091]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Items"
+
+[node name="BackButton" type="TextureButton" parent="UnitNamebgChara2" unique_id=1632732036]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("4_back_normal")
+texture_pressed = ExtResource("5_back_pressed")
+
+[node name="Back" type="Label" parent="UnitNamebgChara2/BackButton" unique_id=1913829208]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ItemBackground" type="TextureRect" parent="." unique_id=1747049824]
+layout_mode = 0
+offset_top = 84.0
+texture = ExtResource("2_item_bg")
+expand_mode = 1
+
+[node name="ItemsScroll" type="ScrollContainer" parent="." unique_id=892221847]
+layout_mode = 1
+offset_left = 3.0
+offset_top = 70.0
+offset_right = 640.0
+offset_bottom = 740.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="ItemGrid" type="GridContainer" parent="ItemsScroll" unique_id=770224966]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2

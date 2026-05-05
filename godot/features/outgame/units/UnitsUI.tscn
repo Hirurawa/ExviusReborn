@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dugxed36vqf78" path="res://features/outgame/units/units_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://005aq5cxxido" path="res://assets/ui/unit/unit_charastand_small.tres" id="2_4fc4h"]
+[ext_resource type="Texture2D" uid="uid://utgca2gftny6" path="res://assets/ui/unit/unit_awakening_icon1.tres" id="3_e30sy"]
 
 [node name="UnitsUI" type="Control" unique_id=1141370021]
 layout_mode = 3
@@ -80,8 +81,9 @@ size_flags_horizontal = 3
 
 [node name="unit_pedestal_1" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot1" unique_id=405535803]
 layout_mode = 0
+offset_left = -10.0
 offset_top = 63.0
-offset_right = 148.0
+offset_right = 138.0
 offset_bottom = 231.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
@@ -339,3 +341,5 @@ custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Awaken Units (Placeholder)"
+icon = ExtResource("3_e30sy")
+expand_icon = true

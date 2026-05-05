@@ -1,18 +1,20 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cq0sopywedfst"]
 
-[ext_resource type="Script" path="res://features/outgame/map/map_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://c1a8m3b227wln" path="res://features/outgame/map/map_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="2_le8hw"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_810w5"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_otgok"]
 
-[node name="MapUI" type="Control"]
-script = ExtResource("1_script")
-visible = false
+[node name="MapUI" type="Control" unique_id=390236831]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1543511304]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,7 +23,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.12, 0.12, 0.12, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1068905615]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,80 +31,109 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TopSpacer" type="Control" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 200)
+[node name="TopSpacer" type="Control" parent="VBoxContainer" unique_id=1354124082]
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 
-[node name="TopBar" type="HBoxContainer" parent="VBoxContainer"]
+[node name="TopBar" type="HBoxContainer" parent="VBoxContainer" unique_id=1805616994]
 layout_mode = 2
 
-[node name="BackButton" type="Button" parent="VBoxContainer/TopBar"]
+[node name="UnitNamebgChara" type="TextureRect" parent="VBoxContainer/TopBar" unique_id=1998544103]
 layout_mode = 2
-text = "< Back"
+texture = ExtResource("2_le8hw")
+stretch_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="Title" type="Label" parent="VBoxContainer/TopBar/UnitNamebgChara" unique_id=260999710]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "World Map"
+
+[node name="BackButton" type="TextureButton" parent="VBoxContainer/TopBar/UnitNamebgChara" unique_id=1506194141]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("3_810w5")
+texture_pressed = ExtResource("4_otgok")
+
+[node name="Back" type="Label" parent="VBoxContainer/TopBar/UnitNamebgChara/BackButton" unique_id=290300237]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=45184246]
 layout_mode = 2
 
-[node name="WorldOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+[node name="WorldOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer" unique_id=2039398621]
 layout_mode = 2
 size_flags_horizontal = 3
 text_overrun_behavior = 3
 clip_text = true
 fit_to_longest_item = false
 
-[node name="RegionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+[node name="RegionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer" unique_id=320417280]
 layout_mode = 2
 size_flags_horizontal = 3
 text_overrun_behavior = 3
 clip_text = true
 fit_to_longest_item = false
 
-[node name="SubregionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+[node name="SubregionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer" unique_id=1057496023]
 layout_mode = 2
 size_flags_horizontal = 3
 text_overrun_behavior = 3
 clip_text = true
 fit_to_longest_item = false
 
-[node name="MapScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+[node name="MapScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1348964588]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="MapSizer" type="Control" parent="VBoxContainer/MapScrollContainer"]
+[node name="MapSizer" type="Control" parent="VBoxContainer/MapScrollContainer" unique_id=1741227085]
 custom_minimum_size = Vector2(2000, 2000)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
 
-[node name="MapContent" type="Control" parent="VBoxContainer/MapScrollContainer/MapSizer"]
+[node name="MapContent" type="Control" parent="VBoxContainer/MapScrollContainer/MapSizer" unique_id=299129187]
 anchors_preset = 0
 mouse_filter = 1
 
-[node name="MapImage" type="TextureRect" parent="VBoxContainer/MapScrollContainer/MapSizer/MapContent"]
+[node name="BackgroundImage" type="TextureRect" parent="VBoxContainer/MapScrollContainer/MapSizer/MapContent" unique_id=420358507]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 2000.0
+offset_bottom = 2000.0
 mouse_filter = 2
+stretch_mode = 5
 
-[node name="MissionDetailsPopup" type="PopupPanel" parent="."]
+[node name="MissionDetailsPopup" type="PopupPanel" parent="." unique_id=1002482684]
 size = Vector2i(400, 400)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MissionDetailsPopup"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MissionDetailsPopup" unique_id=971260839]
 offset_left = 4.0
 offset_top = 4.0
 offset_right = 396.0
 offset_bottom = 396.0
 
-[node name="DungeonNameLabel" type="Label" parent="MissionDetailsPopup/VBoxContainer"]
+[node name="DungeonNameLabel" type="Label" parent="MissionDetailsPopup/VBoxContainer" unique_id=219395190]
 layout_mode = 2
 text = "Dungeon Name"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MissionDetailsPopup/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MissionDetailsPopup/VBoxContainer" unique_id=62661457]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="MissionsListContainer" type="VBoxContainer" parent="MissionDetailsPopup/VBoxContainer/ScrollContainer"]
+[node name="MissionsListContainer" type="VBoxContainer" parent="MissionDetailsPopup/VBoxContainer/ScrollContainer" unique_id=711388605]
 layout_mode = 2
 size_flags_horizontal = 3

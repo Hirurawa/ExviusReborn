@@ -163,20 +163,23 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		var item_id = equipment[slot_id]
 		if item_id != null and item_id != "":
 			var template_id = DataManager.get_equipment_template_id(item_id)
-			assert(DataManager.game_data_equipment.has(template_id), "CRITICAL ERROR: game_data_equipment is missing template_id: " + str(template_id))
-			if not DataManager.game_data_equipment.has(template_id): push_error("CRITICAL ERROR: game_data_equipment is missing template_id: " + str(template_id))
-			var item_data = DataManager.game_data_equipment[template_id]
+			var item_data: Dictionary = {}
+			if DataManager.game_data_equipment.has(template_id):
+				item_data = DataManager.game_data_equipment[template_id]
+			elif DataManager.game_data_materia.has(template_id):
+				item_data = DataManager.game_data_materia[template_id]
+			else:
+				push_error("CRITICAL ERROR: template_id not found in equipment or materia data: " + str(template_id))
+				continue
 
-			assert(item_data.has("stats"), "CRITICAL ERROR: item_data is missing stats!")
-			if not item_data.has("stats"): push_error("CRITICAL ERROR: item_data is missing stats!")
-			var item_stats = item_data["stats"]
-			
+			var item_stats: Dictionary = item_data.get("stats", {})
+
 			for stat_name in final_profile["stats"].keys():
 				flat_mods[stat_name] += item_stats.get(stat_name, 0)
 
 			_accumulate_named_resists(item_stats.get("element_resist", null), element_resists, ELEMENTS)
 			_accumulate_named_resists(item_stats.get("status_resist", null), status_resists, STATUSES)
-				
+
 			var equip_skills = item_data.get("skills", [])
 			if equip_skills != null:
 				for skill_id in equip_skills:

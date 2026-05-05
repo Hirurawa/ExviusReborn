@@ -206,12 +206,16 @@ func initialize_battle(mission_id: String) -> void:
 	party_data = []
 
 	if DataManager.parties.size() > 0:
-		var first_party = DataManager.parties[0]
-		var party_instance_ids = []
-		if typeof(first_party) == TYPE_DICTIONARY:
-			party_instance_ids = first_party.get("units", [])
-		elif typeof(first_party) == TYPE_ARRAY:
-			party_instance_ids = first_party
+		var active_party: Dictionary = DataManager.get_active_party()
+		var party_instance_ids: Array = []
+		if not active_party.is_empty():
+			party_instance_ids = active_party.get("units", [])
+		else:
+			var fallback_party: Variant = DataManager.parties[0]
+			if typeof(fallback_party) == TYPE_DICTIONARY:
+				party_instance_ids = fallback_party.get("units", [])
+			elif typeof(fallback_party) == TYPE_ARRAY:
+				party_instance_ids = fallback_party
 
 		for instance_id in party_instance_ids:
 			if instance_id == "":
@@ -654,7 +658,7 @@ func _trigger_mission_complete() -> void:
 	print("Mission Drops: ", mission_drops)
 
 	if DataManager.has_method("request_finish_mission"):
-		await DataManager.request_finish_mission(true, current_mission_id, used_items, challenge_results)
+		await DataManager.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
 
 	mission_cleared.emit()
 

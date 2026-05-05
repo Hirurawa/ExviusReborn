@@ -193,14 +193,23 @@ func get_mission_progress_async() -> Dictionary:
 	return {"cleared_missions": {}}
 
 func summon_units_async(amount: int) -> Array:
+	return await _summon_units_by_rpc_async("summon_units", amount)
+
+func summon_exp_boost_units_async(amount: int) -> Array:
+	return await _summon_units_by_rpc_async("debug_add_exp_boost_units", amount)
+
+func summon_trust_units_async(amount: int) -> Array:
+	return await _summon_units_by_rpc_async("debug_add_trust_units", amount)
+
+func _summon_units_by_rpc_async(rpc_id: String, amount: int) -> Array:
 	if _session == null or _session.is_expired():
 		return []
 
 	var payload = JSON.stringify({"amount": amount})
-	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "summon_units", payload)
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
 
 	if result.is_exception():
-		push_error("Failed to summon units: %s" % result.get_exception().message)
+		push_error("Failed to summon units (%s): %s" % [rpc_id, result.get_exception().message])
 		return []
 
 	var dict = JSON.parse_string(result.payload)
@@ -266,9 +275,9 @@ func enhance_unit_async(base_unit_instance_id: String, material_unit_instance_id
 
 	return {}
 
-func get_parties_async() -> Array:
+func get_parties_async() -> Dictionary:
 	if not _session:
-		return []
+		return {"parties": [], "selected_party_index": 0}
 
 	var rpc_id = "get_parties"
 	var payload = "{}"
@@ -276,24 +285,72 @@ func get_parties_async() -> Array:
 
 	if result.is_exception():
 		push_error("get_parties error: %s" % result.get_exception().message)
-		return []
+		return {"parties": [], "selected_party_index": 0}
 
-	var data = JSON.parse_string(result.payload)
-	if data and data.has("parties"):
-		return data.parties
-	return []
+	var parsed: Variant = JSON.parse_string(result.payload)
+	if not (parsed is Dictionary):
+		return {"parties": [], "selected_party_index": 0}
 
-func save_parties_async(parties: Array) -> Dictionary:
+	var data: Dictionary = parsed
+	var parties: Array = []
+	var selected_party_index: int = int(data.get("selected_party_index", 0))
+	if data.has("parties") and data["parties"] is Array:
+		parties = data["parties"]
+
+	return {
+		"parties": parties,
+		"selected_party_index": selected_party_index
+	}
+
+func save_parties_async(parties: Array, selected_party_index: int) -> Dictionary:
 	if not _session:
 		return {"error": "Not authenticated"}
 
 	var rpc_id = "save_parties"
-	var payload = JSON.stringify({"parties": parties})
+	var payload = JSON.stringify({
+		"parties": parties,
+		"selected_party_index": selected_party_index
+	})
 	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
 
 	if result.is_exception():
 		var err_msg = result.get_exception().message
 		push_error("save_parties error: %s" % err_msg)
+		return {"error": err_msg}
+
+	var data = JSON.parse_string(result.payload)
+	if data:
+		return data
+	return {"error": "Failed to parse response"}
+
+func get_combat_items_async() -> Array:
+	if _session == null or _session.is_expired():
+		return ["", "", "", "", "", "", "", "", "", ""]
+
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "get_combat_items", "{}")
+
+	if result.is_exception():
+		push_error("get_combat_items error: %s" % result.get_exception().message)
+		return ["", "", "", "", "", "", "", "", "", ""]
+
+	var data = JSON.parse_string(result.payload)
+	if data and data.has("slots"):
+		return data.get("slots", [])
+	return ["", "", "", "", "", "", "", "", "", ""]
+
+func save_combat_items_async(slots: Array) -> Dictionary:
+	if not _session:
+		return {"error": "Not authenticated"}
+
+	var rpc_id = "save_combat_items"
+	var payload = JSON.stringify({
+		"slots": slots
+	})
+	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
+
+	if result.is_exception():
+		var err_msg = result.get_exception().message
+		push_error("save_combat_items error: %s" % err_msg)
 		return {"error": err_msg}
 
 	var data = JSON.parse_string(result.payload)
@@ -356,7 +413,7 @@ func start_mission_async(mission_id: String) -> Dictionary:
 
 	return {"success": false, "error": "Invalid response"}
 
-func finish_mission_async(win_status: bool, used_items: Dictionary = {}, challenge_results: Array = []) -> Dictionary:
+func finish_mission_async(win_status: bool, used_items: Dictionary = {}, challenge_results: Array = [], mission_drops: Array = []) -> Dictionary:
 	if _session == null or _session.is_expired():
 		return {"success": false, "error": "Not authenticated"}
 
@@ -366,6 +423,8 @@ func finish_mission_async(win_status: bool, used_items: Dictionary = {}, challen
 	}
 	if not challenge_results.is_empty():
 		payload_data["challenge_results"] = challenge_results
+	if not mission_drops.is_empty():
+		payload_data["mission_drops"] = mission_drops
 
 	var payload = JSON.stringify(payload_data)
 	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, "finish_mission", payload)

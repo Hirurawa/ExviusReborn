@@ -1,5 +1,12 @@
 extends Control
 
+const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
+
+const SLOT_FALLBACK_W: float = 128.0
+const SLOT_FALLBACK_H: float = 168.0
+const SLOT_SIDE_PADDING: float = 4.0
+const SLOT_PEDESTAL_BOTTOM_MARGIN: float = 2.0
+
 @onready var party_name_label: Label = $VBoxContainer/PartyHeaderHBox/PartyNameLabel
 @onready var prev_party_btn: Button = $VBoxContainer/PartyHeaderHBox/PrevPartyButton
 @onready var next_party_btn: Button = $VBoxContainer/PartyHeaderHBox/NextPartyButton
@@ -23,6 +30,50 @@ func _get_dynamic_texture(path: String) -> Texture2D:
 	_texture_cache[path] = tex
 	return tex
 
+func _get_pedestal_texture(rarity: int) -> Texture2D:
+	var candidate_paths: Array[String] = [
+		"res://assets/ui/unit/unit_charastand_rare%s_small.tres" % rarity,
+		"res://assets/ui/unit/unit_charastand_rare%s_small.png" % rarity,
+		"res://assets/ui/unit/unit_charastand_small.tres",
+		"res://assets/ui/unit/unit_charastand_small.png"
+	]
+
+	for path in candidate_paths:
+		if ResourceLoader.exists(path):
+			return _get_dynamic_texture(path)
+
+	return null
+
+func _get_or_create_slot_visual(slot_btn: Button) -> Control:
+	var visual_container: Control = slot_btn.get_node_or_null("SharedUnitVisual") as Control
+	if visual_container == null:
+		visual_container = Control.new()
+		visual_container.name = "SharedUnitVisual"
+		visual_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		visual_container.clip_contents = true
+		visual_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot_btn.add_child(visual_container)
+
+		var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+		if unit_visual != null:
+			unit_visual.name = "UnitVisual"
+			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+			unit_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			visual_container.add_child(unit_visual)
+
+		# Hide only the legacy unit portrait layer; keep the legacy pedestal for empty slots.
+		var legacy_unit_rect: TextureRect = slot_btn.get_node_or_null("TextureRect") as TextureRect
+		if legacy_unit_rect != null:
+			legacy_unit_rect.visible = false
+
+	return visual_container
+
+func _set_legacy_pedestal_visible(slot_btn: Button, visible: bool) -> void:
+	for child in slot_btn.get_children():
+		if child is TextureRect and String(child.name).begins_with("unit_pedestal_"):
+			(child as TextureRect).visible = visible
+			return
+
 func _ready() -> void:
 	DataManager.parties_updated.connect(_on_parties_updated)
 	DataManager.units_updated.connect(_on_units_updated)
@@ -31,14 +82,28 @@ func _ready() -> void:
 	next_party_btn.pressed.connect(_on_next_party)
 	view_units_btn.pressed.connect(_on_view_units)
 	enhance_units_btn.pressed.connect(_on_enhance_units)
+	current_party_index = DataManager.get_selected_party_index()
+
+	for i in range(slots_container.get_child_count()):
+		var slot_btn: Button = slots_container.get_child(i) as Button
+		if slot_btn != null and not slot_btn.resized.is_connected(_on_slot_resized):
+			slot_btn.resized.connect(_on_slot_resized)
 
 	_refresh_ui()
+	# Refresh once more after layout so shared visuals use final slot sizes.
+	call_deferred("_refresh_ui")
+
+func _exit_tree() -> void:
+	_commit_selected_party_on_exit()
 
 func _on_parties_updated(parties: Array) -> void:
 	_refresh_ui()
 
 func _on_units_updated(units: Array) -> void:
 	_refresh_ui()
+
+func _on_slot_resized() -> void:
+	call_deferred("_refresh_ui")
 
 func _refresh_ui() -> void:
 	var parties: Array = DataManager.parties
@@ -72,6 +137,7 @@ func _update_slots(unit_uuids: Array) -> void:
 			uuid = unit_uuids[i]
 
 		var slot_tex: Texture2D = null
+		var pedestal_tex: Texture2D = null
 		var unit_name: String = ""
 		var unit_level: String = ""
 		var unit_inst: Dictionary = {}
@@ -83,14 +149,37 @@ func _update_slots(unit_uuids: Array) -> void:
 				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
 				if ResourceLoader.exists(path):
 					slot_tex = _get_dynamic_texture(path)
+				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("rarity", 1)))
 
 				var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
 				unit_name = unit_data.get("name", "Unknown")
 				unit_level = "Lvl %s" % str(int(unit_inst.get("level", 1)))
 
-		# Update slot visuals
-		var tex_rect: TextureRect = slot_btn.get_node("TextureRect") as TextureRect
-		tex_rect.texture = slot_tex
+		# Render slot with the shared unit visual so pedestal style matches rarity.
+		var shared_visual: Control = _get_or_create_slot_visual(slot_btn)
+		var unit_visual: Control = shared_visual.get_node_or_null("UnitVisual") as Control
+		var can_render_shared: bool = unit_visual != null and slot_tex != null and pedestal_tex != null
+		shared_visual.visible = can_render_shared
+		_set_legacy_pedestal_visible(slot_btn, not can_render_shared)
+		if can_render_shared and unit_visual.has_method("setup_in_cell"):
+			var slot_w: float = slot_btn.size.x
+			var slot_h: float = slot_btn.size.y
+			if slot_w <= 0.0:
+				slot_w = SLOT_FALLBACK_W
+			if slot_h <= 0.0:
+				slot_h = SLOT_FALLBACK_H
+			unit_visual.call(
+				"setup_in_cell",
+				slot_tex,
+				pedestal_tex,
+				slot_w,
+				slot_h,
+				SLOT_SIDE_PADDING,
+				SLOT_PEDESTAL_BOTTOM_MARGIN,
+				""
+			)
+
+		# Keep existing labels for name/level.
 		var lbl_name: Label = slot_btn.get_node("NameLabel") as Label
 		lbl_name.text = unit_name
 		var lbl_lvl: Label = slot_btn.get_node("LevelLabel") as Label
@@ -109,16 +198,33 @@ func _find_unit_inst(uuid: String) -> Dictionary:
 	return {}
 
 func _on_prev_party() -> void:
+	if DataManager.parties.is_empty():
+		return
+	var party_count: int = DataManager.parties.size()
 	current_party_index -= 1
 	if current_party_index < 0:
-		current_party_index = max_parties - 1
+		current_party_index = party_count - 1
 	_refresh_ui()
 
 func _on_next_party() -> void:
+	if DataManager.parties.is_empty():
+		return
+	var party_count: int = DataManager.parties.size()
 	current_party_index += 1
-	if current_party_index >= max_parties:
+	if current_party_index >= party_count:
 		current_party_index = 0
 	_refresh_ui()
+
+func _commit_selected_party_on_exit() -> void:
+	if DataManager.parties.is_empty():
+		return
+
+	var changed: bool = DataManager.set_selected_party_index(current_party_index)
+	if not changed:
+		return
+
+	# Persist only the selected party index at Units root exit.
+	DataManager.party_save_requested.emit(DataManager.parties.duplicate(true))
 
 func _on_slot_clicked(slot_index: int, unit_inst: Dictionary) -> void:
 	if unit_inst.is_empty():

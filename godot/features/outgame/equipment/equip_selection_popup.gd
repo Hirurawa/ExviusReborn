@@ -40,7 +40,14 @@ func _populate_list() -> void:
 		var item_cell: Control = ItemScene.instantiate()
 		item_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		equip_selection_list.add_child(item_cell)
-		item_cell.setup_from_item_data(item_dict, {})
+		if str(item_dict.get("item_type", "")) == "MATERIA":
+			var icon_name: String = str(item_dict.get("icon", ""))
+			var icon_path: String = "res://assets/abilities/" + icon_name if icon_name != "" else ""
+			var effects: Array = item_dict.get("effects", [])
+			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
+			item_cell.setup_placeholder(str(item_dict.get("name", "Unknown Materia")), detail_text, {"icon_path": icon_path})
+		else:
+			item_cell.setup_from_item_data(item_dict, {})
 		item_cell.set_clickable(true)
 		item_cell.pressed.connect(_on_equip_item_selected.bind(item_instance_id))
 

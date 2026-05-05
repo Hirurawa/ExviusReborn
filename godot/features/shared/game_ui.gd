@@ -2,10 +2,92 @@ extends Control
 
 @onready var default_background: ColorRect = $DefaultBackground
 @onready var background: TextureRect = $Background
+@onready var user_menu_button: MenuButton = $UserMenuButton
+@onready var player_sprites_container: Control = $PlayerSpritesContainer
+
+const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
+const COMBAT_SPRITE_SCRIPT: GDScript = preload("res://features/battle/ui/combat_sprite.gd")
+
+var _spawned_party_sprites: Array[TextureRect] = []
 
 func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
+	user_menu_button.get_popup().id_pressed.connect(_on_user_menu_pressed)
+	if not DataManager.parties_updated.is_connected(_on_parties_updated):
+		DataManager.parties_updated.connect(_on_parties_updated)
+	if not DataManager.active_party_changed.is_connected(_on_active_party_changed):
+		DataManager.active_party_changed.connect(_on_active_party_changed)
+	if not DataManager.units_updated.is_connected(_on_units_updated):
+		DataManager.units_updated.connect(_on_units_updated)
 	_on_visibility_changed()
+	_refresh_party_sprites()
+
+func _exit_tree() -> void:
+	if DataManager.parties_updated.is_connected(_on_parties_updated):
+		DataManager.parties_updated.disconnect(_on_parties_updated)
+	if DataManager.active_party_changed.is_connected(_on_active_party_changed):
+		DataManager.active_party_changed.disconnect(_on_active_party_changed)
+	if DataManager.units_updated.is_connected(_on_units_updated):
+		DataManager.units_updated.disconnect(_on_units_updated)
+
+func _on_parties_updated(_parties: Array) -> void:
+	_refresh_party_sprites()
+
+func _on_active_party_changed(_party_index: int) -> void:
+	_refresh_party_sprites()
+
+func _on_units_updated(_units: Array) -> void:
+	_refresh_party_sprites()
+
+func _clear_party_sprites() -> void:
+	for dot in player_sprites_container.get_children():
+		for child in dot.get_children():
+			child.queue_free()
+	_spawned_party_sprites.clear()
+
+func _refresh_party_sprites() -> void:
+	_clear_party_sprites()
+
+	var active_party: Dictionary = DataManager.get_active_party()
+	if active_party.is_empty():
+		return
+
+	var party_units: Array = active_party.get("units", [])
+
+	for grid_idx in range(player_sprites_container.get_child_count()):
+		if grid_idx >= GRID_TO_PARTY_MAP.size():
+			continue
+
+		var party_idx: int = GRID_TO_PARTY_MAP[grid_idx]
+		if party_idx < 0 or party_idx >= party_units.size():
+			continue
+
+		var instance_id: String = str(party_units[party_idx])
+		if instance_id == "":
+			continue
+
+		var unit_inst: Dictionary = _find_unit_inst(instance_id)
+		if unit_inst.is_empty():
+			continue
+
+		var unit_id: String = str(unit_inst.get("unit_id", ""))
+		if unit_id == "":
+			continue
+
+		var combat_sprite: TextureRect = COMBAT_SPRITE_SCRIPT.new()
+		combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		combat_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
+		combat_sprite.setup(party_idx, unit_id)
+
+		player_sprites_container.get_child(grid_idx).add_child(combat_sprite)
+		_spawned_party_sprites.append(combat_sprite)
+
+func _find_unit_inst(instance_id: String) -> Dictionary:
+	for unit_entry in DataManager.owned_units_ids:
+		if unit_entry is Dictionary and str(unit_entry.get("instance_id", "")) == instance_id:
+			return unit_entry
+	return {}
 
 func _on_visibility_changed() -> void:
 	if visible:

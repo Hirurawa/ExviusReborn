@@ -3,12 +3,12 @@ extends Control
 @onready var map_scroll: ScrollContainer = $VBoxContainer/MapScrollContainer
 @onready var map_sizer: Control = $VBoxContainer/MapScrollContainer/MapSizer
 @onready var map_content: Control = $VBoxContainer/MapScrollContainer/MapSizer/MapContent
-@onready var map_image: TextureRect = $VBoxContainer/MapScrollContainer/MapSizer/MapContent/MapImage
+@onready var background_image: TextureRect = $VBoxContainer/MapScrollContainer/MapSizer/MapContent/BackgroundImage
 
 @onready var map_world_option: OptionButton = $VBoxContainer/HBoxContainer/WorldOptionButton
 @onready var map_region_option: OptionButton = $VBoxContainer/HBoxContainer/RegionOptionButton
 @onready var map_subregion_option: OptionButton = $VBoxContainer/HBoxContainer/SubregionOptionButton
-@onready var map_back_button: Button = $VBoxContainer/TopBar/BackButton
+@onready var map_back_button: TextureButton = $VBoxContainer/TopBar/UnitNamebgChara/BackButton
 
 @onready var mission_details_popup: PopupPanel = $MissionDetailsPopup
 @onready var mission_dungeon_name: Label = $MissionDetailsPopup/VBoxContainer/DungeonNameLabel
@@ -24,6 +24,7 @@ var current_selected_subregion: String = ""
 var current_selected_dungeon_id: String = ""
 
 var _texture_cache: Dictionary = {}
+var _map_canvas_base_size: Vector2 = Vector2(2000.0, 2000.0)
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
@@ -31,6 +32,30 @@ func _get_dynamic_texture(path: String) -> Texture2D:
 	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
 	_texture_cache[path] = tex
 	return tex
+
+func _apply_map_canvas_size(map_size: Vector2) -> void:
+	_map_canvas_base_size = map_size
+	map_content.size = map_size
+	map_content.custom_minimum_size = map_size
+	background_image.size = map_size
+	map_sizer.custom_minimum_size = map_size * map_zoom_level
+
+func _set_background_for_subregion(subregion_id: String) -> void:
+	if subregion_id == "":
+		background_image.texture = null
+		_apply_map_canvas_size(Vector2(2000.0, 2000.0))
+		return
+
+	var map_texture_path: String = "res://assets/maps/map%s.png" % subregion_id
+	var map_texture: Texture2D = _get_dynamic_texture(map_texture_path)
+	if map_texture:
+		background_image.texture = map_texture
+		_apply_map_canvas_size(Vector2(map_texture.get_size()))
+		return
+
+	background_image.texture = null
+	_apply_map_canvas_size(Vector2(2000.0, 2000.0))
+	push_warning("Map texture missing for subregion '%s': %s" % [subregion_id, map_texture_path])
 
 func _ready() -> void:
 	map_back_button.pressed.connect(func(): UIManager.pop())
@@ -44,7 +69,7 @@ func _ready() -> void:
 	await _apply_latest_cleared_map_selection()
 	map_zoom_level = 1.0
 	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
-	map_sizer.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
+	_apply_map_canvas_size(_map_canvas_base_size)
 
 func _apply_latest_cleared_map_selection() -> void:
 	var selection: Dictionary = await DataManager.get_latest_cleared_map_selection()
@@ -98,7 +123,7 @@ func _on_map_scroll_gui_input(event: InputEvent) -> void:
 
 			if old_zoom != map_zoom_level:
 				map_content.scale = Vector2(map_zoom_level, map_zoom_level)
-				map_sizer.custom_minimum_size = Vector2(2000, 2000) * map_zoom_level
+				map_sizer.custom_minimum_size = _map_canvas_base_size * map_zoom_level
 			map_scroll.accept_event()
 
 	elif event is InputEventMouseMotion and _is_panning_map:
@@ -111,7 +136,7 @@ func _populate_world_options() -> void:
 	map_subregion_option.clear()
 
 	for child in map_content.get_children():
-		if child != map_image:
+		if child != background_image:
 			child.queue_free()
 
 	map_world_option.add_item("Select a World", 0)
@@ -131,9 +156,10 @@ func _on_map_world_selected(index: int) -> void:
 	map_region_option.clear()
 	map_subregion_option.clear()
 	current_selected_world = map_world_option.get_item_metadata(index)
+	_set_background_for_subregion("")
 
 	for child in map_content.get_children():
-		if child != map_image:
+		if child != background_image:
 			child.queue_free()
 
 	if current_selected_world == "":
@@ -158,9 +184,10 @@ func _on_map_world_selected(index: int) -> void:
 func _on_map_region_selected(index: int) -> void:
 	map_subregion_option.clear()
 	current_selected_region = map_region_option.get_item_metadata(index)
+	_set_background_for_subregion("")
 
 	for child in map_content.get_children():
-		if child != map_image:
+		if child != background_image:
 			child.queue_free()
 
 	if current_selected_region == "" or current_selected_world == "":
@@ -186,9 +213,10 @@ func _on_map_region_selected(index: int) -> void:
 
 func _on_map_subregion_selected(index: int) -> void:
 	current_selected_subregion = map_subregion_option.get_item_metadata(index)
+	_set_background_for_subregion(current_selected_subregion)
 
 	for child in map_content.get_children():
-		if child != map_image:
+		if child != background_image:
 			child.queue_free()
 
 	if current_selected_subregion == "" or current_selected_region == "" or current_selected_world == "":

@@ -1,5 +1,11 @@
 class_name OpcodeParser
 
+static func _has_meaningful_payload_value(value: Variant) -> bool:
+	if typeof(value) == TYPE_ARRAY:
+		return not value.is_empty()
+
+	return value != 0
+
 static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) -> Dictionary:
 	
 	var parsed_action: Dictionary = {
@@ -26,7 +32,7 @@ static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) ->
 				var value = payload[i]
 				
 				# Drop zeros and unknowns for a perfectly clean output!
-				if value != 0 and key != "UNKNOWN" and key != "???" and key != "":
+				if _has_meaningful_payload_value(value) and key != "UNKNOWN" and key != "???" and key != "":
 					parsed_effect["effect"][key] = value
 					
 			parsed_action.get("effects").append(parsed_effect)
@@ -82,7 +88,7 @@ static func parse_skill(skill_data: Dictionary, skill_schema: Dictionary) -> Dic
 				var value = payload[i]
 				
 				# Drop zeros and unknowns for a perfectly clean output!
-				if value != 0 and key != "UNKNOWN":
+				if _has_meaningful_payload_value(value) and key != "UNKNOWN":
 					parsed_effect["effect"][key] = value
 					
 			parsed_action.get("effects").append(parsed_effect)

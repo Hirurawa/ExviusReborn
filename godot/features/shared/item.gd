@@ -203,6 +203,9 @@ func _apply_quantity(display_options: Dictionary) -> void:
 	item_count_label.show()
 
 func _apply_slot_badge(item_data: Dictionary, display_options: Dictionary) -> void:
+	if not bool(display_options.get("show_slot_badge", true)):
+		return
+
 	var badge_key: String = str(display_options.get("slot_badge", ""))
 	if badge_key == "":
 		badge_key = _resolve_slot_badge_key(item_data)

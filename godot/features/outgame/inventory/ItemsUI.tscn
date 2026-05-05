@@ -1,10 +1,23 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bqjc8qvkcjgjr"]
 
-[ext_resource type="Script" path="res://features/outgame/inventory/items_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cujpdca08xajr" path="res://features/outgame/inventory/items_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cyo1su671dmm5" path="res://assets/ui/common/bottomline.tres" id="2_3pvk7"]
+[ext_resource type="Texture2D" uid="uid://bc5s030hkaxtr" path="res://assets/ui/item/item_bg.tres" id="3_sc7kn"]
+[ext_resource type="Texture2D" uid="uid://c4j6yu6c2jjo8" path="res://assets/ui/item/item_slot_unset.tres" id="4_nc4ov"]
+[ext_resource type="Texture2D" uid="uid://w2uxym7qq71r" path="res://assets/ui/common/button_mini_long1.tres" id="5_qwgbv"]
+[ext_resource type="Texture2D" uid="uid://cor65d50a6byy" path="res://assets/ui/common/button_mini_long2.tres" id="6_sc7kn"]
+[ext_resource type="Texture2D" uid="uid://wngr07jvje5s" path="res://assets/ui/common/commonR_btnSquare-M.tres" id="6_uqudl"]
+[ext_resource type="Texture2D" uid="uid://b05rwwv8r8oan" path="res://assets/ui/item/largebutton_square_icon_itemList.tres" id="7_wcc7d"]
+[ext_resource type="Texture2D" uid="uid://b6isekrcwp72c" path="res://assets/ui/item/largebutton_square_icon_itemMaterial.tres" id="8_y52l3"]
+[ext_resource type="Texture2D" uid="uid://cnloulc4d47ll" path="res://assets/ui/item/largebutton_square_icon_itemEquip.tres" id="9_pl3kn"]
+[ext_resource type="Texture2D" uid="uid://tvt54jyamotp" path="res://assets/ui/item/largebutton_square_icon_itemAability.tres" id="10_s07ty"]
+[ext_resource type="Texture2D" uid="uid://cibdy8tljf0dq" path="res://assets/ui/item/largebutton_square_icon_itemVisionCard.tres" id="11_aob5u"]
+[ext_resource type="Texture2D" uid="uid://ckaexn5qx7iqx" path="res://assets/ui/item/largebutton_square_icon_itemCraft.tres" id="12_xe3oe"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="14_uqudl"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="15_wcc7d"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="16_y52l3"]
 
-[node name="ItemsUI" type="Control"]
-script = ExtResource("1_script")
-visible = false
+[node name="ItemsUI" type="Control" unique_id=1323044953]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,55 +25,437 @@ anchor_bottom = 1.0
 offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="line_top" type="TextureRect" parent="." unique_id=432024792]
+layout_mode = 0
+offset_top = 48.0
+offset_right = 640.0
+offset_bottom = 128.0
+texture = ExtResource("2_3pvk7")
+expand_mode = 1
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-text = "Inventory"
-horizontal_alignment = 1
+[node name="line_bottom" type="TextureRect" parent="." unique_id=311758643]
+layout_mode = 0
+offset_top = 374.0
+offset_right = 640.0
+offset_bottom = 454.0
+texture = ExtResource("2_3pvk7")
+expand_mode = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
+[node name="item_bg" type="TextureRect" parent="." unique_id=774429093]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 640.0
+offset_bottom = 448.0
+texture = ExtResource("3_sc7kn")
+expand_mode = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/separation = 15
+[node name="item_frame1" type="TextureButton" parent="item_bg" unique_id=724881107]
+layout_mode = 0
+offset_top = 5.0
+offset_right = 120.0
+offset_bottom = 125.0
+texture_normal = ExtResource("4_nc4ov")
 
-[node name="ItemsLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame1" unique_id=1737309371]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame2" type="TextureButton" parent="item_bg" unique_id=54126620]
+layout_mode = 0
+offset_left = 129.0
+offset_top = 5.0
+offset_right = 249.0
+offset_bottom = 125.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame2" unique_id=146282639]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame3" type="TextureButton" parent="item_bg" unique_id=1777509283]
+layout_mode = 0
+offset_left = 259.0
+offset_top = 5.0
+offset_right = 379.0
+offset_bottom = 125.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame3" unique_id=1842807215]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame4" type="TextureButton" parent="item_bg" unique_id=1877011439]
+layout_mode = 0
+offset_left = 389.0
+offset_top = 5.0
+offset_right = 509.0
+offset_bottom = 125.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame4" unique_id=1443681133]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame5" type="TextureButton" parent="item_bg" unique_id=1654769403]
+layout_mode = 0
+offset_left = 519.0
+offset_top = 5.0
+offset_right = 639.0
+offset_bottom = 125.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame5" unique_id=943342711]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame6" type="TextureButton" parent="item_bg" unique_id=1026024460]
+layout_mode = 0
+offset_top = 136.0
+offset_right = 120.0
+offset_bottom = 256.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame6" unique_id=1532052869]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame7" type="TextureButton" parent="item_bg" unique_id=371486152]
+layout_mode = 0
+offset_left = 129.0
+offset_top = 136.0
+offset_right = 249.0
+offset_bottom = 256.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame7" unique_id=2139954664]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame8" type="TextureButton" parent="item_bg" unique_id=1675174177]
+layout_mode = 0
+offset_left = 258.0
+offset_top = 136.0
+offset_right = 378.0
+offset_bottom = 256.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame8" unique_id=2079788254]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame9" type="TextureButton" parent="item_bg" unique_id=830680594]
+layout_mode = 0
+offset_left = 389.0
+offset_top = 136.0
+offset_right = 509.0
+offset_bottom = 256.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame9" unique_id=1575216567]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="item_frame10" type="TextureButton" parent="item_bg" unique_id=1335716923]
+layout_mode = 0
+offset_left = 519.0
+offset_top = 136.0
+offset_right = 639.0
+offset_bottom = 256.0
+texture_normal = ExtResource("4_nc4ov")
+
+[node name="ItemIcon" type="TextureRect" parent="item_bg/item_frame10" unique_id=1229442438]
+layout_mode = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="btn_reset" type="TextureButton" parent="." unique_id=1089698332]
+layout_mode = 0
+offset_left = 272.0
+offset_top = 390.0
+offset_right = 424.0
+offset_bottom = 446.0
+texture_normal = ExtResource("5_qwgbv")
+texture_pressed = ExtResource("6_sc7kn")
+
+[node name="btn_all" type="TextureButton" parent="." unique_id=1236603917]
+layout_mode = 0
+offset_left = 455.0
+offset_top = 390.0
+offset_right = 607.0
+offset_bottom = 446.0
+texture_normal = ExtResource("5_qwgbv")
+texture_pressed = ExtResource("6_sc7kn")
+
+[node name="Items" type="TextureButton" parent="." unique_id=466317759]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 473.0
+offset_right = 159.0
+offset_bottom = 593.0
+
+[node name="btn_item" type="TextureRect" parent="Items" unique_id=288977454]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 140.0
+offset_bottom = 130.0
+texture = ExtResource("6_uqudl")
+stretch_mode = 2
+
+[node name="btn_item_front" type="TextureRect" parent="Items" unique_id=793747877]
+layout_mode = 0
+offset_right = 130.0
+offset_bottom = 86.0
+texture = ExtResource("7_wcc7d")
+expand_mode = 1
+
+[node name="btn_item_text" type="Label" parent="Items" unique_id=1230957026]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 89.0
+offset_right = 125.0
+offset_bottom = 117.0
 theme_override_font_sizes/font_size = 20
 text = "Items"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="ItemsListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
+[node name="Materials" type="TextureButton" parent="." unique_id=1708810229]
+layout_mode = 0
+offset_left = 180.0
+offset_top = 473.0
+offset_right = 310.0
+offset_bottom = 593.0
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
+[node name="btn_material" type="TextureRect" parent="Materials" unique_id=1424516636]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 140.0
+offset_bottom = 130.0
+texture = ExtResource("6_uqudl")
+expand_mode = 1
 
-[node name="EquipmentLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+[node name="btn_material_front" type="TextureRect" parent="Materials" unique_id=785274223]
+layout_mode = 0
+offset_right = 130.0
+offset_bottom = 86.0
+texture = ExtResource("8_y52l3")
+expand_mode = 1
+
+[node name="btn_material_text" type="Label" parent="Materials" unique_id=399359675]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 89.0
+offset_right = 141.0
+offset_bottom = 117.0
+theme_override_font_sizes/font_size = 20
+text = "Materials"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Equipment" type="TextureButton" parent="." unique_id=1772380916]
+layout_mode = 0
+offset_left = 330.0
+offset_top = 473.0
+offset_right = 460.0
+offset_bottom = 593.0
+
+[node name="btn_equip" type="TextureRect" parent="Equipment" unique_id=1718866163]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 140.0
+offset_bottom = 130.0
+texture = ExtResource("6_uqudl")
+expand_mode = 1
+
+[node name="btn_equip_front" type="TextureRect" parent="Equipment" unique_id=1001650169]
+layout_mode = 0
+offset_right = 130.0
+offset_bottom = 86.0
+texture = ExtResource("9_pl3kn")
+expand_mode = 1
+
+[node name="btn_equip_text" type="Label" parent="Equipment" unique_id=765339763]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 89.0
+offset_right = 125.0
+offset_bottom = 117.0
 theme_override_font_sizes/font_size = 20
 text = "Equipment"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="EquipmentListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
+[node name="Abilities" type="TextureButton" parent="." unique_id=1250870130]
+layout_mode = 0
+offset_left = 480.0
+offset_top = 473.0
+offset_right = 610.0
+offset_bottom = 593.0
+
+[node name="btn_ac" type="TextureRect" parent="Abilities" unique_id=1830810843]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 140.0
+offset_bottom = 130.0
+texture = ExtResource("6_uqudl")
+expand_mode = 1
+
+[node name="btn_ac_front" type="TextureRect" parent="Abilities" unique_id=168051665]
+layout_mode = 0
+offset_right = 130.0
+offset_bottom = 86.0
+texture = ExtResource("10_s07ty")
+expand_mode = 1
+
+[node name="btn_ac_text" type="Label" parent="Abilities" unique_id=1889183051]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 89.0
+offset_right = 125.0
+offset_bottom = 117.0
+theme_override_font_sizes/font_size = 20
+text = "Materia
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VisionCard" type="TextureButton" parent="." unique_id=602622283]
+visible = false
+layout_mode = 0
+offset_left = 180.0
+offset_top = 603.0
+offset_right = 310.0
+offset_bottom = 723.0
+
+[node name="btn_visioncard" type="TextureRect" parent="VisionCard" unique_id=1234320308]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 140.0
+offset_bottom = 130.0
+texture = ExtResource("6_uqudl")
+expand_mode = 1
+
+[node name="btn_visioncard_front" type="TextureRect" parent="VisionCard" unique_id=1651780719]
+layout_mode = 0
+offset_right = 130.0
+offset_bottom = 86.0
+texture = ExtResource("11_aob5u")
+expand_mode = 1
+
+[node name="btn_visioncard_text" type="Label" parent="VisionCard" unique_id=35012917]
+layout_mode = 0
+offset_left = -26.0
+offset_top = 87.0
+offset_right = 162.0
+offset_bottom = 115.0
+theme_override_font_sizes/font_size = 20
+text = "Vision card"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Craft" type="TextureButton" parent="." unique_id=272692145]
+visible = false
+layout_mode = 0
+offset_left = 330.0
+offset_top = 602.0
+offset_right = 460.0
+offset_bottom = 722.0
+
+[node name="btn_craft" type="TextureRect" parent="Craft" unique_id=519618236]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 140.0
+offset_bottom = 130.0
+texture = ExtResource("6_uqudl")
+expand_mode = 1
+
+[node name="btn_craft_front" type="TextureRect" parent="Craft" unique_id=587253155]
+layout_mode = 0
+offset_right = 130.0
+offset_bottom = 86.0
+texture = ExtResource("12_xe3oe")
+expand_mode = 1
+
+[node name="btn_craft_text" type="Label" parent="Craft" unique_id=1136322678]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 89.0
+offset_right = 125.0
+offset_bottom = 117.0
+theme_override_font_sizes/font_size = 20
+text = "Craft"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UnitNamebgChara2" type="TextureRect" parent="." unique_id=575576703]
+visible = false
+layout_mode = 0
+offset_top = 1.0
+offset_right = 560.0
+offset_bottom = 73.0
+texture = ExtResource("14_uqudl")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="UnitNamebgChara2" unique_id=1497340676]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Items"
+
+[node name="BackButton" type="TextureButton" parent="UnitNamebgChara2" unique_id=568729259]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("15_wcc7d")
+texture_pressed = ExtResource("16_y52l3")
+
+[node name="Back" type="Label" parent="UnitNamebgChara2/BackButton" unique_id=683655111]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1

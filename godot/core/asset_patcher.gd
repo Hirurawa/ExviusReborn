@@ -174,3 +174,6 @@ func get_data(file_type: String) -> Variant:
 	if cached_data.has(file_type):
 		return cached_data[file_type]
 	return {}
+
+func get_versions_snapshot() -> Dictionary:
+	return _load_versions_file()

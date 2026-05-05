@@ -30,7 +30,6 @@ expand_mode = 1
 stretch_mode = 4
 
 [node name="unit_equip_list_item_count" type="Label" parent="." unique_id=1322872352]
-visible = false
 layout_mode = 0
 offset_left = 70.0
 offset_top = 71.0
@@ -38,8 +37,6 @@ offset_right = 275.0
 offset_bottom = 94.0
 theme_override_font_sizes/font_size = 14
 text = "unit_equip_list_item_count"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="unit_equip_list_name_text" type="Label" parent="." unique_id=2104829644]
 layout_mode = 0

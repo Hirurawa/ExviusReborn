@@ -27,6 +27,9 @@ const PEDESTAL_BOTTOM_MARGIN: int = 2
 const UNIT_SIDE_PADDING: int = 4
 const V_SCROLLBAR_MIN_W: float = 12.0
 const MAX_MATERIAL_SELECTION: int = 5
+const ENHANCE_MAX_TRUST_VALUE: float = 100.0
+const EXP_UNIT_JOB_ID: int = 901
+const TRUST_MATERIAL_JOB_ID: int = 903
 
 signal unit_selected(unit_inst: Dictionary)
 signal materials_selected(units_array: Array)
@@ -106,6 +109,8 @@ func _seed_preselected_materials() -> void:
 		if instance_id == "":
 			continue
 		if _exclude_instance_id_set.has(instance_id):
+			continue
+		if _is_max_trust_playable_material(entry):
 			continue
 		if _selected_units_map.size() >= MAX_MATERIAL_SELECTION:
 			break
@@ -187,6 +192,9 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+		var is_disabled_max_trust_material: bool = _is_max_trust_playable_material(unit_inst)
+		if is_disabled_max_trust_material:
+			_selected_units_map.erase(unit_instance_id)
 		
 		# Keep five columns and shrink cell width only when viewport is tight.
 		var container: Control = Control.new()
@@ -238,6 +246,8 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		click_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))
 		click_btn.z_index = 18
 		container.add_child(click_btn)
+		if is_disabled_max_trust_material:
+			container.modulate = Color(1.0, 1.0, 1.0, 0.45)
 
 		if mode == "enhance_material_selection":
 			var check_box: CheckBox = CheckBox.new()
@@ -247,9 +257,24 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			check_box.mouse_filter = Control.MOUSE_FILTER_STOP
 			var checked: bool = _selected_units_map.has(unit_instance_id)
 			_set_checkbox_state(check_box, checked)
+			check_box.disabled = is_disabled_max_trust_material
+			if is_disabled_max_trust_material:
+				check_box.tooltip_text = "Cannot use a playable unit at 100% trust as enhancement material"
 			check_box.toggled.connect(_on_material_checkbox_toggled.bind(unit_inst))
 			container.add_child(check_box)
 			_material_checkboxes[unit_instance_id] = check_box
+
+			if is_disabled_max_trust_material:
+				var badge: Label = Label.new()
+				badge.text = "MAX TRUST"
+				badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+				badge.position = Vector2(-96, 6)
+				badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				badge.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2, 1.0))
+				badge.add_theme_constant_override("outline_size", 2)
+				badge.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+				badge.z_index = 30
+				container.add_child(badge)
 
 		units_list_container.add_child(container)
 
@@ -263,6 +288,24 @@ func _set_checkbox_state(check_box: CheckBox, state: bool) -> void:
 	check_box.button_pressed = state
 	_suppress_checkbox_signal = false
 
+func _is_playable_unit(unit_inst: Dictionary) -> bool:
+	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	if unit_id == "":
+		return false
+
+	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+	var job_id: int = int(unit_data.get("job_id", 0))
+	return job_id != EXP_UNIT_JOB_ID and job_id != TRUST_MATERIAL_JOB_ID
+
+func _is_max_trust_playable_material(unit_inst: Dictionary) -> bool:
+	if mode != "enhance_material_selection":
+		return false
+	if not _is_playable_unit(unit_inst):
+		return false
+
+	var trust_value: float = float(unit_inst.get("trust_value", 0.0))
+	return trust_value >= ENHANCE_MAX_TRUST_VALUE
+
 func _on_material_checkbox_toggled(checked: bool, unit_inst: Dictionary) -> void:
 	if _suppress_checkbox_signal:
 		return
@@ -271,6 +314,12 @@ func _on_material_checkbox_toggled(checked: bool, unit_inst: Dictionary) -> void
 func _apply_material_toggle(unit_inst: Dictionary, checked: bool) -> void:
 	var instance_id: String = str(unit_inst.get("instance_id", ""))
 	if instance_id == "":
+		return
+	if _is_max_trust_playable_material(unit_inst):
+		_selected_units_map.erase(instance_id)
+		var check_box: CheckBox = _material_checkboxes.get(instance_id, null) as CheckBox
+		if check_box != null:
+			_set_checkbox_state(check_box, false)
 		return
 
 	if checked:
@@ -350,6 +399,8 @@ func _on_unit_clicked(unit_inst: Dictionary) -> void:
 		if selection_callback.is_valid():
 			selection_callback.call(unit_inst)
 	elif mode == "enhance_material_selection":
+		if _is_max_trust_playable_material(unit_inst):
+			return
 		var instance_id: String = str(unit_inst.get("instance_id", ""))
 		var check_box: CheckBox = _material_checkboxes.get(instance_id, null) as CheckBox
 		if check_box == null:

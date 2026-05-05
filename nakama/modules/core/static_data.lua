@@ -42,6 +42,7 @@ parse_rank_exp_csv()
 StaticData.units_data = Utilities.read_json_file("data/units.json") or {}
 StaticData.items_data = Utilities.read_json_file("data/items.json") or {}
 StaticData.equipment_data = Utilities.read_json_file("data/equipment.json") or {}
+StaticData.materia_data = Utilities.read_json_file("data/materia.json") or {}
 StaticData.worlds_data = Utilities.read_json_file("data/worlds.json") or {}
 StaticData.dungeons_data = Utilities.read_json_file("data/dungeons.json") or {}
 StaticData.missions_data = Utilities.read_json_file("data/missions.json") or {}

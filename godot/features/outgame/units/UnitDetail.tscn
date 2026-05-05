@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dgto5l2b0kqpv"]
 
-[ext_resource type="Script" uid="uid://cr3xlq3qhyyjj" path="res://features/outgame/units/unit_detail_new.gd" id="1_omn6i"]
+[ext_resource type="Script" uid="uid://cr3xlq3qhyyjj" path="res://features/outgame/units/unit_detail.gd" id="1_omn6i"]
 [ext_resource type="Texture2D" uid="uid://dr806ftiwnelt" path="res://assets/ui/unit/unit_statusbg.tres" id="1_r0tc3"]
 [ext_resource type="Texture2D" uid="uid://bfrilw2hm3w8v" path="res://assets/ui/unit/unit_charastand_large.tres" id="2_trjmn"]
 [ext_resource type="Texture2D" uid="uid://b4a2fbpjw7631" path="res://assets/ui/unit/unit_chara_label_type.tres" id="3_b7kau"]
@@ -79,7 +79,7 @@ border_color = Color(0.3, 0.3, 0.5, 1)
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[node name="UnitDetailNEW" type="Control" unique_id=1858227993]
+[node name="UnitDetail" type="Control" unique_id=1858227993]
 layout_mode = 3
 anchors_preset = 0
 offset_top = 44.0
@@ -315,7 +315,7 @@ offset_bottom = 128.0
 
 [node name="AnimSprite" type="Sprite2D" parent="IllustrationButton" unique_id=307711002]
 visible = false
-position = Vector2(42, 57)
+position = Vector2(42, 72)
 
 [node name="unit_role_bg" type="TextureRect" parent="." unique_id=160359160]
 visible = false

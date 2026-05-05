@@ -107,8 +107,9 @@ function Inventory.rpc_equip_item(context, payload)
         r_hand = true, l_hand = true, head = true,
         body = true, acc_1 = true, acc_2 = true
     }
+    local is_ability_slot = string.match(slot, "^ability_%d+$") ~= nil
 
-    if not valid_slots[slot] then
+    if not valid_slots[slot] and not is_ability_slot then
         return nk.json_encode({error = "Invalid slot: " .. tostring(slot)})
     end
 
@@ -149,8 +150,14 @@ function Inventory.rpc_equip_item(context, payload)
 
         local template_id = eq_obj.template_id
         local eq_data = StaticData.equipment_data[template_id]
+        local is_materia_item = false
         if not eq_data then
-            return nk.json_encode({error = "Invalid equipment template_id: " .. tostring(template_id)})
+            if is_ability_slot and StaticData.materia_data[template_id] ~= nil then
+                eq_data = StaticData.materia_data[template_id]
+                is_materia_item = true
+            else
+                return nk.json_encode({error = "Invalid equipment template_id: " .. tostring(template_id)})
+            end
         end
 
         local unit_base_data = StaticData.units_data[target_unit.unit_id]
@@ -158,18 +165,20 @@ function Inventory.rpc_equip_item(context, payload)
             return nk.json_encode({error = "Base unit data not found"})
         end
 
-        local can_equip = false
-        if type(unit_base_data.equip) == "table" then
-            for _, type_id in ipairs(unit_base_data.equip) do
-                if type_id == eq_data.type_id then
-                    can_equip = true
-                    break
+        -- Materia can be equipped in any ability slot without unit type restrictions
+        if not is_materia_item then
+            local can_equip = false
+            if type(unit_base_data.equip) == "table" then
+                for _, type_id in ipairs(unit_base_data.equip) do
+                    if type_id == eq_data.type_id then
+                        can_equip = true
+                        break
+                    end
                 end
             end
-        end
-
-        if not can_equip then
-            return nk.json_encode({error = "Unit cannot equip this item type"})
+            if not can_equip then
+                return nk.json_encode({error = "Unit cannot equip this item type"})
+            end
         end
 
         -- Prevent equipping the exact same item instance to multiple slots on the same unit

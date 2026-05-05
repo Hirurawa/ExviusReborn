@@ -18,6 +18,7 @@ extends Control
 
 @onready var LBName: Label = $UnitLbframe/LBName
 @onready var TMName: Label = $TM/unit_mix_bonds_name
+@onready var TMValue: Label = $TM/unit_mix_bonds_rate
 
 var base_unit_instance_id: String = ""
 var base_unit_inst: Dictionary = {}
@@ -136,6 +137,8 @@ func _on_confirm_pressed() -> void:
 		_show_result_popup("No valid material units selected.")
 		return
 
+	var previous_trust_value: float = float(base_unit_inst.get("trust_value", 0.0))
+
 	confirm_button.disabled = true
 
 	var result: Dictionary = await DataManager.enhance_unit(base_unit_instance_id, material_ids)
@@ -146,6 +149,8 @@ func _on_confirm_pressed() -> void:
 		var updated: Dictionary = result.get("updated_base_unit", {})
 		var consumed_count: int = (result.get("consumed_material_ids", []) as Array).size()
 		var gil: int = int(result.get("updated_currency", {}).get("gil", 0))
+		var updated_trust_value: float = float(updated.get("trust_value", previous_trust_value))
+		var reached_max_trust_now: bool = previous_trust_value < 100.0 and updated_trust_value >= 100.0
 		var msg: String = (
 			"Enhancement successful!\n"
 			+ "Level: %d   XP: %d\n"
@@ -161,6 +166,33 @@ func _on_confirm_pressed() -> void:
 			consumed_count,
 			gil
 		]
+
+		var trust_reward: Dictionary = result.get("granted_trust_reward", {})
+		var unlocked_reward_name: String = ""
+		if not trust_reward.is_empty():
+			var reward_type: String = str(trust_reward.get("reward_type", ""))
+			var reward_template_id: String = str(trust_reward.get("template_id", ""))
+			if reward_template_id != "":
+				var reward_name: String = "%s %s" % [reward_type, reward_template_id]
+				if reward_type == "EQUIP" and DataManager.game_data_equipment.has(reward_template_id):
+					reward_name = str(DataManager.game_data_equipment[reward_template_id].get("name", reward_name))
+				elif reward_type == "MATERIA" and DataManager.game_data_materia.has(reward_template_id):
+					reward_name = str(DataManager.game_data_materia[reward_template_id].get("name", reward_name))
+				unlocked_reward_name = reward_name
+				msg += "\nTrust Master Reward acquired: %s" % reward_name
+
+		if reached_max_trust_now:
+			if unlocked_reward_name == "":
+				unlocked_reward_name = _resolve_trust_reward_name(base_unit_inst)
+			if unlocked_reward_name != "":
+				msg += "\nTrust Master reached 100%%!\nUnlocked: %s" % unlocked_reward_name
+			else:
+				msg += "\nTrust Master reached 100%%!"
+
+		var trust_reward_warning: String = str(result.get("trust_reward_warning", ""))
+		if trust_reward_warning != "":
+			msg += "\nTrust Reward Warning: %s" % trust_reward_warning
+
 		base_unit_inst.merge(updated, true)
 		_refresh_base_unit_ui()
 		material_units_array.clear()
@@ -235,6 +267,7 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	else:
 		TMName.text = "None"
 	
+	TMValue.text = str(unit_inst.get("trust_value"))
 	
 	HP.text = str(unit_inst.final_stats["stats"].get("HP"))
 	MP.text = str(unit_inst.final_stats["stats"].get("MP"))
@@ -242,3 +275,25 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	DEF.text = str(unit_inst.final_stats["stats"].get("DEF"))
 	MAG.text = str(unit_inst.final_stats["stats"].get("MAG"))
 	SPR.text = str(unit_inst.final_stats["stats"].get("SPR"))
+
+func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
+	var tmr_data: Variant = unit_inst.get("TMR", null)
+	if tmr_data == null or typeof(tmr_data) != TYPE_ARRAY:
+		return ""
+
+	var tmr_array: Array = tmr_data
+	if tmr_array.size() < 2:
+		return ""
+
+	var tmr_type: String = str(tmr_array[0])
+	var tmr_id: String = str(tmr_array[1])
+	if tmr_id == "":
+		return ""
+
+	if tmr_type == "EQUIP" and DataManager.game_data_equipment.has(tmr_id):
+		return str(DataManager.game_data_equipment[tmr_id].get("name", ""))
+
+	if tmr_type == "MATERIA" and DataManager.game_data_materia.has(tmr_id):
+		return str(DataManager.game_data_materia[tmr_id].get("name", ""))
+
+	return ""

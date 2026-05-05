@@ -37,9 +37,20 @@ layout_mode = 2
 text = "Summon"
 horizontal_alignment = 1
 
-[node name="PerformSummonButton" type="Button" parent="VBoxContainer" unique_id=216101240]
+[node name="SummonButtonsRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PerformSummonButton" type="Button" parent="VBoxContainer/SummonButtonsRow" unique_id=216101240]
 layout_mode = 2
 text = "Summon 3 Units"
+
+[node name="GetCactuarButton" type="Button" parent="VBoxContainer/SummonButtonsRow"]
+layout_mode = 2
+text = "Get Cactuar"
+
+[node name="GetMoogleButton" type="Button" parent="VBoxContainer/SummonButtonsRow"]
+layout_mode = 2
+text = "Get Moogle"
 
 [node name="SummonOverlay" type="ColorRect" parent="." unique_id=1647780593]
 visible = false

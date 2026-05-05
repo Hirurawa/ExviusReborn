@@ -22,6 +22,195 @@ local ENHANCE_LIMITBURST_LEVEL_STEP = 20
 local ENHANCE_LIMITBURST_BASE_XP_REQUIREMENT = 10
 local ENHANCE_LIMITBURST_XP_REQUIREMENT_GROWTH = 5
 
+local UNIT_TYPE_PLAYABLE = "playable"
+local UNIT_TYPE_EXP_MATERIAL = "exp_material"
+local UNIT_TYPE_TRUST_MATERIAL = "trust_material"
+
+local PLAYABLE_ACCUMULATED_EXP_TRANSFER_RATE = 0.5
+local PLAYABLE_DUPLICATE_TRUST_BONUS = 5.0
+local DEFAULT_MAX_ACCUMULATED_EXP = 2000000000
+
+local EXP_UNIT_JOB_ID = 901
+local TRUST_MATERIAL_JOB_ID = 903
+local EXP_UNIT_YIELD_BY_PATTERN = {
+    [201] = 5000,
+    [202] = 10000,
+    [203] = 30000,
+    [204] = 100000,
+}
+
+local TRUST_YIELD_BY_UNIT_ID = {
+    [904000101] = 1.0,  -- 1★ Trust Moogle
+    [904000104] = 5.0,  -- 4★ Trust Moogle
+    [904000105] = 10.0, -- 5★ Trust Moogle
+}
+
+local function get_raw_unit_exp_pattern(unit_id, unit_data, rarity)
+    local entries = unit_data and unit_data.entries
+    if type(entries) == "table" then
+        if rarity ~= nil then
+            for _, entry in pairs(entries) do
+                if type(entry) == "table" and tonumber(entry.rarity) == tonumber(rarity) and tonumber(entry.exp_pattern) then
+                    return tonumber(entry.exp_pattern)
+                end
+            end
+        end
+
+        local keyed_entry = entries[tostring(unit_id)]
+        if type(keyed_entry) == "table" and tonumber(keyed_entry.exp_pattern) then
+            return tonumber(keyed_entry.exp_pattern)
+        end
+
+        for _, entry in pairs(entries) do
+            if type(entry) == "table" and tonumber(entry.exp_pattern) then
+                return tonumber(entry.exp_pattern)
+            end
+        end
+    end
+
+    return nil
+end
+
+local function get_progression_exp_pattern(unit_id, unit_data, rarity)
+    local exp_pattern = get_raw_unit_exp_pattern(unit_id, unit_data, rarity)
+    if exp_pattern and StaticData.unit_exp_patterns[exp_pattern] then
+        return exp_pattern
+    end
+
+    return 5
+end
+
+local function get_exp_unit_yield(unit_id)
+    local unit_data = StaticData.units_data[unit_id]
+    if not unit_data or unit_data.job_id ~= EXP_UNIT_JOB_ID then
+        return nil
+    end
+
+    local exp_pattern = get_raw_unit_exp_pattern(unit_id, unit_data, unit_data.rarity_min)
+    if not exp_pattern then
+        return nil
+    end
+
+    return EXP_UNIT_YIELD_BY_PATTERN[exp_pattern]
+end
+
+local function get_unit_type(unit_data)
+    if not unit_data then
+        return UNIT_TYPE_PLAYABLE
+    end
+
+    if unit_data.job_id == EXP_UNIT_JOB_ID then
+        return UNIT_TYPE_EXP_MATERIAL
+    end
+    if unit_data.job_id == TRUST_MATERIAL_JOB_ID then
+        return UNIT_TYPE_TRUST_MATERIAL
+    end
+
+    return UNIT_TYPE_PLAYABLE
+end
+
+local function clamp_min(value, minimum)
+    if value < minimum then
+        return minimum
+    end
+    return value
+end
+
+local function clamp_max(value, maximum)
+    if value > maximum then
+        return maximum
+    end
+    return value
+end
+
+local function get_base_exp_yield(unit, unit_data)
+    if unit_data and tonumber(unit_data.base_exp_yield) then
+        return math.floor(tonumber(unit_data.base_exp_yield))
+    end
+
+    local unit_type = get_unit_type(unit_data)
+    if unit_type == UNIT_TYPE_EXP_MATERIAL then
+        return get_exp_unit_yield(unit.unit_id) or 0
+    end
+
+    if unit_type == UNIT_TYPE_PLAYABLE then
+        local rarity = math.max(1, math.floor(tonumber(unit.current_rarity) or tonumber(unit_data and unit_data.rarity_min) or 1))
+        return ENHANCE_BASE_XP_GAIN + (rarity * ENHANCE_XP_PER_RARITY) + ENHANCE_XP_PER_LEVEL
+    end
+
+    return 0
+end
+
+local function get_material_accumulated_exp(material_unit)
+    local stored = tonumber(material_unit.current_accumulated_exp)
+    if stored == nil then
+        stored = tonumber(material_unit.bonus_exp)
+    end
+    if stored == nil then
+        stored = tonumber(material_unit.xp) or 0
+    end
+    return clamp_min(math.floor(stored), 0)
+end
+
+local function get_material_accumulated_trust(material_unit)
+    return clamp_min(tonumber(material_unit.trust_value) or 0.0, 0.0)
+end
+
+local function get_trust_yield(unit_id, unit_data)
+    if not unit_data then
+        return 0.0
+    end
+
+    local configured_trust_yield = tonumber(unit_data.trust_yield)
+    if configured_trust_yield ~= nil then
+        return clamp_min(configured_trust_yield, 0.0)
+    end
+
+    local fallback_trust_yield = TRUST_YIELD_BY_UNIT_ID[tonumber(unit_id)]
+    if fallback_trust_yield ~= nil then
+        return fallback_trust_yield
+    end
+
+    return 0.0
+end
+
+local function get_trust_mastery_id(unit_data)
+    if not unit_data then
+        return nil
+    end
+
+    if unit_data.trust_mastery_id ~= nil then
+        return tostring(unit_data.trust_mastery_id)
+    end
+
+    if type(unit_data.TMR) == "table" and unit_data.TMR[2] ~= nil then
+        return tostring(unit_data.TMR[2])
+    end
+
+    return nil
+end
+
+local function is_duplicate_unit(base_unit, base_unit_data, material_unit, material_unit_data)
+    if tostring(base_unit.unit_id) == tostring(material_unit.unit_id) then
+        return true
+    end
+
+    local base_mastery = get_trust_mastery_id(base_unit_data)
+    local material_mastery = get_trust_mastery_id(material_unit_data)
+    if base_mastery and material_mastery and base_mastery == material_mastery then
+        return true
+    end
+
+    return false
+end
+
+local function get_max_accumulated_exp(unit_data)
+    if unit_data and tonumber(unit_data.max_accumulated_exp) then
+        return math.max(0, math.floor(tonumber(unit_data.max_accumulated_exp)))
+    end
+    return DEFAULT_MAX_ACCUMULATED_EXP
+end
+
 local function parse_wallet(account_wallet)
     if type(account_wallet) == "table" then
         return account_wallet
@@ -62,6 +251,15 @@ local function normalize_unit(unit)
         unit.is_locked = false
     end
 
+    if unit.trust_reward_claimed == nil then
+        unit.trust_reward_claimed = false
+    end
+
+    unit.current_accumulated_exp = math.floor(tonumber(unit.current_accumulated_exp) or tonumber(unit.bonus_exp) or 0)
+    if unit.current_accumulated_exp < 0 then
+        unit.current_accumulated_exp = 0
+    end
+
     return unit
 end
 
@@ -74,7 +272,7 @@ local function update_unit_next_xp(unit, unit_data)
         return
     end
 
-    local exp_pattern = unit_data.exp_pattern or 5
+    local exp_pattern = get_progression_exp_pattern(unit.unit_id, unit_data, unit.current_rarity)
     local max_level = get_unit_max_level(unit)
     if unit.level < max_level then
         local base_xp = StaticData.calculate_total_xp_for_level(unit.level, exp_pattern)
@@ -87,15 +285,95 @@ local function update_unit_next_xp(unit, unit_data)
     end
 end
 
-local function calculate_material_enhance_gains(material_unit)
-    local rarity = math.max(1, math.floor(tonumber(material_unit.current_rarity) or 1))
-    local level = math.max(1, math.floor(tonumber(material_unit.level) or 1))
+local function calculate_material_enhance_gains(material_unit, material_unit_data)
+    local material_type = get_unit_type(material_unit_data)
 
-    local xp_gain = ENHANCE_BASE_XP_GAIN + (rarity * ENHANCE_XP_PER_RARITY) + (level * ENHANCE_XP_PER_LEVEL)
-    local trust_gain = ENHANCE_BASE_TRUST_GAIN + (rarity * ENHANCE_TRUST_PER_RARITY) + (level * ENHANCE_TRUST_PER_LEVEL)
-    local limitburst_xp_gain = ENHANCE_BASE_LIMITBURST_XP_GAIN + (rarity * ENHANCE_LIMITBURST_XP_PER_RARITY) + math.floor(level / ENHANCE_LIMITBURST_LEVEL_STEP)
+    if material_type == UNIT_TYPE_EXP_MATERIAL then
+        local exp_total = get_base_exp_yield(material_unit, material_unit_data) + get_material_accumulated_exp(material_unit)
+        return exp_total, 0.0, 0
+    end
 
-    return xp_gain, trust_gain, limitburst_xp_gain
+    if material_type == UNIT_TYPE_TRUST_MATERIAL then
+        local trust_total = get_trust_yield(material_unit.unit_id, material_unit_data) + get_material_accumulated_trust(material_unit)
+        return 0, trust_total, 0
+    end
+
+    local base_exp = get_base_exp_yield(material_unit, material_unit_data)
+    local stored_exp = get_material_accumulated_exp(material_unit)
+    local xp_gain = base_exp + math.floor(stored_exp * PLAYABLE_ACCUMULATED_EXP_TRANSFER_RATE)
+
+    return xp_gain, 0.0, 0
+end
+
+-- Returns reward_type ("EQUIP" or "MATERIA"), template_id, error_message.
+local function resolve_trust_reward(unit_data)
+    if not unit_data then
+        return nil, nil, "Missing unit static data for trust reward"
+    end
+
+    if type(unit_data.TMR) == "table" and unit_data.TMR[2] ~= nil then
+        local reward_type = tostring(unit_data.TMR[1] or "")
+        local reward_id   = tostring(unit_data.TMR[2])
+
+        if reward_type == "EQUIP" then
+            if StaticData.equipment_data[reward_id] == nil then
+                return nil, nil, "Trust reward equipment template not found"
+            end
+            return "EQUIP", reward_id, nil
+        elseif reward_type == "MATERIA" then
+            if StaticData.materia_data[reward_id] == nil then
+                return nil, nil, "Trust reward materia template not found"
+            end
+            return "MATERIA", reward_id, nil
+        else
+            return nil, nil, "Unsupported trust reward type: " .. reward_type
+        end
+    end
+
+    if unit_data.trust_mastery_id ~= nil then
+        local reward_id = tostring(unit_data.trust_mastery_id)
+        if StaticData.equipment_data[reward_id] ~= nil then
+            return "EQUIP", reward_id, nil
+        end
+        if StaticData.materia_data[reward_id] ~= nil then
+            return "MATERIA", reward_id, nil
+        end
+    end
+
+    return nil, nil, "No supported trust reward configured"
+end
+
+-- Stores one or more instanced items (EQUIP or MATERIA) in the "equipment" collection.
+-- Each instance carries an item_type field so the client can route to the correct data table.
+local function grant_instanced_item(user_id, item_type, template_id, amount)
+    local grant_count = math.max(1, math.floor(tonumber(amount) or 1))
+    local writes = {}
+    local granted_items = {}
+
+    for _ = 1, grant_count do
+        local item_instance = {
+            instance_id = nk.uuid_v4(),
+            template_id = tostring(template_id),
+            item_type   = tostring(item_type),
+            equipped_to = ""
+        }
+        table.insert(granted_items, item_instance)
+        table.insert(writes, {
+            collection = "equipment",
+            key = item_instance.instance_id,
+            user_id = user_id,
+            value = item_instance,
+            permission_read = 1,
+            permission_write = 1
+        })
+    end
+
+    local ok, err = pcall(nk.storage_write, writes)
+    if not ok then
+        return false, tostring(err), {}
+    end
+
+    return true, nil, granted_items
 end
 
 local function limitburst_xp_required_for_next_level(level)
@@ -127,6 +405,52 @@ end
 
 local function rpc_fail(error_message)
     return nk.json_encode({success = false, error = error_message})
+end
+
+local function build_unit_instance(unit_id)
+    local unit_data = StaticData.units_data[unit_id]
+    if not unit_data then
+        return nil
+    end
+
+    local exp_pattern = get_progression_exp_pattern(unit_id, unit_data, unit_data.rarity_min)
+    local next_xp = StaticData.calculate_xp_for_level(2, exp_pattern)
+
+    return {
+        instance_id = nk.uuid_v4(),
+        unit_id = unit_id,
+        level = 1,
+        xp = 0,
+        current_rarity = unit_data.rarity_min or 1,
+        next_xp = next_xp,
+        equipment = {},
+        trust_value = 0.0,
+        trust_reward_claimed = false,
+        limitburst_level = 1,
+        limitburst_xp = 0,
+        is_locked = false,
+        current_accumulated_exp = 0
+    }
+end
+
+local function summon_fixed_unit(context, unit_id, amount)
+    local unit_data = StaticData.units_data[unit_id]
+    if not unit_data then
+        return nk.json_encode({error = "Unit data not found for unit_id " .. tostring(unit_id)})
+    end
+
+    local summon_amount = math.max(1, math.floor(tonumber(amount) or 1))
+    local summoned_units = {}
+    for _ = 1, summon_amount do
+        local new_unit = build_unit_instance(unit_id)
+        if not new_unit then
+            return nk.json_encode({error = "Failed to build summoned unit"})
+        end
+        table.insert(summoned_units, new_unit)
+    end
+
+    Units.save_units(context.user_id, summoned_units)
+    return nk.json_encode({summoned = summoned_units})
 end
 
 function Units.get_player_units(user_id)
@@ -268,24 +592,10 @@ function Units.summon_units(context, payload)
     for i = 1, amount do
         local random_index = math.random(1, #available_unit_ids)
         local unit_id = available_unit_ids[random_index]
-        local unit_data = StaticData.units_data[unit_id]
-
-        local exp_pattern = unit_data.exp_pattern or 5
-        local next_xp = StaticData.calculate_xp_for_level(2, exp_pattern)
-
-        local new_unit = {
-            instance_id = nk.uuid_v4(),
-            unit_id = unit_id,
-            level = 1,
-            xp = 0,
-            current_rarity = unit_data.rarity_min or 1,
-            next_xp = next_xp,
-            equipment = {},
-            trust_value = 0.0,
-            limitburst_level = 1,
-            limitburst_xp = 0,
-            is_locked = false
-        }
+        local new_unit = build_unit_instance(unit_id)
+        if not new_unit then
+            return nk.json_encode({error = "Failed to build summoned unit for unit_id " .. tostring(unit_id)})
+        end
 
         table.insert(summoned_units, new_unit)
     end
@@ -293,6 +603,26 @@ function Units.summon_units(context, payload)
     Units.save_units(context.user_id, summoned_units)
 
     return nk.json_encode({summoned = summoned_units})
+end
+
+function Units.debug_add_exp_boost_units(context, payload)
+    local request = Utilities.parse_payload(payload)
+    if request == nil then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
+
+    local amount = request.amount or 3
+    return summon_fixed_unit(context, "900020401", amount)
+end
+
+function Units.debug_add_trust_units(context, payload)
+    local request = Utilities.parse_payload(payload)
+    if request == nil then
+        return nk.json_encode({error = "Invalid JSON payload"})
+    end
+
+    local amount = request.amount or 3
+    return summon_fixed_unit(context, "904000105", amount)
 end
 
 function Units.add_unit_xp(context, payload)
@@ -321,7 +651,7 @@ function Units.add_unit_xp(context, payload)
         return nk.json_encode({error = "Unit data not found"})
     end
 
-    local exp_pattern = unit_data.exp_pattern or 5
+    local exp_pattern = get_progression_exp_pattern(unit.unit_id, unit_data, unit.current_rarity)
     local max_level = get_unit_max_level(unit)
 
     unit.xp = unit.xp + xp_amount
@@ -371,7 +701,7 @@ function Units.awaken_unit(context, payload)
     unit.level = 1
     unit.xp = 0
 
-    local exp_pattern = unit_data.exp_pattern or 5
+    local exp_pattern = get_progression_exp_pattern(unit.unit_id, unit_data, unit.current_rarity)
     local next_xp = StaticData.calculate_xp_for_level(2, exp_pattern)
     unit.next_xp = next_xp
 
@@ -422,8 +752,12 @@ function Units.enhance_unit(context, payload)
     end
 
     local base_max_level = get_unit_max_level(base_unit)
-    if base_unit.level >= base_max_level and base_unit.trust_value >= ENHANCE_MAX_TRUST_VALUE then
-        return rpc_fail("Base unit is already at maximum level and trust")
+    local base_unit_type = get_unit_type(base_unit_data)
+
+    if base_unit_type == UNIT_TYPE_PLAYABLE then
+        if base_unit.level >= base_max_level and base_unit.trust_value >= ENHANCE_MAX_TRUST_VALUE then
+            return rpc_fail("Base unit is already at maximum level and trust")
+        end
     end
 
     local material_units = {}
@@ -441,6 +775,24 @@ function Units.enhance_unit(context, payload)
             return rpc_fail("One or more material units are assigned to a party")
         end
 
+        local material_unit_data = StaticData.units_data[material_unit.unit_id]
+        if not material_unit_data then
+            return rpc_fail("Material unit data not found")
+        end
+        local material_type = get_unit_type(material_unit_data)
+
+        if material_type == UNIT_TYPE_PLAYABLE and tonumber(material_unit.trust_value) ~= nil and tonumber(material_unit.trust_value) >= ENHANCE_MAX_TRUST_VALUE then
+            return rpc_fail("One or more material units are already at 100% trust")
+        end
+
+        if base_unit_type == UNIT_TYPE_EXP_MATERIAL and material_type ~= UNIT_TYPE_EXP_MATERIAL then
+            return rpc_fail("Cannot use non-EXP materials to enhance an EXP unit")
+        end
+
+        if base_unit_type == UNIT_TYPE_TRUST_MATERIAL and material_type ~= UNIT_TYPE_TRUST_MATERIAL then
+            return rpc_fail("Cannot use non-trust materials to enhance a trust material unit")
+        end
+
         table.insert(material_units, material_unit)
     end
 
@@ -450,16 +802,6 @@ function Units.enhance_unit(context, payload)
     local current_gil = tonumber(wallet.gil) or 0
     if current_gil < total_cost then
         return rpc_fail("Insufficient gil")
-    end
-
-    local total_xp_gain = 0
-    local total_trust_gain = 0.0
-    local total_limitburst_xp_gain = 0
-    for _, material_unit in ipairs(material_units) do
-        local xp_gain, trust_gain, lb_xp_gain = calculate_material_enhance_gains(material_unit)
-        total_xp_gain = total_xp_gain + xp_gain
-        total_trust_gain = total_trust_gain + trust_gain
-        total_limitburst_xp_gain = total_limitburst_xp_gain + lb_xp_gain
     end
 
     local wallet_ok, wallet_result = pcall(
@@ -477,17 +819,75 @@ function Units.enhance_unit(context, payload)
         return rpc_fail("Failed to deduct gil: " .. tostring(wallet_result))
     end
 
-    local exp_pattern = base_unit_data.exp_pattern or 5
-    base_unit.xp = base_unit.xp + total_xp_gain
-    base_unit.level = StaticData.calculate_level_from_xp(base_unit.xp, exp_pattern, base_max_level)
-    update_unit_next_xp(base_unit, base_unit_data)
+    local granted_trust_reward = nil
+    local trust_reward_warning = nil
 
-    base_unit.trust_value = base_unit.trust_value + total_trust_gain
-    if base_unit.trust_value > ENHANCE_MAX_TRUST_VALUE then
-        base_unit.trust_value = ENHANCE_MAX_TRUST_VALUE
+    if base_unit_type == UNIT_TYPE_EXP_MATERIAL then
+        local total_exp_to_add = 0
+        for _, material_unit in ipairs(material_units) do
+            local material_unit_data = StaticData.units_data[material_unit.unit_id]
+            local xp_gain, _, _ = calculate_material_enhance_gains(material_unit, material_unit_data)
+            total_exp_to_add = total_exp_to_add + xp_gain
+        end
+
+        local max_accumulated_exp = get_max_accumulated_exp(base_unit_data)
+        base_unit.current_accumulated_exp = clamp_max(base_unit.current_accumulated_exp + total_exp_to_add, max_accumulated_exp)
+    elseif base_unit_type == UNIT_TYPE_TRUST_MATERIAL then
+        local total_trust_to_add = 0.0
+        for _, material_unit in ipairs(material_units) do
+            local material_unit_data = StaticData.units_data[material_unit.unit_id]
+            local _, trust_gain, _ = calculate_material_enhance_gains(material_unit, material_unit_data)
+            total_trust_to_add = total_trust_to_add + trust_gain
+        end
+
+        base_unit.trust_value = clamp_max(base_unit.trust_value + total_trust_to_add, ENHANCE_MAX_TRUST_VALUE)
+    else
+        local total_xp_gain = 0
+        local total_trust_gain = 0.0
+        local previous_trust_value = tonumber(base_unit.trust_value) or 0.0
+
+        for _, material_unit in ipairs(material_units) do
+            local material_unit_data = StaticData.units_data[material_unit.unit_id]
+            local xp_gain, trust_gain, _ = calculate_material_enhance_gains(material_unit, material_unit_data)
+
+            total_xp_gain = total_xp_gain + xp_gain
+            total_trust_gain = total_trust_gain + trust_gain
+
+            if get_unit_type(material_unit_data) == UNIT_TYPE_PLAYABLE and is_duplicate_unit(base_unit, base_unit_data, material_unit, material_unit_data) then
+                total_trust_gain = total_trust_gain + PLAYABLE_DUPLICATE_TRUST_BONUS + get_material_accumulated_trust(material_unit)
+            end
+        end
+
+        local exp_pattern = get_progression_exp_pattern(base_unit.unit_id, base_unit_data, base_unit.current_rarity)
+        base_unit.xp = base_unit.xp + total_xp_gain
+        base_unit.level = StaticData.calculate_level_from_xp(base_unit.xp, exp_pattern, base_max_level)
+        update_unit_next_xp(base_unit, base_unit_data)
+
+        base_unit.trust_value = base_unit.trust_value + total_trust_gain
+        if base_unit.trust_value > ENHANCE_MAX_TRUST_VALUE then
+            base_unit.trust_value = ENHANCE_MAX_TRUST_VALUE
+        end
+
+        if previous_trust_value < ENHANCE_MAX_TRUST_VALUE and base_unit.trust_value >= ENHANCE_MAX_TRUST_VALUE and base_unit.trust_reward_claimed ~= true then
+            local reward_type, reward_template_id, reward_warning = resolve_trust_reward(base_unit_data)
+            if reward_template_id ~= nil then
+                local grant_ok, grant_err, granted_items = grant_instanced_item(context.user_id, reward_type, reward_template_id, 1)
+                if grant_ok then
+                    granted_trust_reward = {
+                        reward_type = reward_type,
+                        template_id = reward_template_id,
+                        quantity = 1,
+                        granted_equipment = granted_items
+                    }
+                    base_unit.trust_reward_claimed = true
+                else
+                    trust_reward_warning = "Failed to grant trust reward: " .. tostring(grant_err)
+                end
+            else
+                trust_reward_warning = reward_warning
+            end
+        end
     end
-
-    apply_limitburst_gain(base_unit, total_limitburst_xp_gain)
 
     local save_ok, save_err = pcall(Units.save_unit, context.user_id, base_unit)
     if not save_ok then
@@ -510,12 +910,15 @@ function Units.enhance_unit(context, payload)
             xp = base_unit.xp,
             trust_value = base_unit.trust_value,
             limitburst_level = base_unit.limitburst_level,
-            limitburst_xp = base_unit.limitburst_xp
+            limitburst_xp = base_unit.limitburst_xp,
+            current_accumulated_exp = base_unit.current_accumulated_exp
         },
         consumed_material_ids = material_unit_instance_ids,
         updated_currency = {
             gil = tonumber(updated_wallet.gil) or 0
-        }
+        },
+        granted_trust_reward = granted_trust_reward,
+        trust_reward_warning = trust_reward_warning
     })
 end
 

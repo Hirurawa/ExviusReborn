@@ -89,6 +89,27 @@ local function get_optional_objective_rewards(mission_data)
     return rewards
 end
 
+local function apply_mission_drops_to_stackables(user_id, mission_drops)
+    if type(mission_drops) ~= "table" or #mission_drops == 0 then
+        return
+    end
+
+    local stackables = Inventory.get_stackables(user_id)
+    local changed = false
+
+    for _, item_id in ipairs(mission_drops) do
+        local id_str = tostring(item_id)
+        if id_str ~= "" then
+            stackables[id_str] = (stackables[id_str] or 0) + 1
+            changed = true
+        end
+    end
+
+    if changed then
+        Inventory.save_stackables(user_id, stackables)
+    end
+end
+
 function Combat.start_mission(context, payload)
     local request = Utilities.parse_payload(payload)
     if not request then
@@ -359,6 +380,8 @@ function Combat.finish_mission(context, payload)
     if is_first_clear then
         save_mission_progress(context.user_id, mission_key, objective_flags)
     end
+
+    apply_mission_drops_to_stackables(context.user_id, request.mission_drops)
 
     local account = nk.account_get_id(context.user_id)
 

@@ -109,14 +109,12 @@ expand_mode = 1
 [node name="header_stamina_time" type="Label" parent="." unique_id=542554953]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 156.0
-offset_top = 80.0
-offset_right = 323.0
+offset_left = 157.0
+offset_top = 75.0
+offset_right = 365.0
 offset_bottom = 103.0
 theme_override_font_sizes/font_size = 20
 text = "header_stamina_time"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="header_stamina_bar" type="TextureProgressBar" parent="." unique_id=6659240]
 unique_name_in_owner = true
@@ -140,26 +138,22 @@ expand_mode = 1
 [node name="header_stamina_num" type="Label" parent="." unique_id=1005466232]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 150.0
-offset_top = 53.0
-offset_right = 317.0
-offset_bottom = 76.0
+offset_left = 153.0
+offset_top = 50.0
+offset_right = 362.0
+offset_bottom = 78.0
 theme_override_font_sizes/font_size = 20
 text = "header_stamina_num"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="header_stamina_num_now" type="Label" parent="." unique_id=1207978347]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 61.0
-offset_top = 53.0
-offset_right = 268.0
-offset_bottom = 76.0
+offset_left = 93.0
+offset_top = 50.0
+offset_right = 351.0
+offset_bottom = 78.0
 theme_override_font_sizes/font_size = 20
 text = "header_stamina_num_now"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="header_lv_num" type="Label" parent="." unique_id=770209109]
 unique_name_in_owner = true
@@ -185,10 +179,10 @@ expand_mode = 1
 [node name="header_exp_num" type="Label" parent="." unique_id=22030085]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 557.0
-offset_top = 82.0
-offset_right = 689.0
-offset_bottom = 105.0
+offset_left = 563.0
+offset_top = 78.0
+offset_right = 695.0
+offset_bottom = 101.0
 theme_override_font_sizes/font_size = 15
 text = "header_exp_num"
 vertical_alignment = 1

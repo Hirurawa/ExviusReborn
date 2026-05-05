@@ -73,3 +73,15 @@ Nakama endpoints:
 - Client architecture and conventions: godot/README.md
 - Backend setup and modules: nakama/README.md
 - AI coding/architecture rules for this repo: AGENTS.md
+
+## THANK YOU!
+- aEnigmatic/ffbe
+    - Datamine files
+- DaddyRaegen/ffbe_asset_dump
+    - Assets
+- dsxragnarok/ffbetool
+    - Creating sprite animations
+- u/Cysidus
+    - Wiki
+- u/NightWaIker
+    - FFBE Memorial Edition

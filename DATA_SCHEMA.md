@@ -87,11 +87,18 @@ Provides the static properties of equippable items (weapons, armor, accessories)
 ```json
 {
   "instance_id": "b019e4b9-...",
-  "template_id": "401006905",
+  "unit_id": "100000102",
   "level": 13,
+  "xp": 4200,
+  "next_xp": 5500,
   "current_rarity": 6,
+  "trust_value": 35.5,
+  "limitburst_level": 3,
+  "limitburst_xp": 12,
+  "is_locked": false,
+  "current_accumulated_exp": 0,
   "equipment": {
-    "r_hand": "uuid-of-equipment-1", 
+    "r_hand": "uuid-of-equipment-1",
     "head": "",
     "body": ""
   }
@@ -146,23 +153,54 @@ Godot must pass the unique instance IDs, not the template IDs.
 
 ## 6. Saved Player Stats (Player Stats)
 
-Player stats (including rank, xp, and nrg) is saved globally as an object in the `player_stats` collection.
+Player stats are stored in the `stats` collection and also returned as an enriched RPC response.
+
+### A. Stored Format (`stats` collection, key: `player_stats`)
 
 ```json
 {
-  "xp": 8309, // The xp needed to reach the next rank
   "rank": 34,
+  "xp": 8309,
   "current_nrg": 284,
-  "last_nrg_update_time": 1775824657
+  "last_nrg_update_time": 1775824657,
+  "last_entered_mission_id": "1110101"
 }
 ```
+
+### B. RPC Response (`get_player_stats`)
+
+The server computes and appends several fields before returning to the client.
+
+```json
+{
+  "rank": 34,
+  "xp": 8309,
+  "next_rank_xp": 12000,
+  "current_nrg": 284,
+  "max_nrg": 112,
+  "nrg_regen_rate_seconds": 300,
+  "seconds_until_next_nrg": 47.0,
+  "last_entered_mission_id": "1110101"
+}
+```
+
+Notes:
+* `xp` is the player's current accumulated XP toward the next rank.
+* `next_rank_xp` is the XP threshold required to reach the next rank (computed from static rank data, not stored).
+* `max_nrg` is derived from the player's current rank via static rank data (not stored).
+* `nrg_regen_rate_seconds` is a server constant (300s = 5 minutes per NRG point).
+* `last_nrg_update_time` is stored in DB for server-side regen calculations but not sent to the client.
 
 ## 7. Saved Player Parties (Parties)
 
 Player's parties are saved globally as an object in the `user_data` collection.
 
+* **Collection:** `"user_data"`
+* **Key:** `"parties"`
+
 ```json
 {
+  "selected_party_index": 0,
   "parties": [
     {
       "name": "Party 1",
@@ -173,7 +211,57 @@ Player's parties are saved globally as an object in the `user_data` collection.
         "",
         ""
       ]
-    },
+    }
   ]
 }
 ```
+
+## 8. Saved Mission Progress (Mission Clears)
+
+Mission clear progress is saved globally as an object in a dedicated mission progress collection.
+
+* **Collection**: `mission_progress`
+* **Key**: `cleared_missions`
+
+```json
+{
+  "mission_1110101": {
+    "cleared": true,
+    "objectives": [true, true, true]
+  }
+}
+```
+
+Notes:
+* Key format is `mission_<mission_id>`.
+* On first successful clear only, server grants mission-level `rewards` and optional objective rewards.
+* Current temporary behavior marks all 3 optional objectives complete on first clear.
+
+## 9. Saved Combat Items (Combat Item Slots)
+
+The player's active combat item loadout is stored in the `user_data` collection.
+
+* **Collection:** `"user_data"`
+* **Key:** `"combat_items"`
+
+```json
+{
+  "slots": [
+    "item_potion_01",
+    "item_hi_potion_01",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]
+}
+```
+
+Notes:
+* `slots` is always a fixed-length array of 10 elements (defined by `COMBAT_ITEM_SLOT_COUNT` in `data_manager.gd`).
+* Each slot holds a stackable item template ID string, or `""` for an empty slot.
+* Only stackable items the player currently owns (quantity > 0) are valid for combat slots.

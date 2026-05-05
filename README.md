@@ -74,6 +74,9 @@ Nakama endpoints:
 - Backend setup and modules: nakama/README.md
 - AI coding/architecture rules for this repo: AGENTS.md
 
+## Assets
+The assets foder is huge, and is not checked in under source control. It is a subtree of DaddyRaegen's ffbe_asset_dump repo with some modifications. The final assets folder can be found here: https://drive.google.com/file/d/1DCw_qFpe03-rCnMiKMWAS5EV56XYO-GA/view?usp=drive_link
+
 ## THANK YOU!
 - aEnigmatic/ffbe
     - Datamine files

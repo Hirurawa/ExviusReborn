@@ -5,10 +5,12 @@ var idle_anim: Dictionary = {}
 var atk_anim: Dictionary = {}
 var magic_standby_anim: Dictionary = {}
 var magic_atk_anim: Dictionary = {}
+var limit_atk_anim: Dictionary = {}
 
 var is_attacking: bool = false
 var is_magic_standby: bool = false
 var is_magic_atk: bool = false
+var is_limit_atk: bool = false
 var is_enemy: bool = false
 var attack_loop_count: int = 0
 var max_attack_loops: int = 1
@@ -45,6 +47,9 @@ func setup(p_index: int, template_id: String, p_is_enemy: bool = false) -> void:
 		atk_anim = TextureBuilder.load_unit_animation_data(template_id, "atk")
 		magic_standby_anim = TextureBuilder.load_unit_animation_data(template_id, "magic_standby")
 		magic_atk_anim = TextureBuilder.load_unit_animation_data(template_id, "magic_atk")
+		limit_atk_anim = TextureBuilder.load_unit_animation_data(template_id, "limit_atk")
+		if limit_atk_anim.is_empty():
+			limit_atk_anim = TextureBuilder.load_unit_animation_data(template_id, "limit")
 		max_attack_loops = 1
 
 	# Visual fail-fast: If idle animation is missing, fallback to icon and turn neon pink
@@ -65,6 +70,7 @@ func _play_idle() -> void:
 	is_attacking = false
 	is_magic_standby = false
 	is_magic_atk = false
+	is_limit_atk = false
 	current_frame_idx = 0
 	current_frame_timer = 0.0
 
@@ -78,6 +84,7 @@ func _play_magic_standby() -> void:
 
 	is_attacking = false
 	is_magic_standby = true
+	is_limit_atk = false
 	current_frame_idx = 0
 	current_frame_timer = 0.0
 	texture = magic_standby_anim["frames"][current_frame_idx]
@@ -89,14 +96,30 @@ func _play_magic_atk() -> void:
 
 	is_attacking = true
 	is_magic_atk = true
+	is_limit_atk = false
 	attack_loop_count = 0
 	current_frame_idx = 0
 	current_frame_timer = 0.0
 	texture = magic_atk_anim["frames"][current_frame_idx]
 
+func _play_limit_atk() -> void:
+	if limit_atk_anim.is_empty() or limit_atk_anim.get("frames", []).size() == 0:
+		_play_atk()
+		return
+
+	is_attacking = true
+	is_magic_atk = false
+	is_limit_atk = true
+	max_attack_loops = 1
+	attack_loop_count = 0
+	current_frame_idx = 0
+	current_frame_timer = 0.0
+	texture = limit_atk_anim["frames"][current_frame_idx]
+
 func _play_atk() -> void:
 	is_attacking = true
 	is_magic_atk = false
+	is_limit_atk = false
 	attack_loop_count = 0
 	current_frame_idx = 0
 	current_frame_timer = 0.0
@@ -118,7 +141,12 @@ func _process(delta: float) -> void:
 
 	var current_anim = idle_anim
 	if is_attacking:
-		current_anim = magic_atk_anim if is_magic_atk else atk_anim
+		if is_magic_atk:
+			current_anim = magic_atk_anim
+		elif is_limit_atk:
+			current_anim = limit_atk_anim
+		else:
+			current_anim = atk_anim
 	elif is_magic_standby:
 		current_anim = magic_standby_anim
 
@@ -178,6 +206,12 @@ func _on_unit_action_started(unit_index: int, action: int) -> void:
 	if action == battle_manager.CombatAction.ATTACK:
 		_play_atk()
 	elif action == battle_manager.CombatAction.SKILL or action == battle_manager.CombatAction.ITEM:
+		var queued_payload: Dictionary = battle_manager.party_data[party_index].get("queued_payload", {})
+		var source_type: String = str(queued_payload.get("source_type", "skill"))
+		if source_type == "limitburst":
+			_play_limit_atk()
+			return
+
 		var action_id = battle_manager.party_data[party_index].get("queued_action_id", "")
 		if DataManager.game_data_skills_magic.has(action_id):
 			max_attack_loops = 3

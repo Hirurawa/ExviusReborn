@@ -27,7 +27,7 @@ services:
       - "-ecx"
       - >
         /nakama/nakama migrate up --database.address postgres:localdb@postgres:5432/nakama &&
-        exec /nakama/nakama --name nakama1 --database.address postgres:localdb@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200 --socket.server_key "nakama_godot"
+        exec /nakama/nakama --name nakama1 --database.address postgres:localdb@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200 --socket.server_key "nakama_godot" --console.username=YourNewUsername --console.password=YourSuperSecurePassword
     restart: always
     links:
       - "postgres:db"

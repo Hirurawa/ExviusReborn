@@ -825,7 +825,6 @@ func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: 
 	elif target_team == "player":
 		var player_sprite: Control = _find_player_combat_sprite(target_index)
 		if receipt_type == "DAMAGE":
-			_spawn_damage_number(damage, target_index)
 			if player_sprite != null:
 				_shake_enemy(player_sprite)
 			_spawn_player_damage_number(damage, target_index)

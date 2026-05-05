@@ -439,6 +439,11 @@ local function summon_fixed_unit(context, unit_id, amount)
         return nk.json_encode({error = "Unit data not found for unit_id " .. tostring(unit_id)})
     end
 
+    local current_units = Units.get_player_units(context.user_id)
+    if #current_units >= 100 then
+        return nk.json_encode({error = "Unit collection is full (max 100 units)"})
+    end
+
     local summon_amount = math.max(1, math.floor(tonumber(amount) or 1))
     local summoned_units = {}
     for _ = 1, summon_amount do
@@ -451,6 +456,15 @@ local function summon_fixed_unit(context, unit_id, amount)
 
     Units.save_units(context.user_id, summoned_units)
     return nk.json_encode({summoned = summoned_units})
+end
+
+local function is_standard_summonable_unit(unit_data)
+    if type(unit_data) ~= "table" or unit_data.is_summonable ~= true then
+        return false
+    end
+
+    local rarity_min = tonumber(unit_data.rarity_min) or 0
+    return rarity_min < 7
 end
 
 function Units.get_player_units(user_id)
@@ -574,13 +588,18 @@ function Units.summon_units(context, payload)
     end
     local amount = request.amount or 1
 
+    local current_units = Units.get_player_units(context.user_id)
+    if #current_units >= 100 then
+        return nk.json_encode({error = "Unit collection is full (max 100 units)"})
+    end
+
     -- TODO: Add currency/ticket deduction logic here before summoning
 
     local available_unit_ids = {}
-        for id, unit_data in pairs(StaticData.units_data) do
-            if unit_data.is_summonable == true then
-                table.insert(available_unit_ids, id)
-            end
+    for id, unit_data in pairs(StaticData.units_data) do
+        if is_standard_summonable_unit(unit_data) then
+            table.insert(available_unit_ids, id)
+        end
     end
 
     if #available_unit_ids == 0 then

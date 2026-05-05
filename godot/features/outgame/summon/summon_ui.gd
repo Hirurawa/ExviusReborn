@@ -17,29 +17,38 @@ func _on_summon_perform_button_pressed() -> void:
 	if DataManager.game_data_units.is_empty():
 		return
 
-	var summoned_units: Array = await DataManager.summon_units(3)
-	_show_summon_results(summoned_units)
+	var result: Dictionary = await DataManager.summon_units(3)
+	_show_summon_results(result)
 
 func _on_get_cactuar_button_pressed() -> void:
 	if DataManager.game_data_units.is_empty():
 		return
 
-	var summoned_units: Array = await DataManager.summon_exp_boost_units(3)
-	_show_summon_results(summoned_units)
+	var result: Dictionary = await DataManager.summon_exp_boost_units(3)
+	_show_summon_results(result)
 
 func _on_get_moogle_button_pressed() -> void:
 	if DataManager.game_data_units.is_empty():
 		return
 
-	var summoned_units: Array = await DataManager.summon_trust_units(3)
-	_show_summon_results(summoned_units)
+	var result: Dictionary = await DataManager.summon_trust_units(3)
+	_show_summon_results(result)
 
-func _show_summon_results(summoned_units: Array) -> void:
-	if summoned_units.is_empty():
-		return
-
+func _show_summon_results(result: Dictionary) -> void:
 	for child in summon_results_list.get_children():
 		child.queue_free()
+
+	if result.has("error"):
+		var error_label := Label.new()
+		error_label.text = result["error"]
+		error_label.add_theme_font_size_override("font_size", 18)
+		summon_results_list.add_child(error_label)
+		summon_overlay.show()
+		return
+
+	var summoned_units: Array = result.get("summoned", [])
+	if summoned_units.is_empty():
+		return
 
 	for unit_inst in summoned_units:
 		var unit_id: String = unit_inst.get("unit_id", "")

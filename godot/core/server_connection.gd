@@ -192,31 +192,34 @@ func get_mission_progress_async() -> Dictionary:
 
 	return {"cleared_missions": {}}
 
-func summon_units_async(amount: int) -> Array:
+func summon_units_async(amount: int) -> Dictionary:
 	return await _summon_units_by_rpc_async("summon_units", amount)
 
-func summon_exp_boost_units_async(amount: int) -> Array:
+func summon_exp_boost_units_async(amount: int) -> Dictionary:
 	return await _summon_units_by_rpc_async("debug_add_exp_boost_units", amount)
 
-func summon_trust_units_async(amount: int) -> Array:
+func summon_trust_units_async(amount: int) -> Dictionary:
 	return await _summon_units_by_rpc_async("debug_add_trust_units", amount)
 
-func _summon_units_by_rpc_async(rpc_id: String, amount: int) -> Array:
+func _summon_units_by_rpc_async(rpc_id: String, amount: int) -> Dictionary:
 	if _session == null or _session.is_expired():
-		return []
+		return {"error": "Session expired"}
 
 	var payload = JSON.stringify({"amount": amount})
 	var result: NakamaAPI.ApiRpc = await _client.rpc_async(_session, rpc_id, payload)
 
 	if result.is_exception():
 		push_error("Failed to summon units (%s): %s" % [rpc_id, result.get_exception().message])
-		return []
+		return {"error": result.get_exception().message}
 
 	var dict = JSON.parse_string(result.payload)
-	if dict and dict is Dictionary and dict.has("summoned") and dict["summoned"] is Array:
-		return dict["summoned"]
+	if dict and dict is Dictionary:
+		if dict.has("error"):
+			return dict
+		if dict.has("summoned") and dict["summoned"] is Array:
+			return {"summoned": dict["summoned"]}
 
-	return []
+	return {"error": "Unexpected response from server"}
 
 func add_unit_xp_async(instance_id: String, xp_amount: int) -> Dictionary:
 	if _session == null or _session.is_expired():

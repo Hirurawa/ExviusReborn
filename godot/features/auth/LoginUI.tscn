@@ -105,12 +105,10 @@ horizontal_alignment = 1
 
 [node name="EmailInput" type="LineEdit" parent="VBoxContainer" unique_id=489568172]
 layout_mode = 2
-text = "qwe@qwe.com"
 placeholder_text = "Email"
 
 [node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=874706628]
 layout_mode = 2
-text = "Qweqweqwe"
 placeholder_text = "Password"
 secret = true
 

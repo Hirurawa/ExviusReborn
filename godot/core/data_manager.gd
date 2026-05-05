@@ -297,6 +297,7 @@ func _on_patch_complete() -> void:
 	game_data_skills_ability = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_ability"))
 	game_data_skills_passive = _sanitize_floats_to_ints(AssetPatcher.get_data("skills_passive"))
 	game_data_limitbursts = _sanitize_floats_to_ints(AssetPatcher.get_data("limitbursts"))
+	_normalize_limitburst_effects_raw()
 	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
 	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))
 	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
@@ -354,10 +355,41 @@ func _try_load_sanitized_cache(signature: String) -> bool:
 	game_data_skills_ability = datasets.get("skills_ability", {})
 	game_data_skills_passive = datasets.get("skills_passive", {})
 	game_data_limitbursts = datasets.get("limitbursts", {})
+	_normalize_limitburst_effects_raw()
 	game_data_materia = datasets.get("materia", {})
 	game_data_equipment_icons = datasets.get("equipment-icons", {})
 	game_data_monsters = datasets.get("monsters", [])
 	return true
+
+func _normalize_limitburst_effects_raw() -> void:
+	for limitburst_id in game_data_limitbursts.keys():
+		var limitburst_data: Variant = game_data_limitbursts.get(limitburst_id, {})
+		if not (limitburst_data is Dictionary):
+			continue
+
+		var limitburst_dict: Dictionary = limitburst_data
+		var levels_value: Variant = limitburst_dict.get("levels", [])
+		if not (levels_value is Array):
+			continue
+
+		var levels: Array = levels_value
+		if levels.is_empty():
+			continue
+
+		var first_level_value: Variant = levels[0]
+		if not (first_level_value is Array):
+			continue
+
+		var first_level: Array = first_level_value
+		if first_level.size() < 2:
+			continue
+
+		var effects_raw_value: Variant = first_level[1]
+		if not (effects_raw_value is Array):
+			continue
+
+		limitburst_dict["effects_raw"] = effects_raw_value
+		game_data_limitbursts[limitburst_id] = limitburst_dict
 
 func _save_sanitized_cache(signature: String) -> void:
 	if signature == "":
@@ -832,23 +864,26 @@ func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String
 		new_parties[party_index]["units"][slot_index] = instance_id
 		party_save_requested.emit(new_parties)
 
-func summon_units(amount: int) -> Array:
-	var summoned_units: Array = await server_connection.summon_units_async(amount)
-	return _handle_summoned_units(summoned_units)
+func summon_units(amount: int) -> Dictionary:
+	var result: Dictionary = await server_connection.summon_units_async(amount)
+	return _handle_summoned_units(result)
 
-func summon_exp_boost_units(amount: int = 3) -> Array:
-	var summoned_units: Array = await server_connection.summon_exp_boost_units_async(amount)
-	return _handle_summoned_units(summoned_units)
+func summon_exp_boost_units(amount: int = 3) -> Dictionary:
+	var result: Dictionary = await server_connection.summon_exp_boost_units_async(amount)
+	return _handle_summoned_units(result)
 
-func summon_trust_units(amount: int = 3) -> Array:
-	var summoned_units: Array = await server_connection.summon_trust_units_async(amount)
-	return _handle_summoned_units(summoned_units)
+func summon_trust_units(amount: int = 3) -> Dictionary:
+	var result: Dictionary = await server_connection.summon_trust_units_async(amount)
+	return _handle_summoned_units(result)
 
-func _handle_summoned_units(summoned_units: Array) -> Array:
+func _handle_summoned_units(result: Dictionary) -> Dictionary:
+	if result.has("error"):
+		return result
+	var summoned_units: Array = result.get("summoned", [])
 	summoned_units = _hydrate_owned_units(summoned_units)
 	owned_units_ids.append_array(summoned_units)
 	units_updated.emit(owned_units_ids)
-	return summoned_units
+	return {"summoned": summoned_units}
 
 func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	var result: Dictionary = await server_connection.add_unit_xp_async(instance_id, xp_amount)

@@ -24,6 +24,8 @@ var _scenes_map: Dictionary = {
 	"item_category_list_ui": "res://features/outgame/inventory/ItemCategoryListUI.tscn",
 	"friends_ui": "res://features/outgame/friends/FriendsUI.tscn",
 	"summon_ui": "res://features/outgame/summon/SummonUI.tscn",
+	"espers_ui": "res://features/outgame/espers/EspersUI.tscn",
+	"summon_board_ui": "res://features/outgame/espers/SummonBoardUI.tscn",
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn",
 	"battle_ui": "res://features/battle/ui/BattleUI.tscn"
@@ -55,10 +57,14 @@ func _load_persistent_overlays() -> void:
 		home_buttons = home_buttons_scene.instantiate()
 		home_buttons.hide()
 		home_buttons.world_map_pressed.connect(_on_world_map_pressed)
+		home_buttons.espers_pressed.connect(_on_espers_pressed)
 		canvas_layer.add_child(home_buttons)
 
 func _on_world_map_pressed() -> void:
 	push("map_ui")
+
+func _on_espers_pressed() -> void:
+	set_root("espers_ui")
 
 func _update_overlays() -> void:
 	if _menu_stack.is_empty():

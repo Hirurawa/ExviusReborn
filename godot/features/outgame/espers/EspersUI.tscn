@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://caiavxfskfqo7"]
+
+[ext_resource type="Script" uid="uid://cyjffux2bypdg" path="res://features/outgame/espers/espers_ui.gd" id="1_script"]
+
+[node name="EspersUI" type="Control" unique_id=866000664]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1577410996]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.86300004
+offset_bottom = 0.079956055
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=390359953]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Espers"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=204901746]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EspersListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=612649902]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8

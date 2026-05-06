@@ -47,6 +47,10 @@ StaticData.worlds_data = Utilities.read_json_file("data/worlds.json") or {}
 StaticData.dungeons_data = Utilities.read_json_file("data/dungeons.json") or {}
 StaticData.missions_data = Utilities.read_json_file("data/missions.json") or {}
 StaticData.versions_data = Utilities.read_json_file("data/versions.json") or {}
+StaticData.summons_data = Utilities.read_json_file("data/summons.json") or {}
+StaticData.summons_boards_data = Utilities.read_json_file("data/summons_boards.json") or {}
+StaticData.summons_exp_patterns_data = Utilities.read_json_file("data/summons_exp_patterns.json") or {}
+StaticData.summons_stat_patterns_data = Utilities.read_json_file("data/summons_stat_patterns.json") or {}
 
 StaticData.unit_exp_patterns = Utilities.read_csv_file("data/unit-exp-pattern.csv") or {}
 
@@ -55,7 +59,9 @@ StaticData.cached_game_data = {
     items = StaticData.items_data,
     worlds = StaticData.worlds_data,
     dungeons = StaticData.dungeons_data,
-    missions = StaticData.missions_data
+    missions = StaticData.missions_data,
+    summons = StaticData.summons_data,
+    summons_boards = StaticData.summons_boards_data
 }
 
 StaticData.rarity_max_levels = {

@@ -6,6 +6,7 @@ const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 @onready var title_label: Label = $VBoxContainer/UnitNamebgChara/Title
 @onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
+@onready var sort_option_button: OptionButton = $VBoxContainer/UnitNamebgChara/SortOptionButton
 
 @onready var back_button: TextureButton = $VBoxContainer/UnitNamebgChara/BackButton
 
@@ -31,6 +32,14 @@ const ENHANCE_MAX_TRUST_VALUE: float = 100.0
 const EXP_UNIT_JOB_ID: int = 901
 const TRUST_MATERIAL_JOB_ID: int = 903
 
+const SORT_DEFAULT: String = "default"
+const SORT_NAME_ASC: String = "name_asc"
+const SORT_NAME_DESC: String = "name_desc"
+const SORT_LEVEL_ASC: String = "level_asc"
+const SORT_LEVEL_DESC: String = "level_desc"
+const SORT_RARITY_ASC: String = "rarity_asc"
+const SORT_RARITY_DESC: String = "rarity_desc"
+
 signal unit_selected(unit_inst: Dictionary)
 signal materials_selected(units_array: Array)
 
@@ -39,6 +48,7 @@ var _exclude_instance_id_set: Dictionary = {}
 var _selected_units_map: Dictionary = {}
 var _material_checkboxes: Dictionary = {}
 var _suppress_checkbox_signal: bool = false
+var _current_sort_mode: String = SORT_DEFAULT
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
@@ -119,6 +129,7 @@ func _seed_preselected_materials() -> void:
 func _ready() -> void:
 	units_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	units_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	_setup_sort_dropdown()
 	
 	back_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	back_button.pressed.connect(_on_back_pressed)
@@ -169,6 +180,7 @@ func _on_units_updated(units: Array) -> void:
 	_refresh_units_list(units)
 
 func _refresh_units_list(owned_units_ids: Array) -> void:
+	var sorted_units: Array = _sort_units_for_display(owned_units_ids)
 	var cell_width: int = _get_effective_cell_width()
 	units_list_container.columns = GRID_COLUMNS
 	_material_checkboxes.clear()
@@ -176,13 +188,13 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 	for child in units_list_container.get_children():
 		child.queue_free()
 
-	if owned_units_ids.is_empty():
+	if sorted_units.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = "No units owned."
 		units_list_container.add_child(empty_label)
 		return
 
-	for unit_inst in owned_units_ids:
+	for unit_inst in sorted_units:
 		if not unit_inst is Dictionary:
 			continue
 
@@ -277,6 +289,117 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 				container.add_child(badge)
 
 		units_list_container.add_child(container)
+
+func _setup_sort_dropdown() -> void:
+	if sort_option_button == null:
+		return
+
+	sort_option_button.clear()
+	_add_sort_option("Sort: Default", SORT_DEFAULT)
+	_add_sort_option("Name A->Z", SORT_NAME_ASC)
+	_add_sort_option("Name Z->A", SORT_NAME_DESC)
+	_add_sort_option("Level Low->High", SORT_LEVEL_ASC)
+	_add_sort_option("Level High->Low", SORT_LEVEL_DESC)
+	_add_sort_option("Rarity Low->High", SORT_RARITY_ASC)
+	_add_sort_option("Rarity High->Low", SORT_RARITY_DESC)
+	_select_sort_option_by_mode(_current_sort_mode)
+
+	var selection_cb: Callable = Callable(self, "_on_sort_option_selected")
+	if not sort_option_button.item_selected.is_connected(selection_cb):
+		sort_option_button.item_selected.connect(selection_cb)
+
+func _add_sort_option(label: String, mode: String) -> void:
+	var option_index: int = sort_option_button.get_item_count()
+	sort_option_button.add_item(label)
+	sort_option_button.set_item_metadata(option_index, mode)
+
+func _select_sort_option_by_mode(mode: String) -> void:
+	for idx in range(sort_option_button.get_item_count()):
+		if str(sort_option_button.get_item_metadata(idx)) == mode:
+			sort_option_button.select(idx)
+			return
+	sort_option_button.select(0)
+
+func _on_sort_option_selected(index: int) -> void:
+	var selected_mode: String = str(sort_option_button.get_item_metadata(index))
+	if selected_mode == "":
+		selected_mode = SORT_DEFAULT
+	if _current_sort_mode == selected_mode:
+		return
+
+	_current_sort_mode = selected_mode
+	_refresh_units_list(DataManager.owned_units_ids)
+
+func _sort_units_for_display(owned_units_ids: Array) -> Array:
+	var sorted_units: Array = []
+	for unit_inst in owned_units_ids:
+		if unit_inst is Dictionary:
+			sorted_units.append(unit_inst)
+
+	if _current_sort_mode == SORT_DEFAULT:
+		return sorted_units
+
+	sorted_units.sort_custom(_compare_units_for_sort_mode)
+	return sorted_units
+
+func _compare_units_for_sort_mode(a: Dictionary, b: Dictionary) -> bool:
+	match _current_sort_mode:
+		SORT_NAME_ASC:
+			var a_name: String = _get_unit_display_name(a)
+			var b_name: String = _get_unit_display_name(b)
+			if a_name == b_name:
+				return _compare_unit_tie_breaker(a, b)
+			return a_name < b_name
+		SORT_NAME_DESC:
+			var a_name: String = _get_unit_display_name(a)
+			var b_name: String = _get_unit_display_name(b)
+			if a_name == b_name:
+				return _compare_unit_tie_breaker(a, b)
+			return a_name > b_name
+		SORT_LEVEL_ASC:
+			var a_level: int = int(a.get("level", 1))
+			var b_level: int = int(b.get("level", 1))
+			if a_level == b_level:
+				return _compare_unit_tie_breaker(a, b)
+			return a_level < b_level
+		SORT_LEVEL_DESC:
+			var a_level: int = int(a.get("level", 1))
+			var b_level: int = int(b.get("level", 1))
+			if a_level == b_level:
+				return _compare_unit_tie_breaker(a, b)
+			return a_level > b_level
+		SORT_RARITY_ASC:
+			var a_rarity: int = int(a.get("rarity", 1))
+			var b_rarity: int = int(b.get("rarity", 1))
+			if a_rarity == b_rarity:
+				return _compare_unit_tie_breaker(a, b)
+			return a_rarity < b_rarity
+		SORT_RARITY_DESC:
+			var a_rarity: int = int(a.get("rarity", 1))
+			var b_rarity: int = int(b.get("rarity", 1))
+			if a_rarity == b_rarity:
+				return _compare_unit_tie_breaker(a, b)
+			return a_rarity > b_rarity
+		_:
+			return _compare_unit_tie_breaker(a, b)
+
+func _compare_unit_tie_breaker(a: Dictionary, b: Dictionary) -> bool:
+	var a_name: String = _get_unit_display_name(a)
+	var b_name: String = _get_unit_display_name(b)
+	if a_name != b_name:
+		return a_name < b_name
+
+	var a_instance_id: String = str(a.get("instance_id", ""))
+	var b_instance_id: String = str(b.get("instance_id", ""))
+	return a_instance_id < b_instance_id
+
+func _get_unit_display_name(unit_inst: Dictionary) -> String:
+	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	if unit_id == "":
+		return ""
+
+	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+	return str(unit_data.get("name", "Unknown")).to_lower()
 
 func _should_display_unit(unit_instance_id: String) -> bool:
 	if unit_instance_id == "":

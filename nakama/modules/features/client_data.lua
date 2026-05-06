@@ -15,9 +15,24 @@ function ClientData.get_data_version(context, payload)
         return nk.json_encode({error = "No type provided"})
     end
 
+    -- Reload versions on each call so newly added static types do not require a server restart.
+    local latest_versions = Utilities.read_json_file("data/versions.json") or {}
+    if latest_versions and next(latest_versions) ~= nil then
+        StaticData.versions_data = latest_versions
+    end
+
     local version = StaticData.versions_data[data_type]
     if not version then
-        return nk.json_encode({error = "Version not found for type: " .. tostring(data_type)})
+        -- Graceful bootstrap path: if file exists but version key is missing, allow download with default version.
+        local file_path = "data/" .. tostring(data_type) .. ".json"
+        local has_file, file_content = pcall(nk.file_read, file_path)
+        if has_file and file_content and file_content ~= "" then
+            version = "v1.0.0"
+            StaticData.versions_data[data_type] = version
+            nk.logger_warn("Missing version for type '" .. tostring(data_type) .. "'. Falling back to v1.0.0")
+        else
+            return nk.json_encode({error = "Version not found for type: " .. tostring(data_type)})
+        end
     end
 
     local response = {
@@ -39,7 +54,9 @@ function ClientData.get_game_data(context, payload)
     if data_type == "core" then
         return nk.json_encode({
             units = StaticData.units_data,
-            items = StaticData.items_data
+            items = StaticData.items_data,
+            summons = StaticData.summons_data,
+            summons_boards = StaticData.summons_boards_data
         })
     elseif data_type == "map" then
         return nk.json_encode({

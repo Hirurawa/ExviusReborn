@@ -3,7 +3,7 @@ extends Node
 signal patch_progress(file_name: String, status: String)
 signal patch_complete
 
-var files_to_patch: Array[String] = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons", "monsters"]
+var files_to_patch: Array[String] = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons", "monsters", "summons", "summons_boards", "summons_exp_patterns", "summons_stat_patterns"]
 var current_patch_index: int = 0
 
 var cached_data: Dictionary = {}

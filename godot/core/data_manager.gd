@@ -67,6 +67,10 @@ var game_data_limitbursts: Dictionary = {}
 var game_data_materia: Dictionary = {}
 var game_data_equipment_icons: Dictionary = {}
 var game_data_monsters = []
+var game_data_summons: Dictionary = {}
+var game_data_summons_boards: Dictionary = {}
+var game_data_summons_exp_patterns: Dictionary = {}
+var game_data_summons_stat_patterns: Dictionary = {}
 var opcode_skill_schema: Dictionary = {}
 var opcode_passive_schema: Dictionary = {}
 var opcode_schemas_ready: bool = false
@@ -78,6 +82,8 @@ const OPCODE_PASSIVE_SCHEMA_PATH: String = "res://features/battle/logic/passive_
 var account_info: NakamaAPI.ApiAccount = null
 var _static_data_ready: bool = false
 var _static_data_loading: bool = false
+var _static_data_synced_with_server: bool = false
+var _static_data_sync_queued: bool = false
 
 signal _static_data_primed
 
@@ -120,6 +126,8 @@ func register(email: String, password: String, username: String) -> void:
 func logout() -> void:
 	server_connection.logout()
 	account_info = null
+	_static_data_synced_with_server = false
+	_static_data_sync_queued = false
 	last_entered_mission_id = ""
 	last_played_dungeon_name = ""
 	selected_party_index = 0
@@ -227,14 +235,20 @@ func _load_initial_data(email: String) -> void:
 	data_loaded.emit()
 
 func _ensure_static_data_ready() -> void:
-	if _static_data_ready:
-		return
-
 	if _static_data_loading:
 		await _static_data_primed
-		return
 
-	await _prime_static_data_cache()
+	if not _static_data_ready:
+		await _prime_static_data_cache()
+
+	# Block only when the local static pool is incomplete (new file types or missing cache files).
+	# Otherwise, perform a best-effort server sync in background to avoid login delay.
+	if _has_valid_static_data_session():
+		if _needs_static_data_refresh():
+			await _refresh_static_data_cache()
+		elif not _static_data_synced_with_server and not _static_data_sync_queued:
+			_static_data_sync_queued = true
+			call_deferred("_run_background_static_data_sync")
 
 func _prime_static_data_cache() -> void:
 	if _static_data_ready or _static_data_loading:
@@ -247,9 +261,36 @@ func _prime_static_data_cache() -> void:
 	if early_sig != "" and _try_load_sanitized_cache(early_sig):
 		_load_opcode_schemas()
 		_static_data_ready = true
+		_static_data_synced_with_server = false
 		_static_data_loading = false
 		_static_data_primed.emit()
 		return
+
+	var synced_with_server: bool = await _run_static_data_patch_cycle()
+	_static_data_synced_with_server = synced_with_server
+
+	_static_data_ready = true
+	_static_data_loading = false
+	_static_data_primed.emit()
+
+func _refresh_static_data_cache() -> void:
+	if _static_data_loading:
+		await _static_data_primed
+		return
+
+	_static_data_loading = true
+	var synced_with_server: bool = await _run_static_data_patch_cycle()
+	_static_data_synced_with_server = synced_with_server
+	_static_data_ready = true
+	_static_data_loading = false
+	_static_data_primed.emit()
+
+func _run_background_static_data_sync() -> void:
+	_static_data_sync_queued = false
+	await _refresh_static_data_cache()
+
+func _run_static_data_patch_cycle() -> bool:
+	var had_valid_session: bool = _has_valid_static_data_session()
 
 	if not AssetPatcher.patch_complete.is_connected(_on_patch_complete):
 		AssetPatcher.patch_progress.connect(func(file_name, status):
@@ -260,10 +301,33 @@ func _prime_static_data_cache() -> void:
 	AssetPatcher.server_connection = server_connection
 	AssetPatcher.start_patching()
 	await AssetPatcher.patch_complete
+	return had_valid_session
 
-	_static_data_ready = true
-	_static_data_loading = false
-	_static_data_primed.emit()
+func _has_valid_static_data_session() -> bool:
+	if server_connection == null:
+		return false
+
+	var session: Variant = server_connection.get("_session")
+	if session == null:
+		return false
+
+	if session.has_method("is_expired"):
+		return not session.is_expired()
+
+	return true
+
+func _needs_static_data_refresh() -> bool:
+	if not AssetPatcher or not AssetPatcher.has_method("get_versions_snapshot"):
+		return false
+
+	var versions: Dictionary = AssetPatcher.get_versions_snapshot()
+	for file_type in AssetPatcher.files_to_patch:
+		if str(versions.get(file_type, "")).strip_edges() == "":
+			return true
+		if not FileAccess.file_exists("user://data/%s.json" % file_type):
+			return true
+
+	return false
 
 func _sanitize_floats_to_ints(data: Variant) -> Variant:
 	if typeof(data) == TYPE_DICTIONARY:
@@ -301,6 +365,10 @@ func _on_patch_complete() -> void:
 	game_data_materia = _sanitize_floats_to_ints(AssetPatcher.get_data("materia"))
 	game_data_equipment_icons = _sanitize_floats_to_ints(AssetPatcher.get_data("equipment-icons"))
 	game_data_monsters = _sanitize_floats_to_ints(AssetPatcher.get_data("monsters"))
+	game_data_summons = _sanitize_floats_to_ints(AssetPatcher.get_data("summons"))
+	game_data_summons_boards = _sanitize_floats_to_ints(AssetPatcher.get_data("summons_boards"))
+	game_data_summons_exp_patterns = _sanitize_floats_to_ints(AssetPatcher.get_data("summons_exp_patterns"))
+	game_data_summons_stat_patterns = _sanitize_floats_to_ints(AssetPatcher.get_data("summons_stat_patterns"))
 
 	_save_sanitized_cache(cache_signature)
 	_load_opcode_schemas()
@@ -359,6 +427,10 @@ func _try_load_sanitized_cache(signature: String) -> bool:
 	game_data_materia = datasets.get("materia", {})
 	game_data_equipment_icons = datasets.get("equipment-icons", {})
 	game_data_monsters = datasets.get("monsters", [])
+	game_data_summons = datasets.get("summons", {})
+	game_data_summons_boards = datasets.get("summons_boards", {})
+	game_data_summons_exp_patterns = datasets.get("summons_exp_patterns", {})
+	game_data_summons_stat_patterns = datasets.get("summons_stat_patterns", {})
 	return true
 
 func _normalize_limitburst_effects_raw() -> void:
@@ -407,7 +479,11 @@ func _save_sanitized_cache(signature: String) -> void:
 		"limitbursts": game_data_limitbursts,
 		"materia": game_data_materia,
 		"equipment-icons": game_data_equipment_icons,
-		"monsters": game_data_monsters
+		"monsters": game_data_monsters,
+		"summons": game_data_summons,
+		"summons_boards": game_data_summons_boards,
+		"summons_exp_patterns": game_data_summons_exp_patterns,
+		"summons_stat_patterns": game_data_summons_stat_patterns
 	}
 
 	# Write binary data blob

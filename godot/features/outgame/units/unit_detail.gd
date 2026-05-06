@@ -3,6 +3,10 @@ extends Control
 const MagicScene: PackedScene = preload("res://features/shared/Skill.tscn")
 const ItemScene: PackedScene = preload("res://features/shared/Item.tscn")
 const UNIT_ANIM_TARGET_HEIGHT: float = 128.0
+const TAB_SMALL_TEXTURE_NORMAL: Texture2D = preload("res://assets/ui/unit/unit_status_button.tres")
+const TAB_SMALL_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_button_on.tres")
+const TAB_BIG_TEXTURE_NORMAL: Texture2D = preload("res://assets/ui/unit/unit_status_button_big.tres")
+const TAB_BIG_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_button_big_on.tres")
 
 @onready var illustration_button: TextureButton = $IllustrationButton
 @onready var unit_detail_sprite: TextureRect = $IllustrationButton/unit_charastand_large/unit_chara
@@ -495,6 +499,38 @@ func _apply_current_mode_state() -> void:
 	status_header.visible = _current_major_mode == "Equip"
 	unit_detail_equip_btn_label_equip.visible = _current_major_mode == "Equip"
 	unit_detail_equip_btn_label_status.visible = _current_major_mode == "Stats"
+	_update_tab_button_states()
+
+func _update_tab_button_states() -> void:
+	unit_detail_traits_btn.texture_normal = TAB_SMALL_TEXTURE_NORMAL
+	unit_detail_traits_btn.texture_pressed = TAB_SMALL_TEXTURE_NORMAL
+	unit_detail_magic_btn.texture_normal = TAB_SMALL_TEXTURE_NORMAL
+	unit_detail_magic_btn.texture_pressed = TAB_SMALL_TEXTURE_NORMAL
+	unit_detail_special_btn.texture_normal = TAB_SMALL_TEXTURE_NORMAL
+	unit_detail_special_btn.texture_pressed = TAB_SMALL_TEXTURE_NORMAL
+
+	unit_detail_equipment_tab_btn.texture_normal = TAB_BIG_TEXTURE_NORMAL
+	unit_detail_equipment_tab_btn.texture_pressed = TAB_BIG_TEXTURE_NORMAL
+	unit_detail_ability_tab_btn.texture_normal = TAB_BIG_TEXTURE_NORMAL
+	unit_detail_ability_tab_btn.texture_pressed = TAB_BIG_TEXTURE_NORMAL
+
+	match _current_equip_sub_tab:
+		"Traits":
+			unit_detail_traits_btn.texture_normal = TAB_SMALL_TEXTURE_ON
+			unit_detail_traits_btn.texture_pressed = TAB_SMALL_TEXTURE_ON
+		"Magic":
+			unit_detail_magic_btn.texture_normal = TAB_SMALL_TEXTURE_ON
+			unit_detail_magic_btn.texture_pressed = TAB_SMALL_TEXTURE_ON
+		_:
+			unit_detail_special_btn.texture_normal = TAB_SMALL_TEXTURE_ON
+			unit_detail_special_btn.texture_pressed = TAB_SMALL_TEXTURE_ON
+
+	if _current_stats_sub_tab == "Ability":
+		unit_detail_ability_tab_btn.texture_normal = TAB_BIG_TEXTURE_ON
+		unit_detail_ability_tab_btn.texture_pressed = TAB_BIG_TEXTURE_ON
+	else:
+		unit_detail_equipment_tab_btn.texture_normal = TAB_BIG_TEXTURE_ON
+		unit_detail_equipment_tab_btn.texture_pressed = TAB_BIG_TEXTURE_ON
 
 func _on_unit_detail_equipment_tab_btn_pressed() -> void:
 	_current_major_mode = "Stats"

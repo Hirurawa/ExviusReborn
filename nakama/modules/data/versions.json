@@ -11,5 +11,9 @@
     "items":"v1.0.0",
     "limitbursts":"v1.0.0",
     "materia":"v1.0.0",
+    "summons":"v1.0.0",
+    "summons_boards":"v1.0.0",
+    "summons_exp_patterns":"v1.0.0",
+    "summons_stat_patterns":"v1.0.0",
     "monsters": "v1.0.0"
 }

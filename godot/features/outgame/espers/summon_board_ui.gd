@@ -68,6 +68,7 @@ func _render_board() -> void:
 		return
 
 	var cells: Array[Dictionary] = []
+	var node_lookup: Dictionary = {}
 	var sum_local := Vector2.ZERO
 	
 	for node_id_variant in board_nodes.keys():
@@ -87,6 +88,7 @@ func _render_board() -> void:
 		
 		# 3. Store the CONVERTED coordinate
 		cells.append({"coord": godot_offset_coord, "node_id": node_id, "data": node_data})
+		node_lookup[node_id] = {"coord": godot_offset_coord, "data": node_data}
 		
 		# Calculate the centroid using the converted coordinate
 		sum_local += tile_map_layer.map_to_local(godot_offset_coord)
@@ -94,6 +96,30 @@ func _render_board() -> void:
 	if cells.is_empty():
 		_show_empty("Board nodes are missing valid positions.")
 		return
+
+	for cell in cells:
+		var node_data: Dictionary = cell["data"]
+		var parent_id_value: Variant = node_data.get("parent_node_id", null)
+		if parent_id_value == null:
+			continue
+
+		var parent_node_id: String = str(parent_id_value)
+		var parent_lookup_value: Variant = node_lookup.get(parent_node_id, null)
+		if not (parent_lookup_value is Dictionary):
+			continue
+
+		var parent_coord: Vector2i = parent_lookup_value["coord"]
+		var child_coord: Vector2i = cell["coord"]
+		var parent_pos: Vector2 = tile_map_layer.map_to_local(parent_coord)
+		var child_pos: Vector2 = tile_map_layer.map_to_local(child_coord)
+
+		var connector := Line2D.new()
+		connector.default_color = Color(0.75, 0.85, 1.0, 0.45)
+		connector.width = 6.0
+		connector.z_index = -1
+		connector.add_point(parent_pos)
+		connector.add_point(child_pos)
+		tile_map_layer.add_child(connector)
 
 	for cell in cells:
 		var coord: Vector2i = cell["coord"]

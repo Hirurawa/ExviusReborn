@@ -1,6 +1,7 @@
 extends Control
 
-@onready var espers_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/EspersListContainer
+@onready var espers_list_container: GridContainer = $VBoxContainer/ScrollContainer/EspersListContainer
+@onready var esper_frame_template: Button = $EsperFrame
 
 func _ready() -> void:
 	_populate_espers_list()
@@ -41,15 +42,11 @@ func _populate_espers_list() -> void:
 		var summon_id: String = str(entry["id"])
 		var summon_name: String = _get_summon_display_name(summon_id, entry["data"])
 
-		var row_button := Button.new()
-		row_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		row_button.text = "#%s  %s" % [summon_id, summon_name]
-		row_button.pressed.connect(_on_esper_pressed.bind(summon_id, summon_name))
-		espers_list_container.add_child(row_button)
-
-		var separator := HSeparator.new()
-		espers_list_container.add_child(separator)
+		var frame: Button = esper_frame_template.duplicate()
+		frame.visible = true
+		frame.get_node("NameLabel").text = summon_name
+		frame.pressed.connect(_on_esper_pressed.bind(summon_id, summon_name))
+		espers_list_container.add_child(frame)
 
 func _get_summon_display_name(summon_id: String, summon_data: Dictionary) -> String:
 	var names_value: Variant = summon_data.get("names", [])
@@ -67,7 +64,7 @@ func _get_summon_display_name(summon_id: String, summon_data: Dictionary) -> Str
 	return "Summon %s" % summon_id
 
 func _on_esper_pressed(summon_id: String, summon_name: String) -> void:
-	UIManager.push("summon_board_ui", {
+	UIManager.push("esper_detail_ui", {
 		"summon_id": summon_id,
 		"summon_name": summon_name
 	})

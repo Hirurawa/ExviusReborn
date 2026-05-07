@@ -165,7 +165,26 @@ func _format_reward(node_data: Dictionary) -> String:
 	if reward_value is Array:
 		var reward_arr: Array = reward_value
 		if reward_arr.size() >= 2:
-			return "%s\n+%s" % [str(reward_arr[0]), str(reward_arr[1])]
+			var reward_type: String = str(reward_arr[0])
+			var reward_id: Variant = reward_arr[1]
+			
+			# Look up skill names for ABILITY and MAGIC rewards
+			if reward_type == "ABILITY":
+				# Check active abilities first
+				var skill_data: Dictionary = DataManager.game_data_skills_ability.get(str(reward_id), {})
+				if not skill_data.is_empty():
+					return str(skill_data.get("name", str(reward_id)))
+				# Then check passive abilities
+				skill_data = DataManager.game_data_skills_passive.get(str(reward_id), {})
+				if not skill_data.is_empty():
+					return str(skill_data.get("name", str(reward_id)))
+			elif reward_type == "MAGIC":
+				var skill_data: Dictionary = DataManager.game_data_skills_magic.get(str(reward_id), {})
+				if not skill_data.is_empty():
+					return str(skill_data.get("name", str(reward_id)))
+			
+			# Fall back to original format for stat rewards (ATK, HP, etc.)
+			return "%s\n+%s" % [reward_type, str(reward_id)]
 		if reward_arr.size() == 1:
 			return str(reward_arr[0])
 	return "?"

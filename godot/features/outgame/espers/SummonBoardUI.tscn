@@ -1,6 +1,13 @@
 [gd_scene format=3 uid="uid://bdg8hwlg1goid"]
 
 [ext_resource type="Script" uid="uid://c4pnehjhbm32a" path="res://features/outgame/espers/summon_board_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cwfwqmc3kgvr3" path="res://assets/ui/beast/sumboard_arrow_rt.tres" id="2_b8y5j"]
+[ext_resource type="Texture2D" uid="uid://djms524f3tntn" path="res://assets/ui/beast/sumboard_arrow_lt.tres" id="3_ecqil"]
+[ext_resource type="Texture2D" uid="uid://b45rwki1qcs3y" path="res://assets/ui/beast/sumboard_arrow_r.tres" id="4_q845t"]
+[ext_resource type="Texture2D" uid="uid://lhu6xo6ejgxl" path="res://assets/ui/beast/sumboard_arrow_rb.tres" id="5_pueu8"]
+[ext_resource type="Texture2D" uid="uid://lross7x0rydh" path="res://assets/ui/beast/sumboard_arrow_lb.tres" id="6_74yb0"]
+[ext_resource type="Texture2D" uid="uid://ddpbr6grxvd2g" path="res://assets/ui/beast/sumboard_arrow_l.tres" id="7_evu1g"]
+[ext_resource type="Texture2D" uid="uid://b0bw8jn3x6jt7" path="res://assets/ui/beast/sumboard_gridbg_attack_learned.tres" id="8_wwty2"]
 
 [sub_resource type="TileSet" id="TileSet_4k7in"]
 tile_shape = 3
@@ -52,3 +59,126 @@ horizontal_alignment = 1
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1197684607]
 tile_set = SubResource("TileSet_4k7in")
+
+[node name="arrow_rt" type="TextureRect" parent="." unique_id=687077727]
+visible = false
+layout_mode = 0
+offset_left = 144.0
+offset_top = -5.0
+offset_right = 216.0
+offset_bottom = 67.0
+texture = ExtResource("2_b8y5j")
+expand_mode = 1
+
+[node name="arrow_lt" type="TextureRect" parent="." unique_id=1260538656]
+visible = false
+layout_mode = 0
+offset_left = 85.0
+offset_top = -5.0
+offset_right = 157.0
+offset_bottom = 67.0
+texture = ExtResource("3_ecqil")
+expand_mode = 1
+
+[node name="arrow_r" type="TextureRect" parent="." unique_id=1289274103]
+visible = false
+layout_mode = 0
+offset_left = 179.0
+offset_top = 46.0
+offset_right = 251.0
+offset_bottom = 118.0
+texture = ExtResource("4_q845t")
+expand_mode = 1
+
+[node name="arrow_rb" type="TextureRect" parent="." unique_id=1647468744]
+visible = false
+layout_mode = 0
+offset_left = 144.0
+offset_top = 100.0
+offset_right = 216.0
+offset_bottom = 172.0
+texture = ExtResource("5_pueu8")
+expand_mode = 1
+
+[node name="arrow_lb" type="TextureRect" parent="." unique_id=75731471]
+visible = false
+layout_mode = 0
+offset_left = 85.0
+offset_top = 100.0
+offset_right = 157.0
+offset_bottom = 172.0
+texture = ExtResource("6_74yb0")
+expand_mode = 1
+
+[node name="arrow_l" type="TextureRect" parent="." unique_id=1660886550]
+visible = false
+layout_mode = 0
+offset_left = 49.0
+offset_top = 46.0
+offset_right = 121.0
+offset_bottom = 118.0
+texture = ExtResource("7_evu1g")
+expand_mode = 1
+
+[node name="base_piece" type="TextureRect" parent="." unique_id=2028095164]
+visible = false
+layout_mode = 0
+offset_left = 71.0
+offset_top = 2.0
+offset_right = 231.0
+offset_bottom = 162.0
+texture = ExtResource("8_wwty2")
+expand_mode = 1
+
+[node name="lr_piece" type="TextureRect" parent="." unique_id=413188723]
+visible = false
+layout_mode = 0
+offset_left = 199.0
+offset_top = 2.0
+offset_right = 359.0
+offset_bottom = 162.0
+texture = ExtResource("8_wwty2")
+expand_mode = 1
+
+[node name="tb_piece" type="TextureRect" parent="." unique_id=1134038806]
+visible = false
+layout_mode = 0
+offset_left = 5.0
+offset_top = 114.0
+offset_right = 165.0
+offset_bottom = 274.0
+texture = ExtResource("8_wwty2")
+expand_mode = 1
+
+[node name="beast_icon" type="TextureRect" parent="." unique_id=1168747709]
+visible = false
+layout_mode = 0
+offset_left = 110.0
+offset_top = 41.0
+offset_right = 192.0
+offset_bottom = 123.0
+expand_mode = 1
+
+[node name="param_label" type="Label" parent="." unique_id=1797045096]
+visible = false
+layout_mode = 0
+offset_left = 91.0
+offset_top = 56.0
+offset_right = 211.0
+offset_bottom = 79.0
+theme_override_font_sizes/font_size = 22
+text = "param_label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="need_cp_label" type="Label" parent="." unique_id=395632537]
+visible = false
+layout_mode = 0
+offset_left = 129.0
+offset_top = 88.0
+offset_right = 237.0
+offset_bottom = 111.0
+theme_override_font_sizes/font_size = 20
+text = "need_cp_label"
+horizontal_alignment = 1
+vertical_alignment = 1

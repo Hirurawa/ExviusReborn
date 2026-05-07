@@ -5,6 +5,9 @@ signal patch_complete
 
 var files_to_patch: Array[String] = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons", "monsters", "summons", "summons_boards", "summons_exp_patterns", "summons_stat_patterns"]
 var current_patch_index: int = 0
+const BUNDLED_STATIC_VERSION: String = "bundled-v1"
+const BUNDLED_STATIC_DIRS: Array[String] = ["res://assets/static_data", "res://assets"]
+var prefer_bundled_static_data: bool = true
 
 var cached_data: Dictionary = {}
 var _http_request: HTTPRequest
@@ -23,6 +26,9 @@ func _ready() -> void:
 func start_patching() -> void:
 	if server_connection == null:
 		push_error("AssetPatcher: Nakama ServerConnection not found.")
+		for file_type in files_to_patch:
+			_load_with_fallback(file_type)
+		patch_complete.emit()
 		return
 	
 	current_patch_index = 0
@@ -35,10 +41,16 @@ func _patch_next_file() -> void:
 		
 	var file_type: String = files_to_patch[current_patch_index]
 	patch_progress.emit(file_type, "Checking version...")
+
+	# Local-first mode avoids RPC/HTTP failures when bundled static JSON is present.
+	if prefer_bundled_static_data and _load_from_bundled_static(file_type):
+		current_patch_index += 1
+		call_deferred("_patch_next_file")
+		return
 	
 	if not server_connection.get("_session"):
 		push_error("AssetPatcher: Nakama session is invalid.")
-		_load_from_cache(file_type)
+		_load_with_fallback(file_type)
 		current_patch_index += 1
 		call_deferred("_patch_next_file")
 		return
@@ -48,7 +60,7 @@ func _patch_next_file() -> void:
 	
 	if result.is_exception():
 		push_error("Failed to get data version for %s: %s" % [file_type, result.get_exception().message])
-		_load_from_cache(file_type)
+		_load_with_fallback(file_type)
 		current_patch_index += 1
 		call_deferred("_patch_next_file")
 		return
@@ -56,7 +68,7 @@ func _patch_next_file() -> void:
 	var dict: Variant = JSON.parse_string(result.payload)
 	if not dict or not dict is Dictionary or not dict.has("version"):
 		push_error("Invalid response for %s version: %s" % [file_type, result.payload])
-		_load_from_cache(file_type)
+		_load_with_fallback(file_type)
 		current_patch_index += 1
 		call_deferred("_patch_next_file")
 		return
@@ -82,7 +94,7 @@ func _download_file(file_type: String, url: String, new_version: String) -> void
 	var error: Error = _http_request.request(url)
 	if error != OK:
 		push_error("An error occurred in the HTTP request for %s." % file_type)
-		_load_from_cache(file_type)
+		_load_with_fallback(file_type)
 		current_patch_index += 1
 		call_deferred("_patch_next_file")
 
@@ -103,12 +115,12 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 			var err_msg = "CRITICAL ERROR: Failed to parse downloaded JSON for %s. Raw body: %s" % [file_type, json_string.substr(0, 500)]
 			printerr(err_msg)
 			push_error(err_msg)
-			_load_from_cache(file_type)
+			_load_with_fallback(file_type)
 	else:
 		var err_msg = "CRITICAL ERROR: HTTP Request failed for %s. Response Code: %d, Result Code: %d" % [file_type, response_code, result]
 		printerr(err_msg)
 		push_error(err_msg)
-		_load_from_cache(file_type)
+		_load_with_fallback(file_type)
 		
 	current_patch_index += 1
 	call_deferred("_patch_next_file")
@@ -169,6 +181,39 @@ func _load_from_cache(file_type: String) -> void:
 	
 	push_warning("Failed to load %s from cache, using empty dictionary." % file_type)
 	cached_data[file_type] = {}
+
+func _load_with_fallback(file_type: String) -> void:
+	if _cache_exists(file_type):
+		_load_from_cache(file_type)
+		return
+	if _load_from_bundled_static(file_type):
+		return
+	_load_from_cache(file_type)
+
+func _load_from_bundled_static(file_type: String) -> bool:
+	for base_dir in BUNDLED_STATIC_DIRS:
+		var path: String = "%s/%s.json" % [base_dir, file_type]
+		if not FileAccess.file_exists(path):
+			continue
+
+		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+		if not file:
+			continue
+
+		var json_string: String = file.get_as_text()
+		file.close()
+
+		var parsed: Variant = JSON.parse_string(json_string)
+		if parsed == null:
+			continue
+
+		cached_data[file_type] = parsed
+		_save_to_cache(file_type, json_string)
+		_set_local_version(file_type, BUNDLED_STATIC_VERSION)
+		patch_progress.emit(file_type, "Loaded bundled static data")
+		return true
+
+	return false
 
 func get_data(file_type: String) -> Variant:
 	if cached_data.has(file_type):

@@ -1,6 +1,12 @@
 [gd_scene format=3 uid="uid://caiavxfskfqo7"]
 
 [ext_resource type="Script" uid="uid://cyjffux2bypdg" path="res://features/outgame/espers/espers_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c1anumws64r7v" path="res://assets/ui/beast/summon_frame.tres" id="2_2sofd"]
+[ext_resource type="Texture2D" uid="uid://cyo1su671dmm5" path="res://assets/ui/common/bottomline.tres" id="2_jfx50"]
+[ext_resource type="Texture2D" uid="uid://b6sqfjo0ifrwm" path="res://assets/ui/beast/summon_star_big.tres" id="3_6edbp"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="4_deou4"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="5_jfx50"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="6_0ql2j"]
 
 [node name="EspersUI" type="Control" unique_id=866000664]
 layout_mode = 3
@@ -12,6 +18,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
+[node name="topline" type="TextureRect" parent="." unique_id=959213555]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 9.0
+offset_right = 641.0
+offset_bottom = 89.0
+texture = ExtResource("2_jfx50")
+expand_mode = 1
+
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1577410996]
 layout_mode = 1
 anchors_preset = -1
@@ -22,18 +37,91 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=390359953]
+[node name="UnitNamebgChara2" type="TextureRect" parent="VBoxContainer" unique_id=2094564439]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+texture = ExtResource("4_deou4")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/UnitNamebgChara2" unique_id=1150371694]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
 text = "Espers"
+
+[node name="BackButton" type="TextureButton" parent="VBoxContainer/UnitNamebgChara2" unique_id=1733233633]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("5_jfx50")
+texture_pressed = ExtResource("6_0ql2j")
+
+[node name="Back" type="Label" parent="VBoxContainer/UnitNamebgChara2/BackButton" unique_id=1466250099]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=204901746]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="EspersListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=612649902]
+[node name="EspersListContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer" unique_id=612649902]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 8
+columns = 3
+
+[node name="EsperFrame" type="Button" parent="." unique_id=2005631204]
+anchors_preset = 0
+offset_top = 104.0
+offset_right = 40.0
+offset_bottom = 144.0
+custom_minimum_size = Vector2(200, 220)
+flat = true
+visible = false
+
+[node name="NameLabel" type="Label" parent="EsperFrame" unique_id=803019280]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 71.0
+offset_right = 187.0
+offset_bottom = 106.0
+theme_override_font_sizes/font_size = 25
+text = "name_label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SummonFrame" type="TextureRect" parent="EsperFrame" unique_id=585886010]
+layout_mode = 0
+offset_right = 192.0
+offset_bottom = 192.0
+texture = ExtResource("2_2sofd")
+stretch_mode = 2
+
+[node name="LvlLabel" type="Label" parent="EsperFrame" unique_id=1396032235]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 179.0
+offset_right = 184.0
+offset_bottom = 214.0
+theme_override_font_sizes/font_size = 25
+text = "lv_label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RarityStar" type="TextureRect" parent="EsperFrame" unique_id=1270251114]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 140.0
+offset_right = 112.0
+offset_bottom = 172.0
+texture = ExtResource("3_6edbp")
+stretch_mode = 2

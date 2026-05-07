@@ -6,6 +6,5 @@
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_sawas")
-source_directory = "res://assets/ui/title"
-output_directory = "res://assets/ui/title"
+source_directory = "res://assets/ui"
 overwrite_existing = true

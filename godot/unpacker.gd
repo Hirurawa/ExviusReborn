@@ -4,7 +4,6 @@ extends Control
 const IMAGE_EXTENSIONS: PackedStringArray = ["png", "jpg", "jpeg"]
 
 @export_dir var source_directory: String = ""
-@export_dir var output_directory: String = "res://assets/unpacked_ui/"
 @export var overwrite_existing: bool = false
 @export var extract_from_folder: bool = false:
 	set(value):
@@ -13,16 +12,8 @@ const IMAGE_EXTENSIONS: PackedStringArray = ["png", "jpg", "jpeg"]
 			extract_from_folder = false
 
 func _extract_all() -> void:
-	if source_directory == "" or output_directory == "":
-		print("Please assign both source directory and output directory.")
-		return
-
-	if not output_directory.begins_with("res://"):
-		print("Output directory must be inside the project (res://...).")
-		return
-
-	if not _ensure_output_directory_exists():
-		print("Failed to create output directory: ", output_directory)
+	if source_directory == "":
+		print("Please assign source directory.")
 		return
 
 	var plist_paths: Array[String] = []
@@ -60,7 +51,7 @@ func _extract_all() -> void:
 		var sprites: Array[Dictionary] = _parse_plist_sprites(plist_path)
 		if sprites.is_empty():
 			continue
-			
+
 		for sprite in sprites:
 			total_sprites += 1
 			var sprite_name: String = sprite.get("name", "")
@@ -70,7 +61,7 @@ func _extract_all() -> void:
 				failed_count += 1
 				continue
 
-			var save_path: String = _get_tres_path(sprite_name)
+			var save_path: String = _get_tres_path(sprite_name, atlas_path)
 			var save_outcome: int = _save_sprite_tres(master_texture, region, save_path)
 			match save_outcome:
 				0:
@@ -107,7 +98,7 @@ func _parse_plist_sprites(plist_path: String) -> Array[Dictionary]:
 
 		if line.begins_with("<key>") and line.ends_with("</key>"):
 			var key_name: String = line.replace("<key>", "").replace("</key>", "").strip_edges()
-			
+
 			if _is_sprite_key(key_name):
 				current_sprite_name = key_name
 				is_next_line_rect = false
@@ -125,7 +116,7 @@ func _parse_plist_sprites(plist_path: String) -> Array[Dictionary]:
 		if region.size.x <= 0.0 or region.size.y <= 0.0:
 			current_sprite_name = ""
 			continue
-		
+
 		sprites.append({
 			"name": current_sprite_name,
 			"region": region
@@ -185,9 +176,10 @@ func _save_sprite_tres(master_tex: Texture2D, region: Rect2, save_path: String) 
 		return 1
 	return 0
 
-func _get_tres_path(texture_name: String) -> String:
+func _get_tres_path(texture_name: String, atlas_path: String) -> String:
 	var file_name: String = texture_name.get_file().get_basename()
-	return _join_path(output_directory.trim_suffix("/"), "%s.tres" % file_name)
+	var atlas_directory: String = atlas_path.get_base_dir().trim_suffix("/")
+	return _join_path(atlas_directory, "%s.tres" % file_name)
 
 func _load_texture_from_path(texture_path: String) -> Texture2D:
 	if texture_path.begins_with("res://") or texture_path.begins_with("uid://"):
@@ -199,9 +191,6 @@ func _load_texture_from_path(texture_path: String) -> Texture2D:
 		return null
 
 	return ImageTexture.create_from_image(image)
-
-func _ensure_output_directory_exists() -> bool:
-	return DirAccess.make_dir_recursive_absolute(output_directory) == OK
 
 func _collect_files_with_extension(root_directory: String, extension: String, output: Array[String]) -> void:
 	var directory: DirAccess = DirAccess.open(root_directory)

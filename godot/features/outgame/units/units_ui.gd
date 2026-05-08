@@ -12,6 +12,7 @@ const SLOT_PEDESTAL_BOTTOM_MARGIN: float = 2.0
 @onready var next_party_btn: Button = $VBoxContainer/PartyHeaderHBox/NextPartyButton
 @onready var pagination_indicators: HBoxContainer = $VBoxContainer/PaginationHBox
 @onready var slots_container: HBoxContainer = $VBoxContainer/PartySlotsHBox
+@onready var esper_slots_container: HBoxContainer = $VBoxContainer/EsperSlots
 
 @onready var view_units_btn: Button = $VBoxContainer/BottomButtonsGrid/ViewUnitsButton
 @onready var awaken_abilities_btn: Button = $VBoxContainer/BottomButtonsGrid/AwakenAbilitiesButton
@@ -89,6 +90,11 @@ func _ready() -> void:
 		if slot_btn != null and not slot_btn.resized.is_connected(_on_slot_resized):
 			slot_btn.resized.connect(_on_slot_resized)
 
+	for i in range(esper_slots_container.get_child_count()):
+		var esper_slot_btn: Button = esper_slots_container.get_child(i) as Button
+		if esper_slot_btn != null and not esper_slot_btn.resized.is_connected(_on_slot_resized):
+			esper_slot_btn.resized.connect(_on_slot_resized)
+
 	_refresh_ui()
 	# Refresh once more after layout so shared visuals use final slot sizes.
 	call_deferred("_refresh_ui")
@@ -120,6 +126,7 @@ func _refresh_ui() -> void:
 
 	_update_pagination()
 	_update_slots(party.get("units", []))
+	_update_esper_slots(party.get("espers", []))
 
 func _update_pagination() -> void:
 	for i in range(pagination_indicators.get_child_count()):
@@ -191,6 +198,45 @@ func _update_slots(unit_uuids: Array) -> void:
 
 		slot_btn.pressed.connect(_on_slot_clicked.bind(i, unit_inst))
 
+func _update_esper_slots(esper_ids: Array) -> void:
+	for i in range(esper_slots_container.get_child_count()):
+		var slot_btn: Button = esper_slots_container.get_child(i) as Button
+		if slot_btn == null:
+			continue
+
+		var summon_id: String = ""
+		if i < esper_ids.size():
+			summon_id = str(esper_ids[i]).strip_edges()
+
+		var summon_name: String = ""
+		if summon_id != "":
+			summon_name = _get_summon_display_name(summon_id)
+
+		var lbl_name: Label = slot_btn.get_node("NameLabel") as Label
+		lbl_name.text = summon_name
+		var lbl_lvl: Label = slot_btn.get_node("LevelLabel") as Label
+		lbl_lvl.text = "Esper" if summon_name != "" else ""
+
+		if slot_btn.pressed.is_connected(_on_esper_slot_clicked):
+			slot_btn.pressed.disconnect(_on_esper_slot_clicked)
+
+		slot_btn.pressed.connect(_on_esper_slot_clicked.bind(i, summon_id))
+
+func _get_summon_display_name(summon_id: String) -> String:
+	var summon_data: Dictionary = DataManager.game_data_summons.get(summon_id, {})
+	if summon_data.is_empty():
+		return "Summon %s" % summon_id
+
+	var names_value: Variant = summon_data.get("names", [])
+	if names_value is Array:
+		var names_array: Array = names_value
+		for name_variant in names_array:
+			var candidate: String = str(name_variant).strip_edges()
+			if candidate != "":
+				return candidate
+
+	return "Summon %s" % summon_id
+
 func _find_unit_inst(uuid: String) -> Dictionary:
 	for u in DataManager.owned_units_ids:
 		if u is Dictionary and u.get("instance_id") == uuid:
@@ -231,6 +277,14 @@ func _on_slot_clicked(slot_index: int, unit_inst: Dictionary) -> void:
 		UIManager.push("unit_selector_ui", {"mode": "select", "party_index": current_party_index, "slot_index": slot_index})
 	else:
 		UIManager.push("unit_stats_popup", {"unit_inst": unit_inst, "party_index": current_party_index, "slot_index": slot_index})
+
+func _on_esper_slot_clicked(slot_index: int, current_summon_id: String) -> void:
+	UIManager.push("espers_ui", {
+		"mode": "select",
+		"party_index": current_party_index,
+		"slot_index": slot_index,
+		"current_summon_id": current_summon_id
+	})
 
 func _on_view_units() -> void:
 	UIManager.push("unit_selector_ui", {"mode": "view"})

@@ -19,6 +19,7 @@ signal friend_action_result(success: bool, message: String)
 signal parties_updated(parties: Array)
 signal party_save_requested(new_parties: Array)
 signal active_party_changed(party_index: int)
+signal espers_updated(espers: Array)
 signal purchase_successful()
 signal purchase_failed(error_message: String)
 
@@ -45,18 +46,21 @@ var lapis: int = 0
 var current_username: String = ""
 
 var owned_units_ids: Array = []
+var owned_summons: Array = []
 
 var last_played_dungeon_name: String = ""
 var cleared_missions: Dictionary = {}
 var latest_cleared_mission_id: String = ""
 var owned_items: Dictionary = {"stackables": {}, "equipment": []}
 const COMBAT_ITEM_SLOT_COUNT: int = 10
+const PARTY_SLOT_COUNT: int = 5
 const COMBAT_ITEMS_SNAPSHOT_FILE: String = "combat_items.json"
 const PARTIES_SNAPSHOT_FILE: String = "parties.json"
 const MISSION_PROGRESS_SNAPSHOT_FILE: String = "mission_progress.json"
 const ITEMS_SNAPSHOT_FILE: String = "items.json"
 const STATS_SNAPSHOT_FILE: String = "stats.json"
 const UNITS_SNAPSHOT_FILE: String = "units.json"
+const ESPERS_SNAPSHOT_FILE: String = "espers.json"
 const LOCAL_SAVE_INDEX_PATH: String = "user://game_state/save_index.json"
 const STARTER_RAIN_UNIT_ID: String = "100000102"
 const STARTER_LASSWELL_UNIT_ID: String = "100000202"
@@ -303,6 +307,7 @@ func _migrate_legacy_snapshots_to_active_save() -> void:
 		ITEMS_SNAPSHOT_FILE,
 		COMBAT_ITEMS_SNAPSHOT_FILE,
 		UNITS_SNAPSHOT_FILE,
+		ESPERS_SNAPSHOT_FILE,
 		PARTIES_SNAPSHOT_FILE,
 		MISSION_PROGRESS_SNAPSHOT_FILE
 	]
@@ -354,10 +359,11 @@ func _build_starter_unit_local(unit_id: String, instance_id: String) -> Dictiona
 
 func _build_default_parties_local(rain_instance_id: String, lasswell_instance_id: String) -> Array:
 	var generated_parties: Array = []
-	for i in range(5):
+	for i in range(PARTY_SLOT_COUNT):
 		generated_parties.append({
 			"name": "Party %d" % (i + 1),
-			"units": ["", "", "", "", ""]
+			"units": ["", "", "", "", ""],
+			"espers": ["", "", "", "", ""]
 		})
 
 	if not generated_parties.is_empty():
@@ -398,6 +404,7 @@ func start_new_local_game(username: String) -> Dictionary:
 	cleared_missions = {}
 	latest_cleared_mission_id = ""
 	owned_units_ids = _hydrate_owned_units([rain_unit, lasswell_unit])
+	owned_summons = []
 	parties = _build_default_parties_local(STARTER_RAIN_INSTANCE_ID, STARTER_LASSWELL_INSTANCE_ID)
 	selected_party_index = 0
 
@@ -410,6 +417,7 @@ func start_new_local_game(username: String) -> Dictionary:
 	items_updated.emit(owned_items)
 	combat_items_loaded.emit(combat_items.duplicate())
 	units_updated.emit(owned_units_ids)
+	espers_updated.emit(owned_summons)
 	parties_updated.emit(parties)
 	active_party_changed.emit(selected_party_index)
 	account_updated.emit(current_username)
@@ -493,9 +501,7 @@ func _normalize_parties_payload(raw_payload: Variant) -> Dictionary:
 		return {"parties": [], "selected_party_index": 0}
 
 	var payload: Dictionary = raw_payload
-	var local_parties: Array = []
-	if payload.has("parties") and payload["parties"] is Array:
-		local_parties = payload["parties"].duplicate(true)
+	var local_parties: Array = _normalize_parties_array(payload.get("parties", []))
 
 	var local_selected: int = int(payload.get("selected_party_index", 0))
 	if local_parties.is_empty():
@@ -507,6 +513,43 @@ func _normalize_parties_payload(raw_payload: Variant) -> Dictionary:
 		"parties": local_parties,
 		"selected_party_index": local_selected
 	}
+
+func _normalize_party_slots(raw_slots: Variant, slot_count: int) -> Array:
+	var normalized: Array = []
+	for _i in range(slot_count):
+		normalized.append("")
+
+	if not (raw_slots is Array):
+		return normalized
+
+	var source_slots: Array = raw_slots
+	for i in range(min(slot_count, source_slots.size())):
+		normalized[i] = str(source_slots[i])
+
+	return normalized
+
+func _normalize_party_entry(raw_party: Variant, fallback_index: int) -> Dictionary:
+	var party_dict: Dictionary = {}
+	if raw_party is Dictionary:
+		party_dict = (raw_party as Dictionary).duplicate(true)
+
+	var fallback_name: String = "Party %d" % (fallback_index + 1)
+	return {
+		"name": str(party_dict.get("name", fallback_name)),
+		"units": _normalize_party_slots(party_dict.get("units", []), PARTY_SLOT_COUNT),
+		"espers": _normalize_party_slots(party_dict.get("espers", []), PARTY_SLOT_COUNT)
+	}
+
+func _normalize_parties_array(raw_parties: Variant) -> Array:
+	if not (raw_parties is Array):
+		return []
+
+	var source_parties: Array = raw_parties
+	var normalized: Array = []
+	for i in range(source_parties.size()):
+		normalized.append(_normalize_party_entry(source_parties[i], i))
+
+	return normalized
 
 func _load_parties_from_local() -> Dictionary:
 	if _save_store == null:
@@ -550,9 +593,36 @@ func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 	}
 
 func _snapshot_parties_payload() -> Dictionary:
+	var normalized_parties: Array = _normalize_parties_array(parties)
+	var normalized_selected: int = 0
+	if not normalized_parties.is_empty():
+		normalized_selected = clampi(selected_party_index, 0, normalized_parties.size() - 1)
 	return {
-		"parties": parties.duplicate(true),
-		"selected_party_index": selected_party_index
+		"parties": normalized_parties,
+		"selected_party_index": normalized_selected
+	}
+
+func _snapshot_espers_payload() -> Dictionary:
+	var lean_espers: Array = []
+	for esper in owned_summons:
+		if esper is Dictionary:
+			lean_espers.append(_extract_esper_lean_record(esper))
+
+	return {
+		"owned_summons": lean_espers
+	}
+
+func _extract_esper_lean_record(hydrated_esper: Dictionary) -> Dictionary:
+	return {
+		"summon_id": str(hydrated_esper.get("summon_id", "")).strip_edges(),
+		"is_unlocked": bool(hydrated_esper.get("is_unlocked", false)),
+		"rank": maxi(1, int(hydrated_esper.get("rank", 1))),
+		"level": maxi(1, int(hydrated_esper.get("level", 1))),
+		"xp": maxi(0, int(hydrated_esper.get("xp", 0))),
+		"current_sp": maxi(0, int(hydrated_esper.get("current_sp", 0))),
+		"spent_sp": maxi(0, int(hydrated_esper.get("spent_sp", 0))),
+		"unlocked_skills": _normalize_string_array(hydrated_esper.get("unlocked_skills", [])),
+		"unlocked_board_nodes": _normalize_string_array(hydrated_esper.get("unlocked_board_nodes", []))
 	}
 
 func _snapshot_mission_progress_payload() -> Dictionary:
@@ -578,6 +648,103 @@ func _normalize_units_payload(raw_payload: Variant) -> Array:
 			lean_units.append(unit)
 
 	return lean_units
+
+func _normalize_string_array(raw_values: Variant) -> Array:
+	if not (raw_values is Array):
+		return []
+
+	var normalized: Array = []
+	for value in raw_values:
+		var normalized_value: String = str(value).strip_edges()
+		if normalized_value == "":
+			continue
+		if normalized.has(normalized_value):
+			continue
+		normalized.append(normalized_value)
+
+	return normalized
+
+func _build_default_esper_progression(summon_id: String) -> Dictionary:
+	return {
+		"summon_id": summon_id,
+		"is_unlocked": false,
+		"rank": 1,
+		"level": 1,
+		"xp": 0,
+		"current_sp": 0,
+		"spent_sp": 0,
+		"unlocked_skills": [],
+		"unlocked_board_nodes": []
+	}
+
+func _normalize_esper_record(raw_record: Variant) -> Dictionary:
+	if not (raw_record is Dictionary):
+		return {}
+
+	var payload: Dictionary = raw_record
+	var summon_id: String = str(payload.get("summon_id", "")).strip_edges()
+	if summon_id == "":
+		return {}
+
+	var normalized: Dictionary = _build_default_esper_progression(summon_id)
+	normalized["is_unlocked"] = bool(payload.get("is_unlocked", false))
+	normalized["rank"] = maxi(1, int(payload.get("rank", 1)))
+	normalized["level"] = maxi(1, int(payload.get("level", 1)))
+	normalized["xp"] = maxi(0, int(payload.get("xp", 0)))
+	normalized["current_sp"] = maxi(0, int(payload.get("current_sp", 0)))
+	normalized["spent_sp"] = maxi(0, int(payload.get("spent_sp", 0)))
+	normalized["unlocked_skills"] = _normalize_string_array(payload.get("unlocked_skills", []))
+	normalized["unlocked_board_nodes"] = _normalize_string_array(payload.get("unlocked_board_nodes", []))
+	return normalized
+
+func _normalize_espers_payload(raw_payload: Variant) -> Array:
+	if not (raw_payload is Dictionary):
+		return []
+
+	var payload: Dictionary = raw_payload
+	var records_value: Variant = payload.get("owned_summons", [])
+	if not (records_value is Array):
+		return []
+
+	var source_records: Array = records_value
+	var by_summon_id: Dictionary = {}
+	for record_value in source_records:
+		var normalized: Dictionary = _normalize_esper_record(record_value)
+		if normalized.is_empty():
+			continue
+		by_summon_id[normalized["summon_id"]] = normalized
+
+	var normalized_records: Array = []
+	for summon_id in by_summon_id.keys():
+		normalized_records.append(by_summon_id[summon_id])
+
+	normalized_records.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var a_id: String = str(a.get("summon_id", ""))
+		var b_id: String = str(b.get("summon_id", ""))
+		if a_id.is_valid_int() and b_id.is_valid_int():
+			return int(a_id) < int(b_id)
+		return a_id < b_id
+	)
+
+	return normalized_records
+
+func _load_espers_from_local() -> Array:
+	if _save_store == null:
+		return []
+
+	var envelope: Dictionary = _load_snapshot(ESPERS_SNAPSHOT_FILE)
+	if envelope.is_empty():
+		return []
+
+	var data: Variant = envelope.get("data", {})
+	if not (data is Dictionary):
+		return []
+
+	var lean_espers: Array = _normalize_espers_payload(data)
+	if lean_espers.is_empty():
+		return []
+
+	return _hydrate_owned_espers(lean_espers)
 
 func _load_units_from_local() -> Array:
 	if _save_store == null:
@@ -708,6 +875,7 @@ func _save_all_snapshots(source_event: String) -> void:
 	_save_snapshot(ITEMS_SNAPSHOT_FILE, _snapshot_items_payload(), source_event)
 	_save_snapshot(COMBAT_ITEMS_SNAPSHOT_FILE, _snapshot_combat_items_payload(), source_event)
 	_save_snapshot(UNITS_SNAPSHOT_FILE, _snapshot_units_payload(), source_event)
+	_save_snapshot(ESPERS_SNAPSHOT_FILE, _snapshot_espers_payload(), source_event)
 	_save_snapshot(PARTIES_SNAPSHOT_FILE, _snapshot_parties_payload(), source_event)
 	_save_snapshot(MISSION_PROGRESS_SNAPSHOT_FILE, _snapshot_mission_progress_payload(), source_event)
 
@@ -793,10 +961,14 @@ func _load_initial_data(email: String) -> void:
 
 	owned_units_ids = _load_units_from_local()
 	units_updated.emit(owned_units_ids)
+
+	owned_summons = _load_espers_from_local()
+	espers_updated.emit(owned_summons)
 	
 	var parties_payload: Dictionary = _load_parties_from_local()
 	parties = parties_payload.get("parties", [])
 	selected_party_index = _clamp_selected_party_index(int(parties_payload.get("selected_party_index", 0)))
+	_ensure_party_assigned_espers_owned()
 	parties_updated.emit(parties)
 	active_party_changed.emit(selected_party_index)
 	
@@ -1534,12 +1706,13 @@ func get_active_party() -> Dictionary:
 	return {}
 
 func save_parties(new_parties: Array) -> Dictionary:
+	var normalized_parties: Array = _normalize_parties_array(new_parties)
 	var selected_for_save: int = 0
-	if not new_parties.is_empty():
-		selected_for_save = clampi(selected_party_index, 0, new_parties.size() - 1)
+	if not normalized_parties.is_empty():
+		selected_for_save = clampi(selected_party_index, 0, normalized_parties.size() - 1)
 
 	var previous_selected_local: int = selected_party_index
-	parties = new_parties
+	parties = normalized_parties
 	selected_party_index = _clamp_selected_party_index(selected_for_save)
 	parties_updated.emit(parties)
 	_save_snapshot(PARTIES_SNAPSHOT_FILE, _snapshot_parties_payload(), "parties_saved")
@@ -1552,10 +1725,39 @@ func save_parties(new_parties: Array) -> Dictionary:
 	}
 
 func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String) -> void:
-	if party_index >= 0 and party_index < parties.size():
-		var new_parties: Array = parties.duplicate(true)
-		new_parties[party_index]["units"][slot_index] = instance_id
-		party_save_requested.emit(new_parties)
+	if party_index < 0 or party_index >= parties.size():
+		return
+	if slot_index < 0 or slot_index >= PARTY_SLOT_COUNT:
+		return
+
+	var new_parties: Array = _normalize_parties_array(parties)
+	new_parties[party_index]["units"][slot_index] = instance_id
+	party_save_requested.emit(new_parties)
+
+func assign_esper_to_party(party_index: int, slot_index: int, summon_id: String) -> void:
+	if party_index < 0 or party_index >= parties.size():
+		return
+	if slot_index < 0 or slot_index >= PARTY_SLOT_COUNT:
+		return
+
+	var normalized_summon_id: String = summon_id.strip_edges()
+	if normalized_summon_id != "" and not game_data_summons.has(normalized_summon_id):
+		return
+	if normalized_summon_id != "" and not is_esper_unlocked(normalized_summon_id):
+		return
+
+	var new_parties: Array = _normalize_parties_array(parties)
+	var target_espers: Array = new_parties[party_index].get("espers", [])
+
+	# Keep espers unique inside the same party by removing any existing assignment first.
+	if normalized_summon_id != "":
+		for i in range(target_espers.size()):
+			if str(target_espers[i]) == normalized_summon_id:
+				target_espers[i] = ""
+
+	target_espers[slot_index] = normalized_summon_id
+	new_parties[party_index]["espers"] = target_espers
+	party_save_requested.emit(new_parties)
 
 func summon_units(amount: int) -> Dictionary:
 	var summoned_units: Array = []
@@ -2211,6 +2413,210 @@ func _normalize_unit_equipment(raw_equipment: Variant) -> Dictionary:
 		return normalized
 
 	return {}
+
+func _find_esper_index_by_summon_id(summon_id: String) -> int:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	if normalized_summon_id == "":
+		return -1
+
+	for i in range(owned_summons.size()):
+		var record_value: Variant = owned_summons[i]
+		if not (record_value is Dictionary):
+			continue
+		if str(record_value.get("summon_id", "")) == normalized_summon_id:
+			return i
+
+	return -1
+
+func _rehydrate_and_emit_espers(source_event: String) -> void:
+	owned_summons = _hydrate_owned_espers(_normalize_espers_payload(_snapshot_espers_payload()))
+	espers_updated.emit(owned_summons)
+	_save_snapshot(ESPERS_SNAPSHOT_FILE, _snapshot_espers_payload(), source_event)
+
+func _upsert_esper_record(record: Dictionary) -> void:
+	var normalized: Dictionary = _normalize_esper_record(record)
+	if normalized.is_empty():
+		return
+
+	var existing_index: int = _find_esper_index_by_summon_id(str(normalized.get("summon_id", "")))
+	if existing_index >= 0:
+		owned_summons[existing_index] = normalized
+	else:
+		owned_summons.append(normalized)
+
+func _ensure_party_assigned_espers_owned() -> void:
+	var changed: bool = false
+	for party_value in parties:
+		if not (party_value is Dictionary):
+			continue
+		var party_dict: Dictionary = party_value
+		var espers_value: Variant = party_dict.get("espers", [])
+		if not (espers_value is Array):
+			continue
+		for esper_value in espers_value:
+			var summon_id: String = str(esper_value).strip_edges()
+			if summon_id == "":
+				continue
+			if not game_data_summons.has(summon_id):
+				continue
+			if _find_esper_index_by_summon_id(summon_id) >= 0:
+				continue
+			var default_record: Dictionary = _build_default_esper_progression(summon_id)
+			default_record["is_unlocked"] = true
+			owned_summons.append(default_record)
+			changed = true
+
+	if changed:
+		owned_summons = _hydrate_owned_espers(owned_summons)
+		espers_updated.emit(owned_summons)
+
+func get_owned_espers() -> Array:
+	return owned_summons.duplicate(true)
+
+func get_esper_progression(summon_id: String) -> Dictionary:
+	var index: int = _find_esper_index_by_summon_id(summon_id)
+	if index < 0:
+		return {}
+
+	var record_value: Variant = owned_summons[index]
+	if record_value is Dictionary:
+		return (record_value as Dictionary).duplicate(true)
+
+	return {}
+
+func is_esper_unlocked(summon_id: String) -> bool:
+	var progression: Dictionary = get_esper_progression(summon_id)
+	if progression.is_empty():
+		return false
+	return bool(progression.get("is_unlocked", false))
+
+func unlock_esper(summon_id: String) -> Dictionary:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	if normalized_summon_id == "":
+		return {"success": false, "error": "ERR_INVALID_SUMMON_ID"}
+	if not game_data_summons.has(normalized_summon_id):
+		return {"success": false, "error": "ERR_SUMMON_NOT_FOUND"}
+
+	var record: Dictionary = get_esper_progression(normalized_summon_id)
+	if record.is_empty():
+		record = _build_default_esper_progression(normalized_summon_id)
+
+	record["is_unlocked"] = true
+	_upsert_esper_record(record)
+	_rehydrate_and_emit_espers("unlock_esper")
+	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
+
+func set_esper_progression(summon_id: String, rank: int, level: int, xp: int) -> Dictionary:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	if normalized_summon_id == "":
+		return {"success": false, "error": "ERR_INVALID_SUMMON_ID"}
+	if not game_data_summons.has(normalized_summon_id):
+		return {"success": false, "error": "ERR_SUMMON_NOT_FOUND"}
+
+	var summon_template: Dictionary = game_data_summons.get(normalized_summon_id, {})
+	var entries_value: Variant = summon_template.get("entries", [])
+	var max_rank: int = 3
+	if entries_value is Array and not (entries_value as Array).is_empty():
+		max_rank = maxi(1, (entries_value as Array).size())
+
+	var record: Dictionary = get_esper_progression(normalized_summon_id)
+	if record.is_empty():
+		record = _build_default_esper_progression(normalized_summon_id)
+
+	record["is_unlocked"] = true
+	record["rank"] = clampi(rank, 1, max_rank)
+	record["level"] = maxi(1, level)
+	record["xp"] = maxi(0, xp)
+	_upsert_esper_record(record)
+	_rehydrate_and_emit_espers("set_esper_progression")
+	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
+
+func set_esper_sp(summon_id: String, current_sp: int, spent_sp: int) -> Dictionary:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	var record: Dictionary = get_esper_progression(normalized_summon_id)
+	if record.is_empty():
+		return {"success": false, "error": "ERR_ESPER_NOT_FOUND"}
+
+	record["current_sp"] = maxi(0, current_sp)
+	record["spent_sp"] = maxi(0, spent_sp)
+	_upsert_esper_record(record)
+	_rehydrate_and_emit_espers("set_esper_sp")
+	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
+
+func spend_esper_sp(summon_id: String, amount: int) -> Dictionary:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	var spend_amount: int = maxi(0, amount)
+	if spend_amount <= 0:
+		return {"success": false, "error": "ERR_INVALID_SP_AMOUNT"}
+
+	var record: Dictionary = get_esper_progression(normalized_summon_id)
+	if record.is_empty():
+		return {"success": false, "error": "ERR_ESPER_NOT_FOUND"}
+
+	var current_sp: int = int(record.get("current_sp", 0))
+	if current_sp < spend_amount:
+		return {"success": false, "error": "ERR_INSUFFICIENT_SP"}
+
+	record["current_sp"] = current_sp - spend_amount
+	record["spent_sp"] = int(record.get("spent_sp", 0)) + spend_amount
+	_upsert_esper_record(record)
+	_rehydrate_and_emit_espers("spend_esper_sp")
+	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
+
+func unlock_esper_skill(summon_id: String, skill_id: String) -> Dictionary:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	var normalized_skill_id: String = skill_id.strip_edges()
+	if normalized_skill_id == "":
+		return {"success": false, "error": "ERR_INVALID_SKILL_ID"}
+
+	var record: Dictionary = get_esper_progression(normalized_summon_id)
+	if record.is_empty():
+		return {"success": false, "error": "ERR_ESPER_NOT_FOUND"}
+
+	var unlocked_skills: Array = _normalize_string_array(record.get("unlocked_skills", []))
+	if unlocked_skills.has(normalized_skill_id):
+		return {"success": false, "error": "ERR_SKILL_ALREADY_UNLOCKED"}
+
+	unlocked_skills.append(normalized_skill_id)
+	record["unlocked_skills"] = unlocked_skills
+	_upsert_esper_record(record)
+	_rehydrate_and_emit_espers("unlock_esper_skill")
+	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
+
+func unlock_esper_board_node(summon_id: String, node_id: String, sp_cost: int = 0, reward_skill_id: String = "") -> Dictionary:
+	var normalized_summon_id: String = summon_id.strip_edges()
+	var normalized_node_id: String = node_id.strip_edges()
+	if normalized_node_id == "":
+		return {"success": false, "error": "ERR_INVALID_NODE_ID"}
+
+	var record: Dictionary = get_esper_progression(normalized_summon_id)
+	if record.is_empty():
+		return {"success": false, "error": "ERR_ESPER_NOT_FOUND"}
+
+	var unlocked_nodes: Array = _normalize_string_array(record.get("unlocked_board_nodes", []))
+	if unlocked_nodes.has(normalized_node_id):
+		return {"success": false, "error": "ERR_NODE_ALREADY_UNLOCKED"}
+
+	var spend_result: Dictionary = {}
+	if sp_cost > 0:
+		spend_result = spend_esper_sp(normalized_summon_id, sp_cost)
+		if not bool(spend_result.get("success", false)):
+			return spend_result
+		record = get_esper_progression(normalized_summon_id)
+
+	unlocked_nodes.append(normalized_node_id)
+	record["unlocked_board_nodes"] = unlocked_nodes
+
+	var normalized_reward_skill_id: String = reward_skill_id.strip_edges()
+	if normalized_reward_skill_id != "":
+		var unlocked_skills: Array = _normalize_string_array(record.get("unlocked_skills", []))
+		if not unlocked_skills.has(normalized_reward_skill_id):
+			unlocked_skills.append(normalized_reward_skill_id)
+		record["unlocked_skills"] = unlocked_skills
+
+	_upsert_esper_record(record)
+	_rehydrate_and_emit_espers("unlock_esper_board_node")
+	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 		
 func _hydrate_owned_units(units: Array) -> Array:
 	var hydrated_units: Array = []
@@ -2253,6 +2659,26 @@ func _hydrate_owned_units(units: Array) -> Array:
 		hydrated_units.append(hydrated_unit)
 
 	return hydrated_units
+
+func _hydrate_owned_espers(espers: Array) -> Array:
+	var hydrated_espers: Array = []
+	for esper_value in espers:
+		if not (esper_value is Dictionary):
+			continue
+
+		var normalized_record: Dictionary = _normalize_esper_record(esper_value)
+		if normalized_record.is_empty():
+			continue
+
+		var summon_id: String = str(normalized_record.get("summon_id", ""))
+		var template_data: Dictionary = game_data_summons.get(summon_id, {})
+		var hydrated: Dictionary = template_data.duplicate(true)
+		hydrated["summon_id"] = summon_id
+		hydrated["progression"] = normalized_record.duplicate(true)
+		hydrated.merge(normalized_record, true)
+		hydrated_espers.append(hydrated)
+
+	return hydrated_espers
 
 func list_friends() -> Variant:
 	friend_action_result.emit(false, "Friends not available in offline mode")

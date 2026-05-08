@@ -27,6 +27,7 @@ var _scenes_map: Dictionary = {
 	"espers_ui": "res://features/outgame/espers/EspersUI.tscn",
 	"esper_detail_ui": "res://features/outgame/espers/EsperDetailUI.tscn",
 	"summon_board_ui": "res://features/outgame/espers/SummonBoardUI.tscn",
+	"esper_enhancement_ui": "res://features/outgame/espers/EsperEnhancementUI.tscn",
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn"
 }
@@ -64,7 +65,7 @@ func _on_world_map_pressed() -> void:
 	push("map_ui")
 
 func _on_espers_pressed() -> void:
-	set_root("espers_ui")
+	push("espers_ui")
 
 func _update_overlays() -> void:
 	if _menu_stack.is_empty():

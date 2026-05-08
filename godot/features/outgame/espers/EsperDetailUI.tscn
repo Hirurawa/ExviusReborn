@@ -21,13 +21,16 @@
 [ext_resource type="Texture2D" uid="uid://bvjbaoka8laxr" path="res://assets/ui/beast/middlebutton_label_special.tres" id="15_8av0p"]
 [ext_resource type="Texture2D" uid="uid://dan4ogokjsfii" path="res://assets/ui/common/mini_arrow_l.tres" id="15_jmawu"]
 [ext_resource type="Texture2D" uid="uid://yf85pjgnkaa1" path="res://assets/ui/beast/largebutton_label_sumpowerup.tres" id="18_3nd5s"]
+[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="18_dbipc"]
 [ext_resource type="Texture2D" uid="uid://dub215akrg47j" path="res://assets/ui/beast/largebutton_label_sumboard.tres" id="19_wugaj"]
+[ext_resource type="Texture2D" uid="uid://b083lif1t03cr" path="res://assets/ui/common/button_middle_mediumlong2.tres" id="21_p1yt5"]
 [ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="22_8av0p"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="23_3nd5s"]
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="24_wugaj"]
 [ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="25_ondgf"]
 [ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="26_qtoeq"]
 [ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="27_hfjiv"]
+[ext_resource type="Texture2D" uid="uid://cx7oimghnle4h" path="res://assets/ui/common/button_large2.tres" id="27_sxe62"]
 [ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="28_yiu2v"]
 [ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="29_dbipc"]
 [ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="30_p1yt5"]
@@ -291,53 +294,53 @@ offset_bottom = 570.0
 texture = ExtResource("9_e3j05")
 expand_mode = 1
 
-[node name="btn_reset" type="TextureRect" parent="." unique_id=341625684]
+[node name="btn_reset" type="TextureButton" parent="." unique_id=1025035014]
 layout_mode = 0
 offset_left = 470.0
 offset_top = 229.0
 offset_right = 622.0
 offset_bottom = 293.0
-texture = ExtResource("10_8av0p")
-expand_mode = 1
+texture_normal = ExtResource("10_8av0p")
+texture_pressed = ExtResource("18_dbipc")
 
 [node name="MinibuttonLongLabelBoardreset" type="Sprite2D" parent="btn_reset" unique_id=1996162466]
 position = Vector2(76, 30)
 texture = ExtResource("11_n6gqy")
 
-[node name="btn_elem" type="TextureRect" parent="." unique_id=80153664]
+[node name="btn_elem" type="TextureButton" parent="." unique_id=589923309]
 layout_mode = 0
 offset_left = 475.0
 offset_top = 450.0
 offset_right = 619.0
 offset_bottom = 530.0
-texture = ExtResource("11_3nd5s")
-expand_mode = 1
+texture_normal = ExtResource("11_3nd5s")
+texture_pressed = ExtResource("21_p1yt5")
 
 [node name="MiddlebuttonLabelResist" type="Sprite2D" parent="btn_elem" unique_id=1520249889]
 position = Vector2(73, 38)
 texture = ExtResource("13_ua42v")
 
-[node name="btn_magic" type="TextureRect" parent="." unique_id=1837392038]
+[node name="btn_magic" type="TextureButton" parent="." unique_id=1873987790]
 layout_mode = 0
 offset_left = 475.0
 offset_top = 542.0
 offset_right = 619.0
 offset_bottom = 622.0
-texture = ExtResource("11_3nd5s")
-expand_mode = 1
+texture_normal = ExtResource("11_3nd5s")
+texture_pressed = ExtResource("21_p1yt5")
 
 [node name="MiddlebuttonLabelMagic" type="Sprite2D" parent="btn_magic" unique_id=866704093]
 position = Vector2(72, 39)
 texture = ExtResource("14_e3j05")
 
-[node name="btn_ability" type="TextureRect" parent="." unique_id=169172072]
+[node name="btn_ability" type="TextureButton" parent="." unique_id=1214288324]
 layout_mode = 0
 offset_left = 475.0
 offset_top = 634.0
 offset_right = 619.0
 offset_bottom = 714.0
-texture = ExtResource("11_3nd5s")
-expand_mode = 1
+texture_normal = ExtResource("11_3nd5s")
+texture_pressed = ExtResource("21_p1yt5")
 
 [node name="MiddlebuttonLabelSpecial" type="Sprite2D" parent="btn_ability" unique_id=1966155891]
 position = Vector2(72, 38)
@@ -372,19 +375,20 @@ offset_top = 834.0
 offset_right = 623.0
 offset_bottom = 938.0
 texture_normal = ExtResource("13_v0mb8")
+texture_pressed = ExtResource("27_sxe62")
 
 [node name="LargebuttonLabelSumboard" type="Sprite2D" parent="btn_board" unique_id=577625789]
 position = Vector2(148, 50)
 texture = ExtResource("19_wugaj")
 
-[node name="btn_powerup" type="TextureRect" parent="." unique_id=2117496983]
+[node name="btn_powerup" type="TextureButton" parent="." unique_id=1502800386]
 layout_mode = 0
 offset_left = 16.0
 offset_top = 832.0
 offset_right = 312.0
 offset_bottom = 936.0
-texture = ExtResource("13_v0mb8")
-expand_mode = 1
+texture_normal = ExtResource("13_v0mb8")
+texture_pressed = ExtResource("27_sxe62")
 
 [node name="LargebuttonLabelSumpowerup" type="Sprite2D" parent="btn_powerup" unique_id=1191245431]
 position = Vector2(148, 53)
@@ -437,9 +441,9 @@ expand_mode = 1
 
 [node name="UnitNamebgChara2" type="TextureRect" parent="." unique_id=1295482844]
 layout_mode = 0
-offset_top = 96.0
+offset_top = 120.0
 offset_right = 560.0
-offset_bottom = 168.0
+offset_bottom = 192.00003
 texture = ExtResource("22_8av0p")
 stretch_mode = 2
 

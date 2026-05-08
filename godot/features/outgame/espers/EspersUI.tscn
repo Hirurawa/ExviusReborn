@@ -20,10 +20,8 @@ script = ExtResource("1_script")
 
 [node name="topline" type="TextureRect" parent="." unique_id=959213555]
 layout_mode = 0
-offset_left = 1.0
-offset_top = 9.0
-offset_right = 641.0
-offset_bottom = 89.0
+offset_right = 640.0
+offset_bottom = 80.0
 texture = ExtResource("2_jfx50")
 expand_mode = 1
 

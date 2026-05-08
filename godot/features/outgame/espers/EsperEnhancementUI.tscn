@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://bn10qsub3qsex" path="res://assets/ui/item/item_frame_1.tres" id="1_2yv8k"]
 [ext_resource type="Texture2D" uid="uid://cwy8q4xsyd03" path="res://assets/ui/beast/summon_bait_window.tres" id="1_5mm6n"]
+[ext_resource type="Script" uid="uid://b1o8tjbnds47b" path="res://features/outgame/espers/esper_enhancement_ui.gd" id="1_nj72f"]
 [ext_resource type="Texture2D" uid="uid://s3ibqiyy6qlf" path="res://assets/ui/beast/summon_bait_info.tres" id="2_4cedu"]
 [ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="2_uhmak"]
 [ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="3_fhrmr"]
@@ -40,6 +41,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_nj72f")
 
 [node name="summon_mix_item_area" type="TextureRect" parent="." unique_id=879759173]
 layout_mode = 0
@@ -58,21 +60,21 @@ offset_bottom = 643.0
 texture = ExtResource("2_4cedu")
 expand_mode = 1
 
-[node name="summon_mix_act_item_icon" type="TextureRect" parent="." unique_id=1476672015]
+[node name="summon_mix_act_item_icon" type="TextureRect" parent="summon_mix_act_item_bg" unique_id=1476672015]
 layout_mode = 0
-offset_left = 16.0
-offset_top = 597.0
-offset_right = 56.0
-offset_bottom = 637.0
+offset_left = 12.0
+offset_top = 6.0
+offset_right = 52.0
+offset_bottom = 46.0
 texture = ExtResource("1_2yv8k")
 expand_mode = 1
 
-[node name="summon_mix_act_item_name" type="Label" parent="." unique_id=1993819088]
+[node name="summon_mix_act_item_name" type="Label" parent="summon_mix_act_item_bg" unique_id=1993819088]
 layout_mode = 0
-offset_left = 63.0
-offset_top = 600.0
-offset_right = 309.0
-offset_bottom = 634.0
+offset_left = 59.0
+offset_top = 9.0
+offset_right = 371.0
+offset_bottom = 43.0
 theme_override_font_sizes/font_size = 22
 text = "summon_mix_act_item_name"
 horizontal_alignment = 1
@@ -87,68 +89,66 @@ offset_bottom = 730.0
 texture = ExtResource("4_2li8q")
 expand_mode = 1
 
-[node name="summon_mix_bar_bg" type="TextureRect" parent="." unique_id=1279445694]
+[node name="summon_mix_bar_bg" type="TextureRect" parent="summon_mix_bar_area" unique_id=1279445694]
 layout_mode = 0
-offset_left = 46.0
-offset_top = 699.0
-offset_right = 594.0
-offset_bottom = 715.0
+offset_left = 22.0
+offset_top = 41.0
+offset_right = 570.0
+offset_bottom = 57.0
 texture = ExtResource("5_jbu6l")
 expand_mode = 1
 
-[node name="summon_mix_bar_inc" type="TextureRect" parent="." unique_id=59884742]
+[node name="summon_mix_bar_frame" type="TextureRect" parent="summon_mix_bar_area" unique_id=904125805]
 layout_mode = 0
-offset_left = 46.0
-offset_top = 699.0
-offset_right = 594.0
-offset_bottom = 713.0
-texture = ExtResource("6_c56oq")
-expand_mode = 1
-
-[node name="summon_mix_bar" type="TextureRect" parent="." unique_id=1652043758]
-layout_mode = 0
-offset_left = 46.0
-offset_top = 699.0
-offset_right = 594.0
-offset_bottom = 713.0
-texture = ExtResource("7_p0fum")
-expand_mode = 1
-
-[node name="summon_mix_bar_frame" type="TextureRect" parent="." unique_id=904125805]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 645.0
-offset_right = 601.0
-offset_bottom = 717.0
+offset_left = -15.0
+offset_top = -13.0
+offset_right = 577.0
+offset_bottom = 59.0
 texture = ExtResource("8_7iblg")
 expand_mode = 1
 
-[node name="summon_mix_bar_lv_icon" type="TextureRect" parent="." unique_id=628185598]
+[node name="summon_mix_bar_inc" type="TextureRect" parent="summon_mix_bar_area/summon_mix_bar_frame" unique_id=59884742]
 layout_mode = 0
-offset_left = 104.0
-offset_top = 666.0
-offset_right = 142.0
-offset_bottom = 690.0
+offset_left = 37.0
+offset_top = 54.0
+offset_right = 585.0
+offset_bottom = 68.0
+texture = ExtResource("6_c56oq")
+expand_mode = 1
+
+[node name="summon_mix_bar" type="TextureRect" parent="summon_mix_bar_area/summon_mix_bar_frame" unique_id=1652043758]
+layout_mode = 0
+offset_left = 37.0
+offset_top = 54.0
+offset_right = 585.0
+offset_bottom = 68.0
+texture = ExtResource("7_p0fum")
+expand_mode = 1
+
+[node name="summon_mix_bar_lv_icon" type="TextureRect" parent="summon_mix_bar_area" unique_id=628185598]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 8.0
+offset_right = 118.0
+offset_bottom = 32.0
 texture = ExtResource("9_mxrop")
 expand_mode = 1
 
-[node name="summon_mix_bar_lv" type="Label" parent="." unique_id=141772305]
+[node name="summon_mix_bar_lv" type="Label" parent="summon_mix_bar_area" unique_id=141772305]
 layout_mode = 0
-offset_left = 156.0
-offset_top = 670.0
-offset_right = 313.0
-offset_bottom = 693.0
+offset_left = 127.0
+offset_top = 5.0
+offset_right = 323.0
+offset_bottom = 33.0
 theme_override_font_sizes/font_size = 20
 text = "summon_mix_bar_lv"
-horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="summon_mix_bar_exp" type="Label" parent="." unique_id=446544586]
+[node name="summon_mix_bar_exp" type="Label" parent="summon_mix_bar_area" unique_id=446544586]
 layout_mode = 0
-offset_left = 389.0
-offset_top = 666.0
-offset_right = 593.0
-offset_bottom = 689.0
+offset_left = 365.0
+offset_top = 4.0
+offset_right = 580.0
+offset_bottom = 32.0
 theme_override_font_sizes/font_size = 20
 text = "summon_mix_bar_exp"
 horizontal_alignment = 1
@@ -172,6 +172,13 @@ offset_bottom = 28.0
 texture = ExtResource("2_uhmak")
 stretch_mode = 2
 
+[node name="hp_label" type="Label" parent="summon_mix_status_bg/summon_mix_status_hp" unique_id=1379155458]
+layout_mode = 0
+offset_left = 48.0
+offset_top = -1.0
+offset_right = 88.0
+offset_bottom = 22.0
+
 [node name="summon_mix_status_mp" type="TextureRect" parent="summon_mix_status_bg" unique_id=1744344555]
 layout_mode = 0
 offset_left = 17.0
@@ -180,6 +187,13 @@ offset_right = 147.0
 offset_bottom = 60.0
 texture = ExtResource("3_fhrmr")
 stretch_mode = 2
+
+[node name="mp_label" type="Label" parent="summon_mix_status_bg/summon_mix_status_mp" unique_id=389231722]
+layout_mode = 0
+offset_left = 55.0
+offset_top = -4.0
+offset_right = 95.0
+offset_bottom = 19.0
 
 [node name="summon_mix_status_atk" type="TextureRect" parent="summon_mix_status_bg" unique_id=1548279741]
 layout_mode = 0
@@ -190,6 +204,13 @@ offset_bottom = 91.0
 texture = ExtResource("4_2ctcw")
 stretch_mode = 2
 
+[node name="atk_label" type="Label" parent="summon_mix_status_bg/summon_mix_status_atk" unique_id=1807348035]
+layout_mode = 0
+offset_left = 57.0
+offset_top = -2.0
+offset_right = 97.0
+offset_bottom = 21.0
+
 [node name="summon_mix_status_def" type="TextureRect" parent="summon_mix_status_bg" unique_id=613599570]
 layout_mode = 0
 offset_left = 17.0
@@ -198,6 +219,13 @@ offset_right = 147.0
 offset_bottom = 122.0
 texture = ExtResource("5_j5wmo")
 stretch_mode = 2
+
+[node name="def_label" type="Label" parent="summon_mix_status_bg/summon_mix_status_def" unique_id=1305951427]
+layout_mode = 0
+offset_left = 52.0
+offset_top = -2.0
+offset_right = 92.0
+offset_bottom = 21.0
 
 [node name="summon_mix_status_mag" type="TextureRect" parent="summon_mix_status_bg" unique_id=322423402]
 layout_mode = 0
@@ -208,6 +236,13 @@ offset_bottom = 154.0
 texture = ExtResource("6_xbgi3")
 stretch_mode = 2
 
+[node name="mag_label" type="Label" parent="summon_mix_status_bg/summon_mix_status_mag" unique_id=1424034614]
+layout_mode = 0
+offset_left = 51.0
+offset_top = -2.0
+offset_right = 91.0
+offset_bottom = 21.0
+
 [node name="summon_mix_status_mind" type="TextureRect" parent="summon_mix_status_bg" unique_id=104808523]
 layout_mode = 0
 offset_left = 17.0
@@ -216,6 +251,13 @@ offset_right = 147.0
 offset_bottom = 187.0
 texture = ExtResource("7_oqp7w")
 stretch_mode = 2
+
+[node name="spr_label" type="Label" parent="summon_mix_status_bg/summon_mix_status_mind" unique_id=1996961708]
+layout_mode = 0
+offset_left = 54.0
+offset_top = -2.0
+offset_right = 94.0
+offset_bottom = 21.0
 
 [node name="summon_mix_up_arrow" type="TextureRect" parent="." unique_id=425957305]
 layout_mode = 0
@@ -257,6 +299,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="summon_mix_scrl_obj" type="Label" parent="." unique_id=1199382003]
+visible = false
 layout_mode = 0
 offset_left = 252.0
 offset_top = 774.0
@@ -266,15 +309,29 @@ text = "summon_mix_scrl_obj"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="summon_mix_item" type="Label" parent="." unique_id=678723944]
-layout_mode = 0
+[node name="summon_mix_item" type="Control" parent="." unique_id=1578202871]
+anchors_preset = 0
 offset_left = 270.0
-offset_top = 778.0
-offset_right = 416.0
-offset_bottom = 878.0
-text = "summon_mix_item"
-horizontal_alignment = 1
-vertical_alignment = 1
+offset_top = 759.0
+offset_right = 370.0
+offset_bottom = 861.0
+
+[node name="ItemFrameBg" type="Sprite2D" parent="summon_mix_item" unique_id=395711556]
+position = Vector2(50, 52)
+texture = ExtResource("20_jbu6l")
+
+[node name="ItemFrame1" type="Sprite2D" parent="summon_mix_item" unique_id=316027593]
+position = Vector2(50, 52)
+texture = ExtResource("1_2yv8k")
+
+[node name="SummonExpUp" type="Sprite2D" parent="summon_mix_item" unique_id=2091066659]
+position = Vector2(50, -4)
+texture = ExtResource("21_c56oq")
+
+[node name="SummonFavorite" type="Sprite2D" parent="summon_mix_item" unique_id=2065342833]
+visible = false
+position = Vector2(49, -5)
+texture = ExtResource("22_c56oq")
 
 [node name="summon_mix_lvup_anime" type="Label" parent="." unique_id=1441811434]
 layout_mode = 0
@@ -286,37 +343,23 @@ text = "summon_mix_lvup_anime"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ItemFrameBg" type="Sprite2D" parent="." unique_id=395711556]
-position = Vector2(-224, 632)
-texture = ExtResource("20_jbu6l")
-
-[node name="ItemFrame1" type="Sprite2D" parent="." unique_id=316027593]
-position = Vector2(-224, 632)
-texture = ExtResource("1_2yv8k")
-
-[node name="SummonExpUp" type="Sprite2D" parent="." unique_id=2091066659]
-position = Vector2(-224, 576)
-texture = ExtResource("21_c56oq")
-
-[node name="SummonFavorite" type="Sprite2D" parent="." unique_id=2065342833]
-visible = false
-position = Vector2(-224, 576)
-texture = ExtResource("22_c56oq")
-
 [node name="NameplateSummon" type="Sprite2D" parent="." unique_id=1853937536]
 position = Vector2(320, 861)
 texture = ExtResource("22_p0fum")
 
 [node name="SummonName" type="Sprite2D" parent="." unique_id=873674381]
-position = Vector2(152, 124)
+position = Vector2(152, 236)
 texture = ExtResource("24_fnavr")
 
 [node name="SummonStarMini" type="Sprite2D" parent="." unique_id=155952054]
-position = Vector2(20, 90)
+position = Vector2(20, 202)
 texture = ExtResource("25_iuegp")
 
 [node name="UnitNamebgChara2" type="TextureRect" parent="." unique_id=193858992]
 layout_mode = 0
+offset_top = 120.0
+offset_right = 560.0
+offset_bottom = 192.0
 texture = ExtResource("26_nj72f")
 stretch_mode = 2
 
@@ -356,12 +399,12 @@ offset_bottom = 209.0
 texture = ExtResource("29_iuegp")
 expand_mode = 1
 
-[node name="label_cp" type="Label" parent="." unique_id=733486881]
+[node name="label_cp" type="Label" parent="cp_area" unique_id=733486881]
 layout_mode = 0
-offset_left = 465.0
-offset_top = 163.0
-offset_right = 615.0
-offset_bottom = 193.0
+offset_left = 58.0
+offset_top = 10.0
+offset_right = 208.0
+offset_bottom = 40.0
 theme_override_font_sizes/font_size = 20
 text = "label_cp"
 horizontal_alignment = 1

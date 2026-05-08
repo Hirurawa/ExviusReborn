@@ -2,6 +2,7 @@ extends Control
 
 @onready var back_button: TextureButton = $UnitNamebgChara2/BackButton
 @onready var board_button: TextureButton = $btn_board
+@onready var powerup_button: TextureButton = $btn_powerup
 @onready var title_label: Label = $UnitNamebgChara2/Title
 @onready var summon_name_bg: TextureRect = $summon_mix_name_bg
 @onready var summon_name_label: Label = $summon_mix_name_label
@@ -19,6 +20,7 @@ var _summon_name: String = ""
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	board_button.pressed.connect(_on_board_pressed)
+	powerup_button.pressed.connect(_on_powerup_pressed)
 	_refresh_ui()
 
 func init_scene(params: Dictionary) -> void:
@@ -38,10 +40,14 @@ func _refresh_ui() -> void:
 	summon_name_bg.visible = true
 	summon_name_label.visible = true
 	summon_name_label.text = display_name
-	level_label.text = "Lv. 1"
+
+	var progression: Dictionary = DataManager.get_esper_progression(_summon_id)
+	var rank: int = maxi(1, int(progression.get("rank", 1)))
+	var level: int = maxi(1, int(progression.get("level", 1)))
+	level_label.text = "Lv. %d (R%d)" % [level, rank]
 
 	var summon_data: Dictionary = DataManager.game_data_summons.get(_summon_id, {})
-	var stats: Dictionary = _extract_stats(summon_data)
+	var stats: Dictionary = _extract_stats_for_rank(summon_data, rank)
 	hp_label.text = str(stats.get("HP", 0))
 	mp_label.text = str(stats.get("MP", 0))
 	atk_label.text = str(stats.get("ATK", 0))
@@ -49,7 +55,7 @@ func _refresh_ui() -> void:
 	mag_label.text = str(stats.get("MAG", 0))
 	mind_label.text = str(stats.get("SPR", 0))
 
-func _extract_stats(summon_data: Dictionary) -> Dictionary:
+func _extract_stats_for_rank(summon_data: Dictionary, rank: int) -> Dictionary:
 	var entries_value: Variant = summon_data.get("entries", [])
 	if not (entries_value is Array):
 		return {}
@@ -58,11 +64,12 @@ func _extract_stats(summon_data: Dictionary) -> Dictionary:
 	if entries.is_empty():
 		return {}
 
-	var first_entry: Variant = entries[0]
-	if not (first_entry is Dictionary):
+	var clamped_rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
+	var selected_entry: Variant = entries[clamped_rank_index]
+	if not (selected_entry is Dictionary):
 		return {}
 
-	var stats_value: Variant = first_entry.get("stats", {})
+	var stats_value: Variant = selected_entry.get("stats", {})
 	if not (stats_value is Dictionary):
 		return {}
 
@@ -85,6 +92,12 @@ func _on_back_pressed() -> void:
 
 func _on_board_pressed() -> void:
 	UIManager.push("summon_board_ui", {
+		"summon_id": _summon_id,
+		"summon_name": _summon_name
+	})
+	
+func _on_powerup_pressed() -> void:
+	UIManager.push("esper_enhancement_ui", {
 		"summon_id": _summon_id,
 		"summon_name": _summon_name
 	})

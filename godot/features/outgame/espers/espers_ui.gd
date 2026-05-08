@@ -4,8 +4,28 @@ extends Control
 @onready var esper_frame_template: Button = $EsperFrame
 @onready var back_button: TextureButton = $VBoxContainer/UnitNamebgChara2/BackButton
 
+var mode: String = "view"
+var target_party_index: int = -1
+var target_slot_index: int = -1
+var current_summon_id: String = ""
+var selection_callback: Callable = Callable()
+var _party_used_summons: Dictionary = {}
+
+func init_scene(params: Dictionary) -> void:
+	mode = str(params.get("mode", "view"))
+	target_party_index = int(params.get("party_index", -1))
+	target_slot_index = int(params.get("slot_index", -1))
+	current_summon_id = str(params.get("current_summon_id", "")).strip_edges()
+	if params.has("selection_callback") and params["selection_callback"] is Callable:
+		selection_callback = params["selection_callback"]
+
+	_rebuild_party_used_summons()
+	if is_node_ready():
+		_populate_espers_list()
+
 func _ready() -> void:
 	back_button.pressed.connect(func(): UIManager.pop())
+	_rebuild_party_used_summons()
 	_populate_espers_list()
 
 func _populate_espers_list() -> void:
@@ -43,10 +63,26 @@ func _populate_espers_list() -> void:
 	for entry in sorted_entries:
 		var summon_id: String = str(entry["id"])
 		var summon_name: String = _get_summon_display_name(summon_id, entry["data"])
+		var progression: Dictionary = DataManager.get_esper_progression(summon_id)
+		var is_unlocked: bool = bool(progression.get("is_unlocked", false))
+
+		# Skip locked espers
+		if not is_unlocked:
+			continue
 
 		var frame: Button = esper_frame_template.duplicate()
 		frame.visible = true
+		var disabled_in_select_mode: bool = _is_summon_disabled_for_selection(summon_id)
+		frame.disabled = disabled_in_select_mode
+		frame.modulate = Color(1, 1, 1, 0.5) if disabled_in_select_mode else Color(1, 1, 1, 1)
+
+
+		# Set name and level labels separately
 		frame.get_node("NameLabel").text = summon_name
+		var level: int = maxi(1, int(progression.get("level", 1)))
+		if frame.has_node("LvlLabel"):
+			frame.get_node("LvlLabel").text = "Lv. %d" % level
+
 		frame.pressed.connect(_on_esper_pressed.bind(summon_id, summon_name))
 		espers_list_container.add_child(frame)
 
@@ -66,10 +102,47 @@ func _get_summon_display_name(summon_id: String, summon_data: Dictionary) -> Str
 	return "Summon %s" % summon_id
 
 func _on_esper_pressed(summon_id: String, summon_name: String) -> void:
+	if mode == "select":
+		if _is_summon_disabled_for_selection(summon_id):
+			return
+
+		if selection_callback.is_valid():
+			selection_callback.call(summon_id, summon_name)
+		elif target_party_index >= 0 and target_slot_index >= 0:
+			DataManager.assign_esper_to_party(target_party_index, target_slot_index, summon_id)
+
+		UIManager.pop()
+		return
+
 	UIManager.push("esper_detail_ui", {
 		"summon_id": summon_id,
 		"summon_name": summon_name
 	})
+
+func _rebuild_party_used_summons() -> void:
+	_party_used_summons.clear()
+	if mode != "select":
+		return
+	if target_party_index < 0 or target_party_index >= DataManager.parties.size():
+		return
+
+	var party: Dictionary = DataManager.parties[target_party_index]
+	var party_espers: Variant = party.get("espers", [])
+	if not (party_espers is Array):
+		return
+
+	for summon_variant in party_espers:
+		var summon_id: String = str(summon_variant).strip_edges()
+		if summon_id == "":
+			continue
+		_party_used_summons[summon_id] = true
+
+func _is_summon_disabled_for_selection(summon_id: String) -> bool:
+	if mode != "select":
+		return false
+	if summon_id == "" or summon_id == current_summon_id:
+		return false
+	return _party_used_summons.has(summon_id)
 
 func _add_empty_state_label(message: String) -> void:
 	var empty_label := Label.new()

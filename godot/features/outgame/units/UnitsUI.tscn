@@ -82,9 +82,9 @@ size_flags_horizontal = 3
 [node name="unit_pedestal_1" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot1" unique_id=405535803]
 layout_mode = 0
 offset_left = -10.0
-offset_top = 63.0
+offset_top = 3.0
 offset_right = 138.0
-offset_bottom = 231.0
+offset_bottom = 171.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
 
@@ -129,9 +129,9 @@ size_flags_horizontal = 3
 [node name="unit_pedestal_2" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot2" unique_id=576197481]
 layout_mode = 0
 offset_left = -11.0
-offset_top = 63.0
+offset_top = 3.0
 offset_right = 137.0
-offset_bottom = 231.0
+offset_bottom = 171.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
 
@@ -176,9 +176,9 @@ size_flags_horizontal = 3
 [node name="unit_pedestal_3" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot3" unique_id=1940070283]
 layout_mode = 0
 offset_left = -13.0
-offset_top = 63.0
+offset_top = 3.0
 offset_right = 135.0
-offset_bottom = 231.0
+offset_bottom = 171.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
 
@@ -223,9 +223,9 @@ size_flags_horizontal = 3
 [node name="unit_pedestal_4" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot4" unique_id=614512544]
 layout_mode = 0
 offset_left = -16.0
-offset_top = 63.0
+offset_top = 3.0
 offset_right = 132.0
-offset_bottom = 231.0
+offset_bottom = 171.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
 
@@ -270,9 +270,9 @@ size_flags_horizontal = 3
 [node name="unit_pedestal_5" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot5" unique_id=882085415]
 layout_mode = 0
 offset_left = -16.0
-offset_top = 63.0
+offset_top = 3.0
 offset_right = 132.0
-offset_bottom = 231.0
+offset_bottom = 171.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
 
@@ -299,6 +299,201 @@ grow_vertical = 0
 horizontal_alignment = 1
 
 [node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot5" unique_id=121674795]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 22.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="EsperSlots" type="HBoxContainer" parent="VBoxContainer" unique_id=512475207]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Slot1" type="Button" parent="VBoxContainer/EsperSlots" unique_id=859245025]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot1" unique_id=1310054306]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot1" unique_id=1553821182]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_bottom = 23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot1" unique_id=829017096]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 22.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot2" type="Button" parent="VBoxContainer/EsperSlots" unique_id=1601935880]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot2" unique_id=997364709]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot2" unique_id=22179061]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_bottom = 23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot2" unique_id=940240046]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 22.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot3" type="Button" parent="VBoxContainer/EsperSlots" unique_id=898124885]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot3" unique_id=291827391]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot3" unique_id=1053286178]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_bottom = 23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot3" unique_id=466593979]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 22.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot4" type="Button" parent="VBoxContainer/EsperSlots" unique_id=1485641434]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot4" unique_id=1915033821]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot4" unique_id=597916031]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_bottom = 23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot4" unique_id=1348057624]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 22.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="Slot5" type="Button" parent="VBoxContainer/EsperSlots" unique_id=1128991216]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot5" unique_id=1504851644]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot5" unique_id=906524263]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_bottom = 23.0
+grow_horizontal = 2
+grow_vertical = 0
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot5" unique_id=1713207464]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0

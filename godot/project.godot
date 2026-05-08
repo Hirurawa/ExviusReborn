@@ -17,8 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-Nakama="*uid://c4wa1wmbnm2fm"
-AssetPatcher="*res://core/asset_patcher.gd"
+StaticDataLoader="*res://core/static_data_loader.gd"
 DataManager="*res://core/data_manager.gd"
 UIManager="*res://core/ui_manager.gd"
 StatCalculator="*res://core/stat_calculator.gd"

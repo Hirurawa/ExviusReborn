@@ -214,7 +214,7 @@ anchor_bottom = 1.0
 offset_left = 10.0
 offset_top = 10.0
 offset_right = -10.0
-offset_bottom = -506.0
+offset_bottom = -495.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
@@ -279,7 +279,6 @@ layout_mode = 2
 text = "Enemy Name"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=1593568957]
-visible = false
 layout_mode = 2
 
 [node name="EnemyHPBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer" unique_id=1210531152]
@@ -294,7 +293,6 @@ layout_mode = 2
 text = "100%"
 
 [node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=183465724]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 

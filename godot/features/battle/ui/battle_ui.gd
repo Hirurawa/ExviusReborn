@@ -541,7 +541,7 @@ func init_scene(params: Dictionary) -> void:
 			formatted_name = dungeon_name.replace(" ", "_")
 
 	if formatted_name == "" and current_mission_id != "":
-		var mission_data: Dictionary = DataManager.game_data_missions.get(str(current_mission_id), {})
+		var mission_data: Dictionary = DataManager.get_mission_data_local(str(current_mission_id))
 		var mission_dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
 		if mission_dungeon_id != "":
 			var mission_dungeon_data: Dictionary = DataManager.game_data_dungeons.get(mission_dungeon_id, {})

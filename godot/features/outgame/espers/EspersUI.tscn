@@ -80,13 +80,13 @@ size_flags_vertical = 3
 columns = 3
 
 [node name="EsperFrame" type="Button" parent="." unique_id=2005631204]
-anchors_preset = 0
+visible = false
+custom_minimum_size = Vector2(200, 220)
+layout_mode = 0
 offset_top = 104.0
 offset_right = 40.0
 offset_bottom = 144.0
-custom_minimum_size = Vector2(200, 220)
 flat = true
-visible = false
 
 [node name="NameLabel" type="Label" parent="EsperFrame" unique_id=803019280]
 layout_mode = 0

@@ -6,10 +6,14 @@ extends Control
 @onready var friends_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/FriendsListContainer
 
 func _ready() -> void:
-	add_friend_button.pressed.connect(_on_add_friend_button_pressed)
-	DataManager.friends_updated.connect(_on_friends_updated)
-	DataManager.friend_action_result.connect(_on_friend_action_result)
-	DataManager.list_friends()
+	add_friend_button.disabled = true
+	add_friend_input.editable = false
+	friends_feedback_label.text = "Not available in offline mode."
+	for child in friends_list_container.get_children():
+		child.queue_free()
+	var offline_label := Label.new()
+	offline_label.text = "Friends are not available in offline mode."
+	friends_list_container.add_child(offline_label)
 
 func _on_add_friend_button_pressed() -> void:
 	var username: String = add_friend_input.text.strip_edges()
@@ -45,7 +49,7 @@ func _on_friends_updated(friends_list) -> void:
 		return
 
 	for friend_obj in friends_list.friends:
-		var friend: NakamaAPI.ApiFriend = friend_obj
+		var friend = friend_obj
 		var hbox := HBoxContainer.new()
 		var label := Label.new()
 		var state_str := "Unknown"

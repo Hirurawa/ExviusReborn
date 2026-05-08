@@ -51,7 +51,7 @@ func _on_account_updated(username: String) -> void:
 		user_info_label.text = username
 
 func _on_data_loaded() -> void:
-	if DataManager.account_info and DataManager.account_info.user.username != "":
-		user_info_label.text = DataManager.account_info.user.username
-	else:
+	if DataManager.current_username != "":
+		user_info_label.text = DataManager.current_username
+	elif user_info_label.text == "":
 		user_info_label.text = "Player"

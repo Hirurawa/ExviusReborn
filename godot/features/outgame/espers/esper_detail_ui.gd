@@ -47,7 +47,7 @@ func _refresh_ui() -> void:
 	atk_label.text = str(stats.get("ATK", 0))
 	def_label.text = str(stats.get("DEF", 0))
 	mag_label.text = str(stats.get("MAG", 0))
-	mind_label.text = str(stats.get("MND", 0))
+	mind_label.text = str(stats.get("SPR", 0))
 
 func _extract_stats(summon_data: Dictionary) -> Dictionary:
 	var entries_value: Variant = summon_data.get("entries", [])
@@ -68,7 +68,7 @@ func _extract_stats(summon_data: Dictionary) -> Dictionary:
 
 	var raw_stats: Dictionary = stats_value
 	var resolved_stats: Dictionary = {}
-	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "MND"]:
+	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
 		resolved_stats[stat_key] = _extract_stat_value(raw_stats.get(stat_key, 0))
 	return resolved_stats
 

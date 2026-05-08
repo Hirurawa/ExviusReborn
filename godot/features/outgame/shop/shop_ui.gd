@@ -38,4 +38,13 @@ func _on_purchase_successful() -> void:
 	shop_feedback_label.text = "Item purchased successfully!"
 
 func _on_purchase_failed(error_message: String) -> void:
-	shop_feedback_label.text = error_message
+	shop_feedback_label.text = _friendly_purchase_error(error_message)
+
+func _friendly_purchase_error(error_message: String) -> String:
+	match error_message:
+		"ERR_INSUFFICIENT_RESOURCES", "ERR_INSUFFICENT_RESOURCES":
+			return "Not enough gil to purchase this item."
+		"ERR_MISSING_SERVER_ERROR_MSG":
+			return "Purchase failed. Please try again."
+		_:
+			return "Purchase failed: %s" % error_message

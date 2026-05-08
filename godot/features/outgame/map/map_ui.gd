@@ -296,7 +296,7 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 		mission_ids = [dungeon_missions]
 
 	for mission_id in mission_ids:
-		var mission_data = DataManager.game_data_missions.get(str(mission_id), {})
+		var mission_data = DataManager.get_mission_data_local(str(mission_id))
 		if mission_data.is_empty():
 			continue
 
@@ -337,7 +337,7 @@ func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 		child.queue_free()
 
 	for mission_id in mission_ids:
-		var mission_data = DataManager.game_data_missions.get(str(mission_id), {})
+		var mission_data = DataManager.get_mission_data_local(str(mission_id))
 		if mission_data.is_empty():
 			continue
 

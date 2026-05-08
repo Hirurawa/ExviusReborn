@@ -53,13 +53,14 @@ func _show_summon_results(result: Dictionary) -> void:
 	for unit_inst in summoned_units:
 		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+		var unit_rarity: int = int(unit_inst.get("current_rarity", int(unit_data.get("rarity_min", 1))))
 		var vbox := VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		var name_label := Label.new()
 		name_label.text = "%s (Rarity: %d★)" % [
 			unit_data.get("name", "Unknown"),
-			unit_inst.get("current_rarity", 1)
+			unit_rarity
 		]
 		name_label.add_theme_font_size_override("font_size", 18)
 		vbox.add_child(name_label)

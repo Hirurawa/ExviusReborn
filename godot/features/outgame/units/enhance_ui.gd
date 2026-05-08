@@ -146,7 +146,7 @@ func _on_confirm_pressed() -> void:
 	confirm_button.disabled = false
 
 	if result.get("success", false):
-		var updated: Dictionary = result.get("updated_base_unit", {})
+		var updated: Dictionary = result.get("enhanced_unit", {})
 		var consumed_count: int = (result.get("consumed_material_ids", []) as Array).size()
 		var gil: int = int(result.get("updated_currency", {}).get("gil", 0))
 		var updated_trust_value: float = float(updated.get("trust_value", previous_trust_value))

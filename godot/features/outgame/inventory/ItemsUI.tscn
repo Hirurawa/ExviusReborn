@@ -8,8 +8,6 @@
 [ext_resource type="Texture2D" uid="uid://cor65d50a6byy" path="res://assets/ui/common/button_mini_long2.tres" id="6_sc7kn"]
 [ext_resource type="Texture2D" uid="uid://wngr07jvje5s" path="res://assets/ui/common/commonR_btnSquare-M.tres" id="6_uqudl"]
 [ext_resource type="Texture2D" uid="uid://b05rwwv8r8oan" path="res://assets/ui/item/largebutton_square_icon_itemList.tres" id="7_wcc7d"]
-[ext_resource type="Texture2D" uid="uid://cq1atcsjifp47" path="res://assets/ui/item/minibutton_label_deckriset.tres" id="7_y52l3"]
-[ext_resource type="Texture2D" uid="uid://buxikbvj2svd1" path="res://assets/ui/item/minibutton_label_itemfull.tres" id="8_pl3kn"]
 [ext_resource type="Texture2D" uid="uid://b6isekrcwp72c" path="res://assets/ui/item/largebutton_square_icon_itemMaterial.tres" id="8_y52l3"]
 [ext_resource type="Texture2D" uid="uid://cnloulc4d47ll" path="res://assets/ui/item/largebutton_square_icon_itemEquip.tres" id="9_pl3kn"]
 [ext_resource type="Texture2D" uid="uid://tvt54jyamotp" path="res://assets/ui/item/largebutton_square_icon_itemAability.tres" id="10_s07ty"]
@@ -210,10 +208,6 @@ offset_bottom = 446.0
 texture_normal = ExtResource("5_qwgbv")
 texture_pressed = ExtResource("6_sc7kn")
 
-[node name="MinibuttonLabelDeckriset" type="Sprite2D" parent="btn_reset" unique_id=801261820]
-position = Vector2(76, 29)
-texture = ExtResource("7_y52l3")
-
 [node name="btn_all" type="TextureButton" parent="." unique_id=1236603917]
 layout_mode = 0
 offset_left = 455.0
@@ -222,10 +216,6 @@ offset_right = 607.0
 offset_bottom = 446.0
 texture_normal = ExtResource("5_qwgbv")
 texture_pressed = ExtResource("6_sc7kn")
-
-[node name="MinibuttonLabelItemfull" type="Sprite2D" parent="btn_all" unique_id=380108797]
-position = Vector2(76, 30)
-texture = ExtResource("8_pl3kn")
 
 [node name="Items" type="TextureButton" parent="." unique_id=466317759]
 layout_mode = 0

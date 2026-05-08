@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://kurtvpbhe3fp"]
 
-[ext_resource type="Script" path="res://features/outgame/espers/esper_detail_ui.gd" id="1_script"]
-
 [ext_resource type="Texture2D" uid="uid://cyo1su671dmm5" path="res://assets/ui/common/bottomline.tres" id="1_fp1yu"]
+[ext_resource type="Script" uid="uid://buh3igk4i6jog" path="res://features/outgame/espers/esper_detail_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://xf4eg374qsit" path="res://assets/ui/beast/sumboard_bg.tres" id="2_lo2hk"]
 [ext_resource type="Texture2D" uid="uid://dlp3ync3rtjv8" path="res://assets/ui/beast/summon_status_bgcol.tres" id="3_2uruc"]
 [ext_resource type="Texture2D" uid="uid://c716vv4x1u8hx" path="res://assets/ui/beast/summon_status.tres" id="4_mhmeb"]
@@ -372,8 +371,6 @@ offset_left = 327.0
 offset_top = 834.0
 offset_right = 623.0
 offset_bottom = 938.0
-texture = ExtResource("13_v0mb8")
-expand_mode = 1
 texture_normal = ExtResource("13_v0mb8")
 
 [node name="LargebuttonLabelSumboard" type="Sprite2D" parent="btn_board" unique_id=577625789]

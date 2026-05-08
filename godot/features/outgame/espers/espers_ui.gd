@@ -2,8 +2,10 @@ extends Control
 
 @onready var espers_list_container: GridContainer = $VBoxContainer/ScrollContainer/EspersListContainer
 @onready var esper_frame_template: Button = $EsperFrame
+@onready var back_button: TextureButton = $VBoxContainer/UnitNamebgChara2/BackButton
 
 func _ready() -> void:
+	back_button.pressed.connect(func(): UIManager.pop())
 	_populate_espers_list()
 
 func _populate_espers_list() -> void:

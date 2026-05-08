@@ -192,7 +192,7 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
-	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
+	var mission_data = DataManager.get_mission_data_local(str(current_mission_id))
 
 	total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
@@ -666,7 +666,7 @@ func _spawn_next_wave() -> void:
 	current_wave += 1
 	print("BattleManager: Spawning Wave %d..." % current_wave)
 
-	var mission_data = DataManager.game_data_missions.get(str(current_mission_id), {})
+	var mission_data = DataManager.get_mission_data_local(str(current_mission_id))
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
 	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
 

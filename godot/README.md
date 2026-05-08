@@ -1,25 +1,89 @@
-# Godot Client Architecture (Project Exvius)
-This directory contains the Godot 4.x project for Project Exvius. The frontend acts exclusively as a "dumb client"—a visual representation of the server's state.
-## 🧠 The "Dumb UI" Philosophy
-To maintain sanity in a project with thousands of UI nodes and complex RPG math, we strictly enforce the "Dumb UI" rule. UI scripts (.gd files attached to Control nodes) must only do two things: draw pixels and listen for clicks.
-1. No Domain Math in the UI
-UI scripts are not allowed to calculate HP percentages, evaluate drop rates, or parse deep dictionaries. Math is reserved for Managers. Visual math (panning, zooming, camera clamping) is the only exception.
-2. The Void Request Pattern (Signal Up, Call Down)
-UI nodes must never directly await server responses. Communication with the global state uses a one-way flow:
-Action: The UI calls a void method: DataManager.request_buy_item(item_id, qty)
-Processing: DataManager handles the await, communicates with Nakama, and updates its internal data.
-Reaction: DataManager emits a global signal: signal inventory_updated
-Redraw: The UI listens to inventory_updated and redraws itself based on the new state.
-## 🏛 Core Singletons (Autoloads)
-The game's logic is distributed across strictly segregated Autoloads:
-DataManager.gd: The Brain. It holds the player's game state (owned_units, inventory), manages all Nakama server RPC calls, and bridges the gap between server payloads and the UI.
-BattleManager.gd: The Combat Engine. Handles turn-based state machines, tracks current HP/MP, and broadcasts combat events (e.g., unit_took_damage).
-StatCalculator.gd: Pure Math. Calculates final unit stats based on base stats, growth curves, and equipment. Only called by Managers, never by the UI.
-AssetPatcher.gd: The Network Downloader. Strictly handles HTTP requests to fetch versioned JSON datamine manifests from the remote server.
-TextureBuilder.gd (or SpriteManager): The Renderer. Takes raw byte arrays and JSON coordinate data from the hard drive and slices them into Godot Texture2D objects for the UI to display.
-# ⚡ Performance & Engine Rules
-1. Strict Static Typing
-All GDScript code must use Godot 4's static typing (var count: int = 0, func do_thing() -> void:).
-Guardrail: When dealing with loosely typed JSON data from Nakama or Dictionaries, use safe casting (as Dictionary, str(id)) to prevent runtime crash errors. Godot parses JSON object keys as Strings, so always cast float/int IDs to String before dictionary lookups.
-2. Dynamic Texture Caching
-Never use load() or ResourceLoader.load() inside a loop (e.g., populating an inventory grid). Dynamic paths must route through a local Dictionary cache to prevent disk-read frame stutters. preload() is acceptable, but only for static, constant scene paths at the top of a script.
+# Godot Client Architecture
+
+This folder contains the Godot 4.6 client. The client follows a strict composition model:
+
+- UI scenes are dumb and event-driven.
+- Global state and backend calls live in managers.
+- Navigation is centralized in `UIManager`.
+
+## Core Principles
+
+1. Dumb UI only
+- UI scripts should only handle presentation and local interaction.
+- UI should not perform backend calls directly.
+- UI should not own global state.
+
+2. Signal up, manager down
+- UI emits intent (or calls manager request methods).
+- `DataManager` performs async/backend work.
+- `DataManager` emits update signals.
+- UI redraws from manager state.
+
+3. No fragile node path coupling
+- Avoid deep relative node path usage for cross-feature communication.
+- Prefer signal wiring and autoload interfaces.
+
+4. Strict typing in GDScript
+- Type variables, params, and returns whenever practical.
+- Cast dictionary/JSON values deliberately (`int(...)`, `str(...)`, `as Dictionary`, etc).
+
+## Autoloads and Responsibilities
+
+Configured in [project.godot](project.godot):
+
+- `Nakama`: plugin singleton.
+- `StaticDataLoader`: Loads static game data from bundled/cached JSON files into memory.
+- `DataManager`: player/account/inventory/party/combat-items state plus backend orchestration.
+- `UIManager`: menu stack, scene push/pop, persistent overlays.
+- `StatCalculator`: pure stat computations.
+
+## Startup Flow
+
+- Main scene is [demo.tscn](demo.tscn).
+- [demo.gd](demo.gd) calls `UIManager.set_root("login_ui")` on `_ready()`.
+- `UIManager` instantiates scenes from `_scenes_map`, pushes to stack, and frees popped scenes with `queue_free()`.
+
+## UI Navigation Contract
+
+`UIManager` is the only place that should own menu-stack navigation:
+
+- `push(scene_key, params)`
+- `pop()`
+- `pop_to_root()`
+- `set_root(scene_key, params)`
+
+Persistent overlays (header/bottom nav/home buttons) are loaded once and visibility is updated based on current scene key.
+
+## Performance Rules
+
+1. Preload static resources
+- Use `preload()` for stable script/scene/resource paths.
+- Do not call `load()` repeatedly inside loops.
+
+2. Cache dynamic textures
+- Route dynamic texture loads through a dictionary cache.
+- Reuse cached `Texture2D` instances for repeat paths.
+
+3. Keep UI frame-safe
+- Avoid heavy parsing, patching, or backend awaits in UI scripts.
+- Keep expensive work in managers/services and emit results.
+
+## Running the Project
+
+From Godot Editor:
+
+1. Open this folder using [project.godot](project.godot).
+2. Run the project with F5.
+
+From CLI (if Godot is on PATH):
+
+```powershell
+godot --path godot --editor
+godot --path godot --play
+```
+
+## Naming Conventions
+
+- Script and directory names: `snake_case`
+- Scene and node names: `PascalCase`
+- Signals: past tense (e.g. `purchase_successful`, `units_updated`)

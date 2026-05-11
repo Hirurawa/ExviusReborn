@@ -1,0 +1,261 @@
+extends Node
+## InventoryService — owns the player's owned items (stackables + equipment
+## instances) and the operations that mutate them (load/save, grant, lookup,
+## availability filters for equip slots, item-cost lookup).
+##
+## State previously held by DataManager that now lives here:
+##   - owned_items dict, items_updated signal, ITEMS_SNAPSHOT_FILE
+##   - snapshot/normalize/load helpers, _grant_instanced_item_local,
+##     _equipment_exists, _generate_instance_id, _get_item_cost,
+##     get_equipment_template_id, get_available_equipment_for_slot.
+##
+## Note: `request_buy_item` lives here and uses PlayerProfile for currency
+## state plus its own purchase_successful/purchase_failed signals.
+
+signal items_updated(items: Dictionary)
+signal purchase_successful()
+signal purchase_failed(error_message: String)
+
+const SNAPSHOT_FILE: String = "items.json"
+
+var owned_items: Dictionary = {"stackables": {}, "equipment": []}
+
+
+# === Snapshot contract ===
+
+func snapshot_payload() -> Dictionary:
+	return {
+		"owned_items": owned_items.duplicate(true)
+	}
+
+
+func load_from_local() -> void:
+	var envelope: Dictionary = Persistence.load_snapshot(SNAPSHOT_FILE)
+	if envelope.is_empty():
+		owned_items = {"stackables": {}, "equipment": []}
+		return
+
+	var data: Variant = envelope.get("data", {})
+	owned_items = _normalize_payload(data)
+
+
+func reset_to_starter() -> void:
+	owned_items = {"stackables": {}, "equipment": []}
+
+
+func emit_updated() -> void:
+	items_updated.emit(owned_items)
+
+
+# === Mutations ===
+
+func generate_instance_id() -> String:
+	var parts: Array = []
+	var sizes: Array = [4, 2, 2, 2, 6]
+
+	for size in sizes:
+		var hex_part: String = ""
+		for _i in range(size):
+			hex_part += "%02x" % randi_range(0, 255)
+		parts.append(hex_part)
+
+	return "%s-%s-%s-%s-%s" % parts
+
+
+func grant_instanced_items(item_type: String, template_id: String, amount: int) -> Dictionary:
+	var grant_count: int = maxi(1, amount)
+	var granted_items: Array = []
+	if not owned_items.has("equipment") or not (owned_items.get("equipment", []) is Array):
+		owned_items["equipment"] = []
+
+	for _i in range(grant_count):
+		var item_instance: Dictionary = {
+			"instance_id": generate_instance_id(),
+			"template_id": str(template_id),
+			"item_type": str(item_type),
+			"equipped_to": ""
+		}
+		granted_items.append(item_instance)
+		(owned_items["equipment"] as Array).append(item_instance)
+
+	return {
+		"success": true,
+		"granted_items": granted_items
+	}
+
+
+func add_stackable(item_id: String, quantity: int) -> void:
+	if not owned_items.has("stackables"):
+		owned_items["stackables"] = {}
+	var current_qty: int = int(owned_items["stackables"].get(item_id, 0))
+	owned_items["stackables"][item_id] = current_qty + quantity
+
+
+func add_equipment_instances(template_id: String, quantity: int) -> Array:
+	if not owned_items.has("equipment"):
+		owned_items["equipment"] = []
+	var added: Array = []
+	for _i in range(quantity):
+		var new_instance: Dictionary = {
+			"instance_id": generate_instance_id(),
+			"template_id": template_id
+		}
+		(owned_items["equipment"] as Array).append(new_instance)
+		added.append(new_instance)
+	return added
+
+
+# === Lookups ===
+
+func get_item_cost(item_id: String) -> int:
+	var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
+	if item_data.is_empty():
+		item_data = StaticData.game_data_equipment.get(item_id, {})
+	return int(item_data.get("price_buy", 0))
+
+
+func has_purchasable_template(item_id: String) -> bool:
+	return StaticData.game_data_items.has(item_id) or StaticData.game_data_equipment.has(item_id)
+
+
+func is_equipment_template(item_id: String) -> bool:
+	return StaticData.game_data_equipment.has(item_id)
+
+
+func equipment_instance_exists(item_id: String) -> bool:
+	if not owned_items.has("equipment"):
+		return false
+	for item in owned_items["equipment"]:
+		if item is Dictionary and item.get("instance_id", "") == item_id:
+			return true
+	return false
+
+
+func get_equipment_template_id(instance_id: String) -> String:
+	assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
+	if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")
+	var equipment_list = owned_items["equipment"] if owned_items.has("equipment") else []
+	for item in equipment_list:
+		if not item is Dictionary: continue
+		assert(item.has("instance_id"), "CRITICAL ERROR: item is missing instance_id!")
+		if not item.has("instance_id"): push_error("CRITICAL ERROR: item is missing instance_id!")
+		if item["instance_id"] == instance_id:
+			assert(item.has("template_id"), "CRITICAL ERROR: item is missing template_id!")
+			if not item.has("template_id"): push_error("CRITICAL ERROR: item is missing template_id!")
+			return item["template_id"]
+	return ""
+
+
+func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) -> Array:
+	var available_items: Array = []
+	assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
+	if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")
+	var equipment_list = owned_items["equipment"] if owned_items.has("equipment") else []
+	for item in equipment_list:
+		if not item is Dictionary: continue
+		assert(item.has("instance_id"), "CRITICAL ERROR: item is missing instance_id!")
+		if not item.has("instance_id"): push_error("CRITICAL ERROR: item is missing instance_id!")
+		var instance_id: String = item["instance_id"]
+
+		assert(item.has("template_id"), "CRITICAL ERROR: item is missing template_id!")
+		if not item.has("template_id"): push_error("CRITICAL ERROR: item is missing template_id!")
+		var template_id: String = item["template_id"]
+
+		# Materia instances are stored in the equipment collection; route them separately
+		if str(item.get("item_type", "")) == "MATERIA":
+			if "ability_" in slot_id and StaticData.game_data_materia.has(template_id):
+				var mat_data: Dictionary = StaticData.game_data_materia.get(template_id, {})
+				var combined: Dictionary = mat_data.duplicate()
+				combined["instance_id"] = instance_id
+				combined["template_id"] = template_id
+				combined["item_type"] = "MATERIA"
+				combined["equipped_to"] = item.get("equipped_to", null)
+				available_items.append(combined)
+			continue
+
+		assert(StaticData.game_data_equipment.has(template_id), "CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
+		if not StaticData.game_data_equipment.has(template_id): push_error("CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
+		var item_data: Variant = StaticData.game_data_equipment[template_id] if StaticData.game_data_equipment.has(template_id) else null
+		if not item_data: continue
+
+		var item_data_dict: Dictionary = item_data as Dictionary
+
+		assert(item_data_dict.has("type_id"), "CRITICAL ERROR: item_data_dict is missing type_id!")
+		if not item_data_dict.has("type_id"): push_error("CRITICAL ERROR: item_data_dict is missing type_id!")
+		var item_type_id: int = item_data_dict["type_id"]
+
+		var is_valid_slot: bool = false
+
+		assert(item_data_dict.has("slot"), "CRITICAL ERROR: item_data_dict is missing slot!")
+		if not item_data_dict.has("slot"): push_error("CRITICAL ERROR: item_data_dict is missing slot!")
+		var item_slot: String = item_data_dict["slot"]
+		if "hand" in slot_id and (item_slot == "Weapon" or item_slot == "Shield"):
+			is_valid_slot = true
+		elif "head" in slot_id and item_slot == "Headgear":
+			is_valid_slot = true
+		elif "body" in slot_id and item_slot == "Chest":
+			is_valid_slot = true
+		elif "acc_" in slot_id and item_slot == "Accessory":
+			is_valid_slot = true
+		elif "ability_" in slot_id and item_slot == "Materia":
+			is_valid_slot = true
+
+		if not is_valid_slot: continue
+		if item_type_id not in allowed_equips and item_type_id != -1: continue
+
+		# Combine the instance wrapper data with static stats for the UI
+		var combined_item: Dictionary = item_data_dict.duplicate()
+		combined_item["instance_id"] = instance_id
+		combined_item["template_id"] = template_id
+		combined_item["equipped_to"] = item.get("equipped_to", null)
+
+		available_items.append(combined_item)
+
+	return available_items
+
+
+# === Helpers ===
+
+func _normalize_payload(raw_payload: Variant) -> Dictionary:
+	if not (raw_payload is Dictionary):
+		return {"stackables": {}, "equipment": []}
+
+	var payload: Dictionary = raw_payload
+	var local_stackables: Dictionary = {}
+	var local_equipment: Array = []
+	if payload.has("owned_items") and payload["owned_items"] is Dictionary:
+		var items_dict: Dictionary = payload["owned_items"]
+		if items_dict.has("stackables") and items_dict["stackables"] is Dictionary:
+			local_stackables = items_dict["stackables"].duplicate(true)
+		if items_dict.has("equipment") and items_dict["equipment"] is Array:
+			local_equipment = items_dict["equipment"].duplicate(true)
+
+	return {
+		"stackables": local_stackables,
+		"equipment": local_equipment
+	}
+
+
+# === Shop purchase ===
+
+func request_buy_item(item_id: String, quantity: int) -> void:
+	if not has_purchasable_template(item_id):
+		purchase_failed.emit("ERR_INSUFFICIENT_RESOURCES")
+		return
+
+	var total_cost: int = get_item_cost(item_id) * quantity
+	if PlayerProfile.gil < total_cost:
+		purchase_failed.emit("ERR_INSUFFICIENT_RESOURCES")
+		return
+
+	PlayerProfile.gil -= total_cost
+	if is_equipment_template(item_id):
+		add_equipment_instances(item_id, quantity)
+	else:
+		add_stackable(item_id, quantity)
+
+	emit_updated()
+	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "buy_item")
+	PlayerProfile.save_snapshot("buy_item_currency")
+	purchase_successful.emit()

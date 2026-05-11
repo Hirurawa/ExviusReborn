@@ -55,6 +55,8 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 			texname = "chara"
 		if texname == "Equip":
 			texname = "weapon"
+		if texname == "Esper":
+			texname = "summons"
 		var cat_icon_path = "res://assets/ui/unit/unit_magic_category_" + texname + ".tres"
 		var cat_tex = load(cat_icon_path)
 		if cat_tex:

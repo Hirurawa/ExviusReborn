@@ -27,7 +27,7 @@ func _refresh_save_dropdown() -> void:
 	save_select.add_item("Select existing save...")
 	save_select.set_item_metadata(0, "")
 
-	var local_saves: Array = DataManager.list_local_saves()
+	var local_saves: Array = AccountService.list_local_saves()
 	for save_var in local_saves:
 		if not (save_var is Dictionary):
 			continue
@@ -56,7 +56,7 @@ func _on_new_game_button_pressed() -> void:
 		return
 
 	feedback_label.text = "Creating new game..."
-	var result: Dictionary = await DataManager.start_new_local_game(save_name)
+	var result: Dictionary = await AccountService.start_new_local_game(save_name)
 	if not bool(result.get("success", false)):
 		feedback_label.text = str(result.get("error_message", "Failed to create new game."))
 		return
@@ -66,7 +66,7 @@ func _on_new_game_button_pressed() -> void:
 	feedback_label.text = "New game created!"
 	UIManager.push("game_ui")
 
-	var mission_result: Dictionary = await DataManager.request_start_mission(INTRO_MISSION_ID)
+	var mission_result: Dictionary = await MissionService.request_start_mission(INTRO_MISSION_ID)
 	if mission_result.get("success", false) == true:
 		UIManager.push("combat_ui", {"mission_id": INTRO_MISSION_ID})
 	else:
@@ -81,7 +81,7 @@ func _on_load_game_button_pressed() -> void:
 		return
 
 	feedback_label.text = "Loading game..."
-	var result: Dictionary = await DataManager.load_local_game(save_name)
+	var result: Dictionary = await AccountService.load_local_game(save_name)
 	if not bool(result.get("success", false)):
 		feedback_label.text = str(result.get("error_message", "Failed to load game."))
 		return

@@ -15,14 +15,14 @@ var _combat_slot_index: int = -1
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	if not DataManager.items_updated.is_connected(_on_items_updated):
-		DataManager.items_updated.connect(_on_items_updated)
+	if not InventoryService.items_updated.is_connected(_on_items_updated):
+		InventoryService.items_updated.connect(_on_items_updated)
 	_sync_grid_width()
-	_refresh_items_grid(DataManager.owned_items)
+	_refresh_items_grid(InventoryService.owned_items)
 
 func _exit_tree() -> void:
-	if DataManager.items_updated.is_connected(_on_items_updated):
-		DataManager.items_updated.disconnect(_on_items_updated)
+	if InventoryService.items_updated.is_connected(_on_items_updated):
+		InventoryService.items_updated.disconnect(_on_items_updated)
 
 func init_scene(params: Dictionary) -> void:
 	current_category_key = str(params.get("category", "items"))
@@ -33,7 +33,7 @@ func init_scene(params: Dictionary) -> void:
 		current_category_key = "items"
 	if is_node_ready():
 		_apply_category_title()
-		_refresh_items_grid(DataManager.owned_items)
+		_refresh_items_grid(InventoryService.owned_items)
 
 func _on_back_pressed() -> void:
 	UIManager.pop()
@@ -81,10 +81,10 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 
 			var equipment_dict: Dictionary = equipment_entry as Dictionary
 			var template_id: String = str(equipment_dict.get("template_id", ""))
-			if template_id == "" or not DataManager.game_data_equipment.has(template_id):
+			if template_id == "" or not StaticData.game_data_equipment.has(template_id):
 				continue
 
-			var equipment_data: Dictionary = DataManager.game_data_equipment.get(template_id, {})
+			var equipment_data: Dictionary = StaticData.game_data_equipment.get(template_id, {})
 			entries.append({
 				"kind": "equipment",
 				"data": equipment_data,
@@ -99,10 +99,10 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 			var quantity: int = int(stackables[item_id_variant])
 			if quantity <= 0:
 				continue
-			if not DataManager.game_data_items.has(item_id):
+			if not StaticData.game_data_items.has(item_id):
 				continue
 
-			var item_data: Dictionary = DataManager.game_data_items.get(item_id, {})
+			var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
 			var item_type: String = str(item_data.get("type", ""))
 			var is_consumable: bool = item_type == "Consumable"
 			if _is_combat_selection_mode and (item_data.get("usable_in_combat", false) != true or not item_data.has("effects_raw")):
@@ -134,9 +134,9 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 				if str(eq_dict.get("item_type", "")) != "MATERIA":
 					continue
 				var template_id: String = str(eq_dict.get("template_id", ""))
-				if template_id == "" or not DataManager.game_data_materia.has(template_id):
+				if template_id == "" or not StaticData.game_data_materia.has(template_id):
 					continue
-				var materia_data: Dictionary = DataManager.game_data_materia.get(template_id, {})
+				var materia_data: Dictionary = StaticData.game_data_materia.get(template_id, {})
 				entries.append({
 					"kind": "materia",
 					"data": materia_data,
@@ -240,11 +240,11 @@ func _on_combat_item_selected(item_id: String) -> void:
 		return
 	if _combat_slot_index < 0:
 		return
-	DataManager.set_combat_item(_combat_slot_index, item_id)
+	CombatItemsService.set_combat_item(_combat_slot_index, item_id)
 	UIManager.pop()
 
 func _is_item_already_selected_in_combat(item_id: String) -> bool:
-	var selected_slots: Array = DataManager.combat_items
+	var selected_slots: Array = CombatItemsService.combat_items
 	for slot_value in selected_slots:
 		if str(slot_value) == item_id:
 			return true

@@ -96,8 +96,99 @@ func get_data(file_type: String) -> Variant:
 	return {}
 
 func get_versions_snapshot() -> Dictionary:
-	# Return minimal version info for diagnostics
+	# Return source-aware version info so downstream caches invalidate when JSON changes.
 	var versions: Dictionary = {}
 	for file_type in files_to_patch:
-		versions[file_type] = BUNDLED_STATIC_VERSION if cached_data.has(file_type) else "not-loaded"
+		versions[file_type] = _build_source_version_token(file_type)
 	return versions
+
+func _build_source_version_token(file_type: String) -> String:
+	var source_path: String = _resolve_source_path(file_type)
+	if source_path == "":
+		return "missing"
+
+	var modified_unix: int = FileAccess.get_modified_time(source_path)
+	var file_size: int = -1
+	var file: FileAccess = FileAccess.open(source_path, FileAccess.READ)
+	if file:
+		file_size = file.get_length()
+		file.close()
+
+	return "%s|%s|%s|%s" % [BUNDLED_STATIC_VERSION, source_path, str(modified_unix), str(file_size)]
+
+func _resolve_source_path(file_type: String) -> String:
+	var cache_path: String = "user://data/%s.json" % file_type
+	if FileAccess.file_exists(cache_path):
+		return cache_path
+
+	for base_dir in BUNDLED_STATIC_DIRS:
+		var bundled_path: String = "%s/%s.json" % [base_dir, file_type]
+		if FileAccess.file_exists(bundled_path):
+			return bundled_path
+
+	return ""
+
+func load_rank_exp_data() -> Dictionary:
+	# Load and parse rank-exp.csv
+	# CSV structure: Rank, Exp (XP needed to reach that rank), Energy, Friend slot
+	# The Exp value at rank N = XP needed to advance from rank N-1 to rank N
+	# Result: rank_data[rank] = {"xp_needed": int, "energy": int}
+	#   where xp_needed = XP to advance FROM rank TO rank+1
+	
+	var rank_data: Dictionary = {}
+	var csv_path: String = "res://assets/static_data/rank-exp.csv"
+	
+	if not FileAccess.file_exists(csv_path):
+		push_error("rank-exp.csv not found at %s" % csv_path)
+		return rank_data
+	
+	var file: FileAccess = FileAccess.open(csv_path, FileAccess.READ)
+	if not file:
+		push_error("Failed to open rank-exp.csv")
+		return rank_data
+	
+	var content: String = file.get_as_text()
+	file.close()
+	
+	var lines: PackedStringArray = content.split("\n")
+	var csv_rows: Array = []
+	
+	# Parse CSV lines into an array (skip header)
+	for i in range(1, lines.size()):
+		var line: String = lines[i].strip_edges()
+		if line == "":
+			continue
+		
+		var columns: PackedStringArray = line.split(",")
+		if columns.size() < 3:
+			continue
+		
+		var rank: int = int(columns[0].strip_edges())
+		var exp_str: String = columns[1].strip_edges()
+		var energy: int = int(columns[2].strip_edges())
+		
+		var exp_value: int = 0
+		if exp_str != "-":
+			exp_value = int(exp_str)
+		
+		csv_rows.append({"rank": rank, "exp": exp_value, "energy": energy})
+	
+	# Build rank_data: 
+	# - rank_data[N] contains XP needed to go from rank N to rank N+1
+	# - CSV row N has the XP needed to reach rank N (i.e., from rank N-1 to rank N)
+	for i in range(csv_rows.size()):
+		var row = csv_rows[i]
+		var current_rank = row["rank"]
+		var current_energy = row["energy"]
+		var xp_to_reach_this_rank = row["exp"]
+		
+		# The XP value in this row applies to advancing from previous rank to current rank
+		if current_rank > 1 and xp_to_reach_this_rank > 0:
+			var prev_rank = current_rank - 1
+			var prev_energy = csv_rows[i-1]["energy"] if i > 0 else 41
+			rank_data[prev_rank] = {
+				"xp_needed": xp_to_reach_this_rank,
+				"energy": prev_energy
+			}
+	
+	return rank_data

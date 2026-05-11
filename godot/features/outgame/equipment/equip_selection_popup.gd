@@ -30,10 +30,10 @@ func _populate_list() -> void:
 	remove_cell.set_clickable(true)
 	remove_cell.pressed.connect(_on_equip_item_selected.bind(""))
 
-	var unit_data: Dictionary = DataManager.game_data_units.get(current_unit_inst.get("unit_id", ""), {})
+	var unit_data: Dictionary = StaticData.game_data_units.get(current_unit_inst.get("unit_id", ""), {})
 	var allowed_equips: Array = unit_data.get("equip", [])
 
-	var available_items: Array = DataManager.get_available_equipment_for_slot(current_slot_id, allowed_equips)
+	var available_items: Array = InventoryService.get_available_equipment_for_slot(current_slot_id, allowed_equips)
 
 	for item_dict in available_items:
 		var item_instance_id: String = str(item_dict.get("instance_id", ""))
@@ -53,5 +53,5 @@ func _populate_list() -> void:
 
 func _on_equip_item_selected(item_id: String) -> void:
 	var instance_id: String = current_unit_inst.get("instance_id", "")
-	DataManager.request_equip_item(instance_id, current_slot_id, item_id)
+	UnitService.request_equip_item(instance_id, current_slot_id, item_id)
 	UIManager.pop()

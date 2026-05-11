@@ -108,6 +108,7 @@ texture = ExtResource("8_7iblg")
 expand_mode = 1
 
 [node name="summon_mix_bar_inc" type="TextureRect" parent="summon_mix_bar_area/summon_mix_bar_frame" unique_id=59884742]
+visible = false
 layout_mode = 0
 offset_left = 37.0
 offset_top = 54.0

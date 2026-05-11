@@ -74,9 +74,9 @@ func _ready() -> void:
 	battle_manager.limit_crystal_dropped.connect(_on_limit_crystal_dropped)
 	battle_manager.item_refunded.connect(_on_item_refunded)
 
-	DataManager.mission_completed.connect(_on_mission_completed)
+	MissionService.mission_completed.connect(_on_mission_completed)
 	battle_manager.mission_failed.connect(_on_mission_failed)
-	DataManager.mission_failed.connect(_on_mission_failed)
+	MissionService.mission_failed.connect(_on_mission_failed)
 
 	
 	_hit_flash = ColorRect.new()
@@ -105,8 +105,8 @@ func _enter_ally_selection_state(action_type: int, action_name: String, action_i
 
 func _init_combat_inventory() -> void:
 	combat_inventory.clear()
-	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
-	var selected_slots: Array = DataManager.combat_items
+	var stackables: Dictionary = InventoryService.owned_items.get("stackables", {})
+	var selected_slots: Array = CombatItemsService.combat_items
 
 	for slot_value in selected_slots:
 		var item_id: String = str(slot_value)
@@ -116,10 +116,10 @@ func _init_combat_inventory() -> void:
 		var quantity: int = int(stackables.get(item_id, 0))
 		if quantity <= 0:
 			continue
-		if not DataManager.game_data_items.has(item_id):
+		if not StaticData.game_data_items.has(item_id):
 			continue
 
-		var item_data: Dictionary = DataManager.game_data_items[item_id]
+		var item_data: Dictionary = StaticData.game_data_items[item_id]
 		if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
 			combat_inventory[item_id] = quantity
 
@@ -226,13 +226,11 @@ func _open_skill_menu(unit_index: int) -> void:
 	if unit_index >= 0 and unit_index < battle_manager.party_data.size():
 		var unit_inst: Dictionary = battle_manager.party_data[unit_index]
 		if not unit_inst.is_empty():
-			var unit_id = str(unit_inst.get("unit_id", ""))
 			var rarity = int(unit_inst.get("current_rarity", 1))
-			var level = int(unit_inst.get("level", 1))
 			var limitburst_id: String = str(unit_inst.get("limitburst_id", ""))
 
-			if limitburst_id != "" and DataManager.game_data_limitbursts.has(limitburst_id):
-				var limitburst_data: Dictionary = DataManager.game_data_limitbursts[limitburst_id]
+			if limitburst_id != "" and StaticData.game_data_limitbursts.has(limitburst_id):
+				var limitburst_data: Dictionary = StaticData.game_data_limitbursts[limitburst_id]
 				options.append({
 					"id": limitburst_id,
 					"name": limitburst_data.get("name", "Unknown Limit Burst"),
@@ -241,37 +239,37 @@ func _open_skill_menu(unit_index: int) -> void:
 					"source_type": "limitburst"
 				})
 
-			var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
-			var skills: Array = unit_data.get("skills", [])
+			# Read from the calculated profile so equipment- and esper-granted
+			# skills (in addition to innate trait skills) appear in the menu.
+			# StatCalculator already filters innate skills by rarity/level.
+			var profile: Dictionary = unit_inst.get("final_stats", {})
+			var profile_skills: Dictionary = profile.get("skills", {})
+			var magic_entries: Array = profile_skills.get("magic", [])
+			var ability_entries: Array = profile_skills.get("ability", [])
 
-			for sk in skills:
-				var req_rarity = int(sk.get("rarity", 99))
-				var req_level = int(sk.get("level", 99))
+			for sk in magic_entries:
+				var sk_id: String = str(int(sk.get("id", 0)))
+				if StaticData.game_data_skills_magic.has(sk_id):
+					var magic_data = StaticData.game_data_skills_magic[sk_id]
+					options.append({
+						"id": sk_id,
+						"name": magic_data.get("name", "Unknown Magic"),
+						"skill_data": magic_data,
+						"level": rarity,
+						"source_type": "skill"
+					})
 
-				if rarity > req_rarity or (rarity == req_rarity and level >= req_level):
-					var sk_id = str(int(sk.get("id", "")))
-					var sk_type = sk.get("type", "")
-
-					if sk_type == "MAGIC":
-						if DataManager.game_data_skills_magic.has(sk_id):
-							var magic_data = DataManager.game_data_skills_magic[sk_id]
-							options.append({
-								"id": sk_id,
-								"name": magic_data.get("name", "Unknown Magic"),
-								"skill_data": magic_data,
-								"level": req_rarity,
-								"source_type": "skill"
-							})
-					elif sk_type == "ABILITY":
-						if DataManager.game_data_skills_ability.has(sk_id):
-							var ability_data = DataManager.game_data_skills_ability[sk_id]
-							options.append({
-								"id": sk_id,
-								"name": ability_data.get("name", "Unknown Ability"),
-								"skill_data": ability_data,
-								"level": req_rarity,
-								"source_type": "skill"
-							})
+			for sk in ability_entries:
+				var sk_id: String = str(int(sk.get("id", 0)))
+				if StaticData.game_data_skills_ability.has(sk_id):
+					var ability_data = StaticData.game_data_skills_ability[sk_id]
+					options.append({
+						"id": sk_id,
+						"name": ability_data.get("name", "Unknown Ability"),
+						"skill_data": ability_data,
+						"level": rarity,
+						"source_type": "skill"
+					})
 
 	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
 
@@ -295,8 +293,8 @@ func _open_item_menu(unit_index: int) -> void:
 
 	for item_id in combat_inventory.keys():
 		var quantity: int = combat_inventory[item_id]
-		if quantity > 0 and DataManager.game_data_items.has(item_id):
-			var item_data: Dictionary = DataManager.game_data_items[item_id]
+		if quantity > 0 and StaticData.game_data_items.has(item_id):
+			var item_data: Dictionary = StaticData.game_data_items[item_id]
 			var item_name: String = item_data.get("name", "Unknown Item")
 			options.append({
 				"id": item_id,
@@ -447,9 +445,9 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 
 				var resolution: Dictionary = {}
 				if source_type == "limitburst":
-					resolution = DataManager.resolve_combat_limitburst(action_id)
+					resolution = SkillResolver.resolve_combat_limitburst(action_id)
 				else:
-					resolution = DataManager.resolve_combat_skill(action_id)
+					resolution = SkillResolver.resolve_combat_skill(action_id)
 				if resolution.is_empty():
 					return
 
@@ -473,7 +471,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			var btn = _create_action_button(action_name, sub_text)
 			btn.pressed.connect(func():
 				if action_type == battle_manager.CombatAction.ITEM:
-					var resolution: Dictionary = DataManager.resolve_combat_item(action_id)
+					var resolution: Dictionary = SkillResolver.resolve_combat_item(action_id)
 					if resolution.is_empty():
 						return
 
@@ -486,7 +484,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 						if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), resolution):
 							_close_action_menu()
 				else:
-					var skill_resolution: Dictionary = DataManager.resolve_combat_skill(action_id)
+					var skill_resolution: Dictionary = SkillResolver.resolve_combat_skill(action_id)
 					if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), skill_resolution, false):
 						_close_action_menu()
 			)
@@ -535,21 +533,21 @@ func init_scene(params: Dictionary) -> void:
 	var formatted_name: String = ""
 
 	if dungeon_id != "":
-		var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
+		var dungeon_data = StaticData.game_data_dungeons.get(dungeon_id, {})
 		if dungeon_data.has("names"):
 			var dungeon_name = str(dungeon_data["names"][0])
 			formatted_name = dungeon_name.replace(" ", "_")
 
 	if formatted_name == "" and current_mission_id != "":
-		var mission_data: Dictionary = DataManager.get_mission_data_local(str(current_mission_id))
+		var mission_data: Dictionary = MissionService.get_mission_data_local(str(current_mission_id))
 		var mission_dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
 		if mission_dungeon_id != "":
-			var mission_dungeon_data: Dictionary = DataManager.game_data_dungeons.get(mission_dungeon_id, {})
+			var mission_dungeon_data: Dictionary = StaticData.game_data_dungeons.get(mission_dungeon_id, {})
 			if mission_dungeon_data.has("names") and mission_dungeon_data["names"] is Array and mission_dungeon_data["names"].size() > 0:
 				formatted_name = str(mission_dungeon_data["names"][0]).replace(" ", "_")
 
 	if formatted_name == "":
-		formatted_name = DataManager.last_played_dungeon_name
+		formatted_name = MissionService.last_played_dungeon_name
 
 	_apply_battle_background_from_formatted_dungeon_name(formatted_name)
 
@@ -966,8 +964,8 @@ func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 
 	var drop_icon = TextureRect.new()
 	var tex_path = "res://icon.svg"
-	if DataManager.game_data_items.has(item_id):
-		var item_data = DataManager.game_data_items[item_id]
+	if StaticData.game_data_items.has(item_id):
+		var item_data = StaticData.game_data_items[item_id]
 		if item_data.has("icon"):
 			tex_path = "res://assets/items/" + str(item_data["icon"])
 

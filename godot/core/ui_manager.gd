@@ -75,7 +75,7 @@ func _update_overlays() -> void:
 
 	# Determine overlay visibility based on context
 	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui"]
-	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "mapui", "editprofileui"]
+	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "esper_detail_ui", "mapui", "editprofileui", "esperdetailui"]
 
 	if top_header:
 		if current_scene_name in hide_top_and_bottom:

@@ -76,14 +76,14 @@ func _set_legacy_pedestal_visible(slot_btn: Button, visible: bool) -> void:
 			return
 
 func _ready() -> void:
-	DataManager.parties_updated.connect(_on_parties_updated)
-	DataManager.units_updated.connect(_on_units_updated)
+	PartyService.parties_updated.connect(_on_parties_updated)
+	UnitService.units_updated.connect(_on_units_updated)
 
 	prev_party_btn.pressed.connect(_on_prev_party)
 	next_party_btn.pressed.connect(_on_next_party)
 	view_units_btn.pressed.connect(_on_view_units)
 	enhance_units_btn.pressed.connect(_on_enhance_units)
-	current_party_index = DataManager.get_selected_party_index()
+	current_party_index = PartyService.get_selected_party_index()
 
 	for i in range(slots_container.get_child_count()):
 		var slot_btn: Button = slots_container.get_child(i) as Button
@@ -112,7 +112,7 @@ func _on_slot_resized() -> void:
 	call_deferred("_refresh_ui")
 
 func _refresh_ui() -> void:
-	var parties: Array = DataManager.parties
+	var parties: Array = PartyService.parties
 	if parties.is_empty():
 		return
 
@@ -158,7 +158,7 @@ func _update_slots(unit_uuids: Array) -> void:
 					slot_tex = _get_dynamic_texture(path)
 				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("rarity", 1)))
 
-				var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+				var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 				unit_name = unit_data.get("name", "Unknown")
 				unit_level = "Lvl %s" % str(int(unit_inst.get("level", 1)))
 
@@ -223,7 +223,7 @@ func _update_esper_slots(esper_ids: Array) -> void:
 		slot_btn.pressed.connect(_on_esper_slot_clicked.bind(i, summon_id))
 
 func _get_summon_display_name(summon_id: String) -> String:
-	var summon_data: Dictionary = DataManager.game_data_summons.get(summon_id, {})
+	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
 	if summon_data.is_empty():
 		return "Summon %s" % summon_id
 
@@ -238,39 +238,39 @@ func _get_summon_display_name(summon_id: String) -> String:
 	return "Summon %s" % summon_id
 
 func _find_unit_inst(uuid: String) -> Dictionary:
-	for u in DataManager.owned_units_ids:
+	for u in UnitService.owned_units_ids:
 		if u is Dictionary and u.get("instance_id") == uuid:
 			return u
 	return {}
 
 func _on_prev_party() -> void:
-	if DataManager.parties.is_empty():
+	if PartyService.parties.is_empty():
 		return
-	var party_count: int = DataManager.parties.size()
+	var party_count: int = PartyService.parties.size()
 	current_party_index -= 1
 	if current_party_index < 0:
 		current_party_index = party_count - 1
 	_refresh_ui()
 
 func _on_next_party() -> void:
-	if DataManager.parties.is_empty():
+	if PartyService.parties.is_empty():
 		return
-	var party_count: int = DataManager.parties.size()
+	var party_count: int = PartyService.parties.size()
 	current_party_index += 1
 	if current_party_index >= party_count:
 		current_party_index = 0
 	_refresh_ui()
 
 func _commit_selected_party_on_exit() -> void:
-	if DataManager.parties.is_empty():
+	if PartyService.parties.is_empty():
 		return
 
-	var changed: bool = DataManager.set_selected_party_index(current_party_index)
+	var changed: bool = PartyService.set_selected_party_index(current_party_index)
 	if not changed:
 		return
 
 	# Persist only the selected party index at Units root exit.
-	DataManager.party_save_requested.emit(DataManager.parties.duplicate(true))
+	PartyService.party_save_requested.emit(PartyService.parties.duplicate(true))
 
 func _on_slot_clicked(slot_index: int, unit_inst: Dictionary) -> void:
 	if unit_inst.is_empty():

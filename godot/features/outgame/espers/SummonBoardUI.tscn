@@ -1,13 +1,17 @@
 [gd_scene format=3 uid="uid://bdg8hwlg1goid"]
 
 [ext_resource type="Script" uid="uid://c4pnehjhbm32a" path="res://features/outgame/espers/summon_board_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="2_74yb0"]
 [ext_resource type="Texture2D" uid="uid://cwfwqmc3kgvr3" path="res://assets/ui/beast/sumboard_arrow_rt.tres" id="2_b8y5j"]
 [ext_resource type="Texture2D" uid="uid://djms524f3tntn" path="res://assets/ui/beast/sumboard_arrow_lt.tres" id="3_ecqil"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_evu1g"]
 [ext_resource type="Texture2D" uid="uid://b45rwki1qcs3y" path="res://assets/ui/beast/sumboard_arrow_r.tres" id="4_q845t"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_wwty2"]
 [ext_resource type="Texture2D" uid="uid://lhu6xo6ejgxl" path="res://assets/ui/beast/sumboard_arrow_rb.tres" id="5_pueu8"]
 [ext_resource type="Texture2D" uid="uid://lross7x0rydh" path="res://assets/ui/beast/sumboard_arrow_lb.tres" id="6_74yb0"]
 [ext_resource type="Texture2D" uid="uid://ddpbr6grxvd2g" path="res://assets/ui/beast/sumboard_arrow_l.tres" id="7_evu1g"]
 [ext_resource type="Texture2D" uid="uid://b0bw8jn3x6jt7" path="res://assets/ui/beast/sumboard_gridbg_attack_learned.tres" id="8_wwty2"]
+[ext_resource type="Texture2D" uid="uid://cbjiyj5wwat7a" path="res://assets/ui/beast/summon_cp.tres" id="12_8uoes"]
 
 [sub_resource type="TileSet" id="TileSet_4k7in"]
 tile_shape = 3
@@ -33,7 +37,40 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
 
+[node name="UnitNamebgChara2" type="TextureRect" parent="VBoxContainer" unique_id=1935069522]
+layout_mode = 2
+texture = ExtResource("2_74yb0")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/UnitNamebgChara2" unique_id=490741908]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Esper Name"
+
+[node name="BackButton" type="TextureButton" parent="VBoxContainer/UnitNamebgChara2" unique_id=1940355767]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("3_evu1g")
+texture_pressed = ExtResource("4_wwty2")
+
+[node name="Back" type="Label" parent="VBoxContainer/UnitNamebgChara2/BackButton" unique_id=186489316]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="HeaderRow" type="HBoxContainer" parent="VBoxContainer" unique_id=946316712]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
@@ -54,6 +91,7 @@ size_flags_vertical = 3
 mouse_filter = 2
 
 [node name="InfoLabel" type="Label" parent="VBoxContainer" unique_id=1515705081]
+visible = false
 layout_mode = 2
 horizontal_alignment = 1
 
@@ -180,5 +218,25 @@ offset_right = 237.0
 offset_bottom = 111.0
 theme_override_font_sizes/font_size = 20
 text = "need_cp_label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="cp_area" type="TextureRect" parent="." unique_id=1360304]
+layout_mode = 0
+offset_left = 407.0
+offset_top = 33.0
+offset_right = 639.0
+offset_bottom = 89.0
+texture = ExtResource("12_8uoes")
+expand_mode = 1
+
+[node name="label_cp" type="Label" parent="." unique_id=1576161033]
+layout_mode = 0
+offset_left = 465.0
+offset_top = 43.0
+offset_right = 615.0
+offset_bottom = 73.0
+theme_override_font_sizes/font_size = 20
+text = "label_cp"
 horizontal_alignment = 1
 vertical_alignment = 1

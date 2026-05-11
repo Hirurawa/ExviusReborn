@@ -141,7 +141,7 @@ func _on_confirm_pressed() -> void:
 
 	confirm_button.disabled = true
 
-	var result: Dictionary = await DataManager.enhance_unit(base_unit_instance_id, material_ids)
+	var result: Dictionary = await UnitService.enhance_unit(base_unit_instance_id, material_ids)
 
 	confirm_button.disabled = false
 
@@ -174,10 +174,10 @@ func _on_confirm_pressed() -> void:
 			var reward_template_id: String = str(trust_reward.get("template_id", ""))
 			if reward_template_id != "":
 				var reward_name: String = "%s %s" % [reward_type, reward_template_id]
-				if reward_type == "EQUIP" and DataManager.game_data_equipment.has(reward_template_id):
-					reward_name = str(DataManager.game_data_equipment[reward_template_id].get("name", reward_name))
-				elif reward_type == "MATERIA" and DataManager.game_data_materia.has(reward_template_id):
-					reward_name = str(DataManager.game_data_materia[reward_template_id].get("name", reward_name))
+				if reward_type == "EQUIP" and StaticData.game_data_equipment.has(reward_template_id):
+					reward_name = str(StaticData.game_data_equipment[reward_template_id].get("name", reward_name))
+				elif reward_type == "MATERIA" and StaticData.game_data_materia.has(reward_template_id):
+					reward_name = str(StaticData.game_data_materia[reward_template_id].get("name", reward_name))
 				unlocked_reward_name = reward_name
 				msg += "\nTrust Master Reward acquired: %s" % reward_name
 
@@ -245,8 +245,8 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	var currentXp = int(unit_inst.xp)
 	var xpForNextLevel = int(unit_inst.next_xp)
 	var lb_id = str(int(unit_inst.get("limitburst_id", "")))
-	if lb_id != "" and DataManager.game_data_limitbursts.has(lb_id):
-		LBName.text = DataManager.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
+	if lb_id != "" and StaticData.game_data_limitbursts.has(lb_id):
+		LBName.text = StaticData.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
 	
 	var tmr_data = unit_inst.get("TMR")
 	if tmr_data != null and typeof(tmr_data) == TYPE_ARRAY and tmr_data.size() >= 2:
@@ -255,12 +255,12 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 		var tmr_name = "Unknown Reward"
 
 		if tmr_type == "EQUIP":
-			if DataManager.game_data_equipment.has(tmr_id):
-				var eq_data = DataManager.game_data_equipment[tmr_id]
+			if StaticData.game_data_equipment.has(tmr_id):
+				var eq_data = StaticData.game_data_equipment[tmr_id]
 				tmr_name = eq_data.get("name", tmr_name)
 		elif tmr_type == "MATERIA":
-			if DataManager.game_data_materia.has(tmr_id):
-				var mat_data = DataManager.game_data_materia[tmr_id]
+			if StaticData.game_data_materia.has(tmr_id):
+				var mat_data = StaticData.game_data_materia[tmr_id]
 				tmr_name = mat_data.get("name", tmr_name)
 
 		TMName.text = tmr_name
@@ -268,13 +268,19 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 		TMName.text = "None"
 	
 	TMValue.text = str(unit_inst.get("trust_value"))
-	
-	HP.text = str(unit_inst.final_stats["stats"].get("HP"))
-	MP.text = str(unit_inst.final_stats["stats"].get("MP"))
-	ATK.text = str(unit_inst.final_stats["stats"].get("ATK"))
-	DEF.text = str(unit_inst.final_stats["stats"].get("DEF"))
-	MAG.text = str(unit_inst.final_stats["stats"].get("MAG"))
-	SPR.text = str(unit_inst.final_stats["stats"].get("SPR"))
+
+	# Recalculate fresh so equipment/esper changes from other screens are reflected,
+	# and persist back to keep unit_inst["final_stats"] as the single source of truth.
+	var fresh_final_stats: Dictionary = StatCalculator.calculate_final_stats(unit_inst)
+	unit_inst["final_stats"] = fresh_final_stats
+	var stats: Dictionary = fresh_final_stats.get("stats", {})
+
+	HP.text = str(stats.get("HP"))
+	MP.text = str(stats.get("MP"))
+	ATK.text = str(stats.get("ATK"))
+	DEF.text = str(stats.get("DEF"))
+	MAG.text = str(stats.get("MAG"))
+	SPR.text = str(stats.get("SPR"))
 
 func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
 	var tmr_data: Variant = unit_inst.get("TMR", null)
@@ -290,10 +296,10 @@ func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
 	if tmr_id == "":
 		return ""
 
-	if tmr_type == "EQUIP" and DataManager.game_data_equipment.has(tmr_id):
-		return str(DataManager.game_data_equipment[tmr_id].get("name", ""))
+	if tmr_type == "EQUIP" and StaticData.game_data_equipment.has(tmr_id):
+		return str(StaticData.game_data_equipment[tmr_id].get("name", ""))
 
-	if tmr_type == "MATERIA" and DataManager.game_data_materia.has(tmr_id):
-		return str(DataManager.game_data_materia[tmr_id].get("name", ""))
+	if tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
+		return str(StaticData.game_data_materia[tmr_id].get("name", ""))
 
 	return ""

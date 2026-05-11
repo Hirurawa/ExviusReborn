@@ -23,7 +23,7 @@ func _on_add_friend_button_pressed() -> void:
 		return
 
 	friends_feedback_label.text = "Sending friend request..."
-	DataManager.add_friend(username)
+	FriendsService.add_friend(username)
 
 func _on_friend_action_result(success: bool, message: String) -> void:
 	if success:
@@ -67,21 +67,21 @@ func _on_friends_updated(friends_list) -> void:
 		if friend.state == 0:
 			var delete_btn := Button.new()
 			delete_btn.text = "Delete"
-			delete_btn.pressed.connect(func(): DataManager.delete_friend(friend.user.username))
+			delete_btn.pressed.connect(func(): FriendsService.delete_friend(friend.user.username))
 			hbox.add_child(delete_btn)
 		elif friend.state == 1:
 			var undo_btn := Button.new()
 			undo_btn.text = "Undo"
-			undo_btn.pressed.connect(func(): DataManager.delete_friend(friend.user.username))
+			undo_btn.pressed.connect(func(): FriendsService.delete_friend(friend.user.username))
 			hbox.add_child(undo_btn)
 		elif friend.state == 2:
 			var accept_btn := Button.new()
 			accept_btn.text = "Accept"
-			accept_btn.pressed.connect(func(): DataManager.add_friend(friend.user.username))
+			accept_btn.pressed.connect(func(): FriendsService.add_friend(friend.user.username))
 			hbox.add_child(accept_btn)
 			var decline_btn := Button.new()
 			decline_btn.text = "Decline"
-			decline_btn.pressed.connect(func(): DataManager.delete_friend(friend.user.username))
+			decline_btn.pressed.connect(func(): FriendsService.delete_friend(friend.user.username))
 			hbox.add_child(decline_btn)
 
 		friends_list_container.add_child(hbox)

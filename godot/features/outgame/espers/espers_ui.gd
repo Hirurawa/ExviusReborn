@@ -32,7 +32,7 @@ func _populate_espers_list() -> void:
 	for child in espers_list_container.get_children():
 		child.queue_free()
 
-	var summons: Dictionary = DataManager.game_data_summons
+	var summons: Dictionary = StaticData.game_data_summons
 	if summons.is_empty():
 		_add_empty_state_label("No espers available.")
 		return
@@ -63,7 +63,7 @@ func _populate_espers_list() -> void:
 	for entry in sorted_entries:
 		var summon_id: String = str(entry["id"])
 		var summon_name: String = _get_summon_display_name(summon_id, entry["data"])
-		var progression: Dictionary = DataManager.get_esper_progression(summon_id)
+		var progression: Dictionary = EsperService.get_esper_progression(summon_id)
 		var is_unlocked: bool = bool(progression.get("is_unlocked", false))
 
 		# Skip locked espers
@@ -109,7 +109,7 @@ func _on_esper_pressed(summon_id: String, summon_name: String) -> void:
 		if selection_callback.is_valid():
 			selection_callback.call(summon_id, summon_name)
 		elif target_party_index >= 0 and target_slot_index >= 0:
-			DataManager.assign_esper_to_party(target_party_index, target_slot_index, summon_id)
+			PartyService.assign_esper_to_party(target_party_index, target_slot_index, summon_id)
 
 		UIManager.pop()
 		return
@@ -123,10 +123,10 @@ func _rebuild_party_used_summons() -> void:
 	_party_used_summons.clear()
 	if mode != "select":
 		return
-	if target_party_index < 0 or target_party_index >= DataManager.parties.size():
+	if target_party_index < 0 or target_party_index >= PartyService.parties.size():
 		return
 
-	var party: Dictionary = DataManager.parties[target_party_index]
+	var party: Dictionary = PartyService.parties[target_party_index]
 	var party_espers: Variant = party.get("espers", [])
 	if not (party_espers is Array):
 		return

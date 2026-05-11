@@ -192,7 +192,7 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
-	var mission_data = DataManager.get_mission_data_local(str(current_mission_id))
+	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
 
 	total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
@@ -205,13 +205,13 @@ func initialize_battle(mission_id: String) -> void:
 
 	party_data = []
 
-	if DataManager.parties.size() > 0:
-		var active_party: Dictionary = DataManager.get_active_party()
+	if PartyService.parties.size() > 0:
+		var active_party: Dictionary = PartyService.get_active_party()
 		var party_instance_ids: Array = []
 		if not active_party.is_empty():
 			party_instance_ids = active_party.get("units", [])
 		else:
-			var fallback_party: Variant = DataManager.parties[0]
+			var fallback_party: Variant = PartyService.parties[0]
 			if typeof(fallback_party) == TYPE_DICTIONARY:
 				party_instance_ids = fallback_party.get("units", [])
 			elif typeof(fallback_party) == TYPE_ARRAY:
@@ -223,7 +223,7 @@ func initialize_battle(mission_id: String) -> void:
 				continue
 
 			var owned_unit = null
-			for u in DataManager.owned_units_ids:
+			for u in UnitService.owned_units_ids:
 				if typeof(u) == TYPE_DICTIONARY and u.get("instance_id") == instance_id:
 					owned_unit = u
 					break
@@ -231,14 +231,12 @@ func initialize_battle(mission_id: String) -> void:
 			if owned_unit != null:
 				var battle_unit = owned_unit.duplicate()
 
-				# Use StatCalculator to get accurate max HP and MP
-				var final_stats = battle_unit.get("final_stats", {})
-				
+				# Use StatCalculator to get accurate max HP and MP. Compute once and
+				# store on battle_unit["final_stats"] so all consumers (battle UI, skill
+				# menu, action processor) read from a single source of truth.
 				battle_unit["final_stats"] = StatCalculator.calculate_final_stats(battle_unit)
-				final_stats = StatCalculator.calculate_final_stats(battle_unit)
-					
-				final_stats = final_stats["stats"]
-				
+				var final_stats: Dictionary = battle_unit["final_stats"].get("stats", {})
+
 				var max_hp = final_stats.get("HP", 100)
 				var max_mp = final_stats.get("MP", 10)
 
@@ -248,7 +246,7 @@ func initialize_battle(mission_id: String) -> void:
 				battle_unit["current_mp"] = max_mp
 				var limitburst_id: String = str(battle_unit.get("limitburst_id", ""))
 				battle_unit["limitburst_id"] = limitburst_id
-				var max_limit_gauge: int = DataManager.get_limitburst_max_gauge(limitburst_id)
+				var max_limit_gauge: int = SkillResolver.get_limitburst_max_gauge(limitburst_id)
 				battle_unit["limit_gauge"] = 0
 				battle_unit["max_limit"] = max_limit_gauge
 				battle_unit["queued_action"] = CombatAction.ATTACK
@@ -274,7 +272,7 @@ func initialize_battle(mission_id: String) -> void:
 
 	# Load enemy data
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
-	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
+	var dungeon_data = StaticData.game_data_dungeons.get(str(dungeon_id), {})
 	_spawn_enemies_for_wave(mission_data, dungeon_data)
 
 	current_state = BattleState.PLAYER_TURN
@@ -332,7 +330,7 @@ func _resolve_queued_action_data(action_id: String, payload: Dictionary) -> Dict
 		}
 
 	var resolved_action_id: String = str(payload.get("resolved_action_id", action_id))
-	return DataManager.resolve_combat_skill(resolved_action_id)
+	return SkillResolver.resolve_combat_skill(resolved_action_id)
 
 func _extract_skill_mp_cost(skill_data: Dictionary) -> int:
 	var cost_value: Variant = skill_data.get("cost", {})
@@ -409,7 +407,7 @@ func execute_queued_action(attacker_index: int) -> void:
 		if parsed_data.is_empty():
 			parsed_data = resolved_action.get("parsed_data", {}) if not resolved_action.is_empty() else {}
 		if parsed_data.is_empty():
-			parsed_data = DataManager.parse_skill_effects(target_skill_data)
+			parsed_data = SkillResolver.parse_skill_effects(target_skill_data)
 		print("Parsed Skill/Item: ", parsed_data)
 
 		# queued_target_index is always a party_data index (stable slot reference)
@@ -632,8 +630,8 @@ func check_battle_state() -> void:
 
 func _trigger_defeat() -> void:
 	print("BattleManager: Defeat! All allies have fallen.")
-	if DataManager.has_method("request_finish_mission"):
-		await DataManager.request_finish_mission(false, current_mission_id, used_items)
+	if MissionService.has_method("request_finish_mission"):
+		await MissionService.request_finish_mission(false, current_mission_id, used_items)
 	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
@@ -657,8 +655,8 @@ func _trigger_mission_complete() -> void:
 	print("BattleManager: Final wave cleared. Initiating mission rewards...")
 	print("Mission Drops: ", mission_drops)
 
-	if DataManager.has_method("request_finish_mission"):
-		await DataManager.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
+	if MissionService.has_method("request_finish_mission"):
+		await MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
 
 	mission_cleared.emit()
 
@@ -666,9 +664,9 @@ func _spawn_next_wave() -> void:
 	current_wave += 1
 	print("BattleManager: Spawning Wave %d..." % current_wave)
 
-	var mission_data = DataManager.get_mission_data_local(str(current_mission_id))
+	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
-	var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
+	var dungeon_data = StaticData.game_data_dungeons.get(str(dungeon_id), {})
 
 	_spawn_enemies_for_wave(mission_data, dungeon_data)
 
@@ -689,7 +687,7 @@ func _generate_enemy_data(dungeon_monster_data: Dictionary) -> Dictionary:
 	var monster_name = dungeon_monster_data.get("name", "")
 
 	if monster_name != "":
-		for monster in DataManager.game_data_monsters:
+		for monster in StaticData.game_data_monsters:
 			if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
 				global_monster_data = monster.duplicate(true)
 				break

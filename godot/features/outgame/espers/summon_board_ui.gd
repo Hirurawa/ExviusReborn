@@ -3,17 +3,26 @@ extends Control
 const TILE_SOURCE_ID: int = 0
 const TILE_ATLAS_COORD: Vector2i = Vector2i(0, 0)
 const TILE_SIZE: int = 100
+const CLICK_DRAG_THRESHOLD: float = 8.0
 
-@onready var back_button: Button = $VBoxContainer/HeaderRow/BackButton
-@onready var title_label: Label = $VBoxContainer/HeaderRow/TitleLabel
+@onready var back_button: TextureButton = $VBoxContainer/UnitNamebgChara2/BackButton
+@onready var title_label: Label = $VBoxContainer/UnitNamebgChara2/Title
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
 @onready var info_label: Label = $VBoxContainer/InfoLabel
+@onready var sp_label: Label = $label_cp
 
 var _summon_id: String = ""
 var _summon_name: String = ""
 var _is_panning: bool = false
 var _pan_start: Vector2 = Vector2.ZERO
 var _tmap_start: Vector2 = Vector2.ZERO
+
+# Esper training state
+var _unlocked_board_nodes: Array[String] = []
+var _unlocked_skills: Array[String] = []
+var _board_nodes_data: Dictionary = {}  # Cache board node data for state queries
+var _node_press_id: String = ""  # Track which node was pressed
+var _node_press_pos: Vector2 = Vector2.ZERO  # Track press position
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
@@ -56,7 +65,7 @@ func _render_board() -> void:
 		_show_empty("No summon board selected.")
 		return
 
-	var boards: Dictionary = DataManager.game_data_summons_boards
+	var boards: Dictionary = StaticData.game_data_summons_boards
 	var board_value: Variant = boards.get(_summon_id, {})
 	if not (board_value is Dictionary):
 		_show_empty("No board data found for summon #%s." % _summon_id)
@@ -66,6 +75,20 @@ func _render_board() -> void:
 	if board_nodes.is_empty():
 		_show_empty("No board data found for summon #%s." % _summon_id)
 		return
+
+	# ESPER TRAINING: Fetch esper progression state
+	var progression: Dictionary = EsperService.get_esper_progression(_summon_id)
+	var unlocked_nodes_raw: Variant = progression.get("unlocked_board_nodes", [])
+	_unlocked_board_nodes.clear()
+	if unlocked_nodes_raw is Array:
+		for node_id in unlocked_nodes_raw:
+			_unlocked_board_nodes.append(str(node_id))
+	var unlocked_skills_raw: Variant = progression.get("unlocked_skills", [])
+	_unlocked_skills.clear()
+	if unlocked_skills_raw is Array:
+		for skill_id in unlocked_skills_raw:
+			_unlocked_skills.append(str(skill_id))
+	_board_nodes_data.clear()
 
 	var cells: Array[Dictionary] = []
 	var node_lookup: Dictionary = {}
@@ -77,6 +100,8 @@ func _render_board() -> void:
 		if not (node_value is Dictionary): continue
 		
 		var node_data: Dictionary = node_value
+		_board_nodes_data[node_id] = node_data  # Cache for state queries
+		
 		var pos_value: Variant = node_data.get("position", [])
 		if not (pos_value is Array) or pos_value.size() < 2: continue
 		
@@ -97,6 +122,7 @@ func _render_board() -> void:
 		_show_empty("Board nodes are missing valid positions.")
 		return
 
+	# ESPER TRAINING: Draw connectors with state-based coloring
 	for cell in cells:
 		var node_data: Dictionary = cell["data"]
 		var parent_id_value: Variant = node_data.get("parent_node_id", null)
@@ -113,40 +139,87 @@ func _render_board() -> void:
 		var parent_pos: Vector2 = tile_map_layer.map_to_local(parent_coord)
 		var child_pos: Vector2 = tile_map_layer.map_to_local(child_coord)
 
+		# ESPER TRAINING: Color connector based on child node state
+		var child_state: String = _get_node_state(cell["node_id"])
+		var connector_color: Color
+		if child_state == "unreachable":
+			connector_color = Color(0.5, 0.5, 0.5, 0.3)  # Dimmed grey for unreachable
+		elif child_state == "learnable":
+			connector_color = Color(0.4, 0.7, 1.0, 0.6)  # Brighter blue for learnable
+		else:  # learned or start
+			connector_color = Color(0.0, 1.0, 0.0, 0.5)  # Green for learned/start
+		
 		var connector := Line2D.new()
-		connector.default_color = Color(0.75, 0.85, 1.0, 0.45)
+		connector.default_color = connector_color
 		connector.width = 6.0
 		connector.z_index = -1
 		connector.add_point(parent_pos)
 		connector.add_point(child_pos)
 		tile_map_layer.add_child(connector)
 
+	# ESPER TRAINING: Render nodes with colors and click handlers
 	for cell in cells:
 		var coord: Vector2i = cell["coord"]
+		var node_id: String = cell["node_id"]
+		var node_data: Dictionary = cell["data"]
 		
 		# This places your new transparent Hex Outline sprite!
 		tile_map_layer.set_cell(coord, TILE_SOURCE_ID, TILE_ATLAS_COORD)
 		
 		var pixel_center: Vector2 = tile_map_layer.map_to_local(coord)
+		
+		# ESPER TRAINING: Create clickable control node with color background
+		var node_control := Control.new()
+		node_control.size = Vector2(TILE_SIZE, TILE_SIZE)
+		node_control.position = pixel_center - (node_control.size * 0.5)
+		node_control.mouse_filter = Control.MOUSE_FILTER_PASS
+		node_control.set_meta("node_id", node_id)
+		node_control.set_meta("node_state", _get_node_state(node_id))
+
+		# Color state is represented by node text color.
+		var state: String = _get_node_state(node_id)
+		var text_color: Color = _get_node_color(state)
+		
+		# Create label for reward text
 		var lbl := Label.new()
-		lbl.text = _format_reward(cell["data"])
+		lbl.text = _format_reward(node_data)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		
-		# Optional: Add a subtle drop shadow/outline to the text so it's readable 
-		# even if it overlaps the hex borders slightly
 		lbl.add_theme_font_size_override("font_size", 12)
-		lbl.add_theme_color_override("font_color", Color.WHITE)
+		lbl.add_theme_color_override("font_color", text_color)
 		lbl.add_theme_color_override("font_outline_color", Color.BLACK)
 		lbl.add_theme_constant_override("outline_size", 3)
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Allow input to pass through
+		node_control.add_child(lbl)
+		lbl.size = node_control.size
+		lbl.position = Vector2.ZERO
 		
-		# Add to tree FIRST to prevent Godot from overriding sizes
-		tile_map_layer.add_child(lbl)
+		# ESPER TRAINING: Add click handler for learnable and start nodes
+		if state in ["learnable", "start"]:
+			node_control.gui_input.connect(func(event: InputEvent) -> void:
+				if event is InputEventMouseButton:
+					var mb := event as InputEventMouseButton
+					if mb.button_index == MOUSE_BUTTON_LEFT:
+						if mb.pressed:
+							_node_press_id = node_id
+							_node_press_pos = mb.position
+						else:
+							# On release, check if this was a click (not a drag)
+							if _node_press_id == node_id and mb.position.distance_to(_node_press_pos) < CLICK_DRAG_THRESHOLD:
+								_on_node_clicked(node_id)
+							_node_press_id = ""
+			)
+			node_control.mouse_entered.connect(func() -> void:
+				# Slightly brighten text on hover for clickable nodes.
+				lbl.add_theme_color_override("font_color", text_color.lerp(Color.WHITE, 0.25))
+			)
+			node_control.mouse_exited.connect(func() -> void:
+				# Reset text color on exit.
+				lbl.add_theme_color_override("font_color", text_color)
+			)
 		
-		# Set dimensions SECOND
-		lbl.size = Vector2(TILE_SIZE, TILE_SIZE)
-		lbl.position = pixel_center - (lbl.size * 0.5)
-
+		tile_map_layer.add_child(node_control)
+	
 	# Wait one frame so layout sizes (header height) are resolved before centering.
 	await get_tree().process_frame
 	var header_h: float = $VBoxContainer/HeaderRow.size.y + 10.0
@@ -156,10 +229,16 @@ func _render_board() -> void:
 
 	var board_title_name: String = _summon_name if _summon_name != "" else "Summon %s" % _summon_id
 	title_label.text = "%s Board" % board_title_name
-	info_label.text = "Nodes: %d  •  Drag to pan" % cells.size()
+	info_label.text = "Nodes: %d  •  Drag to pan  •  Click to learn skills" % cells.size()
+	sp_label.text = str(int(progression.get("current_sp", 0)))
 
 func _format_reward(node_data: Dictionary) -> String:
 	var reward_value: Variant = node_data.get("reward", null)
+	var sp_cost: int = 0
+	var cost_value: Variant = node_data.get("cost", {})
+	if cost_value is Dictionary:
+		sp_cost = int(cost_value.get("SP", 0))
+	
 	if reward_value == null:
 		return "START"
 	if reward_value is Array:
@@ -171,23 +250,122 @@ func _format_reward(node_data: Dictionary) -> String:
 			# Look up skill names for ABILITY and MAGIC rewards
 			if reward_type == "ABILITY":
 				# Check active abilities first
-				var skill_data: Dictionary = DataManager.game_data_skills_ability.get(str(reward_id), {})
+				var skill_data: Dictionary = StaticData.game_data_skills_ability.get(str(reward_id), {})
 				if not skill_data.is_empty():
-					return str(skill_data.get("name", str(reward_id)))
+					var skill_name: String = str(skill_data.get("name", str(reward_id)))
+					if sp_cost > 0:
+						return "%s\n%d SP" % [skill_name, sp_cost]
+					return skill_name
 				# Then check passive abilities
-				skill_data = DataManager.game_data_skills_passive.get(str(reward_id), {})
+				skill_data = StaticData.game_data_skills_passive.get(str(reward_id), {})
 				if not skill_data.is_empty():
-					return str(skill_data.get("name", str(reward_id)))
+					var skill_name: String = str(skill_data.get("name", str(reward_id)))
+					if sp_cost > 0:
+						return "%s\n%d SP" % [skill_name, sp_cost]
+					return skill_name
 			elif reward_type == "MAGIC":
-				var skill_data: Dictionary = DataManager.game_data_skills_magic.get(str(reward_id), {})
+				var skill_data: Dictionary = StaticData.game_data_skills_magic.get(str(reward_id), {})
 				if not skill_data.is_empty():
-					return str(skill_data.get("name", str(reward_id)))
+					var skill_name: String = str(skill_data.get("name", str(reward_id)))
+					if sp_cost > 0:
+						return "%s\n%d SP" % [skill_name, sp_cost]
+					return skill_name
 			
-			# Fall back to original format for stat rewards (ATK, HP, etc.)
-			return "%s\n+%s" % [reward_type, str(reward_id)]
+			# Fall back to stat rewards format (ATK +5 on line 1, SP cost on line 2)
+			if sp_cost > 0:
+				return "%s +%s\n%d SP" % [reward_type, str(reward_id), sp_cost]
+			return "%s +%s" % [reward_type, str(reward_id)]
 		if reward_arr.size() == 1:
 			return str(reward_arr[0])
 	return "?"
+
+## ESPER TRAINING: State determination for nodes
+func _get_node_state(node_id: String) -> String:
+	"""
+	Returns the state of a node:
+	- 'learned': Node is already unlocked
+	- 'learnable': Parent is unlocked or is a START node, AND node is not yet unlocked
+	- 'unreachable': Parent is not unlocked
+	- 'start': Node is a start node (no parent)
+	"""
+	if node_id in _unlocked_board_nodes:
+		return "learned"
+	
+	var node_data: Dictionary = _board_nodes_data.get(node_id, {})
+	var parent_id_value: Variant = node_data.get("parent_node_id", null)
+	
+	# START nodes (no parent) are always learnable from the start
+	if parent_id_value == null:
+		return "start"
+	
+	var parent_id: String = str(parent_id_value)
+	
+	# Check if parent is unlocked OR if parent is a START node (no grandparent)
+	if parent_id in _unlocked_board_nodes:
+		return "learnable"
+	
+	# Check if parent is a START node (direct child of START is learnable)
+	var parent_data: Dictionary = _board_nodes_data.get(parent_id, {})
+	var grandparent_id_value: Variant = parent_data.get("parent_node_id", null)
+	if grandparent_id_value == null:
+		# Parent is a START node, so this node is learnable
+		return "learnable"
+	
+	return "unreachable"
+
+func _get_node_color(state: String) -> Color:
+	"""Returns the color for a node based on its state"""
+	match state:
+		"learned":
+			return Color.GREEN
+		"learnable":
+			return Color(0.0, 0.5, 1.0)  # Blue
+		"start":
+			return Color.GREEN  # START nodes appear as learned (always available)
+		"unreachable":
+			return Color(0.5, 0.5, 0.5)  # Grey
+	return Color.WHITE
+
+func _get_node_reward_skill_id(node_data: Dictionary) -> String:
+	"""Extracts skill ID from reward if it's an ability or magic skill"""
+	var reward_value: Variant = node_data.get("reward", null)
+	if reward_value is Array:
+		var reward_arr: Array = reward_value
+		if reward_arr.size() >= 2:
+			var reward_type: String = str(reward_arr[0])
+			if reward_type in ["ABILITY", "MAGIC"]:
+				return str(reward_arr[1])
+	return ""
+
+func _on_node_clicked(node_id: String) -> void:
+	"""Handle clicking on a board node to learn a skill"""
+	# Prevent stale drag state if a click triggers an immediate board rerender.
+	_is_panning = false
+
+	var state: String = _get_node_state(node_id)
+	
+	if state == "unreachable":
+		return
+	
+	if state == "learned":
+		return
+	
+	var node_data: Dictionary = _board_nodes_data.get(node_id, {})
+	var reward_skill_id: String = _get_node_reward_skill_id(node_data)
+
+	# Unlock the node via DataManager (handles persistence)
+	var sp_cost: int = 0
+	var cost_value: Variant = node_data.get("cost", {})
+	if cost_value is Dictionary:
+		sp_cost = int(cost_value.get("SP", 0))
+
+	var result: Dictionary = EsperService.unlock_esper_board_node(_summon_id, node_id, sp_cost, reward_skill_id)
+
+	if not bool(result.get("success", false)):
+		return
+
+	# Refresh board visuals (await the async render)
+	await _render_board()
 
 func _show_empty(message: String) -> void:
 	title_label.text = "Summon Board"

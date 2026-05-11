@@ -13,22 +13,22 @@ var _spawned_party_sprites: Array[TextureRect] = []
 func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 	user_menu_button.get_popup().id_pressed.connect(_on_user_menu_pressed)
-	if not DataManager.parties_updated.is_connected(_on_parties_updated):
-		DataManager.parties_updated.connect(_on_parties_updated)
-	if not DataManager.active_party_changed.is_connected(_on_active_party_changed):
-		DataManager.active_party_changed.connect(_on_active_party_changed)
-	if not DataManager.units_updated.is_connected(_on_units_updated):
-		DataManager.units_updated.connect(_on_units_updated)
+	if not PartyService.parties_updated.is_connected(_on_parties_updated):
+		PartyService.parties_updated.connect(_on_parties_updated)
+	if not PartyService.active_party_changed.is_connected(_on_active_party_changed):
+		PartyService.active_party_changed.connect(_on_active_party_changed)
+	if not UnitService.units_updated.is_connected(_on_units_updated):
+		UnitService.units_updated.connect(_on_units_updated)
 	_on_visibility_changed()
 	_refresh_party_sprites()
 
 func _exit_tree() -> void:
-	if DataManager.parties_updated.is_connected(_on_parties_updated):
-		DataManager.parties_updated.disconnect(_on_parties_updated)
-	if DataManager.active_party_changed.is_connected(_on_active_party_changed):
-		DataManager.active_party_changed.disconnect(_on_active_party_changed)
-	if DataManager.units_updated.is_connected(_on_units_updated):
-		DataManager.units_updated.disconnect(_on_units_updated)
+	if PartyService.parties_updated.is_connected(_on_parties_updated):
+		PartyService.parties_updated.disconnect(_on_parties_updated)
+	if PartyService.active_party_changed.is_connected(_on_active_party_changed):
+		PartyService.active_party_changed.disconnect(_on_active_party_changed)
+	if UnitService.units_updated.is_connected(_on_units_updated):
+		UnitService.units_updated.disconnect(_on_units_updated)
 
 func _on_parties_updated(_parties: Array) -> void:
 	_refresh_party_sprites()
@@ -48,7 +48,7 @@ func _clear_party_sprites() -> void:
 func _refresh_party_sprites() -> void:
 	_clear_party_sprites()
 
-	var active_party: Dictionary = DataManager.get_active_party()
+	var active_party: Dictionary = PartyService.get_active_party()
 	if active_party.is_empty():
 		return
 
@@ -84,15 +84,15 @@ func _refresh_party_sprites() -> void:
 		_spawned_party_sprites.append(combat_sprite)
 
 func _find_unit_inst(instance_id: String) -> Dictionary:
-	for unit_entry in DataManager.owned_units_ids:
+	for unit_entry in UnitService.owned_units_ids:
 		if unit_entry is Dictionary and str(unit_entry.get("instance_id", "")) == instance_id:
 			return unit_entry
 	return {}
 
 func _on_visibility_changed() -> void:
 	if visible:
-		if DataManager.last_played_dungeon_name != "":
-			var bg_path = "res://assets/battle_bg/%s.jpg" % DataManager.last_played_dungeon_name
+		if MissionService.last_played_dungeon_name != "":
+			var bg_path = "res://assets/battle_bg/%s.jpg" % MissionService.last_played_dungeon_name
 			if ResourceLoader.exists(bg_path):
 				background.texture = load(bg_path)
 				background.show()
@@ -111,5 +111,5 @@ func _on_user_menu_pressed(id: int) -> void:
 	if id == 0:
 		UIManager.push("edit_profile_ui")
 	elif id == 1:
-		DataManager.logout()
+		AccountService.logout()
 		UIManager.set_root("login_ui")

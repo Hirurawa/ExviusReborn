@@ -14,11 +14,11 @@ extends Node
 @onready var energy_time_label: Label = $header_stamina_time
 
 func _ready() -> void:
-	DataManager.rank_updated.connect(_on_rank_updated)
-	DataManager.nrg_updated.connect(_on_nrg_updated)
-	DataManager.currency_updated.connect(_on_currency_updated)
-	DataManager.account_updated.connect(_on_account_updated)
-	DataManager.data_loaded.connect(_on_data_loaded)
+	PlayerProfile.rank_updated.connect(_on_rank_updated)
+	PlayerProfile.nrg_updated.connect(_on_nrg_updated)
+	PlayerProfile.currency_updated.connect(_on_currency_updated)
+	AccountService.account_updated.connect(_on_account_updated)
+	AccountService.data_loaded.connect(_on_data_loaded)
 
 
 func _on_rank_updated(rank: int, xp: int, next_rank_xp: int) -> void:
@@ -26,7 +26,7 @@ func _on_rank_updated(rank: int, xp: int, next_rank_xp: int) -> void:
 	if next_rank_xp > 0:
 		xp_bar.max_value = next_rank_xp
 		xp_bar.value = xp
-	xp_label.text = "%d" % next_rank_xp
+	xp_label.text = "%d" % int(next_rank_xp - xp)
 
 func _on_nrg_updated(current_nrg: int, max_nrg: int, time_until_next: float) -> void:
 	if max_nrg > 0:
@@ -51,7 +51,7 @@ func _on_account_updated(username: String) -> void:
 		user_info_label.text = username
 
 func _on_data_loaded() -> void:
-	if DataManager.current_username != "":
-		user_info_label.text = DataManager.current_username
+	if AccountService.current_username != "":
+		user_info_label.text = AccountService.current_username
 	elif user_info_label.text == "":
 		user_info_label.text = "Player"

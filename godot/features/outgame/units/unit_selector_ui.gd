@@ -95,7 +95,7 @@ func _apply_scene_params() -> void:
 		return
 
 	_update_mode_ui()
-	_refresh_units_list(DataManager.owned_units_ids)
+	_refresh_units_list(UnitService.owned_units_ids)
 
 func _rebuild_exclude_set() -> void:
 	_exclude_instance_id_set.clear()
@@ -144,8 +144,8 @@ func _ready() -> void:
 	_configure_vertical_scrollbar()
 	units_list_container.columns = GRID_COLUMNS
 	units_scroll_container.resized.connect(_on_scroll_metrics_changed)
-	DataManager.units_updated.connect(_on_units_updated)
-	_refresh_units_list(DataManager.owned_units_ids)
+	UnitService.units_updated.connect(_on_units_updated)
+	_refresh_units_list(UnitService.owned_units_ids)
 
 func _on_back_pressed() -> void:
 	UIManager.pop()
@@ -203,7 +203,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			continue
 
 		var unit_id: String = unit_inst.get("unit_id", "")
-		var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+		var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 		var is_disabled_max_trust_material: bool = _is_max_trust_playable_material(unit_inst)
 		if is_disabled_max_trust_material:
 			_selected_units_map.erase(unit_instance_id)
@@ -328,7 +328,7 @@ func _on_sort_option_selected(index: int) -> void:
 		return
 
 	_current_sort_mode = selected_mode
-	_refresh_units_list(DataManager.owned_units_ids)
+	_refresh_units_list(UnitService.owned_units_ids)
 
 func _sort_units_for_display(owned_units_ids: Array) -> Array:
 	var sorted_units: Array = []
@@ -398,7 +398,7 @@ func _get_unit_display_name(unit_inst: Dictionary) -> String:
 	if unit_id == "":
 		return ""
 
-	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 	return str(unit_data.get("name", "Unknown")).to_lower()
 
 func _should_display_unit(unit_instance_id: String) -> bool:
@@ -416,7 +416,7 @@ func _is_playable_unit(unit_inst: Dictionary) -> bool:
 	if unit_id == "":
 		return false
 
-	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 	var job_id: int = int(unit_data.get("job_id", 0))
 	return job_id != EXP_UNIT_JOB_ID and job_id != TRUST_MATERIAL_JOB_ID
 
@@ -463,7 +463,7 @@ func _on_confirm_material_selection() -> void:
 		return
 
 	var ordered_selection: Array = []
-	for entry in DataManager.owned_units_ids:
+	for entry in UnitService.owned_units_ids:
 		if not (entry is Dictionary):
 			continue
 		var instance_id: String = str(entry.get("instance_id", ""))
@@ -507,14 +507,14 @@ func _get_effective_cell_width() -> int:
 	return maxi(1, mini(UNIT_CELL_W, fitted_cell_width))
 
 func _rebuild_for_layout_change() -> void:
-	_refresh_units_list(DataManager.owned_units_ids)
+	_refresh_units_list(UnitService.owned_units_ids)
 
 func _on_unit_clicked(unit_inst: Dictionary) -> void:
 	if mode == "view":
 		UIManager.push("unit_detail_ui", {"unit_inst": unit_inst})
 	elif mode == "select":
 		unit_selected.emit(unit_inst)
-		DataManager.assign_unit_to_party(target_party_index, target_slot_index, unit_inst.instance_id)
+		PartyService.assign_unit_to_party(target_party_index, target_slot_index, unit_inst.instance_id)
 		UIManager.pop()
 	elif mode == "enhance_base_selection":
 		unit_selected.emit(unit_inst)

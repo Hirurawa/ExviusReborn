@@ -63,7 +63,7 @@ func _ready() -> void:
 	map_region_option.item_selected.connect(_on_map_region_selected)
 	map_subregion_option.item_selected.connect(_on_map_subregion_selected)
 	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
-	DataManager.dungeon_missions_ready.connect(_on_dungeon_missions_ready)
+	MissionService.dungeon_missions_ready.connect(_on_dungeon_missions_ready)
 
 	_populate_world_options()
 	await _apply_latest_cleared_map_selection()
@@ -72,7 +72,7 @@ func _ready() -> void:
 	_apply_map_canvas_size(_map_canvas_base_size)
 
 func _apply_latest_cleared_map_selection() -> void:
-	var selection: Dictionary = await DataManager.get_latest_cleared_map_selection()
+	var selection: Dictionary = await MissionService.get_latest_cleared_map_selection()
 	if selection.is_empty():
 		return
 
@@ -143,8 +143,8 @@ func _populate_world_options() -> void:
 	map_world_option.set_item_metadata(0, "")
 
 	var idx = 1
-	for world_id in DataManager.game_data_worlds.keys():
-		var world_data = DataManager.game_data_worlds[world_id]
+	for world_id in StaticData.game_data_worlds.keys():
+		var world_data = StaticData.game_data_worlds[world_id]
 		var world_name = "Unknown World"
 		if world_data.has("names") and world_data.names.size() > 0 and world_data.names[0]:
 			world_name = world_data.names[0]
@@ -165,7 +165,7 @@ func _on_map_world_selected(index: int) -> void:
 	if current_selected_world == "":
 		return
 
-	var world_data = DataManager.game_data_worlds.get(current_selected_world, {})
+	var world_data = StaticData.game_data_worlds.get(current_selected_world, {})
 	var regions = world_data.get("regions", {})
 
 	map_region_option.add_item("Select a Region", 0)
@@ -193,7 +193,7 @@ func _on_map_region_selected(index: int) -> void:
 	if current_selected_region == "" or current_selected_world == "":
 		return
 
-	var world_data = DataManager.game_data_worlds.get(current_selected_world, {})
+	var world_data = StaticData.game_data_worlds.get(current_selected_world, {})
 	var regions = world_data.get("regions", {})
 	var region_data = regions.get(current_selected_region, {})
 	var subregions = region_data.get("subregions", {})
@@ -222,7 +222,7 @@ func _on_map_subregion_selected(index: int) -> void:
 	if current_selected_subregion == "" or current_selected_region == "" or current_selected_world == "":
 		return
 
-	var world_data = DataManager.game_data_worlds.get(current_selected_world, {})
+	var world_data = StaticData.game_data_worlds.get(current_selected_world, {})
 	var regions = world_data.get("regions", {})
 	var region_data = regions.get(current_selected_region, {})
 	var subregions = region_data.get("subregions", {})
@@ -238,7 +238,7 @@ func _on_map_subregion_selected(index: int) -> void:
 		dungeon_ids = [dungeons]
 
 	for dungeon_id in dungeon_ids:
-		var dungeon_data = DataManager.game_data_dungeons.get(str(dungeon_id), {})
+		var dungeon_data = StaticData.game_data_dungeons.get(str(dungeon_id), {})
 		if dungeon_data.is_empty():
 			continue
 
@@ -276,7 +276,7 @@ func _on_map_subregion_selected(index: int) -> void:
 
 func _on_dungeon_clicked(dungeon_id: String) -> void:
 	current_selected_dungeon_id = dungeon_id
-	var dungeon_data = DataManager.game_data_dungeons.get(dungeon_id, {})
+	var dungeon_data = StaticData.game_data_dungeons.get(dungeon_id, {})
 	var d_names = dungeon_data.get("names", [])
 	if d_names.size() > 0 and d_names[0]:
 		mission_dungeon_name.text = d_names[0]
@@ -296,7 +296,7 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 		mission_ids = [dungeon_missions]
 
 	for mission_id in mission_ids:
-		var mission_data = DataManager.get_mission_data_local(str(mission_id))
+		var mission_data = MissionService.get_mission_data_local(str(mission_id))
 		if mission_data.is_empty():
 			continue
 
@@ -327,7 +327,7 @@ func _on_dungeon_clicked(dungeon_id: String) -> void:
 	mission_details_popup.popup_centered()
 
 	# Lazy load actual mission data
-	DataManager.request_dungeon_missions(mission_ids)
+	MissionService.request_dungeon_missions(mission_ids)
 
 func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 	if not mission_details_popup.visible:
@@ -337,7 +337,7 @@ func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 		child.queue_free()
 
 	for mission_id in mission_ids:
-		var mission_data = DataManager.get_mission_data_local(str(mission_id))
+		var mission_data = MissionService.get_mission_data_local(str(mission_id))
 		if mission_data.is_empty():
 			continue
 
@@ -379,7 +379,7 @@ func _on_dungeon_missions_ready(mission_ids: Array) -> void:
 
 
 func _on_start_mission_pressed(mission_id: String) -> void:
-	var result: Dictionary = await DataManager.request_start_mission(mission_id)
+	var result: Dictionary = await MissionService.request_start_mission(mission_id)
 
 	if result.get("success") == true:
 		mission_details_popup.hide()

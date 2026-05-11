@@ -37,13 +37,16 @@ func _populate_data() -> void:
 		return
 
 	var unit_id: String = current_unit_inst.get("unit_id", "")
-	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 
 	name_label.text = unit_data.get("name", "Unknown")
 	level_label.text = "Level: %s" % str(int(current_unit_inst.get("level", 1)))
 
-	var final_stats: Dictionary = current_unit_inst.get("final_stats", {})
-	final_stats = final_stats.get("stats", {})
+	# Recalculate stats fresh to reflect current equipment/esper assignments,
+	# and persist back so other screens read up-to-date data.
+	var fresh_final_stats: Dictionary = StatCalculator.calculate_final_stats(current_unit_inst)
+	current_unit_inst["final_stats"] = fresh_final_stats
+	var final_stats: Dictionary = fresh_final_stats.get("stats", {})
 
 	hp_label.text = "HP: " + str(final_stats.get("HP", 0))
 	mp_label.text = "MP: " + str(final_stats.get("MP", 0))
@@ -60,5 +63,5 @@ func _on_swap_pressed() -> void:
 	UIManager.push("unit_selector_ui", {"mode": "select", "party_index": target_party_index, "slot_index": target_slot_index})
 
 func _on_remove_pressed() -> void:
-	DataManager.assign_unit_to_party(target_party_index, target_slot_index, "")
+	PartyService.assign_unit_to_party(target_party_index, target_slot_index, "")
 	UIManager.pop()

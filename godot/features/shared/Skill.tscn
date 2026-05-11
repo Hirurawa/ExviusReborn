@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cj3pqlm08tv1g" path="res://features/shared/skill.gd" id="1_4y2sa"]
 [ext_resource type="Texture2D" uid="uid://dv3a2baao2odf" path="res://assets/ui/common/button_item1.tres" id="2_vnha4"]
 [ext_resource type="Texture2D" uid="uid://cr5hhlhik3sxa" path="res://assets/ui/common/text_mp.tres" id="3_5gmq1"]
-[ext_resource type="Texture2D" path="res://assets/ui/battle/lack_mp.tres" id="4_0n4r2"]
+[ext_resource type="Texture2D" uid="uid://c1x0ttoiucs75" path="res://assets/ui/battle/lack_mp.tres" id="4_0n4r2"]
 [ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="6_66tcj"]
 
 [node name="Magic" type="Control" unique_id=174978603]
@@ -45,9 +45,9 @@ offset_left = 16.0
 offset_top = 20.0
 offset_right = 90.0
 offset_bottom = 92.0
+mouse_filter = 2
 texture = ExtResource("4_0n4r2")
 expand_mode = 1
-mouse_filter = 2
 
 [node name="unit_magic_name_text_1" type="Label" parent="." unique_id=1087739549]
 layout_mode = 0

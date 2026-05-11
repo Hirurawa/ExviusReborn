@@ -12,8 +12,8 @@ const INTRO_MISSION_ID: String = "1110100"
 func _ready() -> void:
 	register_button.pressed.connect(_on_register_button_pressed)
 	back_to_login_button.pressed.connect(_on_back_to_login_button_pressed)
-	DataManager.register_success.connect(_on_register_success)
-	DataManager.register_failed.connect(_on_register_failed)
+	AccountService.register_success.connect(_on_register_success)
+	AccountService.register_failed.connect(_on_register_failed)
 
 func _on_register_button_pressed() -> void:
 	var username: String = username_input.text.strip_edges()
@@ -25,13 +25,13 @@ func _on_register_button_pressed() -> void:
 		return
 
 	feedback_label.text = "Registering..."
-	DataManager.register(email, password, username)
+	AccountService.register(email, password, username)
 
 func _on_register_success() -> void:
 	feedback_label.text = "Registration successful!"
 	UIManager.push("game_ui")
 
-	var mission_result: Dictionary = await DataManager.request_start_mission(INTRO_MISSION_ID)
+	var mission_result: Dictionary = await MissionService.request_start_mission(INTRO_MISSION_ID)
 	if mission_result.get("success", false) == true:
 		UIManager.push("combat_ui", {"mission_id": INTRO_MISSION_ID})
 	else:

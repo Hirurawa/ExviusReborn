@@ -83,15 +83,15 @@ func _ready() -> void:
 	unit_detail_magic_btn.pressed.connect(_on_unit_detail_magic_btn_pressed)
 	unit_detail_special_btn.pressed.connect(_on_unit_detail_special_btn_pressed)
 
-	if not DataManager.units_updated.is_connected(_on_units_updated):
-		DataManager.units_updated.connect(_on_units_updated)
+	if not UnitService.units_updated.is_connected(_on_units_updated):
+		UnitService.units_updated.connect(_on_units_updated)
 
 	_apply_current_mode_state()
 
 func _exit_tree() -> void:
 	_stop_idle_animation()
-	if DataManager.units_updated.is_connected(_on_units_updated):
-		DataManager.units_updated.disconnect(_on_units_updated)
+	if UnitService.units_updated.is_connected(_on_units_updated):
+		UnitService.units_updated.disconnect(_on_units_updated)
 
 func init_scene(params: Dictionary) -> void:
 	if params.has("unit_inst"):
@@ -113,7 +113,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_stop_idle_animation()
 
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	var unit_data: Dictionary = DataManager.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 
 	unit_detail_name_label.text = str(unit_data.get("name", "Unknown"))
 
@@ -136,7 +136,11 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var next_xp: int = int(unit_inst.get("next_xp", 0))
 	unit_detail_level_label.text = "Lvl %d/%d  next %d" % [level, max_level, next_xp]
 
-	var final_stats: Dictionary = unit_inst.get("final_stats", {}).get("stats", {})
+	# Recalculate stats fresh to reflect current equipment/esper assignments,
+	# and persist back so other screens (enhance_ui, etc.) read up-to-date data.
+	var fresh_final_stats: Dictionary = StatCalculator.calculate_final_stats(unit_inst)
+	unit_inst["final_stats"] = fresh_final_stats
+	var final_stats: Dictionary = fresh_final_stats.get("stats", {})
 	var hp: int = int(final_stats.get("HP", 0))
 	var mp: int = int(final_stats.get("MP", 0))
 	var atk: int = int(final_stats.get("ATK", 0))
@@ -158,9 +162,9 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	unit_detail_spr_max_value.text = "/%d" % spr
 
 	_populate_equip_icons_grid(unit_data)
-	_populate_skills(unit_inst, unit_data)
+	_populate_skills(fresh_final_stats)
 	_populate_equipment_slots(unit_inst, unit_data)
-	_populate_resistances(unit_inst)
+	_populate_resistances(fresh_final_stats)
 	_populate_lb_and_tmr(unit_inst, unit_data)
 	_apply_current_mode_state()
 
@@ -268,8 +272,8 @@ func _run_attack_once(token: int, unit_id: String, frames: Array[Texture2D], fra
 func _stop_idle_animation() -> void:
 	_idle_anim_token += 1
 
-func _populate_resistances(unit_inst: Dictionary) -> void:
-	var element_resist: Dictionary = unit_inst.get("final_stats", {}).get("element_resist", {})
+func _populate_resistances(final_stats: Dictionary) -> void:
+	var element_resist: Dictionary = final_stats.get("element_resist", {})
 	for elem in StatCalculator.ELEMENTS:
 		if elem_resist_grid.has_node(elem):
 			var resist_panel: Node = elem_resist_grid.get_node(elem)
@@ -277,7 +281,7 @@ func _populate_resistances(unit_inst: Dictionary) -> void:
 			var val: int = int(element_resist.get(elem, 0))
 			label.text = str(val) + "%" if val != 0 else "-"
 
-	var status_resist: Dictionary = unit_inst.get("final_stats", {}).get("status_resist", {})
+	var status_resist: Dictionary = final_stats.get("status_resist", {})
 	var status_node_map: Dictionary = {
 		"POISON": "POISON",
 		"BLIND": "BLIND",
@@ -301,8 +305,8 @@ func _populate_resistances(unit_inst: Dictionary) -> void:
 
 func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	var lb_id: String = str(int(unit_inst.get("limitburst_id", "0")))
-	if lb_id != "0" and DataManager.game_data_limitbursts.has(lb_id):
-		var lb_name: String = str(DataManager.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst"))
+	if lb_id != "0" and StaticData.game_data_limitbursts.has(lb_id):
+		var lb_name: String = str(StaticData.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst"))
 		lb_name_label.text = "Limit Burst: %s" % lb_name
 	else:
 		lb_name_label.text = "Limit Burst: None"
@@ -320,12 +324,12 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	var tmr_name: String = "Unknown Reward"
 	var icon_path: String = ""
 
-	if tmr_type == "EQUIP" and DataManager.game_data_equipment.has(tmr_id):
-		var eq_data: Dictionary = DataManager.game_data_equipment[tmr_id]
+	if tmr_type == "EQUIP" and StaticData.game_data_equipment.has(tmr_id):
+		var eq_data: Dictionary = StaticData.game_data_equipment[tmr_id]
 		tmr_name = str(eq_data.get("name", tmr_name))
 		icon_path = "res://assets/equip/" + str(eq_data.get("icon", "0.png"))
-	elif tmr_type == "MATERIA" and DataManager.game_data_materia.has(tmr_id):
-		var mat_data: Dictionary = DataManager.game_data_materia[tmr_id]
+	elif tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
+		var mat_data: Dictionary = StaticData.game_data_materia[tmr_id]
 		tmr_name = str(mat_data.get("name", tmr_name))
 		icon_path = "res://assets/materia/" + str(mat_data.get("icon", "0.png"))
 
@@ -335,39 +339,39 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	else:
 		tm_icon_rect.texture = null
 
-func _populate_skills(unit_inst: Dictionary, unit_data: Dictionary) -> void:
+func _populate_skills(final_stats_profile: Dictionary) -> void:
 	for child in unit_detail_magic_grid.get_children():
 		child.queue_free()
 	for child in unit_detail_special_grid.get_children():
 		child.queue_free()
 
-	if not unit_inst.has("final_stats") or not unit_inst["final_stats"].has("skills"):
+	if not final_stats_profile.has("skills"):
 		return
 
-	var all_skills: Dictionary = unit_inst["final_stats"]["skills"]
+	var all_skills: Dictionary = final_stats_profile["skills"]
 
 	var magic_list: Array = all_skills.get("magic", [])
 	for sk in magic_list:
 		var sk_id: String = str(sk.get("id", ""))
-		if DataManager.game_data_skills_magic.has(sk_id):
+		if StaticData.game_data_skills_magic.has(sk_id):
 			var panel: Control = MagicScene.instantiate()
-			panel.setup_from_skill_data(DataManager.game_data_skills_magic[sk_id], str(sk.get("source", "Trait")), false)
+			panel.setup_from_skill_data(StaticData.game_data_skills_magic[sk_id], str(sk.get("source", "Trait")), false)
 			unit_detail_magic_grid.add_child(panel)
 
 	var ability_list: Array = all_skills.get("ability", [])
 	for sk in ability_list:
 		var sk_id: String = str(sk.get("id", ""))
-		if DataManager.game_data_skills_ability.has(sk_id):
+		if StaticData.game_data_skills_ability.has(sk_id):
 			var panel: Control = MagicScene.instantiate()
-			panel.setup_from_skill_data(DataManager.game_data_skills_ability[sk_id], str(sk.get("source", "Trait")), false)
+			panel.setup_from_skill_data(StaticData.game_data_skills_ability[sk_id], str(sk.get("source", "Trait")), false)
 			unit_detail_special_grid.add_child(panel)
 
 	var passive_list: Array = all_skills.get("passive", [])
 	for sk in passive_list:
 		var sk_id: String = str(sk.get("id", ""))
-		if DataManager.game_data_skills_passive.has(sk_id):
+		if StaticData.game_data_skills_passive.has(sk_id):
 			var panel: Control = MagicScene.instantiate()
-			panel.setup_from_skill_data(DataManager.game_data_skills_passive[sk_id], str(sk.get("source", "Trait")), false)
+			panel.setup_from_skill_data(StaticData.game_data_skills_passive[sk_id], str(sk.get("source", "Trait")), false)
 			unit_detail_special_grid.add_child(panel)
 
 func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> void:
@@ -404,8 +408,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		if slot_info.id in ["r_hand", "l_hand"]:
 			var other_item_id: String = str(equipment.get(other_hand, ""))
 			if other_item_id != "":
-				var other_template_id: String = DataManager.get_equipment_template_id(other_item_id)
-				var other_item_data: Dictionary = DataManager.game_data_equipment.get(other_template_id, {})
+				var other_template_id: String = InventoryService.get_equipment_template_id(other_item_id)
+				var other_item_data: Dictionary = StaticData.game_data_equipment.get(other_template_id, {})
 				if bool(other_item_data.get("is_twohanded", false)):
 					is_locked = true
 
@@ -414,8 +418,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			display_options["detail_text"] = "Locked"
 		else:
 			if item_id != "":
-				var template_id: String = DataManager.get_equipment_template_id(item_id)
-				item_data = DataManager.game_data_equipment.get(template_id, {}).duplicate()
+				var template_id: String = InventoryService.get_equipment_template_id(item_id)
+				item_data = StaticData.game_data_equipment.get(template_id, {}).duplicate()
 			else:
 				item_data = {"name": "", "slot": "", "type": "", "stats": {}}
 				display_options["detail_text"] = "Empty"
@@ -446,11 +450,11 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 
 		var _is_materia_slot_item: bool = false
 		if item_id != "":
-			var template_id: String = DataManager.get_equipment_template_id(item_id)
-			if DataManager.game_data_equipment.has(template_id):
-				item_data = DataManager.game_data_equipment.get(template_id, {}).duplicate()
-			elif DataManager.game_data_materia.has(template_id):
-				item_data = DataManager.game_data_materia.get(template_id, {}).duplicate()
+			var template_id: String = InventoryService.get_equipment_template_id(item_id)
+			if StaticData.game_data_equipment.has(template_id):
+				item_data = StaticData.game_data_equipment.get(template_id, {}).duplicate()
+			elif StaticData.game_data_materia.has(template_id):
+				item_data = StaticData.game_data_materia.get(template_id, {}).duplicate()
 				_is_materia_slot_item = true
 			else:
 				item_data = {"name": "", "slot": "", "type": "", "stats": {}}
@@ -587,7 +591,7 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 		child.queue_free()
 
 	var allowed_equip: Array = unit_data.get("equip", [])
-	var equip_icons_data: Dictionary = DataManager.game_data_equipment_icons
+	var equip_icons_data: Dictionary = StaticData.game_data_equipment_icons
 	var valid_keys: Array = []
 
 	for key in equip_icons_data.keys():

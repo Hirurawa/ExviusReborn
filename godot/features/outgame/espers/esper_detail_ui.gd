@@ -3,6 +3,7 @@ extends Control
 @onready var back_button: TextureButton = $UnitNamebgChara2/BackButton
 @onready var board_button: TextureButton = $btn_board
 @onready var powerup_button: TextureButton = $btn_powerup
+@onready var reset_button: TextureButton = $btn_reset
 @onready var title_label: Label = $UnitNamebgChara2/Title
 @onready var summon_name_bg: TextureRect = $summon_mix_name_bg
 @onready var summon_name_label: Label = $summon_mix_name_label
@@ -13,6 +14,7 @@ extends Control
 @onready var def_label: Label = $status_frame/label_def
 @onready var mag_label: Label = $status_frame/label_int
 @onready var mind_label: Label = $status_frame/label_mind
+@onready var cp_label: Label = $label_cp
 
 var _summon_id: String = ""
 var _summon_name: String = ""
@@ -21,7 +23,16 @@ func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	board_button.pressed.connect(_on_board_pressed)
 	powerup_button.pressed.connect(_on_powerup_pressed)
+	reset_button.pressed.connect(_on_reset_pressed)
+	var updated_callable: Callable = Callable(self, "_on_espers_updated")
+	if not EsperService.espers_updated.is_connected(updated_callable):
+		EsperService.espers_updated.connect(updated_callable)
 	_refresh_ui()
+
+func _exit_tree() -> void:
+	var updated_callable: Callable = Callable(self, "_on_espers_updated")
+	if EsperService.espers_updated.is_connected(updated_callable):
+		EsperService.espers_updated.disconnect(updated_callable)
 
 func init_scene(params: Dictionary) -> void:
 	_summon_id = str(params.get("summon_id", "")).strip_edges()
@@ -41,13 +52,18 @@ func _refresh_ui() -> void:
 	summon_name_label.visible = true
 	summon_name_label.text = display_name
 
-	var progression: Dictionary = DataManager.get_esper_progression(_summon_id)
+	var progression: Dictionary = EsperService.get_esper_progression(_summon_id)
 	var rank: int = maxi(1, int(progression.get("rank", 1)))
 	var level: int = maxi(1, int(progression.get("level", 1)))
+	var current_sp: int = maxi(0, int(progression.get("current_sp", 0)))
 	level_label.text = "Lv. %d (R%d)" % [level, rank]
+	cp_label.text = str(current_sp)
 
-	var summon_data: Dictionary = DataManager.game_data_summons.get(_summon_id, {})
-	var stats: Dictionary = _extract_stats_for_rank(summon_data, rank)
+	var summon_data: Dictionary = StaticData.game_data_summons.get(_summon_id, {})
+	var stats: Dictionary = _extract_stats_for_level_and_rank(summon_data, rank, level)
+	var board_stat_bonus: Dictionary = EsperService.get_esper_board_stat_bonuses(_summon_id)
+	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
+		stats[stat_key] = int(stats.get(stat_key, 0)) + int(board_stat_bonus.get(stat_key, 0))
 	hp_label.text = str(stats.get("HP", 0))
 	mp_label.text = str(stats.get("MP", 0))
 	atk_label.text = str(stats.get("ATK", 0))
@@ -55,7 +71,35 @@ func _refresh_ui() -> void:
 	mag_label.text = str(stats.get("MAG", 0))
 	mind_label.text = str(stats.get("SPR", 0))
 
-func _extract_stats_for_rank(summon_data: Dictionary, rank: int) -> Dictionary:
+func _resolve_rank_max_level(entry: Dictionary) -> int:
+	var cp_pattern_value: Variant = entry.get("cp_pattern", [])
+	if cp_pattern_value is Array:
+		var cp_pattern: Array = cp_pattern_value
+		if not cp_pattern.is_empty():
+			return maxi(1, cp_pattern.size())
+	return 1
+
+func _interpolate_stat_value(value: Variant, level: int, rank_max_level: int) -> int:
+	if value is Array:
+		var values: Array = value
+		if values.is_empty():
+			return 0
+		if values.size() == 1:
+			return int(values[0])
+
+		var min_value: float = float(values[0])
+		var max_value: float = float(values[1])
+		var clamped_max_level: int = maxi(1, rank_max_level)
+		var clamped_level: int = clampi(level, 1, clamped_max_level)
+		if clamped_max_level <= 1:
+			return int(round(min_value))
+
+		var interpolated: float = min_value + float(clamped_level - 1) * (max_value - min_value) / float(clamped_max_level - 1)
+		return int(round(interpolated))
+
+	return int(value)
+
+func _extract_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level: int) -> Dictionary:
 	var entries_value: Variant = summon_data.get("entries", [])
 	if not (entries_value is Array):
 		return {}
@@ -68,24 +112,23 @@ func _extract_stats_for_rank(summon_data: Dictionary, rank: int) -> Dictionary:
 	var selected_entry: Variant = entries[clamped_rank_index]
 	if not (selected_entry is Dictionary):
 		return {}
+	var entry_data: Dictionary = selected_entry
+	var rank_max_level: int = _resolve_rank_max_level(entry_data)
 
-	var stats_value: Variant = selected_entry.get("stats", {})
+	var stats_value: Variant = entry_data.get("stats", {})
 	if not (stats_value is Dictionary):
 		return {}
 
 	var raw_stats: Dictionary = stats_value
 	var resolved_stats: Dictionary = {}
 	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
-		resolved_stats[stat_key] = _extract_stat_value(raw_stats.get(stat_key, 0))
+		resolved_stats[stat_key] = _interpolate_stat_value(raw_stats.get(stat_key, 0), level, rank_max_level)
 	return resolved_stats
 
-func _extract_stat_value(value: Variant) -> int:
-	if value is Array:
-		var values: Array = value
-		if values.is_empty():
-			return 0
-		return int(values[0])
-	return int(value)
+func _on_espers_updated(_espers: Array) -> void:
+	if _summon_id == "":
+		return
+	_refresh_ui()
 
 func _on_back_pressed() -> void:
 	UIManager.pop()
@@ -101,3 +144,13 @@ func _on_powerup_pressed() -> void:
 		"summon_id": _summon_id,
 		"summon_name": _summon_name
 	})
+
+func _on_reset_pressed() -> void:
+	if _summon_id == "":
+		return
+
+	var result: Dictionary = EsperService.reset_esper_board_progression(_summon_id)
+	if not bool(result.get("success", false)):
+		return
+
+	_refresh_ui()

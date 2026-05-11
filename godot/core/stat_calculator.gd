@@ -55,6 +55,149 @@ func _accumulate_named_resists(source: Variant, targets: Dictionary, ordered_key
 			if typeof(resist_value) in [TYPE_INT, TYPE_FLOAT]:
 				targets[target_key] += int(resist_value)
 
+func _resolve_esper_rank_max_level(entry: Dictionary) -> int:
+	var cp_pattern_value: Variant = entry.get("cp_pattern", [])
+	if cp_pattern_value is Array:
+		var cp_pattern: Array = cp_pattern_value
+		if not cp_pattern.is_empty():
+			return maxi(1, cp_pattern.size())
+	return 1
+
+func _interpolate_esper_stat_value(value: Variant, level: int, rank_max_level: int) -> int:
+	if value is Array:
+		var values: Array = value
+		if values.is_empty():
+			return 0
+		if values.size() == 1:
+			return int(values[0])
+
+		var min_value: float = float(values[0])
+		var max_value: float = float(values[1])
+		var clamped_max_level: int = maxi(1, rank_max_level)
+		var clamped_level: int = clampi(level, 1, clamped_max_level)
+		if clamped_max_level <= 1:
+			return int(round(min_value))
+
+		var interpolated: float = min_value + float(clamped_level - 1) * (max_value - min_value) / float(clamped_max_level - 1)
+		return int(round(interpolated))
+
+	return int(value)
+
+func _extract_esper_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level: int) -> Dictionary:
+	var entries_value: Variant = summon_data.get("entries", [])
+	if not (entries_value is Array):
+		return {}
+
+	var entries: Array = entries_value
+	if entries.is_empty():
+		return {}
+
+	var rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
+	var selected_entry: Variant = entries[rank_index]
+	if not (selected_entry is Dictionary):
+		return {}
+	var entry_data: Dictionary = selected_entry
+	var rank_max_level: int = _resolve_esper_rank_max_level(entry_data)
+
+	var stats_value: Variant = entry_data.get("stats", {})
+	if not (stats_value is Dictionary):
+		return {}
+
+	var raw_stats: Dictionary = stats_value
+	var resolved_stats: Dictionary = {}
+	for stat_name in CORE_STATS:
+		resolved_stats[stat_name] = _interpolate_esper_stat_value(raw_stats.get(stat_name, 0), level, rank_max_level)
+	return resolved_stats
+
+func _resolve_active_party_slot_for_unit(unit_instance: Dictionary) -> int:
+	var instance_id: String = str(unit_instance.get("instance_id", "")).strip_edges()
+	if instance_id == "":
+		return -1
+
+	var active_party: Dictionary = PartyService.get_active_party()
+	if active_party.is_empty():
+		return -1
+
+	var unit_slots: Variant = active_party.get("units", [])
+	if not (unit_slots is Array):
+		return -1
+
+	var slots: Array = unit_slots
+	for i in range(slots.size()):
+		if str(slots[i]) == instance_id:
+			return i
+
+	return -1
+
+func _resolve_active_party_esper_id_for_unit(unit_instance: Dictionary) -> String:
+	var unit_slot_index: int = _resolve_active_party_slot_for_unit(unit_instance)
+	if unit_slot_index < 0:
+		return ""
+
+	var active_party: Dictionary = PartyService.get_active_party()
+	if active_party.is_empty():
+		return ""
+
+	var party_espers: Variant = active_party.get("espers", [])
+	if not (party_espers is Array):
+		return ""
+
+	var espers: Array = party_espers
+	if unit_slot_index >= espers.size():
+		return ""
+
+	return str(espers[unit_slot_index]).strip_edges()
+
+func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> Array:
+	var unlocked_skill_ids: Array = []
+
+	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
+	if summon_id == "":
+		return unlocked_skill_ids
+
+	var progression: Dictionary = EsperService.get_esper_progression(summon_id)
+	var unlocked_raw: Variant = progression.get("unlocked_skills", [])
+	if not (unlocked_raw is Array):
+		return unlocked_skill_ids
+
+	for skill_id in unlocked_raw:
+		var normalized_skill_id: String = str(skill_id).strip_edges()
+		if normalized_skill_id == "":
+			continue
+		if not normalized_skill_id.is_valid_int():
+			continue
+
+		# Esper board progression can contain multiple reward types; only surface
+		# skills that are represented in the shared magic/ability datasets.
+		if StaticData.game_data_skills_magic.has(normalized_skill_id) or StaticData.game_data_skills_ability.has(normalized_skill_id):
+			unlocked_skill_ids.append(int(normalized_skill_id))
+
+	return unlocked_skill_ids
+
+func _compute_active_party_esper_flat_bonus(unit_instance: Dictionary) -> Dictionary:
+	var bonus: Dictionary = {}
+	for stat_name in CORE_STATS:
+		bonus[stat_name] = 0
+
+	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
+	if summon_id == "":
+		return bonus
+	if not StaticData.game_data_summons.has(summon_id):
+		return bonus
+
+	var progression: Dictionary = EsperService.get_esper_progression(summon_id)
+	var rank: int = maxi(1, int(progression.get("rank", 1)))
+	var level: int = maxi(1, int(progression.get("level", 1)))
+	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	var esper_stats: Dictionary = _extract_esper_stats_for_level_and_rank(summon_data, rank, level)
+	var board_stat_bonus: Dictionary = EsperService.get_esper_board_stat_bonuses(summon_id)
+
+	for stat_name in CORE_STATS:
+		var esper_stat_value: float = float(esper_stats.get(stat_name, 0)) + float(board_stat_bonus.get(stat_name, 0))
+		bonus[stat_name] = int(floor(esper_stat_value * 0.01))
+
+	return bonus
+
 func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var final_profile = {
 		"stats": {
@@ -162,12 +305,12 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	for slot_id in equipment:
 		var item_id = equipment[slot_id]
 		if item_id != null and item_id != "":
-			var template_id = DataManager.get_equipment_template_id(item_id)
+			var template_id = InventoryService.get_equipment_template_id(item_id)
 			var item_data: Dictionary = {}
-			if DataManager.game_data_equipment.has(template_id):
-				item_data = DataManager.game_data_equipment[template_id]
-			elif DataManager.game_data_materia.has(template_id):
-				item_data = DataManager.game_data_materia[template_id]
+			if StaticData.game_data_equipment.has(template_id):
+				item_data = StaticData.game_data_equipment[template_id]
+			elif StaticData.game_data_materia.has(template_id):
+				item_data = StaticData.game_data_materia[template_id]
 			else:
 				push_error("CRITICAL ERROR: template_id not found in equipment or materia data: " + str(template_id))
 				continue
@@ -184,20 +327,28 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			if equip_skills != null:
 				for skill_id in equip_skills:
 					raw_skills.append({"id": skill_id, "source": "Equip"})
+
+	var esper_flat_bonus: Dictionary = _compute_active_party_esper_flat_bonus(unit_instance)
+	for stat_name in CORE_STATS:
+		flat_mods[stat_name] += int(esper_flat_bonus.get(stat_name, 0))
+
+	var esper_unlocked_skills: Array = _collect_active_party_esper_unlocked_skills(unit_instance)
+	for skill_id in esper_unlocked_skills:
+		raw_skills.append({"id": skill_id, "source": "Esper"})
 				
 	# Categorize skills
 	for raw_skill in raw_skills:
 		var skill_id_str = str(raw_skill["id"])
 		var skill_entry = {"id": int(raw_skill["id"]), "source": raw_skill["source"]}
 		
-		if DataManager.game_data_skills_magic.has(skill_id_str):
+		if StaticData.game_data_skills_magic.has(skill_id_str):
 			final_profile["skills"]["magic"].append(skill_entry)
-		elif DataManager.game_data_skills_ability.has(skill_id_str):
+		elif StaticData.game_data_skills_ability.has(skill_id_str):
 			final_profile["skills"]["ability"].append(skill_entry)
-		elif DataManager.game_data_skills_passive.has(skill_id_str):
+		elif StaticData.game_data_skills_passive.has(skill_id_str):
 			final_profile["skills"]["passive"].append(skill_entry)
-			var skill_data = DataManager.game_data_skills_passive.get(skill_id_str)
-			var parsed_passive = DataManager.parse_passive_effects(skill_data)
+			var skill_data = StaticData.game_data_skills_passive.get(skill_id_str)
+			var parsed_passive = SkillResolver.parse_passive_effects(skill_data)
 			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
 			for e in parsed_passive.get("effects", []):
 				if(e.get("type") == "STAT_BOOST_PCT"):

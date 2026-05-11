@@ -58,18 +58,18 @@ func _ready() -> void:
 	for i in range(min(COMBAT_SLOT_COUNT, _frame_buttons.size())):
 		_frame_buttons[i].pressed.connect(_on_item_frame_pressed.bind(i))
 
-	if not DataManager.combat_items_updated.is_connected(_on_combat_items_updated):
-		DataManager.combat_items_updated.connect(_on_combat_items_updated)
-	if not DataManager.items_updated.is_connected(_on_items_updated):
-		DataManager.items_updated.connect(_on_items_updated)
+	if not CombatItemsService.combat_items_updated.is_connected(_on_combat_items_updated):
+		CombatItemsService.combat_items_updated.connect(_on_combat_items_updated)
+	if not InventoryService.items_updated.is_connected(_on_items_updated):
+		InventoryService.items_updated.connect(_on_items_updated)
 
 	_refresh_slot_icons()
 
 func _exit_tree() -> void:
-	if DataManager.combat_items_updated.is_connected(_on_combat_items_updated):
-		DataManager.combat_items_updated.disconnect(_on_combat_items_updated)
-	if DataManager.items_updated.is_connected(_on_items_updated):
-		DataManager.items_updated.disconnect(_on_items_updated)
+	if CombatItemsService.combat_items_updated.is_connected(_on_combat_items_updated):
+		CombatItemsService.combat_items_updated.disconnect(_on_combat_items_updated)
+	if InventoryService.items_updated.is_connected(_on_items_updated):
+		InventoryService.items_updated.disconnect(_on_items_updated)
 
 func _on_category_button_pressed(category: ItemCategory) -> void:
 	UIManager.push("item_category_list_ui", {"category": _get_category_key(category)})
@@ -82,7 +82,7 @@ func _on_item_frame_pressed(slot_index: int) -> void:
 	})
 
 func _on_reset_pressed() -> void:
-	DataManager.clear_all_combat_items()
+	CombatItemsService.clear_all()
 
 func _on_combat_items_updated(slots: Array) -> void:
 	_refresh_slot_icons(slots)
@@ -91,8 +91,8 @@ func _on_items_updated(_items: Dictionary) -> void:
 	_refresh_slot_icons()
 
 func _refresh_slot_icons(slots: Array = []) -> void:
-	var selected_slots: Array = slots if not slots.is_empty() else DataManager.combat_items
-	var stackables: Dictionary = DataManager.owned_items.get("stackables", {})
+	var selected_slots: Array = slots if not slots.is_empty() else CombatItemsService.combat_items
+	var stackables: Dictionary = InventoryService.owned_items.get("stackables", {})
 
 	for i in range(min(COMBAT_SLOT_COUNT, _frame_icons.size())):
 		var icon_rect: TextureRect = _frame_icons[i]
@@ -107,10 +107,10 @@ func _refresh_slot_icons(slots: Array = []) -> void:
 			continue
 		if int(stackables.get(item_id, 0)) <= 0:
 			continue
-		if not DataManager.game_data_items.has(item_id):
+		if not StaticData.game_data_items.has(item_id):
 			continue
 
-		var item_data: Dictionary = DataManager.game_data_items.get(item_id, {})
+		var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
 		var icon_name: String = str(item_data.get("icon", ""))
 		if icon_name == "":
 			continue

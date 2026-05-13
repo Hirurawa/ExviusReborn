@@ -5,12 +5,17 @@ signal pressed
 const ICON_BASE_PATH: String = "res://assets/abilities/"
 const BUTTON_ITEM_BACKGROUND: Texture2D = preload("res://assets/ui/common/button_item1.tres")
 const BUTTON_LIMIT_BACKGROUND: Texture2D = preload("res://assets/ui/common/button_limit1.tres")
+const BUTTON_ESPER_BACKGROUND: Texture2D = preload("res://assets/ui/common/button_summag1.tres")
 const LACK_MP_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_mp.tres")
 const LACK_LIMIT_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_limit.tres")
+const LACK_SUMMON_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_summon.tres")
 
 const REASON_NONE: String = ""
 const REASON_LACK_MP: String = "lack_mp"
 const REASON_LACK_LIMIT: String = "lack_limit"
+const ROLE_STANDARD: String = "standard"
+const ROLE_LIMITBURST: String = "limitburst"
+const ROLE_ESPER: String = "esper_skill"
 
 @onready var background_rect: TextureRect = $unit_magic_bg_1
 @onready var category_rect: TextureRect = $unit_magic_category_1
@@ -32,14 +37,14 @@ func _ready() -> void:
 	level_icon.hide()
 	level_banner.hide()
 	level_label.hide()
-	_apply_skill_role_style(false)
+	_apply_skill_role_style(ROLE_STANDARD)
 	_apply_action_state(true, REASON_NONE)
 
 func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_button: bool = false) -> void:
 	if not is_node_ready():
 		await ready
 
-	_apply_skill_role_style(false)
+	_apply_skill_role_style(ROLE_STANDARD)
 	_apply_action_state(true, REASON_NONE)
 
 	name_label.text = str(skill_data.get("name", "Unknown Magic"))
@@ -89,7 +94,7 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 		level_banner.hide()
 		level_label.hide()
 		
-	detail_label.text = _build_effect_text(skill_data)
+	detail_label.text = _build_description_text(skill_data)
 	
 	action_button.visible = is_button
 	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if is_button else Control.MOUSE_FILTER_IGNORE
@@ -107,10 +112,10 @@ func set_action_enabled(enabled: bool) -> void:
 		_disabled_reason = REASON_NONE
 	_apply_action_state(enabled, _disabled_reason)
 
-func set_skill_role_style(is_limitburst: bool) -> void:
+func set_skill_role_style(role_type: String) -> void:
 	if not is_node_ready():
 		await ready
-	_apply_skill_role_style(is_limitburst)
+	_apply_skill_role_style(role_type)
 
 func set_action_availability(enabled: bool, disabled_reason: String = REASON_NONE) -> void:
 	if not is_node_ready():
@@ -118,10 +123,15 @@ func set_action_availability(enabled: bool, disabled_reason: String = REASON_NON
 	_disabled_reason = disabled_reason if not enabled else REASON_NONE
 	_apply_action_state(enabled, _disabled_reason)
 
-func _apply_skill_role_style(is_limitburst: bool) -> void:
+func _apply_skill_role_style(role_type: String) -> void:
 	if background_rect == null:
 		return
-	background_rect.texture = BUTTON_LIMIT_BACKGROUND if is_limitburst else BUTTON_ITEM_BACKGROUND
+	if role_type == ROLE_LIMITBURST:
+		background_rect.texture = BUTTON_LIMIT_BACKGROUND
+	elif role_type == ROLE_ESPER:
+		background_rect.texture = BUTTON_ESPER_BACKGROUND
+	else:
+		background_rect.texture = BUTTON_ITEM_BACKGROUND
 
 func _apply_action_state(enabled: bool, disabled_reason: String) -> void:
 	if action_button != null:
@@ -146,7 +156,11 @@ func _build_mp_text(skill_data: Dictionary) -> String:
 		return str(int(cost["MP"]))
 	return "--"
 
-func _build_effect_text(skill_data: Dictionary) -> String:
+func _build_description_text(skill_data: Dictionary) -> String:
+	var description_text: String = str(skill_data.get("description", "")).strip_edges()
+	if description_text != "":
+		return description_text
+
 	var effects: Variant = skill_data.get("effects", [])
 	if effects is Array and not effects.is_empty():
 		var first_effect: Variant = effects[0]

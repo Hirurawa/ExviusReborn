@@ -39,7 +39,7 @@ func _setup_tileset() -> void:
 	var source := TileSetAtlasSource.new()
 	#source.texture = tex
 	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	source.create_tile(TILE_ATLAS_COORD)
+	#source.create_tile(TILE_ATLAS_COORD)
 	var ts := TileSet.new()
 	ts.tile_shape = TileSet.TILE_SHAPE_HEXAGON
 	#ts.tile_layout = TileSet.TILE_LAYOUT_STACKED

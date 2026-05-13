@@ -3,7 +3,7 @@ extends Node
 signal patch_progress(file_name: String, status: String)
 signal patch_complete
 
-var files_to_patch: Array[String] = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons", "monsters", "summons", "summons_boards", "summons_exp_patterns", "summons_stat_patterns"]
+var files_to_patch: Array[String] = ["units", "items", "worlds", "dungeons", "missions", "skills_ability", "skills_magic", "skills_passive", "equipment", "limitbursts", "materia", "equipment-icons", "monsters", "summons", "summons_boards", "summons_exp_patterns", "summons_stat_patterns", "unit_exp_patterns", "rank_exp"]
 var current_patch_index: int = 0
 const BUNDLED_STATIC_VERSION: String = "bundled-v1"
 const BUNDLED_STATIC_DIRS: Array[String] = ["res://assets/static_data", "res://assets"]
@@ -11,9 +11,12 @@ const BUNDLED_STATIC_DIRS: Array[String] = ["res://assets/static_data", "res://a
 var cached_data: Dictionary = {}
 
 func _ready() -> void:
-	# Create data dir if it doesn't exist
+	_ensure_user_data_dir()
+
+func _ensure_user_data_dir() -> void:
+	# Create user://data for local static cache files (json/csv).
 	var dir: DirAccess = DirAccess.open("user://")
-	if not dir.dir_exists("data"):
+	if dir and not dir.dir_exists("data"):
 		dir.make_dir("data")
 
 func start_patching() -> void:
@@ -37,6 +40,7 @@ func _cache_exists(file_type: String) -> bool:
 	return FileAccess.file_exists("user://data/%s.json" % file_type)
 
 func _save_to_cache(file_type: String, json_string: String) -> void:
+	_ensure_user_data_dir()
 	var path: String = "user://data/%s.json" % file_type
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file:
@@ -128,67 +132,113 @@ func _resolve_source_path(file_type: String) -> String:
 
 	return ""
 
+func _build_static_data_candidates(file_name: String) -> PackedStringArray:
+	var candidates: PackedStringArray = []
+	for base_dir in BUNDLED_STATIC_DIRS:
+		candidates.append("%s/%s" % [base_dir, file_name])
+	return candidates
+
+func _resolve_static_data_file_path(file_name: String) -> String:
+	var candidates: PackedStringArray = _build_static_data_candidates(file_name)
+	for path in candidates:
+		if FileAccess.file_exists(path):
+			return path
+	return ""
+
+func _build_csv_cache_path(file_name: String) -> String:
+	return "user://data/%s" % file_name
+
+func resolve_or_cache_static_csv(file_name: String) -> String:
+	_ensure_user_data_dir()
+
+	var cached_path: String = _build_csv_cache_path(file_name)
+	if FileAccess.file_exists(cached_path):
+		return cached_path
+
+	var bundled_path: String = _resolve_static_data_file_path(file_name)
+	if bundled_path == "":
+		return ""
+
+	var source_file: FileAccess = FileAccess.open(bundled_path, FileAccess.READ)
+	if not source_file:
+		return bundled_path
+
+	var content: String = source_file.get_as_text()
+	source_file.close()
+
+	var cache_file: FileAccess = FileAccess.open(cached_path, FileAccess.WRITE)
+	if not cache_file:
+		push_warning("Unable to cache %s to %s, using bundled file" % [file_name, cached_path])
+		return bundled_path
+
+	cache_file.store_string(content)
+	cache_file.close()
+
+	if FileAccess.file_exists(cached_path):
+		return cached_path
+
+	return bundled_path
+
 func load_rank_exp_data() -> Dictionary:
-	# Load and parse rank-exp.csv
-	# CSV structure: Rank, Exp (XP needed to reach that rank), Energy, Friend slot
-	# The Exp value at rank N = XP needed to advance from rank N-1 to rank N
+	# Load and parse rank_exp.json.
+	# JSON structure: {"<rank>": {"Exp": int, "Energy": int, ...}, ...}
+	# Exp at rank N is treated as XP needed to advance FROM rank N TO rank N+1.
 	# Result: rank_data[rank] = {"xp_needed": int, "energy": int}
-	#   where xp_needed = XP to advance FROM rank TO rank+1
-	
+
 	var rank_data: Dictionary = {}
-	var csv_path: String = "res://assets/static_data/rank-exp.csv"
-	
-	if not FileAccess.file_exists(csv_path):
-		push_error("rank-exp.csv not found at %s" % csv_path)
+	# Use the same cache-first path resolution as patched static JSON files.
+	var json_path: String = _resolve_source_path("rank_exp")
+
+	if json_path == "":
+		var attempted_paths: PackedStringArray = _build_static_data_candidates("rank_exp.json")
+		attempted_paths.append(_build_csv_cache_path("rank_exp.json"))
+		push_error("rank_exp.json not found. Attempted paths: %s" % ", ".join(attempted_paths))
 		return rank_data
-	
-	var file: FileAccess = FileAccess.open(csv_path, FileAccess.READ)
+
+	var file: FileAccess = FileAccess.open(json_path, FileAccess.READ)
 	if not file:
-		push_error("Failed to open rank-exp.csv")
+		push_error("Failed to open rank_exp.json")
 		return rank_data
-	
+
 	var content: String = file.get_as_text()
 	file.close()
-	
-	var lines: PackedStringArray = content.split("\n")
-	var csv_rows: Array = []
-	
-	# Parse CSV lines into an array (skip header)
-	for i in range(1, lines.size()):
-		var line: String = lines[i].strip_edges()
-		if line == "":
+
+	var parsed: Variant = JSON.parse_string(content)
+	if not (parsed is Dictionary):
+		push_error("rank_exp.json parse failed or root is not an object")
+		return rank_data
+
+	var rows: Dictionary = parsed
+	var sorted_ranks: Array[int] = []
+	for rank_key in rows.keys():
+		var rank_text: String = str(rank_key).strip_edges()
+		if rank_text == "" or not rank_text.is_valid_int():
+			push_warning("Skipping rank_exp.json row with invalid rank key: %s" % str(rank_key))
 			continue
-		
-		var columns: PackedStringArray = line.split(",")
-		if columns.size() < 3:
+		sorted_ranks.append(int(rank_text))
+
+	sorted_ranks.sort()
+
+	for rank in sorted_ranks:
+		var row_value: Variant = rows.get(str(rank), null)
+		if not (row_value is Dictionary):
+			push_warning("Skipping rank %d in rank_exp.json: row is not an object" % rank)
 			continue
-		
-		var rank: int = int(columns[0].strip_edges())
-		var exp_str: String = columns[1].strip_edges()
-		var energy: int = int(columns[2].strip_edges())
-		
-		var exp_value: int = 0
-		if exp_str != "-":
-			exp_value = int(exp_str)
-		
-		csv_rows.append({"rank": rank, "exp": exp_value, "energy": energy})
-	
-	# Build rank_data: 
-	# - rank_data[N] contains XP needed to go from rank N to rank N+1
-	# - CSV row N has the XP needed to reach rank N (i.e., from rank N-1 to rank N)
-	for i in range(csv_rows.size()):
-		var row = csv_rows[i]
-		var current_rank = row["rank"]
-		var current_energy = row["energy"]
-		var xp_to_reach_this_rank = row["exp"]
-		
-		# The XP value in this row applies to advancing from previous rank to current rank
-		if current_rank > 1 and xp_to_reach_this_rank > 0:
-			var prev_rank = current_rank - 1
-			var prev_energy = csv_rows[i-1]["energy"] if i > 0 else 41
-			rank_data[prev_rank] = {
-				"xp_needed": xp_to_reach_this_rank,
-				"energy": prev_energy
-			}
-	
+
+		var row: Dictionary = row_value
+		if not row.has("Exp") or not row.has("Energy"):
+			push_warning("Skipping rank %d in rank_exp.json: missing Exp or Energy" % rank)
+			continue
+
+		var xp_needed: int = int(row.get("Exp", 0))
+		var energy: int = int(row.get("Energy", 0))
+		if xp_needed <= 0:
+			push_warning("Skipping rank %d in rank_exp.json: Exp must be > 0" % rank)
+			continue
+
+		rank_data[rank] = {
+			"xp_needed": xp_needed,
+			"energy": energy
+		}
+
 	return rank_data

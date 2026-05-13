@@ -82,7 +82,7 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 	var exp_pattern: int = _get_raw_unit_exp_pattern(unit_id, unit_data, initial_rarity)
 	if exp_pattern <= 0:
 		exp_pattern = 5
-	var next_xp_required: int = _calculate_xp_for_level_local(2, exp_pattern)
+	var next_xp_required: int = _calculate_xp_for_level_local(1, exp_pattern)
 	if next_xp_required <= 0:
 		next_xp_required = 1000
 
@@ -681,37 +681,57 @@ func _ensure_unit_exp_patterns_loaded() -> void:
 	if not _unit_exp_patterns_cache.is_empty():
 		return
 
-	var file_path: String = "res://assets/static_data/unit-exp-pattern.csv"
-	if not FileAccess.file_exists(file_path):
+	if not StaticData:
+		push_error("Unit exp patterns unavailable: StaticData autoload is missing")
 		return
 
-	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
-	if file == null:
+	var source_patterns: Dictionary = StaticData.game_data_unit_exp_patterns
+	if source_patterns.is_empty():
+		push_error("unit_exp_patterns.json is empty or not loaded in StaticData")
 		return
 
-	var header_line: String = file.get_line().strip_edges()
-	var headers: PackedStringArray = header_line.split(",")
-	while not file.eof_reached():
-		var line: String = file.get_line().strip_edges()
-		if line == "":
+	for raw_pattern_key in source_patterns.keys():
+		var normalized_pattern_text: String = str(raw_pattern_key).strip_edges()
+		if normalized_pattern_text.begins_with("Gr "):
+			normalized_pattern_text = normalized_pattern_text.trim_prefix("Gr ").strip_edges()
+		if not normalized_pattern_text.is_valid_int():
 			continue
-		var cols: PackedStringArray = line.split(",")
-		if cols.size() < 2:
+
+		var pattern_id: int = int(normalized_pattern_text)
+		if pattern_id <= 0:
 			continue
-		var level: int = int(cols[0])
-		for i in range(1, mini(headers.size(), cols.size())):
-			var header: String = headers[i].strip_edges()
-			var pattern_value_str: String = header.replace("Gr ", "")
-			var pattern: int = int(pattern_value_str)
-			if pattern <= 0:
+
+		var pattern_rows_value: Variant = source_patterns.get(raw_pattern_key, {})
+		if not (pattern_rows_value is Dictionary):
+			continue
+
+		var pattern_rows: Dictionary = pattern_rows_value
+		if not _unit_exp_patterns_cache.has(pattern_id):
+			_unit_exp_patterns_cache[pattern_id] = {}
+
+		for raw_level_key in pattern_rows.keys():
+			var normalized_level_text: String = str(raw_level_key).strip_edges()
+			if not normalized_level_text.is_valid_int():
 				continue
-			if not _unit_exp_patterns_cache.has(pattern):
-				_unit_exp_patterns_cache[pattern] = {}
-			var value_text: String = cols[i].strip_edges()
-			var value: int = 0
-			if value_text != "-" and value_text != "":
-				value = int(value_text)
-			_unit_exp_patterns_cache[pattern][level] = value
+
+			var level: int = int(normalized_level_text)
+			if level <= 0:
+				continue
+
+			var xp_raw: Variant = pattern_rows.get(raw_level_key, 0)
+			var xp_value: int = 0
+			if xp_raw is String:
+				var xp_text: String = str(xp_raw).strip_edges()
+				if xp_text != "" and xp_text != "-" and xp_text.is_valid_int():
+					xp_value = int(xp_text)
+			else:
+				xp_value = int(xp_raw)
+
+			var runtime_rows: Dictionary = _unit_exp_patterns_cache[pattern_id]
+			runtime_rows[level] = xp_value
+
+	if _unit_exp_patterns_cache.is_empty():
+		push_error("unit_exp_patterns.json loaded but no valid pattern rows were parsed")
 
 func _calculate_xp_for_level_local(level: int, exp_pattern: int) -> int:
 	_ensure_unit_exp_patterns_loaded()
@@ -722,7 +742,7 @@ func _calculate_xp_for_level_local(level: int, exp_pattern: int) -> int:
 
 func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:
 	var total: int = 0
-	for l in range(2, level + 1):
+	for l in range(1, level):
 		total += _calculate_xp_for_level_local(l, exp_pattern)
 	return total
 
@@ -730,7 +750,7 @@ func _calculate_level_from_xp_local(total_xp: int, exp_pattern: int, max_level: 
 	var level: int = 1
 	var remaining: int = maxi(0, total_xp)
 	while level < max_level:
-		var required: int = _calculate_xp_for_level_local(level + 1, exp_pattern)
+		var required: int = _calculate_xp_for_level_local(level, exp_pattern)
 		if required <= 0 or remaining < required:
 			break
 		remaining -= required
@@ -747,7 +767,7 @@ func _update_unit_next_xp_local(unit: Dictionary, unit_data: Dictionary) -> void
 	if level < max_level:
 		var base_xp: int = _calculate_total_xp_for_level_local(level, exp_pattern)
 		var xp_into_level: int = int(unit.get("xp", 0)) - base_xp
-		var required_marginal_xp: int = _calculate_xp_for_level_local(level + 1, exp_pattern)
+		var required_marginal_xp: int = _calculate_xp_for_level_local(level, exp_pattern)
 		unit["next_xp"] = maxi(0, required_marginal_xp - xp_into_level)
 	else:
 		unit["next_xp"] = 0

@@ -27,6 +27,7 @@ var game_data_summons: Dictionary = {}
 var game_data_summons_boards: Dictionary = {}
 var game_data_summons_exp_patterns: Dictionary = {}
 var game_data_summons_stat_patterns: Dictionary = {}
+var game_data_unit_exp_patterns: Dictionary = {}
 
 var is_ready: bool = false
 var synced_with_server: bool = false
@@ -143,6 +144,7 @@ func _on_patch_complete() -> void:
 	game_data_summons_boards = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons_boards"))
 	game_data_summons_exp_patterns = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons_exp_patterns"))
 	game_data_summons_stat_patterns = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons_stat_patterns"))
+	game_data_unit_exp_patterns = _sanitize_floats_to_ints(StaticDataLoader.get_data("unit_exp_patterns"))
 
 	_save_sanitized_cache(cache_signature)
 	_notify_skill_resolver()
@@ -229,6 +231,7 @@ func _try_load_sanitized_cache(signature: String) -> bool:
 	game_data_summons_boards = datasets.get("summons_boards", {})
 	game_data_summons_exp_patterns = datasets.get("summons_exp_patterns", {})
 	game_data_summons_stat_patterns = datasets.get("summons_stat_patterns", {})
+	game_data_unit_exp_patterns = datasets.get("unit_exp_patterns", {})
 	return true
 
 
@@ -284,7 +287,8 @@ func _save_sanitized_cache(signature: String) -> void:
 		"summons": game_data_summons,
 		"summons_boards": game_data_summons_boards,
 		"summons_exp_patterns": game_data_summons_exp_patterns,
-		"summons_stat_patterns": game_data_summons_stat_patterns
+		"summons_stat_patterns": game_data_summons_stat_patterns,
+		"unit_exp_patterns": game_data_unit_exp_patterns
 	}
 
 	var bin_path: String = "user://data/sanitized_data_cache.bin"

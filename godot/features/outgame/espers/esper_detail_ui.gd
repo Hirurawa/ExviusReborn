@@ -15,6 +15,8 @@ extends Control
 @onready var mag_label: Label = $status_frame/label_int
 @onready var mind_label: Label = $status_frame/label_mind
 @onready var cp_label: Label = $label_cp
+@onready var skill_name: Label = $skill_name_label
+@onready var skill_desc: Label = $skill_desc_label
 
 var _summon_id: String = ""
 var _summon_name: String = ""
@@ -56,10 +58,17 @@ func _refresh_ui() -> void:
 	var rank: int = maxi(1, int(progression.get("rank", 1)))
 	var level: int = maxi(1, int(progression.get("level", 1)))
 	var current_sp: int = maxi(0, int(progression.get("current_sp", 0)))
+	skill_name.text = ""
+	skill_desc.text = ""
 	level_label.text = "Lv. %d (R%d)" % [level, rank]
 	cp_label.text = str(current_sp)
 
 	var summon_data: Dictionary = StaticData.game_data_summons.get(_summon_id, {})
+	var resolved_skill: Dictionary = _resolve_rank_skill_data(summon_data, rank)
+	if not resolved_skill.is_empty():
+		skill_name.text = _get_skill_text_by_key(resolved_skill, "name")
+		skill_desc.text = _get_skill_text_by_key(resolved_skill, "desc")
+
 	var stats: Dictionary = _extract_stats_for_level_and_rank(summon_data, rank, level)
 	var board_stat_bonus: Dictionary = EsperService.get_esper_board_stat_bonuses(_summon_id)
 	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
@@ -124,6 +133,51 @@ func _extract_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level
 	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
 		resolved_stats[stat_key] = _interpolate_stat_value(raw_stats.get(stat_key, 0), level, rank_max_level)
 	return resolved_stats
+
+func _resolve_rank_skill_data(summon_data: Dictionary, rank: int) -> Dictionary:
+	var skill_value: Variant = summon_data.get("skill", {})
+	if not (skill_value is Dictionary):
+		return {}
+
+	var skill_data: Dictionary = skill_value
+	if skill_data.is_empty():
+		return {}
+
+	var summon_numeric_id: int = int(_summon_id)
+	var expected_skill_id: String = "%d%02d" % [100 + summon_numeric_id, rank]
+	var direct_match: Variant = skill_data.get(expected_skill_id, {})
+	if direct_match is Dictionary:
+		var direct_dict: Dictionary = direct_match
+		if not direct_dict.is_empty():
+			return direct_dict
+
+	# Fallback: prefer any key whose last digit matches the current rank.
+	for key_value in skill_data.keys():
+		var key: String = str(key_value)
+		if key.ends_with(str(rank)):
+			var rank_match: Variant = skill_data.get(key, {})
+			if rank_match is Dictionary:
+				var rank_dict: Dictionary = rank_match
+				if not rank_dict.is_empty():
+					return rank_dict
+
+	return {}
+
+func _get_skill_text_by_key(skill_data: Dictionary, text_key: String) -> String:
+	var strings_value: Variant = skill_data.get("strings", {})
+	if not (strings_value is Dictionary):
+		return ""
+
+	var strings: Dictionary = strings_value
+	var text_value: Variant = strings.get(text_key, [])
+	if not (text_value is Array):
+		return ""
+
+	var localized_values: Array = text_value
+	if localized_values.is_empty():
+		return ""
+
+	return str(localized_values[0])
 
 func _on_espers_updated(_espers: Array) -> void:
 	if _summon_id == "":

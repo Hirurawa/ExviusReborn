@@ -148,6 +148,92 @@ func _resolve_active_party_esper_id_for_unit(unit_instance: Dictionary) -> Strin
 
 	return str(espers[unit_slot_index]).strip_edges()
 
+func _resolve_rank_skill_data_for_summon(summon_id: String, summon_data: Dictionary, rank: int) -> Dictionary:
+	var skill_value: Variant = summon_data.get("skill", {})
+	if not (skill_value is Dictionary):
+		return {}
+
+	var skill_data: Dictionary = skill_value
+	if skill_data.is_empty():
+		return {}
+
+	var summon_numeric_id: int = int(summon_id)
+	var expected_skill_id: String = "%d%02d" % [100 + summon_numeric_id, rank]
+	var direct_match: Variant = skill_data.get(expected_skill_id, {})
+	if direct_match is Dictionary:
+		var direct_dict: Dictionary = direct_match
+		if not direct_dict.is_empty():
+			var with_id: Dictionary = direct_dict.duplicate(true)
+			with_id["skill_id"] = expected_skill_id
+			return with_id
+
+	for key_value in skill_data.keys():
+		var key: String = str(key_value)
+		if key.ends_with(str(rank)):
+			var rank_match: Variant = skill_data.get(key, {})
+			if rank_match is Dictionary:
+				var rank_dict: Dictionary = rank_match
+				if not rank_dict.is_empty():
+					var with_fallback_id: Dictionary = rank_dict.duplicate(true)
+					with_fallback_id["skill_id"] = key
+					return with_fallback_id
+
+	return {}
+
+func _get_esper_skill_text(skill_data: Dictionary, text_key: String) -> String:
+	var strings_value: Variant = skill_data.get("strings", {})
+	if not (strings_value is Dictionary):
+		return ""
+
+	var strings: Dictionary = strings_value
+	var text_value: Variant = strings.get(text_key, [])
+	if not (text_value is Array):
+		return ""
+
+	var localized_values: Array = text_value
+	if localized_values.is_empty():
+		return ""
+
+	return str(localized_values[0])
+
+func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
+	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
+	if summon_id == "":
+		return {}
+	if not StaticData.game_data_summons.has(summon_id):
+		return {}
+
+	var progression: Dictionary = EsperService.get_esper_progression(summon_id)
+	var rank: int = maxi(1, int(progression.get("rank", 1)))
+	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	if summon_data.is_empty():
+		return {}
+
+	var rank_skill_data: Dictionary = _resolve_rank_skill_data_for_summon(summon_id, summon_data, rank)
+	if rank_skill_data.is_empty():
+		return {}
+
+	var skill_id: String = str(rank_skill_data.get("skill_id", "")).strip_edges()
+	if skill_id == "":
+		return {}
+
+	var normalized_skill_data: Dictionary = rank_skill_data.duplicate(true)
+	var skill_name: String = _get_esper_skill_text(rank_skill_data, "name")
+	var skill_description: String = _get_esper_skill_text(rank_skill_data, "desc")
+	if skill_name != "":
+		normalized_skill_data["name"] = skill_name
+	if skill_description != "":
+		normalized_skill_data["description"] = skill_description
+
+	return {
+		"summon_id": summon_id,
+		"rank": rank,
+		"skill_id": skill_id,
+		"name": skill_name,
+		"description": skill_description,
+		"skill_data": normalized_skill_data
+	}
+
 func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> Array:
 	var unlocked_skill_ids: Array = []
 

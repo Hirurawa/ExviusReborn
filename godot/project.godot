@@ -37,6 +37,7 @@ StatCalculator="*res://core/stat_calculator.gd"
 
 window/size/viewport_width=640
 window/size/viewport_height=960
+window/stretch/mode="canvas_items"
 window/handheld/orientation=1
 
 [physics]
@@ -46,3 +47,4 @@ window/handheld/orientation=1
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_etc2_astc=true

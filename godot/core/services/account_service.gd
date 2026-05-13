@@ -139,20 +139,31 @@ func load_initial_data(email: String) -> void:
 
 	var stats: Dictionary = PlayerProfile.load_stats_from_local()
 
-	# Load rank progression data from CSV
+	# Load rank progression data from rank_exp.json
 	PlayerProfile.ensure_rank_exp_loaded()
 
 	# Apply stats with safe defaults
 	PlayerProfile.current_rank = int(stats.get("rank", 1))
 	PlayerProfile.current_xp = int(stats.get("xp", 0))
 	PlayerProfile.next_rank_xp = int(stats.get("next_rank_xp", 100))
-	PlayerProfile.current_nrg = int(stats.get("current_nrg", 0))
-	PlayerProfile.max_nrg = int(stats.get("max_nrg", 0))
+	PlayerProfile.current_nrg = int(stats.get("current_nrg", 41))
+	PlayerProfile.max_nrg = int(stats.get("max_nrg", 41))
 	PlayerProfile.nrg_regen_rate_seconds = int(stats.get("nrg_regen_rate_seconds", 300))
 	PlayerProfile.seconds_until_next_nrg = float(stats.get("seconds_until_next_nrg", 0.0))
 	MissionService.last_entered_mission_id = str(stats.get("last_entered_mission_id", ""))
 	PlayerProfile.gil = int(stats.get("gil", 0))
 	PlayerProfile.lapis = int(stats.get("lapis", 0))
+
+	# Normalize progression values only when save data is missing/invalid.
+	if PlayerProfile.next_rank_xp <= 0 or PlayerProfile.max_nrg <= 0:
+		if not PlayerProfile.rank_exp_data.is_empty():
+			if PlayerProfile.rank_exp_data.has(PlayerProfile.current_rank):
+				PlayerProfile.next_rank_xp = int(PlayerProfile.rank_exp_data[PlayerProfile.current_rank].get("xp_needed", PlayerProfile.next_rank_xp))
+				PlayerProfile.max_nrg = int(PlayerProfile.rank_exp_data[PlayerProfile.current_rank].get("energy", PlayerProfile.max_nrg))
+			else:
+				var fallback_rank: int = int(PlayerProfile.rank_exp_data.keys().max())
+				PlayerProfile.next_rank_xp = int(PlayerProfile.rank_exp_data[fallback_rank].get("xp_needed", PlayerProfile.next_rank_xp))
+				PlayerProfile.max_nrg = int(PlayerProfile.rank_exp_data[fallback_rank].get("energy", PlayerProfile.max_nrg))
 	current_username = str(stats.get("username", ""))
 	if MissionService.last_entered_mission_id != "":
 		await MissionService.update_last_played_dungeon_from_mission(MissionService.last_entered_mission_id)

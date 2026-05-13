@@ -7,7 +7,7 @@ extends Node
 ##   - current_rank, current_xp, next_rank_xp
 ##   - current_nrg, max_nrg, nrg_regen_rate_seconds, seconds_until_next_nrg
 ##   - gil, lapis
-##   - rank_exp_data (loaded from rank-exp.csv)
+##   - rank_exp_data (loaded from rank_exp.json)
 ##   - rank_updated / nrg_updated / currency_updated signals
 ##
 ## Stats persistence (stats.json) still lives on DataManager because it bundles
@@ -36,7 +36,7 @@ var seconds_until_next_nrg: float = 0.0
 var gil: int = 0
 var lapis: int = 0
 
-# Loaded from rank-exp.csv: {rank: {"xp_needed": int, "energy": int}}
+# Loaded from rank_exp.json: {rank: {"xp_needed": int, "energy": int}}
 var rank_exp_data: Dictionary = {}
 
 

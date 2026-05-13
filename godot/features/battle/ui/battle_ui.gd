@@ -8,6 +8,9 @@ const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
 const SKILL_DISABLE_REASON_NONE: String = ""
 const SKILL_DISABLE_REASON_LACK_MP: String = "lack_mp"
 const SKILL_DISABLE_REASON_LACK_LIMIT: String = "lack_limit"
+const SKILL_ROLE_STANDARD: String = "standard"
+const SKILL_ROLE_LIMITBURST: String = "limitburst"
+const SKILL_ROLE_ESPER: String = "esper_skill"
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -236,7 +239,20 @@ func _open_skill_menu(unit_index: int) -> void:
 					"name": limitburst_data.get("name", "Unknown Limit Burst"),
 					"skill_data": limitburst_data,
 					"level": -1,
-					"source_type": "limitburst"
+					"source_type": SKILL_ROLE_LIMITBURST,
+					"source": ""
+				})
+
+			var esper_rank_skill: Dictionary = StatCalculator.get_active_party_esper_rank_skill(unit_inst)
+			if not esper_rank_skill.is_empty():
+				var esper_skill_data: Dictionary = esper_rank_skill.get("skill_data", {})
+				options.append({
+					"id": str(esper_rank_skill.get("skill_id", "")),
+					"name": esper_rank_skill.get("name", "Unknown Esper Skill"),
+					"skill_data": esper_skill_data,
+					"level": -1,
+					"source_type": SKILL_ROLE_ESPER,
+					"source": "Esper"
 				})
 
 			# Read from the calculated profile so equipment- and esper-granted
@@ -256,7 +272,8 @@ func _open_skill_menu(unit_index: int) -> void:
 						"name": magic_data.get("name", "Unknown Magic"),
 						"skill_data": magic_data,
 						"level": rarity,
-						"source_type": "skill"
+						"source_type": "skill",
+						"source": str(sk.get("source", ""))
 					})
 
 			for sk in ability_entries:
@@ -268,7 +285,8 @@ func _open_skill_menu(unit_index: int) -> void:
 						"name": ability_data.get("name", "Unknown Ability"),
 						"skill_data": ability_data,
 						"level": rarity,
-						"source_type": "skill"
+						"source_type": "skill",
+						"source": str(sk.get("source", ""))
 					})
 
 	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
@@ -406,6 +424,8 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			var skill_data: Dictionary = opt.get("skill_data", {})
 			var skill_level: int = int(opt.get("level", -1))
 			var source_type: String = str(opt.get("source_type", "skill"))
+			var source_name: String = str(opt.get("source", ""))
+			var role_style: String = SKILL_ROLE_STANDARD
 			var can_use_limitburst: bool = true
 			var can_use_mp: bool = true
 			var can_use_action: bool = true
@@ -415,7 +435,8 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
 				source_unit = battle_manager.party_data[_menu_target_unit_index]
 
-			if source_type == "limitburst":
+			if source_type == SKILL_ROLE_LIMITBURST:
+				role_style = SKILL_ROLE_LIMITBURST
 				can_use_limitburst = false
 				if not source_unit.is_empty():
 					var current_limit: int = int(source_unit.get("limit_gauge", 0))
@@ -424,6 +445,12 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 				can_use_action = can_use_limitburst
 				if not can_use_action:
 					disabled_reason = SKILL_DISABLE_REASON_LACK_LIMIT
+			elif source_type == SKILL_ROLE_ESPER:
+				role_style = SKILL_ROLE_ESPER
+				can_use_mp = _can_unit_pay_skill_mp(source_unit, skill_data)
+				can_use_action = can_use_mp
+				if not can_use_action:
+					disabled_reason = SKILL_DISABLE_REASON_LACK_MP
 			else:
 				can_use_mp = _can_unit_pay_skill_mp(source_unit, skill_data)
 				can_use_action = can_use_mp
@@ -435,8 +462,8 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			grid.add_child(btn)
 			
-			btn.setup_from_skill_data(skill_data, "", true)
-			btn.set_skill_role_style(source_type == "limitburst")
+			btn.setup_from_skill_data(skill_data, source_name, true)
+			btn.set_skill_role_style(role_style)
 			btn.set_action_availability(can_use_action, disabled_reason)
 
 			btn.pressed.connect(func():
@@ -444,8 +471,10 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 					return
 
 				var resolution: Dictionary = {}
-				if source_type == "limitburst":
+				if source_type == SKILL_ROLE_LIMITBURST:
 					resolution = SkillResolver.resolve_combat_limitburst(action_id)
+				elif source_type == SKILL_ROLE_ESPER:
+					resolution = _build_direct_skill_resolution(action_id, skill_data, SKILL_ROLE_ESPER)
 				else:
 					resolution = SkillResolver.resolve_combat_skill(action_id)
 				if resolution.is_empty():
@@ -516,6 +545,48 @@ func _extract_skill_mp_cost(skill_data: Dictionary) -> int:
 		if cost_dict.has("MP"):
 			return maxi(0, int(cost_dict.get("MP", 0)))
 	return 0
+
+func _build_targeting_metadata_from_parsed_data(parsed_data: Dictionary) -> Dictionary:
+	var metadata: Dictionary = {
+		"needs_ally_selection": false,
+		"targets_allies": false,
+		"targets_enemies": false,
+		"targets_self": false,
+		"has_aoe": false
+	}
+
+	for effect in parsed_data.get("effects", []):
+		var target_area: int = int(effect.get("target_area", 1))
+		var target_type: int = int(effect.get("target_type", 1))
+
+		if target_area == 2:
+			metadata["has_aoe"] = true
+
+		if target_type == 3:
+			metadata["targets_self"] = true
+		elif target_type == 1:
+			metadata["targets_enemies"] = true
+		elif target_type in [2, 6]:
+			metadata["targets_allies"] = true
+			if target_area == 1:
+				metadata["needs_ally_selection"] = true
+
+	return metadata
+
+func _build_direct_skill_resolution(skill_id: String, skill_data: Dictionary, source_type: String = "skill") -> Dictionary:
+	if skill_data.is_empty():
+		return {}
+
+	var parsed_data: Dictionary = SkillResolver.parse_skill_effects(skill_data)
+	return {
+		"source_type": source_type,
+		"source_id": skill_id,
+		"resolved_action_id": skill_id,
+		"resolved_action_name": skill_data.get("name", ""),
+		"resolved_action_data": skill_data,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata_from_parsed_data(parsed_data)
+	}
 
 func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String) -> void:
 	if formatted_name == "":

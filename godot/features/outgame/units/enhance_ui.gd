@@ -6,6 +6,8 @@ extends Control
 @onready var cancel_button: Button = $EnhanceFlowRoot/UnitNamebgChara/UnitMinibutton1
 @onready var clear_button: Button = $unit_mix_ui_bg/unit_mix_button_clear
 @onready var confirm_button: Button = $unit_mix_ui_bg/unit_mix_button_union
+@onready var get_exp_number_label: Label = $unit_mix_ui_sell_info/unit_mix_get_exp_label/unit_mix_get_exp_number
+@onready var need_gil_number_label: Label = $unit_mix_ui_sell_info/unit_mix_need_money_label/unit_mix_need_money_number
 
 @onready var UnitLevel: Label = $UnitLevel/UnitLevel
 
@@ -26,6 +28,8 @@ var material_units_array: Array = []
 
 var _texture_cache: Dictionary = {}
 var _pedestal_slots: Array[Control] = []
+
+const ENHANCE_GIL_COST_PER_MATERIAL: int = 1000
 
 func init_scene(params: Dictionary) -> void:
 	if params.has("base_unit_instance_id"):
@@ -81,6 +85,55 @@ func _redraw_material_slots() -> void:
 		if sprite == null:
 			continue
 		sprite.texture = _get_unit_texture(material_units_array[i])
+
+	_update_get_exp_display()
+	_update_need_gil_display()
+
+func _update_get_exp_display() -> void:
+	if get_exp_number_label == null:
+		return
+
+	if base_unit_inst.is_empty():
+		get_exp_number_label.text = "0"
+		return
+
+	var base_unit_id: String = str(base_unit_inst.get("unit_id", ""))
+	var base_unit_data: Dictionary = StaticData.game_data_units.get(base_unit_id, {})
+	if base_unit_data.is_empty():
+		get_exp_number_label.text = "0"
+		return
+
+	var base_unit_type: String = str(UnitService.call("_get_unit_type", base_unit_data))
+	if base_unit_type == "trust_material":
+		get_exp_number_label.text = "0"
+		return
+
+	var total_xp_gain: int = 0
+	for material_unit_value in material_units_array:
+		if not (material_unit_value is Dictionary):
+			continue
+
+		var material_unit: Dictionary = material_unit_value
+		var material_unit_id: String = str(material_unit.get("unit_id", ""))
+		if material_unit_id == "":
+			continue
+
+		var material_unit_data: Dictionary = StaticData.game_data_units.get(material_unit_id, {})
+		if material_unit_data.is_empty():
+			continue
+
+		var gains_value: Variant = UnitService.call("_calculate_material_enhance_gains", material_unit, material_unit_data)
+		if gains_value is Dictionary:
+			total_xp_gain += int((gains_value as Dictionary).get("xp_gain", 0))
+
+	get_exp_number_label.text = "%d" % total_xp_gain
+
+func _update_need_gil_display() -> void:
+	if need_gil_number_label == null:
+		return
+
+	var required_gil: int = material_units_array.size() * ENHANCE_GIL_COST_PER_MATERIAL
+	need_gil_number_label.text = "%d" % required_gil
 
 func _on_any_pedestal_pressed() -> void:
 	if base_unit_instance_id == "":
@@ -244,9 +297,11 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	var xp = int(unit_inst.xp)
 	var currentXp = int(unit_inst.xp)
 	var xpForNextLevel = int(unit_inst.next_xp)
-	var lb_id = str(int(unit_inst.get("limitburst_id", "")))
+	var lb_id = str(unit_inst.get("limitburst_id", ""))
 	if lb_id != "" and StaticData.game_data_limitbursts.has(lb_id):
 		LBName.text = StaticData.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
+	else:
+		LBName.text = "None"
 	
 	var tmr_data = unit_inst.get("TMR")
 	if tmr_data != null and typeof(tmr_data) == TYPE_ARRAY and tmr_data.size() >= 2:

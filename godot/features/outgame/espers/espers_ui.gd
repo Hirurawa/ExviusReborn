@@ -82,6 +82,15 @@ func _populate_espers_list() -> void:
 		var level: int = maxi(1, int(progression.get("level", 1)))
 		if frame.has_node("LvlLabel"):
 			frame.get_node("LvlLabel").text = "Lv. %d" % level
+		if frame.has_node("SummonIcon"):
+			var summon_data: Dictionary = entry.get("data", {})
+			var icon_filename: String = str(summon_data.get("icon", "")).strip_edges()
+			var summon_icon: TextureRect = frame.get_node("SummonIcon")
+			summon_icon.texture = null
+			if icon_filename != "":
+				var icon_path: String = "res://assets/esper/" + icon_filename
+				if ResourceLoader.exists(icon_path):
+					summon_icon.texture = ResourceLoader.load(icon_path) as Texture2D
 
 		frame.pressed.connect(_on_esper_pressed.bind(summon_id, summon_name))
 		espers_list_container.add_child(frame)

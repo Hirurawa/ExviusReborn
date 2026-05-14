@@ -304,8 +304,8 @@ func _populate_resistances(final_stats: Dictionary) -> void:
 			label.text = str(val) + "%" if val != 0 else "-"
 
 func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
-	var lb_id: String = str(int(unit_inst.get("limitburst_id", "0")))
-	if lb_id != "0" and StaticData.game_data_limitbursts.has(lb_id):
+	var lb_id: String = str(unit_inst.get("limitburst_id", ""))
+	if lb_id != "" and lb_id != "<null>" and StaticData.game_data_limitbursts.has(lb_id):
 		var lb_name: String = str(StaticData.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst"))
 		lb_name_label.text = "Limit Burst: %s" % lb_name
 	else:
@@ -469,7 +469,15 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			var icon_path: String = "res://assets/abilities/" + icon_name if icon_name != "" else ""
 			var effects: Array = item_data.get("effects", [])
 			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
-			slot_cell.setup_placeholder(str(item_data.get("name", "Unknown Materia")), detail_text, {"icon_path": icon_path})
+			slot_cell.setup_placeholder(
+				str(item_data.get("name", "Unknown Materia")),
+				detail_text,
+				{
+					"icon_path": icon_path,
+					"slot_badge": str(display_options.get("slot_badge", "")),
+					"show_slot_badge": bool(display_options.get("show_slot_badge", true))
+				}
+			)
 		else:
 			slot_cell.setup_from_item_data(item_data, display_options)
 		slot_cell.set_clickable(true)

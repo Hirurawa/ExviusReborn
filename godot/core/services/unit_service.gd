@@ -33,16 +33,17 @@ const PLAYABLE_DUPLICATE_TRUST_BONUS: float = 5.0
 const DEFAULT_MAX_ACCUMULATED_EXP: int = 2000000000
 const EXP_UNIT_JOB_ID: int = 901
 const TRUST_MATERIAL_JOB_ID: int = 903
+const MATERIAL_UNIT_JOB_IDS: Array[int] = [900, 901, 902, 903]
 const EXP_UNIT_YIELD_BY_PATTERN: Dictionary = {
 	201: 5000,
 	202: 10000,
-	203: 30000,
-	204: 100000,
+	203: 30000, # MAX_EXP: 1290000
+	204: 100000, # MAX_EXP: 4500000
 }
 const TRUST_YIELD_BY_UNIT_ID: Dictionary = {
 	904000101: 1.0,
 	904000104: 5.0,
-	904000105: 10.0,
+	904000105: 50.0,
 }
 
 var owned_units_ids: Array = []
@@ -382,8 +383,29 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 		equip_failed.emit("ERR_EQUIPMENT_NOT_FOUND")
 		return
 
+	if item_id != "":
+		var requested_item: Dictionary = InventoryService.get_equipment_instance(item_id)
+		var equipped_to: String = str(requested_item.get("equipped_to", ""))
+		if equipped_to != "" and equipped_to != instance_id:
+			equip_failed.emit("ERR_EQUIPMENT_ALREADY_EQUIPPED")
+			return
+
+		for existing_unit in owned_units_ids:
+			if not (existing_unit is Dictionary):
+				continue
+			var existing_unit_instance_id: String = str(existing_unit.get("instance_id", ""))
+			var existing_equipment: Dictionary = _normalize_unit_equipment(existing_unit.get("equipment", {}))
+			for existing_slot_id in existing_equipment.keys():
+				if str(existing_equipment.get(existing_slot_id, "")) != item_id:
+					continue
+				if existing_unit_instance_id == instance_id and str(existing_slot_id) == slot_id:
+					continue
+				equip_failed.emit("ERR_EQUIPMENT_ALREADY_EQUIPPED")
+				return
+
 	var owned_items: Dictionary = InventoryService.owned_items
 	var game_data_equipment: Dictionary = StaticData.game_data_equipment
+	var removed_item_ids: Array[String] = []
 
 	if item_id != "":
 		var item_data_dict: Dictionary = {}
@@ -400,7 +422,10 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 			for unit in owned_units_ids:
 				if unit is Dictionary and unit.get("instance_id", "") == instance_id:
 					var current_equipment: Dictionary = _normalize_unit_equipment(unit.get("equipment", {}))
+					var removed_other_hand_item_id: String = str(current_equipment.get(other_hand, ""))
 					current_equipment.erase(other_hand)
+					if removed_other_hand_item_id != "":
+						removed_item_ids.append(removed_other_hand_item_id)
 					unit["equipment"] = current_equipment
 					break
 
@@ -408,21 +433,59 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 	for unit in owned_units_ids:
 		if unit is Dictionary and unit.get("instance_id", "") == instance_id:
 			var current_equipment: Dictionary = _normalize_unit_equipment(unit.get("equipment", {}))
+			if item_id != "":
+				for equipped_slot_id in current_equipment.keys():
+					if str(current_equipment.get(equipped_slot_id, "")) == item_id and str(equipped_slot_id) != slot_id:
+						equip_failed.emit("ERR_EQUIPMENT_ALREADY_IN_USE")
+						return
+
+			var previously_equipped_item_id: String = str(current_equipment.get(slot_id, ""))
 			if item_id == "":
 				current_equipment.erase(slot_id)
 			else:
 				current_equipment[slot_id] = item_id
+			if previously_equipped_item_id != "" and previously_equipped_item_id != item_id:
+				removed_item_ids.append(previously_equipped_item_id)
 			unit["equipment"] = current_equipment
 			unit_found = true
 			break
 
 	if unit_found:
+		if owned_items.has("equipment"):
+			for raw_item in owned_items["equipment"]:
+				if not (raw_item is Dictionary):
+					continue
+				var inv_item: Dictionary = raw_item
+				var inv_item_instance_id: String = str(inv_item.get("instance_id", ""))
+				if inv_item_instance_id == item_id:
+					inv_item["equipped_to"] = instance_id
+				elif inv_item_instance_id in removed_item_ids:
+					inv_item["equipped_to"] = ""
+
 		owned_units_ids = _hydrate_owned_units(owned_units_ids)
 		emit_updated()
 		Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "equip_item")
+		Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "equip_item")
+		InventoryService.emit_updated()
 		equip_successful.emit()
 	else:
 		equip_failed.emit("ERR_UNIT_NOT_FOUND")
+	
+func is_material_unit(unit_inst: Dictionary) -> bool:
+	"""Check if a unit is a material unit (non-playable) based on job_id."""
+	if unit_inst.is_empty():
+		return false
+	
+	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	if unit_id == "":
+		return false
+	
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	if unit_data.is_empty():
+		return false
+	
+	var job_id: int = int(unit_data.get("job_id", 0))
+	return job_id in MATERIAL_UNIT_JOB_IDS
 
 # === Internal helpers ===
 

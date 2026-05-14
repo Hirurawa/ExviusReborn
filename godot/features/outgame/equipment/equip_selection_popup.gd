@@ -47,7 +47,11 @@ func _populate_list() -> void:
 			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
 			item_cell.setup_placeholder(str(item_dict.get("name", "Unknown Materia")), detail_text, {"icon_path": icon_path})
 		else:
-			item_cell.setup_from_item_data(item_dict, {})
+			var display_options: Dictionary = {
+				"show_slot_badge": false,
+				"equipped_to_unit_id": str(item_dict.get("equipped_to", ""))
+			}
+			item_cell.setup_from_item_data(item_dict, display_options)
 		item_cell.set_clickable(true)
 		item_cell.pressed.connect(_on_equip_item_selected.bind(item_instance_id))
 

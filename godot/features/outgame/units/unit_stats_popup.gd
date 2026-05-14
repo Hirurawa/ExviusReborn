@@ -59,8 +59,22 @@ func _on_close_pressed() -> void:
 	UIManager.pop()
 
 func _on_swap_pressed() -> void:
+	var exclude_list: Array = PartyService.get_units_in_party_excluding_slot(target_party_index, target_slot_index)
+	
+	# Also exclude material units from party selection
+	for unit in UnitService.owned_units_ids:
+		if unit is Dictionary and UnitService.is_material_unit(unit):
+			var material_instance_id: String = str(unit.get("instance_id", ""))
+			if material_instance_id != "" and material_instance_id not in exclude_list:
+				exclude_list.append(material_instance_id)
+	
 	UIManager.pop()
-	UIManager.push("unit_selector_ui", {"mode": "select", "party_index": target_party_index, "slot_index": target_slot_index})
+	UIManager.push("unit_selector_ui", {
+		"mode": "select",
+		"party_index": target_party_index,
+		"slot_index": target_slot_index,
+		"exclude_list": exclude_list
+	})
 
 func _on_remove_pressed() -> void:
 	PartyService.assign_unit_to_party(target_party_index, target_slot_index, "")

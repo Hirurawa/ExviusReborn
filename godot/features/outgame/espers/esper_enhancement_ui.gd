@@ -6,6 +6,7 @@ extends Control
 @onready var summon_mix_bar_exp: Label = $summon_mix_bar_area/summon_mix_bar_exp
 @onready var cp_label: Label = $cp_area/label_cp
 @onready var xp_bar: TextureRect = $summon_mix_bar_area/summon_mix_bar_frame/summon_mix_bar
+@onready var summon_image: TextureRect = $SummonImage
 
 var _summon_id: String = ""
 var _summon_name: String = ""
@@ -47,6 +48,7 @@ func init_scene(params: Dictionary) -> void:
 		_refresh_exp_bar()
 
 func _refresh_exp_bar() -> void:
+	summon_image.texture = _get_summon_image_texture(_summon_id)
 	if _summon_id == "":
 		summon_mix_bar_lv.text = "Lv. -"
 		summon_mix_bar_exp.text = "0 / 0"
@@ -187,6 +189,24 @@ func _calculate_level_from_xp(total_xp: int, thresholds: Array[int]) -> int:
 		else:
 			break
 	return level
+
+func _get_summon_image_texture(summon_id: String) -> Texture2D:
+	if summon_id == "":
+		return null
+
+	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	if summon_data.is_empty():
+		return null
+
+	var image_filename: String = str(summon_data.get("image", "")).strip_edges()
+	if image_filename == "":
+		return null
+
+	var image_path: String = "res://assets/esper/" + image_filename
+	if not ResourceLoader.exists(image_path):
+		return null
+
+	return ResourceLoader.load(image_path) as Texture2D
 
 func _on_back_pressed() -> void:
 	_stop_summon_mix_hold()

@@ -175,6 +175,55 @@ func is_unit_assigned_to_any_party(unit_instance_id: String) -> bool:
 	return false
 
 
+func get_units_in_party(party_index: int) -> Array:
+	"""Returns array of unit instance IDs assigned to a specific party."""
+	if party_index < 0 or party_index >= parties.size():
+		return []
+
+	var party_entry: Variant = parties[party_index]
+	if not (party_entry is Dictionary):
+		return []
+
+	var units_value: Variant = party_entry.get("units", [])
+	if not (units_value is Array):
+		return []
+
+	var assigned_units: Array = []
+	for unit_id in units_value:
+		var normalized_id: String = str(unit_id).strip_edges()
+		if normalized_id != "":
+			assigned_units.append(normalized_id)
+
+	return assigned_units
+
+
+func get_units_in_party_excluding_slot(party_index: int, slot_index: int) -> Array:
+	"""Returns array of unit instance IDs in a party, excluding a specific slot.
+	Useful for preventing duplicates when replacing/editing a unit in a slot."""
+	if party_index < 0 or party_index >= parties.size():
+		return []
+	if slot_index < 0 or slot_index >= SLOT_COUNT:
+		return []
+
+	var party_entry: Variant = parties[party_index]
+	if not (party_entry is Dictionary):
+		return []
+
+	var units_value: Variant = party_entry.get("units", [])
+	if not (units_value is Array):
+		return []
+
+	var assigned_units: Array = []
+	for i in range(units_value.size()):
+		if i == slot_index:
+			continue
+		var unit_id: String = str(units_value[i]).strip_edges()
+		if unit_id != "":
+			assigned_units.append(unit_id)
+
+	return assigned_units
+
+
 # === Normalization helpers ===
 
 func normalize_parties_array(raw_parties: Variant) -> Array:

@@ -43,6 +43,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_nj72f")
 
+[node name="SummonImage" type="TextureRect" parent="." unique_id=1022157186]
+layout_mode = 0
+offset_top = 103.0
+offset_right = 640.0
+offset_bottom = 763.0
+expand_mode = 4
+stretch_mode = 5
+
 [node name="summon_mix_item_area" type="TextureRect" parent="." unique_id=879759173]
 layout_mode = 0
 offset_top = 722.0
@@ -335,6 +343,7 @@ position = Vector2(49, -5)
 texture = ExtResource("22_c56oq")
 
 [node name="summon_mix_lvup_anime" type="Label" parent="." unique_id=1441811434]
+visible = false
 layout_mode = 0
 offset_left = 220.0
 offset_top = 472.0

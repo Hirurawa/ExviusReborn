@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://cge6dur454te3"]
+
+[ext_resource type="Texture2D" uid="uid://dn5ikad3sia4y" path="res://assets/ui/create/cre_btn4_2.tres" id="1_wmagf"]
+[ext_resource type="Texture2D" uid="uid://b4dtpxneo667j" path="res://assets/ui/create/cre_label_magic_black_1.tres" id="2_bpxc3"]
+[ext_resource type="Texture2D" uid="uid://bwynx8ycnvl5y" path="res://assets/ui/create/cre_label_magic_white_1.tres" id="3_hrxm4"]
+[ext_resource type="Texture2D" uid="uid://b2lk0cyregdvv" path="res://assets/ui/create/cre_label_magic_green_1.tres" id="4_esong"]
+[ext_resource type="Texture2D" uid="uid://dafwo7wt1ktoh" path="res://assets/ui/create/cre_label_other_1.tres" id="5_bbr5a"]
+
+[node name="CraftAbility" type="Control" unique_id=321639662]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="craft_recipe_type_black_magic" type="TextureRect" parent="." unique_id=1186192442]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 5.0
+offset_right = 156.0
+offset_bottom = 81.0
+texture = ExtResource("1_wmagf")
+expand_mode = 1
+
+[node name="CreLabelMagicBlack1" type="Sprite2D" parent="craft_recipe_type_black_magic" unique_id=1698021709]
+position = Vector2(74, 39)
+texture = ExtResource("2_bpxc3")
+
+[node name="craft_recipe_type_white_magic" type="TextureRect" parent="." unique_id=1320481285]
+layout_mode = 0
+offset_left = 164.0
+offset_top = 5.0
+offset_right = 312.0
+offset_bottom = 81.0
+texture = ExtResource("1_wmagf")
+expand_mode = 1
+
+[node name="CreLabelMagicWhite1" type="Sprite2D" parent="craft_recipe_type_white_magic" unique_id=1466583384]
+position = Vector2(74, 35)
+texture = ExtResource("3_hrxm4")
+
+[node name="craft_recipe_type_green_magic" type="TextureRect" parent="." unique_id=1155067292]
+layout_mode = 0
+offset_left = 320.0
+offset_top = 5.0
+offset_right = 468.0
+offset_bottom = 81.0
+texture = ExtResource("1_wmagf")
+expand_mode = 1
+
+[node name="CreLabelMagicGreen1" type="Sprite2D" parent="craft_recipe_type_green_magic" unique_id=1595935085]
+position = Vector2(74, 32)
+texture = ExtResource("4_esong")
+
+[node name="craft_recipe_type_spcial" type="TextureRect" parent="." unique_id=349060354]
+layout_mode = 0
+offset_left = 476.0
+offset_top = 5.0
+offset_right = 624.0
+offset_bottom = 81.0
+texture = ExtResource("1_wmagf")
+expand_mode = 1
+
+[node name="CreLabelOther1" type="Sprite2D" parent="craft_recipe_type_spcial" unique_id=1355880593]
+position = Vector2(79, 36)
+texture = ExtResource("5_bbr5a")

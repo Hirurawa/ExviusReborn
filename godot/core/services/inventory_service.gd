@@ -131,6 +131,15 @@ func equipment_instance_exists(item_id: String) -> bool:
 	return false
 
 
+func get_equipment_instance(item_id: String) -> Dictionary:
+	if not owned_items.has("equipment"):
+		return {}
+	for item in owned_items["equipment"]:
+		if item is Dictionary and item.get("instance_id", "") == item_id:
+			return item
+	return {}
+
+
 func get_equipment_template_id(instance_id: String) -> String:
 	assert(owned_items.has("equipment"), "CRITICAL ERROR: owned_items is missing equipment!")
 	if not owned_items.has("equipment"): push_error("CRITICAL ERROR: owned_items is missing equipment!")

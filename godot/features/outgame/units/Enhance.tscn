@@ -62,13 +62,12 @@ vertical_alignment = 1
 
 [node name="unit_mix_get_exp_number" type="Label" parent="unit_mix_ui_sell_info/unit_mix_get_exp_label" unique_id=238039354]
 layout_mode = 0
-offset_left = 82.0
-offset_top = 22.0
-offset_right = 309.0
-offset_bottom = 48.0
+offset_left = 140.0
+offset_top = 19.0
+offset_right = 367.0
+offset_bottom = 45.0
 theme_override_font_sizes/font_size = 18
 text = "unit_mix_get_exp_number"
-horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="unit_mix_need_money_label" type="Label" parent="unit_mix_ui_sell_info" unique_id=863822414]
@@ -88,7 +87,6 @@ offset_right = 413.0
 offset_bottom = 43.0
 theme_override_font_sizes/font_size = 18
 text = "unit_mix_need_money_number"
-horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="unit_mix_money_icon" type="TextureRect" parent="unit_mix_ui_sell_info/unit_mix_need_money_label" unique_id=1094517015]

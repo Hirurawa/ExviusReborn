@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://daqiwnlxd4cwj"]
+
+[ext_resource type="Texture2D" uid="uid://dtaou5udxf6p2" path="res://assets/ui/create/cre_btn5_2.tres" id="1_rddch"]
+
+[node name="CraftItem" type="Control" unique_id=718299518]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="craft_recipe_type_recovery" type="TextureRect" parent="." unique_id=1906002777]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = 125.0
+offset_bottom = 81.0
+texture = ExtResource("1_rddch")
+expand_mode = 1
+
+[node name="craft_recipe_type_strecovery" type="TextureRect" parent="." unique_id=1724341725]
+layout_mode = 0
+offset_left = 134.0
+offset_top = 5.0
+offset_right = 252.0
+offset_bottom = 81.0
+texture = ExtResource("1_rddch")
+expand_mode = 1
+
+[node name="craft_recipe_type_support" type="TextureRect" parent="." unique_id=1659542569]
+layout_mode = 0
+offset_left = 261.0
+offset_top = 5.0
+offset_right = 379.0
+offset_bottom = 81.0
+texture = ExtResource("1_rddch")
+expand_mode = 1
+
+[node name="craft_recipe_type_attack" type="TextureRect" parent="." unique_id=665045220]
+layout_mode = 0
+offset_left = 388.0
+offset_top = 5.0
+offset_right = 506.0
+offset_bottom = 81.0
+texture = ExtResource("1_rddch")
+expand_mode = 1
+
+[node name="craft_recipe_type_other" type="TextureRect" parent="." unique_id=1914851322]
+layout_mode = 0
+offset_left = 515.0
+offset_top = 5.0
+offset_right = 633.0
+offset_bottom = 81.0
+texture = ExtResource("1_rddch")
+expand_mode = 1

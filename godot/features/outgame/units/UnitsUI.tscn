@@ -3,6 +3,14 @@
 [ext_resource type="Script" uid="uid://dugxed36vqf78" path="res://features/outgame/units/units_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://005aq5cxxido" path="res://assets/ui/unit/unit_charastand_small.tres" id="2_4fc4h"]
 [ext_resource type="Texture2D" uid="uid://utgca2gftny6" path="res://assets/ui/unit/unit_awakening_icon1.tres" id="3_e30sy"]
+[ext_resource type="Texture2D" uid="uid://bv3j2jibruv3g" path="res://assets/ui/unit/unit_partybg_top.tres" id="4_e7oih"]
+[ext_resource type="Texture2D" uid="uid://c0uxhq5ki4wpy" path="res://assets/ui/unit/unit_summon_line.tres" id="5_ymc44"]
+[ext_resource type="Texture2D" uid="uid://c1anumws64r7v" path="res://assets/ui/beast/summon_frame.tres" id="6_2pfev"]
+[ext_resource type="Texture2D" uid="uid://bfmn57g3vdqo" path="res://assets/ui/unit/unit_partybg_bottom.tres" id="7_blgtl"]
+[ext_resource type="Texture2D" uid="uid://cjoi8tguwp0nq" path="res://assets/ui/unit/unit_partyname_edit1.tres" id="8_ata6j"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e8wcf"]
+bg_color = Color(1, 0, 0, 0.2)
 
 [node name="UnitsUI" type="Control" unique_id=1141370021]
 layout_mode = 3
@@ -538,3 +546,81 @@ size_flags_horizontal = 3
 text = "Awaken Units (Placeholder)"
 icon = ExtResource("3_e30sy")
 expand_icon = true
+
+[node name="party_register_confirm_upper_deck_area_bg" type="TextureRect" parent="." unique_id=2133791077]
+visible = false
+layout_mode = 0
+offset_top = 51.0
+offset_right = 640.0
+offset_bottom = 351.0
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_bg_top" type="TextureRect" parent="." unique_id=961151574]
+visible = false
+layout_mode = 0
+offset_top = -4.0
+offset_right = 640.0
+offset_bottom = 52.0
+texture = ExtResource("4_e7oih")
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_unit_offset" type="TextureRect" parent="." unique_id=381507055]
+visible = false
+layout_mode = 0
+offset_top = 51.0
+offset_right = 148.0
+offset_bottom = 219.0
+texture = ExtResource("2_4fc4h")
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_linked_line" type="TextureRect" parent="." unique_id=1461290674]
+visible = false
+layout_mode = 0
+offset_left = 50.0
+offset_top = 179.0
+offset_right = 82.0
+offset_bottom = 275.0
+texture = ExtResource("5_ymc44")
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_beast_icon" type="TextureRect" parent="." unique_id=1999920269]
+visible = false
+layout_mode = 0
+offset_left = 18.0
+offset_top = 247.0
+offset_right = 114.0
+offset_bottom = 343.0
+texture = ExtResource("6_2pfev")
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_bg_bottom" type="TextureRect" parent="." unique_id=493108224]
+visible = false
+layout_mode = 0
+offset_top = 351.0
+offset_right = 640.0
+offset_bottom = 367.0
+texture = ExtResource("7_blgtl")
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_slot_plate" type="TextureRect" parent="." unique_id=206370215]
+visible = false
+layout_mode = 0
+offset_left = 413.0
+offset_top = -1.0
+offset_right = 633.0
+offset_bottom = 39.0
+texture = ExtResource("8_ata6j")
+expand_mode = 1
+
+[node name="party_register_confirm_upper_deck_area_slot_label" type="Label" parent="." unique_id=521616542]
+visible = false
+layout_mode = 0
+offset_left = 440.0
+offset_top = 9.0
+offset_right = 832.0
+offset_bottom = 32.0
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_e8wcf")
+text = "party_register_confirm_upper_deck_area_slot_label"
+horizontal_alignment = 1
+vertical_alignment = 1

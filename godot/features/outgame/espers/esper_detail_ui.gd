@@ -5,8 +5,7 @@ extends Control
 @onready var powerup_button: TextureButton = $btn_powerup
 @onready var reset_button: TextureButton = $btn_reset
 @onready var title_label: Label = $UnitNamebgChara2/Title
-@onready var summon_name_bg: TextureRect = $summon_mix_name_bg
-@onready var summon_name_label: Label = $summon_mix_name_label
+@onready var summon_image: TextureRect = $SummonImage
 @onready var level_label: Label = $lv_label
 @onready var hp_label: Label = $status_frame/label_hp
 @onready var mp_label: Label = $status_frame/label_mp
@@ -50,9 +49,6 @@ func _refresh_ui() -> void:
 		display_name = "Esper"
 
 	title_label.text = display_name
-	summon_name_bg.visible = true
-	summon_name_label.visible = true
-	summon_name_label.text = display_name
 
 	var progression: Dictionary = EsperService.get_esper_progression(_summon_id)
 	var rank: int = maxi(1, int(progression.get("rank", 1)))
@@ -64,6 +60,7 @@ func _refresh_ui() -> void:
 	cp_label.text = str(current_sp)
 
 	var summon_data: Dictionary = StaticData.game_data_summons.get(_summon_id, {})
+	summon_image.texture = _get_summon_image_texture(summon_data)
 	var resolved_skill: Dictionary = _resolve_rank_skill_data(summon_data, rank)
 	if not resolved_skill.is_empty():
 		skill_name.text = _get_skill_text_by_key(resolved_skill, "name")
@@ -133,6 +130,20 @@ func _extract_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level
 	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
 		resolved_stats[stat_key] = _interpolate_stat_value(raw_stats.get(stat_key, 0), level, rank_max_level)
 	return resolved_stats
+
+func _get_summon_image_texture(summon_data: Dictionary) -> Texture2D:
+	if summon_data.is_empty():
+		return null
+
+	var image_filename: String = str(summon_data.get("image", "")).strip_edges()
+	if image_filename == "":
+		return null
+
+	var image_path: String = "res://assets/esper/" + image_filename
+	if not ResourceLoader.exists(image_path):
+		return null
+
+	return ResourceLoader.load(image_path) as Texture2D
 
 func _resolve_rank_skill_data(summon_data: Dictionary, rank: int) -> Dictionary:
 	var skill_value: Variant = summon_data.get("skill", {})

@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://d1omj526abfwg"]
+
+[ext_resource type="Texture2D" uid="uid://br6dtn1d0kyly" path="res://assets/ui/create/cre_btn3_1.tres" id="1_o7nyp"]
+[ext_resource type="Texture2D" uid="uid://b8f4dsewc3kbk" path="res://assets/ui/create/cre_label_weapon_1.tres" id="2_owvhk"]
+[ext_resource type="Texture2D" uid="uid://dqha8ud08r48d" path="res://assets/ui/create/cre_label_armor_1.tres" id="3_qh3nu"]
+[ext_resource type="Texture2D" uid="uid://da4g28orpghaq" path="res://assets/ui/create/cre_label_accessory_1.tres" id="4_mvifr"]
+
+[node name="CraftEquipment" type="Control" unique_id=864663031]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="craft_recipe_type_weapon" type="TextureRect" parent="." unique_id=1563202021]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 5.0
+offset_right = 209.0
+offset_bottom = 81.0
+texture = ExtResource("1_o7nyp")
+expand_mode = 1
+
+[node name="CreLabelWeapon1" type="Sprite2D" parent="craft_recipe_type_weapon" unique_id=194794712]
+position = Vector2(100, 36)
+texture = ExtResource("2_owvhk")
+
+[node name="craft_recipe_type_protect" type="TextureRect" parent="." unique_id=1660458490]
+layout_mode = 0
+offset_left = 221.0
+offset_top = 5.0
+offset_right = 419.0
+offset_bottom = 81.0
+texture = ExtResource("1_o7nyp")
+expand_mode = 1
+
+[node name="CreLabelArmor1" type="Sprite2D" parent="craft_recipe_type_protect" unique_id=187866232]
+position = Vector2(96, 38)
+texture = ExtResource("3_qh3nu")
+
+[node name="craft_recipe_type_accessories" type="TextureRect" parent="." unique_id=2002323599]
+layout_mode = 0
+offset_left = 431.0
+offset_top = 5.0
+offset_right = 629.0
+offset_bottom = 81.0
+texture = ExtResource("1_o7nyp")
+expand_mode = 1
+
+[node name="CreLabelAccessory1" type="Sprite2D" parent="craft_recipe_type_accessories" unique_id=513517587]
+position = Vector2(99, 33)
+texture = ExtResource("4_mvifr")

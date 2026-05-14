@@ -212,6 +212,10 @@ func _update_esper_slots(esper_ids: Array) -> void:
 		if summon_id != "":
 			summon_name = _get_summon_display_name(summon_id)
 
+		var icon_rect: TextureRect = slot_btn.get_node_or_null("TextureRect") as TextureRect
+		if icon_rect != null:
+			icon_rect.texture = _get_summon_icon_texture(summon_id)
+
 		var lbl_name: Label = slot_btn.get_node("NameLabel") as Label
 		lbl_name.text = summon_name
 		var lbl_lvl: Label = slot_btn.get_node("LevelLabel") as Label
@@ -236,6 +240,24 @@ func _get_summon_display_name(summon_id: String) -> String:
 				return candidate
 
 	return "Summon %s" % summon_id
+
+func _get_summon_icon_texture(summon_id: String) -> Texture2D:
+	if summon_id == "":
+		return null
+
+	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	if summon_data.is_empty():
+		return null
+
+	var icon_filename: String = str(summon_data.get("icon", "")).strip_edges()
+	if icon_filename == "":
+		return null
+
+	var icon_path: String = "res://assets/esper/" + icon_filename
+	if not ResourceLoader.exists(icon_path):
+		return null
+
+	return _get_dynamic_texture(icon_path)
 
 func _find_unit_inst(uuid: String) -> Dictionary:
 	for u in UnitService.owned_units_ids:
@@ -274,7 +296,21 @@ func _commit_selected_party_on_exit() -> void:
 
 func _on_slot_clicked(slot_index: int, unit_inst: Dictionary) -> void:
 	if unit_inst.is_empty():
-		UIManager.push("unit_selector_ui", {"mode": "select", "party_index": current_party_index, "slot_index": slot_index})
+		var exclude_list: Array = PartyService.get_units_in_party_excluding_slot(current_party_index, slot_index)
+		
+		# Also exclude material units from party selection
+		for unit in UnitService.owned_units_ids:
+			if unit is Dictionary and UnitService.is_material_unit(unit):
+				var material_instance_id: String = str(unit.get("instance_id", ""))
+				if material_instance_id != "" and material_instance_id not in exclude_list:
+					exclude_list.append(material_instance_id)
+		
+		UIManager.push("unit_selector_ui", {
+			"mode": "select",
+			"party_index": current_party_index,
+			"slot_index": slot_index,
+			"exclude_list": exclude_list
+		})
 	else:
 		UIManager.push("unit_stats_popup", {"unit_inst": unit_inst, "party_index": current_party_index, "slot_index": slot_index})
 

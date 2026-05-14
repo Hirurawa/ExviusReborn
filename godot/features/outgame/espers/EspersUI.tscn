@@ -97,6 +97,12 @@ text = "name_label"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="SummonIcon" type="TextureRect" parent="EsperFrame" unique_id=271346450]
+layout_mode = 0
+offset_right = 192.0
+offset_bottom = 192.0
+stretch_mode = 2
+
 [node name="SummonFrame" type="TextureRect" parent="EsperFrame" unique_id=585886010]
 layout_mode = 0
 offset_right = 192.0

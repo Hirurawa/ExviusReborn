@@ -1,0 +1,87 @@
+[gd_scene format=3 uid="uid://c71srj3r5myik"]
+
+[ext_resource type="Texture2D" uid="uid://cb6bcra3ju6tu" path="res://assets/ui/common/button_large_icon1.tres" id="1_d5k3f"]
+[ext_resource type="Texture2D" uid="uid://cxg5jifom8axo" path="res://assets/ui/create/largebutton_label_createequip.tres" id="2_taytf"]
+[ext_resource type="Texture2D" uid="uid://dp5nutg27qlbq" path="res://assets/ui/common/button_large_icon2.tres" id="2_tnnae"]
+[ext_resource type="Texture2D" uid="uid://cp7bcf30h8qaq" path="res://assets/ui/create/largebutton_label_strengthen.tres" id="3_tnnae"]
+[ext_resource type="Texture2D" uid="uid://bqv8w5wpw4gep" path="res://assets/ui/create/largebutton_label_createitem.tres" id="4_63qtt"]
+[ext_resource type="Texture2D" uid="uid://c7p2td10syxjl" path="res://assets/ui/create/largebutton_label_createability.tres" id="5_lb3is"]
+[ext_resource type="Texture2D" uid="uid://xpejb1ew3m40" path="res://assets/ui/create/largebutton_label_vcstrengthen.tres" id="6_v48ai"]
+[ext_resource type="Texture2D" uid="uid://c257bjugymaw7" path="res://assets/ui/create/cre_craft_title.tres" id="7_1nqbr"]
+
+[node name="Craft" type="Control" unique_id=1168316291]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="craft_top_btn1" type="TextureButton" parent="." unique_id=1125754155]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 328.0
+offset_right = 305.0
+offset_bottom = 432.0
+texture_normal = ExtResource("1_d5k3f")
+texture_pressed = ExtResource("2_tnnae")
+
+[node name="LargebuttonLabelCreateequip" type="Sprite2D" parent="craft_top_btn1" unique_id=1810986533]
+position = Vector2(148, 52)
+texture = ExtResource("2_taytf")
+
+[node name="craft_top_btn2" type="TextureButton" parent="." unique_id=740054710]
+layout_mode = 0
+offset_left = 334.0
+offset_top = 328.0
+offset_right = 630.0
+offset_bottom = 432.0
+texture_normal = ExtResource("1_d5k3f")
+texture_pressed = ExtResource("2_tnnae")
+
+[node name="LargebuttonLabelStrengthen" type="Sprite2D" parent="craft_top_btn2" unique_id=1664489955]
+position = Vector2(148, 52)
+texture = ExtResource("3_tnnae")
+
+[node name="craft_top_btn3" type="TextureButton" parent="." unique_id=673985372]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 498.0
+offset_right = 305.0
+offset_bottom = 602.0
+texture_normal = ExtResource("1_d5k3f")
+texture_pressed = ExtResource("2_tnnae")
+
+[node name="LargebuttonLabelCreateitem" type="Sprite2D" parent="craft_top_btn3" unique_id=1892485798]
+position = Vector2(148, 52)
+texture = ExtResource("4_63qtt")
+
+[node name="craft_top_btn4" type="TextureButton" parent="." unique_id=1822322278]
+layout_mode = 0
+offset_left = 334.0
+offset_top = 498.0
+offset_right = 630.0
+offset_bottom = 602.0
+texture_normal = ExtResource("1_d5k3f")
+texture_pressed = ExtResource("2_tnnae")
+
+[node name="LargebuttonLabelCreateability" type="Sprite2D" parent="craft_top_btn4" unique_id=2014762975]
+position = Vector2(148, 52)
+texture = ExtResource("5_lb3is")
+
+[node name="craft_top_btn5" type="TextureButton" parent="." unique_id=1752891964]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 668.0
+offset_right = 305.0
+offset_bottom = 772.0
+texture_normal = ExtResource("1_d5k3f")
+texture_pressed = ExtResource("2_tnnae")
+
+[node name="LargebuttonLabelVcstrengthen" type="Sprite2D" parent="craft_top_btn5" unique_id=1931264769]
+position = Vector2(148, 52)
+texture = ExtResource("6_v48ai")
+
+[node name="CreCraftTitle" type="Sprite2D" parent="." unique_id=1700271587]
+position = Vector2(212, 156)
+texture = ExtResource("7_1nqbr")

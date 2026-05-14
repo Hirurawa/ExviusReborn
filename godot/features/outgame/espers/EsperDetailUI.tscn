@@ -13,7 +13,6 @@
 [ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="10_8av0p"]
 [ext_resource type="Texture2D" uid="uid://b5ijfw3ktu11p" path="res://assets/ui/common/button_middle_mediumlong1.tres" id="11_3nd5s"]
 [ext_resource type="Texture2D" uid="uid://djofy6ci7ko88" path="res://assets/ui/beast/minibutton_long_label_boardreset.tres" id="11_n6gqy"]
-[ext_resource type="Texture2D" uid="uid://gjc7sewsd8rt" path="res://assets/ui/beast/summon_name.tres" id="12_wugaj"]
 [ext_resource type="Texture2D" uid="uid://b06exv82vpr23" path="res://assets/ui/beast/middlebutton_label_resist.tres" id="13_ua42v"]
 [ext_resource type="Texture2D" uid="uid://dvj1adbih78jd" path="res://assets/ui/common/button_large1.tres" id="13_v0mb8"]
 [ext_resource type="Texture2D" uid="uid://cupn218skk1vc" path="res://assets/ui/common/mini_arrow_r.tres" id="14_2nnm6"]
@@ -62,6 +61,14 @@ offset_right = 781.0
 offset_bottom = 920.0
 texture = ExtResource("2_lo2hk")
 stretch_mode = 2
+
+[node name="SummonImage" type="TextureRect" parent="." unique_id=513396378]
+layout_mode = 0
+offset_top = 103.0
+offset_right = 640.0
+offset_bottom = 763.0
+expand_mode = 4
+stretch_mode = 5
 
 [node name="summon_image" type="TextureRect" parent="." unique_id=2114202208]
 visible = false
@@ -345,28 +352,6 @@ texture_pressed = ExtResource("21_p1yt5")
 [node name="MiddlebuttonLabelSpecial" type="Sprite2D" parent="btn_ability" unique_id=1966155891]
 position = Vector2(72, 38)
 texture = ExtResource("15_8av0p")
-
-[node name="summon_mix_name_bg" type="TextureRect" parent="." unique_id=413835666]
-visible = false
-layout_mode = 0
-offset_left = 5.0
-offset_top = 233.0
-offset_right = 325.0
-offset_bottom = 267.0
-texture = ExtResource("12_wugaj")
-expand_mode = 1
-
-[node name="summon_mix_name_label" type="Label" parent="." unique_id=2026447770]
-visible = false
-layout_mode = 0
-offset_left = 33.0
-offset_top = 239.0
-offset_right = 285.0
-offset_bottom = 262.0
-theme_override_font_sizes/font_size = 22
-text = "summon_mix_name_label"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="btn_board" type="TextureButton" parent="." unique_id=446100227]
 layout_mode = 0

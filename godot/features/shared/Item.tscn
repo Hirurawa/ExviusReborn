@@ -110,6 +110,15 @@ texture = ExtResource("5_kacut")
 expand_mode = 1
 stretch_mode = 4
 
+[node name="EquippedTo" type="TextureRect" parent="." unique_id=1139933438]
+layout_mode = 0
+offset_left = 213.0
+offset_top = 7.0
+offset_right = 262.0
+offset_bottom = 40.0
+expand_mode = 1
+stretch_mode = 4
+
 [node name="ClickArea" type="Button" parent="." unique_id=1647311002]
 layout_mode = 0
 offset_right = 306.0

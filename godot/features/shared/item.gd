@@ -90,6 +90,7 @@ const TYPE_BADGE_BY_TYPE_NAME: Dictionary = {
 @onready var equip_name: Label = $unit_equip_list_name_text
 @onready var unit_equip_cat: TextureRect = $UnitEquipCategory
 @onready var equip_cat: TextureRect = $EquipCategory
+@onready var equipped_to: TextureRect = $EquippedTo
 @onready var prop_label_1: TextureRect = $unit_equip_list_property1_label
 @onready var prop_number_1: Label = $unit_equip_list_property1_number
 @onready var prop_label_2: TextureRect = $unit_equip_list_property2_label
@@ -127,6 +128,7 @@ func setup_from_item_data(item_data: Dictionary, display_options: Dictionary = {
 	_apply_slot_badge(item_data, display_options)
 	_apply_type_badge(item_data, display_options)
 	_apply_primary_stats(item_data)
+	_apply_equipped_to(item_data, display_options)
 
 func setup_placeholder(title: String, detail_text: String = "", display_options: Dictionary = {}) -> void:
 	if not is_node_ready():
@@ -146,10 +148,17 @@ func setup_placeholder(title: String, detail_text: String = "", display_options:
 		item_count_label.text = "x%d" % quantity
 		item_count_label.show()
 
-	var slot_badge_path: String = str(display_options.get("slot_badge_path", ""))
-	if slot_badge_path != "":
-		unit_equip_cat.texture = _load_texture(slot_badge_path)
-		unit_equip_cat.visible = unit_equip_cat.texture != null
+	if bool(display_options.get("show_slot_badge", true)):
+		var slot_badge_path: String = str(display_options.get("slot_badge_path", ""))
+		if slot_badge_path == "":
+			var slot_badge_key: String = str(display_options.get("slot_badge", ""))
+			if slot_badge_key != "":
+				slot_badge_path = "%sunit_equip_category_%s.tres" % [UI_UNIT_BASE_PATH, slot_badge_key]
+		if slot_badge_path != "":
+			unit_equip_cat.texture = _load_texture(slot_badge_path)
+			unit_equip_cat.visible = unit_equip_cat.texture != null
+	else:
+		unit_equip_cat.hide()
 
 	var type_badge_path: String = str(display_options.get("type_badge_path", ""))
 	if type_badge_path != "":
@@ -169,6 +178,9 @@ func _reset_visual_state() -> void:
 	if equip_cat != null:
 		equip_cat.texture = null
 		equip_cat.hide()
+	if equipped_to != null:
+		equipped_to.texture = null
+		equipped_to.hide()
 	if prop_label_1 != null:
 		prop_label_1.hide()
 	if prop_number_1 != null:
@@ -204,6 +216,7 @@ func _apply_quantity(display_options: Dictionary) -> void:
 
 func _apply_slot_badge(item_data: Dictionary, display_options: Dictionary) -> void:
 	if not bool(display_options.get("show_slot_badge", true)):
+		unit_equip_cat.hide()
 		return
 
 	var badge_key: String = str(display_options.get("slot_badge", ""))
@@ -235,6 +248,33 @@ func _apply_primary_stats(item_data: Dictionary) -> void:
 	_apply_single_stat(prop_label_1, prop_number_1, primary_stats[0])
 	if primary_stats.size() > 1:
 		_apply_single_stat(prop_label_2, prop_number_2, primary_stats[1])
+
+func _apply_equipped_to(item_data: Dictionary, display_options: Dictionary) -> void:
+	var equipped_to_unit_id: String = str(display_options.get("equipped_to_unit_id", ""))
+	if equipped_to_unit_id == "":
+		equipped_to_unit_id = str(item_data.get("equipped_to", ""))
+	
+	if equipped_to_unit_id == "":
+		return
+	
+	# Find the unit by instance_id in UnitService's owned_units_ids
+	var unit_inst: Dictionary = {}
+	for unit in UnitService.owned_units_ids:
+		if str(unit.get("instance_id", "")) == equipped_to_unit_id:
+			unit_inst = unit
+			break
+	
+	if unit_inst.is_empty():
+		return
+	
+	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	if unit_id == "":
+		return
+	
+	var icon_path: String = "res://assets/unit_icons/unit_icon_%s.png" % unit_id
+	equipped_to.texture = _load_texture(icon_path)
+	if equipped_to.texture != null:
+		equipped_to.show()
 
 func _apply_single_stat(label_rect: TextureRect, value_label: Label, stat_info: Dictionary) -> void:
 	var stat_key: String = str(stat_info.get("key", ""))

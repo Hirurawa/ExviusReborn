@@ -1,56 +1,92 @@
 [gd_scene format=3 uid="uid://daqiwnlxd4cwj"]
 
+[ext_resource type="Script" path="res://features/outgame/craft/craft_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dtaou5udxf6p2" path="res://assets/ui/create/cre_btn5_2.tres" id="1_rddch"]
+[ext_resource type="Texture2D" uid="uid://b6jx2ybi2213w" path="res://assets/ui/create/cre_prepare_title.tres" id="2_chraj"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_wdfox"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_005mf"]
 
 [node name="CraftItem" type="Control" unique_id=718299518]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 120.0
+offset_bottom = 120.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
 [node name="craft_recipe_type_recovery" type="TextureRect" parent="." unique_id=1906002777]
 layout_mode = 0
 offset_left = 7.0
-offset_top = 5.0
+offset_top = 133.0
 offset_right = 125.0
-offset_bottom = 81.0
+offset_bottom = 209.0
 texture = ExtResource("1_rddch")
 expand_mode = 1
 
 [node name="craft_recipe_type_strecovery" type="TextureRect" parent="." unique_id=1724341725]
 layout_mode = 0
 offset_left = 134.0
-offset_top = 5.0
+offset_top = 133.0
 offset_right = 252.0
-offset_bottom = 81.0
+offset_bottom = 209.0
 texture = ExtResource("1_rddch")
 expand_mode = 1
 
 [node name="craft_recipe_type_support" type="TextureRect" parent="." unique_id=1659542569]
 layout_mode = 0
 offset_left = 261.0
-offset_top = 5.0
+offset_top = 133.0
 offset_right = 379.0
-offset_bottom = 81.0
+offset_bottom = 209.0
 texture = ExtResource("1_rddch")
 expand_mode = 1
 
 [node name="craft_recipe_type_attack" type="TextureRect" parent="." unique_id=665045220]
 layout_mode = 0
 offset_left = 388.0
-offset_top = 5.0
+offset_top = 133.0
 offset_right = 506.0
-offset_bottom = 81.0
+offset_bottom = 209.0
 texture = ExtResource("1_rddch")
 expand_mode = 1
 
 [node name="craft_recipe_type_other" type="TextureRect" parent="." unique_id=1914851322]
 layout_mode = 0
 offset_left = 515.0
-offset_top = 5.0
+offset_top = 133.0
 offset_right = 633.0
-offset_bottom = 81.0
+offset_bottom = 209.0
 texture = ExtResource("1_rddch")
 expand_mode = 1
+
+[node name="CrePrepareTitle" type="Sprite2D" parent="." unique_id=491988617]
+position = Vector2(212, 56)
+texture = ExtResource("2_chraj")
+
+[node name="Title" type="Label" parent="CrePrepareTitle" unique_id=1938998912]
+offset_left = 12.0
+offset_top = -3.0
+offset_right = 123.0
+offset_bottom = 20.0
+text = "Item"
+
+[node name="BackButton" type="TextureButton" parent="CrePrepareTitle" unique_id=1313691217]
+offset_left = -166.0
+offset_top = -46.0
+offset_right = -70.0
+offset_bottom = 14.0
+texture_normal = ExtResource("3_wdfox")
+texture_pressed = ExtResource("4_005mf")
+
+[node name="Back" type="Label" parent="CrePrepareTitle/BackButton" unique_id=936851503]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1

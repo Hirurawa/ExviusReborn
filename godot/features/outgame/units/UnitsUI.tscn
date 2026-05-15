@@ -8,9 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://c1anumws64r7v" path="res://assets/ui/beast/summon_frame.tres" id="6_2pfev"]
 [ext_resource type="Texture2D" uid="uid://bfmn57g3vdqo" path="res://assets/ui/unit/unit_partybg_bottom.tres" id="7_blgtl"]
 [ext_resource type="Texture2D" uid="uid://cjoi8tguwp0nq" path="res://assets/ui/unit/unit_partyname_edit1.tres" id="8_ata6j"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e8wcf"]
-bg_color = Color(1, 0, 0, 0.2)
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="9_2pfev"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="10_blgtl"]
 
 [node name="UnitsUI" type="Control" unique_id=1141370021]
 layout_mode = 3
@@ -23,531 +22,35 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=818974411]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 1.0
-anchor_bottom = 0.93600005
-offset_bottom = -0.08001709
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ManagePartyLabel" type="Label" parent="VBoxContainer" unique_id=321609183]
-layout_mode = 2
-text = "Manage Party"
-
-[node name="PartyHeaderHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=590024559]
-layout_mode = 2
-alignment = 1
-
-[node name="PrevPartyButton" type="Button" parent="VBoxContainer/PartyHeaderHBox" unique_id=1713956979]
-layout_mode = 2
-text = "<"
-
-[node name="PartyNameLabel" type="Label" parent="VBoxContainer/PartyHeaderHBox" unique_id=327844339]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "PARTY 1"
-horizontal_alignment = 1
-
-[node name="NextPartyButton" type="Button" parent="VBoxContainer/PartyHeaderHBox" unique_id=1855897873]
-layout_mode = 2
-text = ">"
-
-[node name="PaginationHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=49164208]
-layout_mode = 2
-alignment = 1
-
-[node name="Dot1" type="Label" parent="VBoxContainer/PaginationHBox" unique_id=1475055590]
-layout_mode = 2
-text = "●"
-
-[node name="Dot2" type="Label" parent="VBoxContainer/PaginationHBox" unique_id=719324626]
-layout_mode = 2
-text = "○"
-
-[node name="Dot3" type="Label" parent="VBoxContainer/PaginationHBox" unique_id=2037597900]
-layout_mode = 2
-text = "○"
-
-[node name="Dot4" type="Label" parent="VBoxContainer/PaginationHBox" unique_id=2138521619]
-layout_mode = 2
-text = "○"
-
-[node name="Dot5" type="Label" parent="VBoxContainer/PaginationHBox" unique_id=1789552603]
-layout_mode = 2
-text = "○"
-
-[node name="PartySlotsHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=388708203]
-layout_mode = 2
-size_flags_vertical = 3
-alignment = 1
-
-[node name="Slot1" type="Button" parent="VBoxContainer/PartySlotsHBox" unique_id=1558853752]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="unit_pedestal_1" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot1" unique_id=405535803]
+[node name="bg_top" type="TextureRect" parent="." unique_id=961151574]
 layout_mode = 0
-offset_left = -10.0
-offset_top = 3.0
-offset_right = 138.0
-offset_bottom = 171.0
-texture = ExtResource("2_4fc4h")
+offset_top = 85.0
+offset_right = 640.0
+offset_bottom = 141.0
+texture = ExtResource("4_e7oih")
 expand_mode = 1
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot1" unique_id=1263471229]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot1" unique_id=1412399752]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot1" unique_id=1138276142]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot2" type="Button" parent="VBoxContainer/PartySlotsHBox" unique_id=185803209]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="unit_pedestal_2" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot2" unique_id=576197481]
+[node name="slot_plate" type="TextureRect" parent="." unique_id=206370215]
 layout_mode = 0
-offset_left = -11.0
-offset_top = 3.0
-offset_right = 137.0
-offset_bottom = 171.0
-texture = ExtResource("2_4fc4h")
+offset_left = 413.0
+offset_top = 89.0
+offset_right = 633.0
+offset_bottom = 129.0
+texture = ExtResource("8_ata6j")
 expand_mode = 1
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot2" unique_id=115278707]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot2" unique_id=1045858034]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot2" unique_id=309335841]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot3" type="Button" parent="VBoxContainer/PartySlotsHBox" unique_id=889575411]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="unit_pedestal_3" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot3" unique_id=1940070283]
+[node name="slot_label" type="Label" parent="." unique_id=521616542]
 layout_mode = 0
-offset_left = -13.0
-offset_top = 3.0
-offset_right = 135.0
-offset_bottom = 171.0
-texture = ExtResource("2_4fc4h")
-expand_mode = 1
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot3" unique_id=1873008110]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot3" unique_id=807526072]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
+offset_left = 440.0
+offset_top = 98.0
+offset_right = 626.0
+offset_bottom = 126.0
+theme_override_font_sizes/font_size = 20
+text = "PartyName"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot3" unique_id=1121960527]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot4" type="Button" parent="VBoxContainer/PartySlotsHBox" unique_id=21169920]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="unit_pedestal_4" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot4" unique_id=614512544]
-layout_mode = 0
-offset_left = -16.0
-offset_top = 3.0
-offset_right = 132.0
-offset_bottom = 171.0
-texture = ExtResource("2_4fc4h")
-expand_mode = 1
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot4" unique_id=2040546361]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot4" unique_id=2131998257]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot4" unique_id=1521371018]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot5" type="Button" parent="VBoxContainer/PartySlotsHBox" unique_id=804469114]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="unit_pedestal_5" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot5" unique_id=882085415]
-layout_mode = 0
-offset_left = -16.0
-offset_top = 3.0
-offset_right = 132.0
-offset_bottom = 171.0
-texture = ExtResource("2_4fc4h")
-expand_mode = 1
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PartySlotsHBox/Slot5" unique_id=1515325319]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot5" unique_id=570942557]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/PartySlotsHBox/Slot5" unique_id=121674795]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="EsperSlots" type="HBoxContainer" parent="VBoxContainer" unique_id=512475207]
-layout_mode = 2
-size_flags_vertical = 3
-alignment = 1
-
-[node name="Slot1" type="Button" parent="VBoxContainer/EsperSlots" unique_id=859245025]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot1" unique_id=1310054306]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot1" unique_id=1553821182]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot1" unique_id=829017096]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot2" type="Button" parent="VBoxContainer/EsperSlots" unique_id=1601935880]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot2" unique_id=997364709]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot2" unique_id=22179061]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot2" unique_id=940240046]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot3" type="Button" parent="VBoxContainer/EsperSlots" unique_id=898124885]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot3" unique_id=291827391]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot3" unique_id=1053286178]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot3" unique_id=466593979]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot4" type="Button" parent="VBoxContainer/EsperSlots" unique_id=1485641434]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot4" unique_id=1915033821]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot4" unique_id=597916031]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot4" unique_id=1348057624]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Slot5" type="Button" parent="VBoxContainer/EsperSlots" unique_id=1128991216]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/EsperSlots/Slot5" unique_id=1504851644]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot5" unique_id=906524263]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_bottom = 23.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="LevelLabel" type="Label" parent="VBoxContainer/EsperSlots/Slot5" unique_id=1713207464]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 22.0
-offset_bottom = 45.0
-grow_horizontal = 2
-grow_vertical = 0
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="VBoxContainer" unique_id=457134966]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="BottomButtonsGrid" type="GridContainer" parent="VBoxContainer" unique_id=603550041]
-layout_mode = 2
-columns = 2
-
-[node name="ViewUnitsButton" type="Button" parent="VBoxContainer/BottomButtonsGrid" unique_id=1084784823]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "View Units"
-
-[node name="AwakenAbilitiesButton" type="Button" parent="VBoxContainer/BottomButtonsGrid" unique_id=1763836982]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Awaken Abilities (Placeholder)"
-
-[node name="EnhanceUnitsButton" type="Button" parent="VBoxContainer/BottomButtonsGrid" unique_id=1601654095]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Enhance Units"
-
-[node name="AwakenUnitsButton" type="Button" parent="VBoxContainer/BottomButtonsGrid" unique_id=286008193]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Awaken Units (Placeholder)"
-icon = ExtResource("3_e30sy")
-expand_icon = true
-
-[node name="party_register_confirm_upper_deck_area_bg" type="TextureRect" parent="." unique_id=2133791077]
+[node name="area_bg" type="TextureRect" parent="." unique_id=2133791077]
 visible = false
 layout_mode = 0
 offset_top = 51.0
@@ -555,72 +58,322 @@ offset_right = 640.0
 offset_bottom = 351.0
 expand_mode = 1
 
-[node name="party_register_confirm_upper_deck_area_bg_top" type="TextureRect" parent="." unique_id=961151574]
-visible = false
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1912709447]
+clip_contents = true
+layout_direction = 2
 layout_mode = 0
-offset_top = -4.0
+offset_top = 143.0
 offset_right = 640.0
-offset_bottom = 52.0
-texture = ExtResource("4_e7oih")
-expand_mode = 1
+offset_bottom = 441.0
 
-[node name="party_register_confirm_upper_deck_area_unit_offset" type="TextureRect" parent="." unique_id=381507055]
-visible = false
+[node name="Unit1" type="Button" parent="HBoxContainer" unique_id=983147893]
+layout_mode = 2
+size_flags_horizontal = 3
+flat = true
+
+[node name="unit_pedestal" type="TextureRect" parent="HBoxContainer/Unit1" unique_id=381507055]
 layout_mode = 0
-offset_top = 51.0
+offset_top = -5.0
 offset_right = 148.0
-offset_bottom = 219.0
+offset_bottom = 163.0
 texture = ExtResource("2_4fc4h")
 expand_mode = 1
 
-[node name="party_register_confirm_upper_deck_area_linked_line" type="TextureRect" parent="." unique_id=1461290674]
-visible = false
+[node name="linked_line" type="TextureRect" parent="HBoxContainer/Unit1" unique_id=1461290674]
 layout_mode = 0
-offset_left = 50.0
-offset_top = 179.0
-offset_right = 82.0
-offset_bottom = 275.0
+offset_left = 58.0
+offset_top = 123.0
+offset_right = 90.0
+offset_bottom = 219.0
 texture = ExtResource("5_ymc44")
 expand_mode = 1
 
-[node name="party_register_confirm_upper_deck_area_beast_icon" type="TextureRect" parent="." unique_id=1999920269]
-visible = false
+[node name="beast_icon" type="TextureRect" parent="HBoxContainer/Unit1" unique_id=2104270234]
 layout_mode = 0
-offset_left = 18.0
-offset_top = 247.0
-offset_right = 114.0
-offset_bottom = 343.0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+expand_mode = 1
+
+[node name="beast_frame" type="TextureRect" parent="HBoxContainer/Unit1" unique_id=1999920269]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
 texture = ExtResource("6_2pfev")
 expand_mode = 1
 
-[node name="party_register_confirm_upper_deck_area_bg_bottom" type="TextureRect" parent="." unique_id=493108224]
-visible = false
+[node name="Unit2" type="Button" parent="HBoxContainer" unique_id=875107560]
+layout_mode = 2
+size_flags_horizontal = 3
+flat = true
+
+[node name="unit_pedestal" type="TextureRect" parent="HBoxContainer/Unit2" unique_id=1626541302]
 layout_mode = 0
-offset_top = 351.0
+offset_top = -5.0
+offset_right = 148.0
+offset_bottom = 163.0
+texture = ExtResource("2_4fc4h")
+expand_mode = 1
+
+[node name="linked_line" type="TextureRect" parent="HBoxContainer/Unit2" unique_id=958291372]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 123.0
+offset_right = 90.0
+offset_bottom = 219.0
+texture = ExtResource("5_ymc44")
+expand_mode = 1
+
+[node name="beast_icon" type="TextureRect" parent="HBoxContainer/Unit2" unique_id=1721344057]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+expand_mode = 1
+
+[node name="beast_frame" type="TextureRect" parent="HBoxContainer/Unit2" unique_id=985565101]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+texture = ExtResource("6_2pfev")
+expand_mode = 1
+
+[node name="Unit3" type="Button" parent="HBoxContainer" unique_id=1635483203]
+layout_mode = 2
+size_flags_horizontal = 3
+flat = true
+
+[node name="unit_pedestal" type="TextureRect" parent="HBoxContainer/Unit3" unique_id=56411988]
+layout_mode = 0
+offset_top = -5.0
+offset_right = 148.0
+offset_bottom = 163.0
+texture = ExtResource("2_4fc4h")
+expand_mode = 1
+
+[node name="linked_line" type="TextureRect" parent="HBoxContainer/Unit3" unique_id=1837536030]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 123.0
+offset_right = 90.0
+offset_bottom = 219.0
+texture = ExtResource("5_ymc44")
+expand_mode = 1
+
+[node name="beast_icon" type="TextureRect" parent="HBoxContainer/Unit3" unique_id=766432742]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+expand_mode = 1
+
+[node name="beast_frame" type="TextureRect" parent="HBoxContainer/Unit3" unique_id=68834966]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+texture = ExtResource("6_2pfev")
+expand_mode = 1
+
+[node name="Unit4" type="Button" parent="HBoxContainer" unique_id=52325157]
+layout_mode = 2
+size_flags_horizontal = 3
+flat = true
+
+[node name="unit_pedestal" type="TextureRect" parent="HBoxContainer/Unit4" unique_id=1981113560]
+layout_mode = 0
+offset_top = -5.0
+offset_right = 148.0
+offset_bottom = 163.0
+texture = ExtResource("2_4fc4h")
+expand_mode = 1
+
+[node name="linked_line" type="TextureRect" parent="HBoxContainer/Unit4" unique_id=634475600]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 123.0
+offset_right = 90.0
+offset_bottom = 219.0
+texture = ExtResource("5_ymc44")
+expand_mode = 1
+
+[node name="beast_icon" type="TextureRect" parent="HBoxContainer/Unit4" unique_id=2123024617]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+expand_mode = 1
+
+[node name="beast_frame" type="TextureRect" parent="HBoxContainer/Unit4" unique_id=1335694598]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+texture = ExtResource("6_2pfev")
+expand_mode = 1
+
+[node name="Unit5" type="Button" parent="HBoxContainer" unique_id=1810831849]
+layout_mode = 2
+size_flags_horizontal = 3
+flat = true
+
+[node name="unit_pedestal" type="TextureRect" parent="HBoxContainer/Unit5" unique_id=1089644196]
+layout_mode = 0
+offset_top = -5.0
+offset_right = 148.0
+offset_bottom = 163.0
+texture = ExtResource("2_4fc4h")
+expand_mode = 1
+
+[node name="linked_line" type="TextureRect" parent="HBoxContainer/Unit5" unique_id=1147223623]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 123.0
+offset_right = 90.0
+offset_bottom = 219.0
+texture = ExtResource("5_ymc44")
+expand_mode = 1
+
+[node name="beast_icon" type="TextureRect" parent="HBoxContainer/Unit5" unique_id=2126094031]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+expand_mode = 1
+
+[node name="beast_frame" type="TextureRect" parent="HBoxContainer/Unit5" unique_id=465991197]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 191.0
+offset_right = 122.0
+offset_bottom = 287.0
+texture = ExtResource("6_2pfev")
+expand_mode = 1
+
+[node name="bg_bottom" type="TextureRect" parent="." unique_id=493108224]
+layout_mode = 0
+offset_top = 440.0
 offset_right = 640.0
-offset_bottom = 367.0
+offset_bottom = 456.0
 texture = ExtResource("7_blgtl")
 expand_mode = 1
 
-[node name="party_register_confirm_upper_deck_area_slot_plate" type="TextureRect" parent="." unique_id=206370215]
-visible = false
+[node name="PartyHeaderHBox" type="HBoxContainer" parent="." unique_id=2098259676]
 layout_mode = 0
-offset_left = 413.0
-offset_top = -1.0
-offset_right = 633.0
-offset_bottom = 39.0
-texture = ExtResource("8_ata6j")
-expand_mode = 1
+offset_top = 89.0
+offset_right = 640.0
+offset_bottom = 120.0
+alignment = 1
 
-[node name="party_register_confirm_upper_deck_area_slot_label" type="Label" parent="." unique_id=521616542]
+[node name="PrevPartyButton" type="Button" parent="PartyHeaderHBox" unique_id=492780652]
+layout_mode = 2
+text = "<"
+
+[node name="PaginationHBox" type="HBoxContainer" parent="PartyHeaderHBox" unique_id=2110328280]
+layout_mode = 2
+alignment = 1
+
+[node name="Dot1" type="Label" parent="PartyHeaderHBox/PaginationHBox" unique_id=2073221514]
+layout_mode = 2
+text = "●"
+
+[node name="Dot2" type="Label" parent="PartyHeaderHBox/PaginationHBox" unique_id=423107756]
+layout_mode = 2
+text = "○"
+
+[node name="Dot3" type="Label" parent="PartyHeaderHBox/PaginationHBox" unique_id=658913654]
+layout_mode = 2
+text = "○"
+
+[node name="Dot4" type="Label" parent="PartyHeaderHBox/PaginationHBox" unique_id=1570750587]
+layout_mode = 2
+text = "○"
+
+[node name="Dot5" type="Label" parent="PartyHeaderHBox/PaginationHBox" unique_id=504980791]
+layout_mode = 2
+text = "○"
+
+[node name="NextPartyButton" type="Button" parent="PartyHeaderHBox" unique_id=1412588251]
+layout_mode = 2
+text = ">"
+
+[node name="BottomButtonsGrid" type="GridContainer" parent="." unique_id=172463873]
+layout_mode = 0
+offset_top = 530.0
+offset_right = 640.0
+offset_bottom = 694.0
+columns = 2
+
+[node name="ViewUnitsButton" type="Button" parent="BottomButtonsGrid" unique_id=244551799]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "View Units"
+
+[node name="AwakenAbilitiesButton" type="Button" parent="BottomButtonsGrid" unique_id=741166952]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Awaken Abilities (Placeholder)"
+
+[node name="EnhanceUnitsButton" type="Button" parent="BottomButtonsGrid" unique_id=521087587]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enhance Units"
+
+[node name="AwakenUnitsButton" type="Button" parent="BottomButtonsGrid" unique_id=2142814035]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Awaken Units"
+icon = ExtResource("3_e30sy")
+expand_icon = true
+
+[node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=1599766870]
 visible = false
 layout_mode = 0
-offset_left = 440.0
-offset_top = 9.0
-offset_right = 832.0
-offset_bottom = 32.0
-theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxFlat_e8wcf")
-text = "party_register_confirm_upper_deck_area_slot_label"
+offset_left = -1.0
+offset_top = 4.0
+offset_right = 640.0
+offset_bottom = 85.0
+texture = ExtResource("9_2pfev")
+stretch_mode = 2
+
+[node name="Party" type="Label" parent="UnitNamebgChara" unique_id=1715886544]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Party"
+
+[node name="UnitMinibutton1" type="Button" parent="UnitNamebgChara" unique_id=426345376]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+icon = ExtResource("10_blgtl")
+flat = true
+
+[node name="Back" type="Label" parent="UnitNamebgChara/UnitMinibutton1" unique_id=849731872]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 23.0
+offset_right = 72.0
+offset_bottom = 46.0
+text = "Back"
 horizontal_alignment = 1
 vertical_alignment = 1

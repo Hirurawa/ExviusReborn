@@ -7,7 +7,6 @@ var top_header: Node = null
 var bottom_nav: Node = null
 var home_buttons: Node = null
 
-# Add standard menu mappings for easier instancing
 var _scenes_map: Dictionary = {
 	"login_ui": "res://features/auth/LoginUI.tscn",
 	"register_ui": "res://features/auth/RegisterUI.tscn",
@@ -17,6 +16,7 @@ var _scenes_map: Dictionary = {
 	"map_ui": "res://features/outgame/map/MapUI.tscn",
 	"units_ui": "res://features/outgame/units/UnitsUI.tscn",
 	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
+	"awaken_ui": "res://features/outgame/units/UnitAwakening.tscn",
 	"unit_selector_ui": "res://features/outgame/units/UnitSelectorUI.tscn",
 	"unit_stats_popup": "res://features/outgame/units/UnitStatsPopup.tscn",
 	"unit_detail_ui": "res://features/outgame/units/UnitDetail.tscn",
@@ -24,6 +24,10 @@ var _scenes_map: Dictionary = {
 	"item_category_list_ui": "res://features/outgame/inventory/ItemCategoryListUI.tscn",
 	"friends_ui": "res://features/outgame/friends/FriendsUI.tscn",
 	"summon_ui": "res://features/outgame/summon/SummonUI.tscn",
+	"craft_ui": "res://features/outgame/craft/Craft.tscn",
+	"craft_equipment_ui": "res://features/outgame/craft/CraftEquipment.tscn",
+	"craft_item_ui": "res://features/outgame/craft/CraftItem.tscn",
+	"craft_ability_ui": "res://features/outgame/craft/CraftAbility.tscn",
 	"espers_ui": "res://features/outgame/espers/EspersUI.tscn",
 	"esper_detail_ui": "res://features/outgame/espers/EsperDetailUI.tscn",
 	"summon_board_ui": "res://features/outgame/espers/SummonBoardUI.tscn",
@@ -31,6 +35,8 @@ var _scenes_map: Dictionary = {
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn"
 }
+
+
 
 func _ready() -> void:
 	canvas_layer = CanvasLayer.new()
@@ -59,6 +65,7 @@ func _load_persistent_overlays() -> void:
 		home_buttons.hide()
 		home_buttons.world_map_pressed.connect(_on_world_map_pressed)
 		home_buttons.espers_pressed.connect(_on_espers_pressed)
+		home_buttons.craft_pressed.connect(_on_craft_pressed)
 		canvas_layer.add_child(home_buttons)
 
 func _on_world_map_pressed() -> void:
@@ -66,6 +73,9 @@ func _on_world_map_pressed() -> void:
 
 func _on_espers_pressed() -> void:
 	push("espers_ui")
+
+func _on_craft_pressed() -> void:
+	push("craft_ui")
 
 func _update_overlays() -> void:
 	if _menu_stack.is_empty():

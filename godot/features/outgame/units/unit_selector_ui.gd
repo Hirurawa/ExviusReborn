@@ -43,21 +43,38 @@ const SORT_RARITY_DESC: String = "rarity_desc"
 signal unit_selected(unit_inst: Dictionary)
 signal materials_selected(units_array: Array)
 
-var _texture_cache: Dictionary = {}
+static var _shared_texture_cache: Dictionary = {}
+static var _shared_path_exists_cache: Dictionary = {}
+static var _shared_pedestal_cache: Dictionary = {}
+
 var _exclude_instance_id_set: Dictionary = {}
 var _selected_units_map: Dictionary = {}
 var _material_checkboxes: Dictionary = {}
 var _suppress_checkbox_signal: bool = false
 var _current_sort_mode: String = SORT_DEFAULT
+var _has_received_init_params: bool = false
+var _has_rendered_once: bool = false
+var _refresh_scheduled: bool = false
+var _last_effective_cell_width: int = -1
 
 func _get_dynamic_texture(path: String) -> Texture2D:
-	if _texture_cache.has(path):
-		return _texture_cache[path]
+	if _shared_texture_cache.has(path):
+		return _shared_texture_cache[path]
 	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
-	_texture_cache[path] = tex
+	_shared_texture_cache[path] = tex
 	return tex
 
+func _resource_exists(path: String) -> bool:
+	if _shared_path_exists_cache.has(path):
+		return bool(_shared_path_exists_cache[path])
+	var exists: bool = ResourceLoader.exists(path)
+	_shared_path_exists_cache[path] = exists
+	return exists
+
 func _get_pedestal_texture(rarity: int) -> Texture2D:
+	if _shared_pedestal_cache.has(rarity):
+		return _shared_pedestal_cache[rarity]
+
 	var candidate_paths: Array[String] = [
 		"res://assets/ui/unit/unit_charastand_rare%s_small.tres" % rarity,
 		"res://assets/ui/unit/unit_charastand_rare%s_small.png" % rarity,
@@ -66,12 +83,16 @@ func _get_pedestal_texture(rarity: int) -> Texture2D:
 	]
 
 	for path in candidate_paths:
-		if ResourceLoader.exists(path):
-			return _get_dynamic_texture(path)
+		if _resource_exists(path):
+			var pedestal_texture: Texture2D = _get_dynamic_texture(path)
+			_shared_pedestal_cache[rarity] = pedestal_texture
+			return pedestal_texture
 
+	_shared_pedestal_cache[rarity] = null
 	return null
 
 func init_scene(params: Dictionary) -> void:
+	_has_received_init_params = true
 	if params.has("mode"):
 		mode = params.mode
 	if params.has("party_index"):
@@ -95,7 +116,7 @@ func _apply_scene_params() -> void:
 		return
 
 	_update_mode_ui()
-	_refresh_units_list(UnitService.owned_units_ids)
+	_request_units_list_refresh()
 
 func _rebuild_exclude_set() -> void:
 	_exclude_instance_id_set.clear()
@@ -145,7 +166,12 @@ func _ready() -> void:
 	units_list_container.columns = GRID_COLUMNS
 	units_scroll_container.resized.connect(_on_scroll_metrics_changed)
 	UnitService.units_updated.connect(_on_units_updated)
-	_refresh_units_list(UnitService.owned_units_ids)
+	call_deferred("_refresh_after_ready_without_params")
+
+func _refresh_after_ready_without_params() -> void:
+	if _has_received_init_params:
+		return
+	_request_units_list_refresh()
 
 func _on_back_pressed() -> void:
 	UIManager.pop()
@@ -177,11 +203,26 @@ func _on_clear_material_selection() -> void:
 			_set_checkbox_state(check_box, false)
 
 func _on_units_updated(units: Array) -> void:
-	_refresh_units_list(units)
+	_request_units_list_refresh()
+
+func _request_units_list_refresh() -> void:
+	if _refresh_scheduled:
+		return
+	_refresh_scheduled = true
+	call_deferred("_perform_units_list_refresh")
+
+func _perform_units_list_refresh() -> void:
+	_refresh_scheduled = false
+	if not is_node_ready():
+		_request_units_list_refresh()
+		return
+	_refresh_units_list(UnitService.owned_units_ids)
 
 func _refresh_units_list(owned_units_ids: Array) -> void:
 	var sorted_units: Array = _sort_units_for_display(owned_units_ids)
 	var cell_width: int = _get_effective_cell_width()
+	_last_effective_cell_width = cell_width
+	_has_rendered_once = true
 	units_list_container.columns = GRID_COLUMNS
 	_material_checkboxes.clear()
 
@@ -218,7 +259,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		# Load textures for the Unit scene and let it fit itself inside this cell.
 		var sprite_texture: Texture2D = null
 		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
-		if ResourceLoader.exists(img_path):
+		if _resource_exists(img_path):
 			sprite_texture = _get_dynamic_texture(img_path)
 
 		var pedestal_texture: Texture2D = _get_pedestal_texture(unit_inst.get("rarity", 1))
@@ -328,7 +369,7 @@ func _on_sort_option_selected(index: int) -> void:
 		return
 
 	_current_sort_mode = selected_mode
-	_refresh_units_list(UnitService.owned_units_ids)
+	_request_units_list_refresh()
 
 func _sort_units_for_display(owned_units_ids: Array) -> Array:
 	var sorted_units: Array = []
@@ -403,6 +444,8 @@ func _get_unit_display_name(unit_inst: Dictionary) -> String:
 
 func _should_display_unit(unit_instance_id: String) -> bool:
 	if unit_instance_id == "":
+		return false
+	if mode == "enhance_base_selection" and _selected_units_map.has(unit_instance_id):
 		return false
 	return not _exclude_instance_id_set.has(unit_instance_id)
 
@@ -479,7 +522,11 @@ func _on_confirm_material_selection() -> void:
 
 func _on_scroll_metrics_changed() -> void:
 	_configure_vertical_scrollbar()
-	call_deferred("_rebuild_for_layout_change")
+	if not _has_rendered_once:
+		return
+	if _get_effective_cell_width() == _last_effective_cell_width:
+		return
+	_request_units_list_refresh()
 
 func _configure_vertical_scrollbar() -> void:
 	var vertical_bar: VScrollBar = units_scroll_container.get_v_scroll_bar()
@@ -505,9 +552,6 @@ func _get_effective_cell_width() -> int:
 	var available_for_cells: float = maxf(1.0, usable_width - spacing_total)
 	var fitted_cell_width: int = int(floor(available_for_cells / float(GRID_COLUMNS)))
 	return maxi(1, mini(UNIT_CELL_W, fitted_cell_width))
-
-func _rebuild_for_layout_change() -> void:
-	_refresh_units_list(UnitService.owned_units_ids)
 
 func _on_unit_clicked(unit_inst: Dictionary) -> void:
 	if mode == "view":

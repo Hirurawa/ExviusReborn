@@ -1,236 +1,90 @@
 [gd_scene format=3 uid="uid://dnbyjkd8gw51i"]
 
 [ext_resource type="Script" uid="uid://faaeonaoeta2" path="res://wireframe.gd" id="1_5oock"]
-[ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="2_8revc"]
-[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="3_gw063"]
-[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="4_5njym"]
-[ext_resource type="Texture2D" uid="uid://cyioreel1h8xw" path="res://assets/ui/unit/minibutton_label_materialclear.tres" id="5_eendj"]
-[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="6_1faml"]
-[ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="7_k03pa"]
-[ext_resource type="Texture2D" uid="uid://cp5bdnf6n328g" path="res://assets/ui/unit/middlebutton_label_union.tres" id="8_fuxka"]
-[ext_resource type="Texture2D" uid="uid://b30vj2xdiepw8" path="res://assets/ui/common/pagebottom_plateinfo.tres" id="9_sraih"]
-[ext_resource type="Texture2D" uid="uid://c0kimka5uneid" path="res://assets/ui/common/icon_coin.tres" id="10_jpmmd"]
-[ext_resource type="Texture2D" uid="uid://b002karm5uh73" path="res://assets/ui/common/quantity_bg.tres" id="11_lqrm3"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h0ld1"]
-bg_color = Color(1, 0, 0, 0.2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wdbbo"]
-bg_color = Color(1, 0, 0, 0.2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e8dos"]
-bg_color = Color(1, 0, 0, 0.2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqsw0"]
-bg_color = Color(1, 0, 0, 0.2)
+[ext_resource type="Texture2D" uid="uid://005aq5cxxido" path="res://assets/ui/unit/unit_charastand_small.tres" id="2_mh506"]
+[ext_resource type="Texture2D" uid="uid://b7myipnh5svi" path="res://assets/ui/unit/unit_chara_label_have.tres" id="3_nymy7"]
+[ext_resource type="Texture2D" uid="uid://s5a8e6gn4igi" path="res://assets/ui/common/item_search_mini_bg1.tres" id="4_5lb7w"]
+[ext_resource type="Texture2D" uid="uid://b4x5hyy74ejcu" path="res://assets/ui/common/item_search_mini_bg2.tres" id="5_or2au"]
+[ext_resource type="Texture2D" uid="uid://d2c46n1qnf6ju" path="res://assets/ui/common/nameplate_item.tres" id="6_goych"]
 
 [node name="Wireframe" type="Control" unique_id=174978603]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_5oock")
-layout_csv = "uid://7jttuearqihl"
+layout_csv = "uid://wn761djdsr3e"
 plist_directory = "res://assets/ui"
 atlas_texture_directory = "res://assets/ui"
 tres_directory = "res://assets/ui"
 
-[node name="unit_mix_ui_bg_0" type="TextureRect" parent="." unique_id=1542598048]
+[node name="unit_classup_material_stand" type="TextureRect" parent="." unique_id=575297446]
 layout_mode = 0
-offset_top = 718.0
-offset_right = 640.0
-offset_bottom = 824.0
-texture = ExtResource("2_8revc")
+offset_right = 148.0
+offset_bottom = 168.0
+texture = ExtResource("2_mh506")
 expand_mode = 1
 
-[node name="unit_mix_button_clear" type="TextureRect" parent="." unique_id=374789251]
+[node name="unit_classup_item_icon" type="TextureRect" parent="." unique_id=1921425045]
 layout_mode = 0
-offset_left = 31.0
-offset_top = 735.0
-offset_right = 183.0
-offset_bottom = 799.0
-texture = ExtResource("3_gw063")
+offset_left = 18.0
+offset_top = 41.0
+offset_right = 130.0
+offset_bottom = 153.0
 expand_mode = 1
 
-[node name="unit_mix_button_clear_on" type="TextureRect" parent="." unique_id=888364516]
+[node name="unit_classup_item_num" type="Label" parent="." unique_id=1111624677]
 layout_mode = 0
-offset_left = 31.0
-offset_top = 735.0
-offset_right = 183.0
-offset_bottom = 799.0
-texture = ExtResource("4_5njym")
+offset_left = 64.0
+offset_top = 111.0
+offset_right = 244.0
+offset_bottom = 134.0
+theme_override_font_sizes/font_size = 20
+text = "unit_classup_item_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_classup_have" type="TextureRect" parent="." unique_id=1500014480]
+layout_mode = 0
+offset_left = 75.0
+offset_top = 133.0
+offset_right = 129.0
+offset_bottom = 155.0
+texture = ExtResource("3_nymy7")
 expand_mode = 1
 
-[node name="unit_mix_button_clear_label" type="TextureRect" parent="." unique_id=434567182]
+[node name="unit_classup_item_search_off" type="TextureRect" parent="." unique_id=956352844]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 757.0
-offset_right = 172.0
-offset_bottom = 781.0
-texture = ExtResource("5_eendj")
+offset_left = 48.0
+offset_top = 184.0
+offset_right = 101.0
+offset_bottom = 216.0
+texture = ExtResource("4_5lb7w")
 expand_mode = 1
 
-[node name="unit_mix_button_union" type="TextureRect" parent="." unique_id=1114378465]
+[node name="unit_classup_item_search_on" type="TextureRect" parent="." unique_id=982715967]
 layout_mode = 0
-offset_left = 223.0
-offset_top = 729.0
-offset_right = 415.0
-offset_bottom = 809.0
-texture = ExtResource("6_1faml")
+offset_left = 48.0
+offset_top = 184.0
+offset_right = 101.0
+offset_bottom = 216.0
+texture = ExtResource("5_or2au")
 expand_mode = 1
 
-[node name="unit_mix_button_union_on" type="TextureRect" parent="." unique_id=1919139791]
+[node name="unit_classup_item_frame" type="TextureRect" parent="." unique_id=1410817448]
 layout_mode = 0
-offset_left = 223.0
-offset_top = 729.0
-offset_right = 415.0
-offset_bottom = 809.0
-texture = ExtResource("7_k03pa")
+offset_left = 8.0
+offset_top = 156.0
+offset_right = 142.0
+offset_bottom = 186.0
+texture = ExtResource("6_goych")
 expand_mode = 1
 
-[node name="unit_mix_button_union_label" type="TextureRect" parent="." unique_id=1075121258]
+[node name="unit_classup_item_name" type="Label" parent="." unique_id=1047987914]
 layout_mode = 0
-offset_left = 236.0
-offset_top = 742.0
-offset_right = 402.0
-offset_bottom = 794.0
-texture = ExtResource("8_fuxka")
-expand_mode = 1
-
-[node name="unit_mix_get_exp_bg" type="TextureRect" parent="." unique_id=1282406982]
-layout_mode = 0
-offset_left = 418.0
-offset_top = 732.0
-offset_right = 640.0
-offset_bottom = 764.0
-texture = ExtResource("9_sraih")
-expand_mode = 1
-
-[node name="unit_mix_get_exp_label" type="Label" parent="." unique_id=361472629]
-layout_mode = 0
-offset_left = 431.0
-offset_top = 739.0
-offset_right = 608.0
-offset_bottom = 762.0
+offset_left = 17.0
+offset_top = 159.0
+offset_right = 206.0
+offset_bottom = 182.0
 theme_override_font_sizes/font_size = 18
-text = "unit_mix_get_exp_label"
+text = "unit_classup_item_name"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="unit_mix_get_exp_number" type="Label" parent="." unique_id=1532013375]
-layout_mode = 0
-offset_left = 558.0
-offset_top = 743.0
-offset_right = 759.0
-offset_bottom = 766.0
-theme_override_font_sizes/font_size = 14
-text = "unit_mix_get_exp_number"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_need_money_bg" type="TextureRect" parent="." unique_id=310560846]
-layout_mode = 0
-offset_left = 418.0
-offset_top = 772.0
-offset_right = 640.0
-offset_bottom = 804.0
-texture = ExtResource("9_sraih")
-expand_mode = 1
-
-[node name="unit_mix_need_money_label" type="Label" parent="." unique_id=224330161]
-layout_mode = 0
-offset_left = 431.0
-offset_top = 779.0
-offset_right = 647.0
-offset_bottom = 802.0
-theme_override_font_sizes/font_size = 18
-text = "unit_mix_need_money_label"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_money_icon" type="TextureRect" parent="." unique_id=756727984]
-layout_mode = 0
-offset_left = 504.0
-offset_top = 773.0
-offset_right = 536.0
-offset_bottom = 805.0
-texture = ExtResource("10_jpmmd")
-expand_mode = 1
-
-[node name="unit_mix_need_money_number" type="Label" parent="." unique_id=1289513974]
-layout_mode = 0
-offset_left = 558.0
-offset_top = 783.0
-offset_right = 799.0
-offset_bottom = 806.0
-theme_override_font_sizes/font_size = 14
-text = "unit_mix_need_money_number"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_scroll_area" type="Label" parent="." unique_id=1231503795]
-layout_mode = 0
-offset_top = 225.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_h0ld1")
-text = "unit_mix_scroll_area"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_scroll_bar" type="Label" parent="." unique_id=862505392]
-layout_mode = 0
-offset_left = 624.0
-offset_top = 225.0
-offset_right = 772.0
-offset_bottom = 663.0
-text = "unit_mix_scroll_bar"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_clip_area" type="Label" parent="." unique_id=1012093353]
-layout_mode = 0
-offset_top = 225.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_wdbbo")
-text = "unit_mix_clip_area"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_scroll_area_enable_unit_box_tab" type="Label" parent="." unique_id=438942818]
-layout_mode = 0
-offset_top = 305.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_e8dos")
-text = "unit_mix_scroll_area_enable_unit_box_tab"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_scroll_bar_enable_unit_box_tab" type="Label" parent="." unique_id=884022424]
-layout_mode = 0
-offset_left = 624.0
-offset_top = 305.0
-offset_right = 937.0
-offset_bottom = 663.0
-text = "unit_mix_scroll_bar_enable_unit_box_tab"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_clip_area_enable_unit_box_tab" type="Label" parent="." unique_id=510669229]
-layout_mode = 0
-offset_top = 305.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_hqsw0")
-text = "unit_mix_clip_area_enable_unit_box_tab"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="unit_mix_quantity" type="TextureRect" parent="." unique_id=1607029287]
-layout_mode = 0
-offset_left = 457.0
-offset_top = 627.0
-offset_right = 625.0
-offset_bottom = 659.0
-texture = ExtResource("11_lqrm3")
-expand_mode = 1

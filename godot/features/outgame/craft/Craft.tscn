@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c71srj3r5myik"]
 
 [ext_resource type="Texture2D" uid="uid://cb6bcra3ju6tu" path="res://assets/ui/common/button_large_icon1.tres" id="1_d5k3f"]
+[ext_resource type="Script" uid="uid://66fiy0g6n7x2" path="res://features/outgame/craft/Craft.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cxg5jifom8axo" path="res://assets/ui/create/largebutton_label_createequip.tres" id="2_taytf"]
 [ext_resource type="Texture2D" uid="uid://dp5nutg27qlbq" path="res://assets/ui/common/button_large_icon2.tres" id="2_tnnae"]
 [ext_resource type="Texture2D" uid="uid://cp7bcf30h8qaq" path="res://assets/ui/create/largebutton_label_strengthen.tres" id="3_tnnae"]
@@ -8,6 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://c7p2td10syxjl" path="res://assets/ui/create/largebutton_label_createability.tres" id="5_lb3is"]
 [ext_resource type="Texture2D" uid="uid://xpejb1ew3m40" path="res://assets/ui/create/largebutton_label_vcstrengthen.tres" id="6_v48ai"]
 [ext_resource type="Texture2D" uid="uid://c257bjugymaw7" path="res://assets/ui/create/cre_craft_title.tres" id="7_1nqbr"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="10_lb3is"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="11_v48ai"]
 
 [node name="Craft" type="Control" unique_id=1168316291]
 layout_mode = 3
@@ -16,6 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
 [node name="craft_top_btn1" type="TextureButton" parent="." unique_id=1125754155]
 layout_mode = 0
@@ -85,3 +89,28 @@ texture = ExtResource("6_v48ai")
 [node name="CreCraftTitle" type="Sprite2D" parent="." unique_id=1700271587]
 position = Vector2(212, 156)
 texture = ExtResource("7_1nqbr")
+
+[node name="Title" type="Label" parent="CreCraftTitle" unique_id=1910604180]
+offset_left = 12.0
+offset_top = -3.0
+offset_right = 123.0
+offset_bottom = 20.0
+text = "Craft"
+
+[node name="BackButton" type="TextureButton" parent="CreCraftTitle" unique_id=688394631]
+offset_left = -166.0
+offset_top = -46.0
+offset_right = -70.0
+offset_bottom = 14.0
+texture_normal = ExtResource("10_lb3is")
+texture_pressed = ExtResource("11_v48ai")
+
+[node name="Back" type="Label" parent="CreCraftTitle/BackButton" unique_id=143748881]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1

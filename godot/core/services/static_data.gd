@@ -15,6 +15,7 @@ var game_data_items: Dictionary = {}
 var game_data_equipment: Dictionary = {}
 var game_data_worlds: Dictionary = {}
 var game_data_dungeons: Dictionary = {}
+var game_data_towns: Dictionary = {}
 var game_data_missions: Dictionary = {}
 var game_data_skills_magic: Dictionary = {}
 var game_data_skills_ability: Dictionary = {}
@@ -131,6 +132,7 @@ func _on_patch_complete() -> void:
 	game_data_equipment = _sanitize_floats_to_ints(StaticDataLoader.get_data("equipment"))
 	game_data_worlds = _sanitize_floats_to_ints(StaticDataLoader.get_data("worlds"))
 	game_data_dungeons = _sanitize_floats_to_ints(StaticDataLoader.get_data("dungeons"))
+	game_data_towns = _sanitize_floats_to_ints(StaticDataLoader.get_data("towns"))
 	game_data_missions = _sanitize_floats_to_ints(StaticDataLoader.get_data("missions"))
 	game_data_skills_magic = _sanitize_floats_to_ints(StaticDataLoader.get_data("skills_magic"))
 	game_data_skills_ability = _sanitize_floats_to_ints(StaticDataLoader.get_data("skills_ability"))
@@ -218,6 +220,7 @@ func _try_load_sanitized_cache(signature: String) -> bool:
 	game_data_equipment = datasets.get("equipment", {})
 	game_data_worlds = datasets.get("worlds", {})
 	game_data_dungeons = datasets.get("dungeons", {})
+	game_data_towns = datasets.get("towns", {})
 	game_data_missions = datasets.get("missions", {})
 	game_data_skills_magic = datasets.get("skills_magic", {})
 	game_data_skills_ability = datasets.get("skills_ability", {})
@@ -276,6 +279,7 @@ func _save_sanitized_cache(signature: String) -> void:
 		"equipment": game_data_equipment,
 		"worlds": game_data_worlds,
 		"dungeons": game_data_dungeons,
+		"towns": game_data_towns,
 		"missions": game_data_missions,
 		"skills_magic": game_data_skills_magic,
 		"skills_ability": game_data_skills_ability,

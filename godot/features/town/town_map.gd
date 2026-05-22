@@ -1,0 +1,125 @@
+extends Node2D
+
+# Root controller for the town map scene. Configures the TileMap based on
+# the requested town id and verifies the necessary data folder exists.
+
+const TOWN_DATA_ROOT: String = "res://assets/town_data"
+# The Map.tscn ships with a baked TileSet matching town 1102's mapchips.
+# For any other town we must rebuild the TileSet from that town's mapchip
+# files via TileMap.build_dynamic_tileset().
+const BAKED_TILESET_TOWN_ID: String = "1102"
+
+@onready var tile_map: TileMap = $TileMap
+
+var current_town_id: String = ""
+# Tracks whether we toggled the parent CanvasLayer's follow_viewport_enabled
+# so we can restore it on exit. UIManager parents scenes under a CanvasLayer,
+# and Camera2D only transforms the underlying viewport canvas — not custom
+# CanvasLayers — unless follow_viewport_enabled is true.
+var _canvas_layer_follow_was: bool = false
+var _canvas_layer_touched: bool = false
+
+# Locally-owned CanvasLayer for the leave-town confirmation popup. We can't
+# reuse UIManager's CanvasLayer because we toggled follow_viewport_enabled
+# on it (the dialog would scroll with the camera). A non-following layer
+# keeps the dialog screen-locked.
+var _ui_layer: CanvasLayer = null
+var _leave_dialog: ConfirmationDialog = null
+
+func _ready() -> void:
+	var parent_layer := get_parent() as CanvasLayer
+	if parent_layer:
+		_canvas_layer_follow_was = parent_layer.follow_viewport_enabled
+		parent_layer.follow_viewport_enabled = true
+		_canvas_layer_touched = true
+
+	_ui_layer = CanvasLayer.new()
+	_ui_layer.name = "TownMapUILayer"
+	# Sit above the world map but stay screen-locked.
+	_ui_layer.layer = 10
+	add_child(_ui_layer)
+
+	_leave_dialog = ConfirmationDialog.new()
+	_leave_dialog.title = "Leave Town"
+	_leave_dialog.dialog_text = "Leave this town?"
+	_leave_dialog.ok_button_text = "Yes"
+	_leave_dialog.cancel_button_text = "No"
+	_leave_dialog.exclusive = false
+	_leave_dialog.confirmed.connect(_on_leave_confirmed)
+	_ui_layer.add_child(_leave_dialog)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_prompt_leave_town()
+		get_viewport().set_input_as_handled()
+
+func _prompt_leave_town() -> void:
+	if not _leave_dialog:
+		return
+	if _leave_dialog.visible:
+		return
+	var town_name: String = _resolve_town_name(current_town_id)
+	if town_name != "":
+		_leave_dialog.dialog_text = "Leave %s?" % town_name
+	else:
+		_leave_dialog.dialog_text = "Leave this town?"
+	_leave_dialog.popup_centered()
+
+func _resolve_town_name(town_id: String) -> String:
+	if town_id == "":
+		return ""
+	var towns: Dictionary = StaticData.game_data_towns
+	if not towns.has(town_id):
+		return ""
+	var data: Dictionary = towns.get(town_id, {})
+	var names = data.get("names", [])
+	if names is Array and names.size() > 0 and names[0]:
+		return str(names[0])
+	return ""
+
+func _on_leave_confirmed() -> void:
+	UIManager.pop()
+
+func _exit_tree() -> void:
+	if _canvas_layer_touched:
+		var parent_layer := get_parent() as CanvasLayer
+		if parent_layer:
+			parent_layer.follow_viewport_enabled = _canvas_layer_follow_was
+
+func init_scene(params: Dictionary) -> void:
+	var town_id: String = str(params.get("town_id", ""))
+	if town_id == "":
+		push_error("TownMap: init_scene called without town_id")
+		UIManager.pop()
+		return
+	current_town_id = town_id
+	_load_town(town_id)
+
+func _load_town(town_id: String) -> void:
+	var town_dir: String = "%s/%s" % [TOWN_DATA_ROOT, town_id]
+	if not DirAccess.dir_exists_absolute(town_dir):
+		push_error("Town data folder not found: %s" % town_dir)
+		UIManager.pop()
+		return
+
+	var bin_path: String = "%s/map.bin" % town_dir
+	var blueprint_path: String = "%s/map_blueprint.json" % town_dir
+	if not FileAccess.file_exists(bin_path):
+		push_error("Town map.bin missing for id %s: %s" % [town_id, bin_path])
+		UIManager.pop()
+		return
+	if not FileAccess.file_exists(blueprint_path):
+		push_error("Town map_blueprint.json missing for id %s: %s" % [town_id, blueprint_path])
+		UIManager.pop()
+		return
+
+	tile_map.map_file_path = bin_path
+	tile_map.blueprint_path = blueprint_path
+	tile_map.mapchip_folder = town_dir
+
+	# The TileSet baked into Map.tscn only matches town 1102. Other towns
+	# need their atlas sources rebuilt from the local mapchip_*.png files.
+	if town_id != BAKED_TILESET_TOWN_ID:
+		tile_map.build_dynamic_tileset()
+
+	tile_map.trigger_redraw()

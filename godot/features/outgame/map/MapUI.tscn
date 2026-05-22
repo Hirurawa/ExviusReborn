@@ -137,3 +137,11 @@ size_flags_vertical = 3
 [node name="MissionsListContainer" type="VBoxContainer" parent="MissionDetailsPopup/VBoxContainer/ScrollContainer" unique_id=711388605]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="EnterTownDialog" type="ConfirmationDialog" parent="."]
+title = "Enter Town"
+initial_position = 2
+size = Vector2i(320, 120)
+ok_button_text = "Yes"
+cancel_button_text = "No"
+dialog_text = "Enter this town?"

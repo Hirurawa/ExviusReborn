@@ -13,6 +13,7 @@ extends Control
 @onready var mission_details_popup: PopupPanel = $MissionDetailsPopup
 @onready var mission_dungeon_name: Label = $MissionDetailsPopup/VBoxContainer/DungeonNameLabel
 @onready var missions_list_container: VBoxContainer = $MissionDetailsPopup/VBoxContainer/ScrollContainer/MissionsListContainer
+@onready var enter_town_dialog: ConfirmationDialog = $EnterTownDialog
 
 var map_zoom_level: float = 1.0
 var _is_panning_map: bool = false
@@ -22,6 +23,7 @@ var current_selected_world: String = ""
 var current_selected_region: String = ""
 var current_selected_subregion: String = ""
 var current_selected_dungeon_id: String = ""
+var _pending_town_id: String = ""
 
 var _texture_cache: Dictionary = {}
 var _map_canvas_base_size: Vector2 = Vector2(2000.0, 2000.0)
@@ -64,6 +66,7 @@ func _ready() -> void:
 	map_subregion_option.item_selected.connect(_on_map_subregion_selected)
 	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
 	MissionService.dungeon_missions_ready.connect(_on_dungeon_missions_ready)
+	enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
 
 	_populate_world_options()
 	await _apply_latest_cleared_map_selection()
@@ -273,6 +276,72 @@ func _on_map_subregion_selected(index: int) -> void:
 
 			btn.pressed.connect(_on_dungeon_clicked.bind(str(dungeon_id)))
 			map_content.add_child(btn)
+
+	# Render towns for the current subregion. Towns are not listed under
+	# subregion data in worlds.json, so we filter towns.json by matching ids.
+	for town_id in StaticData.game_data_towns.keys():
+		var town_data: Dictionary = StaticData.game_data_towns.get(town_id, {})
+		if town_data.is_empty():
+			continue
+		if str(town_data.get("world_id", "")) != str(current_selected_world):
+			continue
+		if str(town_data.get("region_id", "")) != str(current_selected_region):
+			continue
+		if str(town_data.get("subregion_id", "")) != str(current_selected_subregion):
+			continue
+
+		var t_pos: Array = town_data.get("position", [0, 0])
+		var t_x: int = t_pos[0]
+		var t_y: int = t_pos[1]
+
+		var t_icon_name: String = town_data.get("icon", "")
+		var t_icon_path: String = "res://assets/map_icons/" + t_icon_name
+
+		var t_btn: TextureButton = TextureButton.new()
+		var t_tex: Texture2D = _get_dynamic_texture(t_icon_path)
+		if not t_tex:
+			t_tex = _get_dynamic_texture("res://icon.svg") # Fallback
+
+		if t_tex:
+			t_btn.texture_normal = t_tex
+			t_btn.position = Vector2(t_x, t_y)
+
+			var t_lbl = Label.new()
+			var t_names = town_data.get("names", [])
+			if t_names.size() > 0 and t_names[0]:
+				t_lbl.text = t_names[0]
+			else:
+				t_lbl.text = "Unknown Town"
+
+			t_lbl.position = Vector2(-t_lbl.get_minimum_size().x/2 + t_btn.size.x/2, t_btn.size.y)
+			t_lbl.add_theme_font_size_override("font_size", 14)
+			t_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+			t_lbl.add_theme_constant_override("outline_size", 4)
+			t_btn.add_child(t_lbl)
+
+			t_btn.pressed.connect(_on_town_clicked.bind(str(town_id), town_data))
+			map_content.add_child(t_btn)
+
+func _on_town_clicked(town_id: String, town_data: Dictionary) -> void:
+	_pending_town_id = town_id
+	var names: Array = town_data.get("names", [])
+	var town_name: String = "this town"
+	if names.size() > 0 and names[0]:
+		town_name = str(names[0])
+	enter_town_dialog.dialog_text = "Enter %s?" % town_name
+	enter_town_dialog.popup_centered()
+
+func _on_enter_town_confirmed() -> void:
+	if _pending_town_id == "":
+		return
+	var town_dir: String = "res://assets/town_data/%s" % _pending_town_id
+	if not DirAccess.dir_exists_absolute(town_dir):
+		push_error("Town data not found for id %s (%s)" % [_pending_town_id, town_dir])
+		_pending_town_id = ""
+		return
+	var town_id_to_load: String = _pending_town_id
+	_pending_town_id = ""
+	UIManager.push("town_map_ui", {"town_id": town_id_to_load})
 
 func _on_dungeon_clicked(dungeon_id: String) -> void:
 	current_selected_dungeon_id = dungeon_id

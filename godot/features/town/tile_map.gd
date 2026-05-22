@@ -129,7 +129,12 @@ func _ready():
 		var mm: Node = preload("res://features/town/minimap.gd").new()
 		mm.name = "Minimap"
 		add_child(mm)
-	trigger_redraw()
+	# At runtime the paths are not valid until load_town() (called by
+	# town_map.gd's init_scene) populates them. Drawing here would hit
+	# the placeholder map.bin / blueprint and fail. Editor / @tool
+	# previews still redraw so the inspector-configured town renders.
+	if Engine.is_editor_hint() or town_id != "":
+		trigger_redraw()
 
 # Public entry point: switch this TileMap to render the town with the
 # given id. Resolves all three asset paths under town_data_root, rebuilds

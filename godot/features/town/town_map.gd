@@ -4,10 +4,6 @@ extends Node2D
 # the requested town id and verifies the necessary data folder exists.
 
 const TOWN_DATA_ROOT: String = "res://assets/town_data"
-# The Map.tscn ships with a baked TileSet matching town 1102's mapchips.
-# For any other town we must rebuild the TileSet from that town's mapchip
-# files via TileMap.build_dynamic_tileset().
-const BAKED_TILESET_TOWN_ID: String = "1102"
 
 @onready var tile_map: TileMap = $TileMap
 
@@ -95,31 +91,35 @@ func init_scene(params: Dictionary) -> void:
 	current_town_id = town_id
 	_load_town(town_id)
 
+# The towns.json key (e.g. "1102") is NOT the on-disk folder name. The
+# real folder id is encoded in the town's icon: "map_icon_<digits>.png"
+# -> "<digits>00". Returns "" if the short id is unknown or its icon
+# doesn't follow the expected convention.
+func _resolve_town_folder_id(short_id: String) -> String:
+	var towns: Dictionary = StaticData.game_data_towns
+	if not towns.has(short_id):
+		return ""
+	var entry: Dictionary = towns.get(short_id, {})
+	var icon: String = str(entry.get("icon", ""))
+	if icon == "":
+		return ""
+	var base: String = icon.get_file().get_basename()
+	const PREFIX: String = "map_icon_"
+	if not base.begins_with(PREFIX):
+		return ""
+	return base.substr(PREFIX.length()) + "00"
+
 func _load_town(town_id: String) -> void:
-	var town_dir: String = "%s/%s" % [TOWN_DATA_ROOT, town_id]
+	var folder_id: String = _resolve_town_folder_id(town_id)
+	if folder_id == "":
+		push_error("TownMap: could not resolve folder id for town %s" % town_id)
+		UIManager.pop()
+		return
+
+	var town_dir: String = "%s/%s" % [TOWN_DATA_ROOT, folder_id]
 	if not DirAccess.dir_exists_absolute(town_dir):
 		push_error("Town data folder not found: %s" % town_dir)
 		UIManager.pop()
 		return
 
-	var bin_path: String = "%s/map.bin" % town_dir
-	var blueprint_path: String = "%s/map_blueprint.json" % town_dir
-	if not FileAccess.file_exists(bin_path):
-		push_error("Town map.bin missing for id %s: %s" % [town_id, bin_path])
-		UIManager.pop()
-		return
-	if not FileAccess.file_exists(blueprint_path):
-		push_error("Town map_blueprint.json missing for id %s: %s" % [town_id, blueprint_path])
-		UIManager.pop()
-		return
-
-	tile_map.map_file_path = bin_path
-	tile_map.blueprint_path = blueprint_path
-	tile_map.mapchip_folder = town_dir
-
-	# The TileSet baked into Map.tscn only matches town 1102. Other towns
-	# need their atlas sources rebuilt from the local mapchip_*.png files.
-	if town_id != BAKED_TILESET_TOWN_ID:
-		tile_map.build_dynamic_tileset()
-
-	tile_map.trigger_redraw()
+	tile_map.load_town(folder_id)

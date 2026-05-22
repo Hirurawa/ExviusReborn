@@ -334,11 +334,9 @@ func _on_town_clicked(town_id: String, town_data: Dictionary) -> void:
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return
-	var town_dir: String = "res://assets/town_data/%s" % _pending_town_id
-	if not DirAccess.dir_exists_absolute(town_dir):
-		push_error("Town data not found for id %s (%s)" % [_pending_town_id, town_dir])
-		_pending_town_id = ""
-		return
+	# Folder existence is validated inside town_map.gd after it resolves
+	# the short towns.json id to the real on-disk folder id via the
+	# entry's icon name.
 	var town_id_to_load: String = _pending_town_id
 	_pending_town_id = ""
 	UIManager.push("town_map_ui", {"town_id": town_id_to_load})

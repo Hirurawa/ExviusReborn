@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://dljdfgda4jbib" path="res://features/town/tile_map.gd" id="13_t0imr"]
 [ext_resource type="Script" uid="uid://cmdc21xwvrbwn" path="res://features/town/camera_2d.gd" id="14_tpiga"]
 [ext_resource type="PackedScene" uid="uid://l8tskjwqtf8x" path="res://features/town/player.tscn" id="15_oa7bu"]
+[ext_resource type="Script" uid="uid://cv84dfudg2ihb" path="res://features/town/town_map.gd" id="town_map_script"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_63tq4"]
 texture = ExtResource("1_jrcb4")
@@ -3253,6 +3254,7 @@ sources/9 = SubResource("TileSetAtlasSource_5sbaq")
 sources/10 = SubResource("TileSetAtlasSource_t0imr")
 
 [node name="Map" type="Node2D" unique_id=1249867793]
+script = ExtResource("town_map_script")
 
 [node name="TileMap" type="TileMap" parent="." unique_id=15758001]
 tile_set = SubResource("TileSet_6skux")
@@ -3281,11 +3283,8 @@ layer_8/z_index = 8
 layer_9/name = "Layer9"
 layer_9/z_index = 9
 script = ExtResource("13_t0imr")
-town_id = "111020200"
-map_file_path = "res://assets/town_data/111020400/map.bin"
-blueprint_path = "res://assets/town_data/111020400/map_blueprint.json"
+show_dynamic_entities = false
 target_chunk = 18
-mapchip_folder = "res://assets/town_data/111020400"
 visible_layers = 4079
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1502482000]

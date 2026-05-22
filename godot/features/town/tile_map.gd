@@ -7,8 +7,28 @@ var _active_chunk_data: Dictionary = {}
 
 # --- EXPORTED FILE PATHS ---
 @export_category("File Paths")
-@export_file("*.bin") var map_file_path: String = "res://assets/town_data/1102/map.bin"
-@export_file("*.json") var blueprint_path: String = "res://assets/town_data/1102/map_blueprint.json" :
+# Root folder under which each town's data lives in its own subfolder
+# named after the town id, e.g. "res://assets/town_data/1102/". When
+# load_town() / town_id is set, the three paths below are derived from
+# "{town_data_root}/{town_id}/".
+@export_dir var town_data_root: String = "res://assets/town_data" :
+	set(v):
+		town_data_root = v
+		if town_id != "":
+			_apply_town_paths()
+
+# When set (either from the inspector or via load_town() at runtime),
+# the bin / blueprint / mapchip paths are recomputed from
+# town_data_root + this id, the dynamic tileset is rebuilt, and the
+# active chunk is redrawn. Leave empty to use the explicit paths below.
+@export var town_id: String = "" :
+	set(v):
+		town_id = v
+		if town_id != "":
+			_apply_town_paths()
+
+@export_file("*.bin") var map_file_path: String = "res://map.bin"
+@export_file("*.json") var blueprint_path: String = "res://map_blueprint.json" :
 	set(v):
 		blueprint_path = v
 		_invalidate_blueprint_cache()
@@ -100,7 +120,65 @@ var _lid_to_chunk: Dictionary = {}
 
 func _ready():
 	add_to_group("tile_map")
+	# Spawn the minimap overlay as a CanvasLayer child. CanvasLayers
+	# render in screen space regardless of their parent's transform, so
+	# parenting under the TileMap is cosmetically irrelevant but keeps
+	# the minimap's lifetime tied to the active map. Skip in @tool /
+	# editor previews.
+	if not Engine.is_editor_hint() and get_node_or_null("Minimap") == null:
+		var mm: Node = preload("res://features/town/minimap.gd").new()
+		mm.name = "Minimap"
+		add_child(mm)
 	trigger_redraw()
+
+# Public entry point: switch this TileMap to render the town with the
+# given id. Resolves all three asset paths under town_data_root, rebuilds
+# the dynamic tileset from the new bin's manifest and redraws the active
+# chunk. Safe to call before _ready() (the redraw is no-op until the
+# node is in the tree).
+#
+# Expected folder layout (per town):
+#   {town_data_root}/{town_id}/
+#       map.bin
+#       map_blueprint.json
+#       mapchip_*.png       <- referenced by filenames in map.bin's manifest
+func load_town(id: String) -> void:
+	town_id = id  # setter calls _apply_town_paths()
+
+# Rebuilds map_file_path / blueprint_path / mapchip_folder from
+# town_data_root + town_id, then forces a tileset rebuild and redraw.
+# Called by the town_id and town_data_root setters; not meant to be
+# called directly from outside.
+func _apply_town_paths() -> void:
+	if town_id == "":
+		return
+	var base := town_data_root.rstrip("/") + "/" + town_id
+	map_file_path = base + "/map.bin"
+	blueprint_path = base + "/map_blueprint.json"
+	# All mapchip PNGs live alongside map.bin in the same town folder.
+	mapchip_folder = base
+	_invalidate_blueprint_cache()
+	if is_inside_tree():
+		# Regenerate the tileset from the new bin's manifest, then redraw.
+		# build_dynamic_tileset() reassigns self.tile_set, replacing
+		# whatever was baked into the scene.
+		build_dynamic_tileset()
+		# At runtime, honour the spawn the bin's file header dictates:
+		# warp to the initial layer_id at the initial (x, y). Editor /
+		# @tool previews fall through to the plain redraw of the
+		# user-selected target_chunk for inspector iteration.
+		if not Engine.is_editor_hint() and _ensure_blueprint_loaded():
+			var init_lid := int(_blueprint_cache.get("initial_layer_id", -1))
+			if init_lid >= 0 and chunk_index_for_lid(init_lid) >= 0:
+				var ix := int(_blueprint_cache.get("initial_player_x", 0))
+				var iy := int(_blueprint_cache.get("initial_player_y", 0))
+				print("Initial spawn from bin header: lid=%d at (%d, %d)" % [init_lid, ix, iy])
+				# Defer so any player node still resolving its own
+				# _ready (and thus group registration) is in the tree
+				# by the time we look it up.
+				call_deferred("warp_to", init_lid, ix, iy)
+				return
+		trigger_redraw()
 
 func get_grid_event_at(cell: Vector2i) -> int:
 	return int(grid_events_lookup.get(cell, 0))
@@ -671,12 +749,60 @@ func draw_chunk(chunk_index: int):
 	# --- DRAW COLLISION OVERLAY (on top of everything) ---
 	_draw_collision_overlay()
 
+	# --- PUSH WALKABLE TEXTURE TO MINIMAP ---
+	_update_minimap()
+
 	# --- BUILD WARP TRIGGERS (only when running, not in @tool editor) ---
 	if not Engine.is_editor_hint():
 		_build_warp_triggers(chunk_data)
 
 	update_layer_visibility()
 	queue_redraw()
+
+
+func _update_minimap() -> void:
+	# The minimap CanvasLayer is spawned as a child of this TileMap in
+	# _ready(). At edit-time / @tool it won't exist, which is fine --
+	# we just skip the bake.
+	if not is_inside_tree():
+		return
+	var minimap_node := get_tree().get_first_node_in_group("minimap")
+	if minimap_node == null:
+		return
+	if map_width <= 0 or map_height <= 0:
+		return
+	minimap_node.set_walkable_map(map_width, map_height, debug_cells_collision)
+	_push_minimap_markers(minimap_node)
+
+
+# Build the category markers for the active chunk and hand them to the
+# minimap. Whitelisted kinds: scripted entities (NPCs) and warp doors
+# (regular + alt). Chests and unknown warp variants are intentionally
+# skipped to keep the minimap focused.
+func _push_minimap_markers(minimap_node: Node) -> void:
+	const ALLOWED := ["scripted_entity", "warp", "warp_alt", "warp_zone"]
+	var markers: Array = []
+	if _active_chunk_data.has("objects"):
+		var objs: Dictionary = _active_chunk_data["objects"]
+		var entities: Array = objs.get("dynamic_entities", [])
+		for e in entities:
+			var kind := String(e.get("kind", ""))
+			if not ALLOWED.has(kind):
+				continue
+			if not (e.has("source_x_px") and e.has("source_y_px")):
+				continue
+			var sx: float = float(e["source_x_px"])
+			var sy: float = float(e["source_y_px"])
+			var sw: float = float(e.get("width_px", tile_size))
+			var sh: float = float(e.get("height_px", tile_size))
+			# Convert pixel-space rect center to grid-space center.
+			var gx: float = (sx + sw * 0.5) / float(tile_size)
+			var gy: float = (sy + sh * 0.5) / float(tile_size)
+			markers.append({
+				"grid_pos": Vector2(gx, gy),
+				"color": minimap_node.color_for_kind(kind),
+			})
+	minimap_node.set_markers(markers)
 
 
 func _draw_collision_overlay() -> void:

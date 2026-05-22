@@ -22,12 +22,6 @@ func _ready() -> void:
 	z_index = 5
 	# Register so the tile_map's warp Area2D triggers can identify us.
 	add_to_group("player")
-	# Ensure the player's Camera2D follows the player even when the scene
-	# is hosted under UIManager's CanvasLayer (where another viewport
-	# camera could otherwise win the "current" race).
-	var cam: Camera2D = $Camera2D
-	if cam:
-		cam.make_current()
 
 func _physics_process(delta: float) -> void:
 	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -74,6 +68,26 @@ func _physics_process(delta: float) -> void:
 	
 	# Pass BOTH the direction and the running state to the animation handler
 	update_animation(direction, is_running)
+
+	# Push the player's grid-space position to the minimap (if present).
+	_update_minimap_marker()
+
+
+func _update_minimap_marker() -> void:
+	if not is_instance_valid(_tile_map):
+		_tile_map = get_tree().get_first_node_in_group("tile_map")
+		if not is_instance_valid(_tile_map):
+			return
+	var ts: int = int(_tile_map.tile_size)
+	if ts <= 0:
+		return
+	var minimap_node := get_tree().get_first_node_in_group("minimap")
+	if minimap_node == null:
+		return
+	# Position is already in world (= tile-grid * tile_size) space, so a
+	# straight divide gives fractional tile coordinates.
+	var grid_pos: Vector2 = global_position / float(ts)
+	minimap_node.set_player_grid_pos(grid_pos)
 
 
 # Returns the event_id of any grid event under or immediately adjacent

@@ -42,8 +42,8 @@ func _ready() -> void:
 	_frame = Panel.new()
 	_frame.name = "Frame"
 	_frame.size = frame_size
-	_frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_frame.position = Vector2(-frame_size.x - frame_margin.x, frame_margin.y)
+	_frame.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_frame.position = Vector2(frame_margin.x, frame_margin.y)
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Plain dark backdrop with a thin border.
 	var sb := StyleBoxFlat.new()

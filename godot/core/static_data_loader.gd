@@ -230,8 +230,15 @@ func load_rank_exp_data() -> Dictionary:
 			push_warning("Skipping rank %d in rank_exp.json: missing Exp or Energy" % rank)
 			continue
 
-		var xp_needed: int = int(row.get("Exp", 0))
-		var energy: int = int(row.get("Energy", 0))
+		var exp_raw: Variant = row.get("Exp", 0)
+		var energy_raw: Variant = row.get("Energy", 0)
+		if exp_raw == null:
+			# Max rank rows commonly have null Exp (no further progression).
+			continue
+		if energy_raw == null:
+			energy_raw = 0
+		var xp_needed: int = int(exp_raw)
+		var energy: int = int(energy_raw)
 		if xp_needed <= 0:
 			push_warning("Skipping rank %d in rank_exp.json: Exp must be > 0" % rank)
 			continue

@@ -3,9 +3,8 @@
 [ext_resource type="Script" uid="uid://dghgq8mmbre4t" path="res://features/town/player.gd" id="1_4flbx"]
 [ext_resource type="Texture2D" uid="uid://bxvysnsqat0rd" path="res://assets/town/map_character1.png" id="2_onrkg"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_onrkg"]
-radius = 16.0
-height = 55.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_m16ti"]
+size = Vector2(24, 28)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_i3pqv"]
 atlas = ExtResource("2_onrkg")
@@ -863,12 +862,14 @@ z_index = 3
 script = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1163880969]
-position = Vector2(32, 32)
-shape = SubResource("CapsuleShape2D_onrkg")
+position = Vector2(0, -28)
+scale = Vector2(2, 2)
+shape = SubResource("RectangleShape2D_m16ti")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1624898591]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1108101412]
-position = Vector2(32, 32)
+position = Vector2(0, -64)
+scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_634y6")
 animation = &"run_up_left"

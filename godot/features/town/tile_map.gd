@@ -50,6 +50,11 @@ var _active_chunk_data: Dictionary = {}
 		show_static_placeholders = v
 		trigger_redraw()
 
+@export_range(0.05, 8.0, 0.05) var npc_sprite_scale: float = 1.0 :
+	set(v):
+		npc_sprite_scale = v
+		trigger_redraw()
+
 @export_category("Map Settings")
 @export var target_chunk: int = 0 :
 	set(v):
@@ -366,60 +371,60 @@ func build_dynamic_tileset():
 	self.tile_set = new_tileset
 	print("--- TILESET GENERATION COMPLETE! Loaded ", success_count, "/", num_textures, " images ---")
 
-func _input(event):
-	# Only trigger when the Left Mouse Button is clicked
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		
-		# Convert the mouse pixel position into Godot grid coordinates
-		var local_pos := get_local_mouse_position()
-		var clicked_cell = local_to_map(local_pos)
-		var cx = clicked_cell.x
-		var cy = clicked_cell.y
-
-		# Top-left pixel of that cell, in the same coordinate space used by
-		# the blueprint's static_assets x/y fields (cell index * tile_size).
-		var px: int = int(cx) * tile_size
-		var py: int = int(cy) * tile_size
-		print("Click @ grid (", cx, ", ", cy, ") top-left px (", px, ", ", py, ")")
-
-		# List every static_asset record in the active chunk whose bounding
-		# box contains this clicked cell. Helps verify which record is
-		# *supposed* to be rendered here (vs. which sprite is visually on top).
-		if not _active_chunk_data.is_empty() \
-				and _active_chunk_data.has("objects") \
-				and _active_chunk_data["objects"].has("static_assets"):
-			var statics_dbg: Array = _active_chunk_data["objects"]["static_assets"]
-			# Use the clicked cell's pixel midpoint so a tile-aligned record
-			# (record_x = cell_x * tile_size) counts as a match.
-			var mx: int = px + (tile_size / 2)
-			var my: int = py + (tile_size / 2)
-			var matches := []
-			for i in range(statics_dbg.size()):
-				var rec: Dictionary = statics_dbg[i]
-				var rx: int = int(rec["x"])
-				var ry: int = int(rec["y"])
-				var rs: float = float(int(rec.get("scale", 100))) / 100.0
-				var rw: int = int(round(int(rec["width"]) * rs))
-				var rh: int = int(round(int(rec["height"]) * rs))
-				if mx >= rx and mx < rx + rw and my >= ry and my < ry + rh:
-					matches.append({"idx": i, "rec": rec})
-			if matches.is_empty():
-				print("  no static_asset bounding box contains this cell")
-			else:
-				print("  ", matches.size(), " static_asset record(s) overlap this cell:")
-				for m in matches:
-					var r: Dictionary = m["rec"]
-					print("    [#", m["idx"], "] x=", r["x"], " y=", r["y"],
-						" w=", r["width"], " h=", r["height"],
-						" atlas_id=", r["atlas_id"],
-						" atlas=(", r["atlas_x"], ",", r["atlas_y"], ")",
-						" layer=", r.get("layer", 0),
-						" layer_flags=", r.get("layer_flags", 0),
-						" scale=", r.get("scale", 100))
-
-		# Ensure we are clicking inside the actual map boundaries
-		if cx >= 0 and cx < map_width and cy >= 0 and cy < map_height:
-			probe_tile_data(cx, cy)
+#func _input(event):
+	## Only trigger when the Left Mouse Button is clicked
+	#if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		#
+		## Convert the mouse pixel position into Godot grid coordinates
+		#var local_pos := get_local_mouse_position()
+		#var clicked_cell = local_to_map(local_pos)
+		#var cx = clicked_cell.x
+		#var cy = clicked_cell.y
+#
+		## Top-left pixel of that cell, in the same coordinate space used by
+		## the blueprint's static_assets x/y fields (cell index * tile_size).
+		#var px: int = int(cx) * tile_size
+		#var py: int = int(cy) * tile_size
+		#print("Click @ grid (", cx, ", ", cy, ") top-left px (", px, ", ", py, ")")
+#
+		## List every static_asset record in the active chunk whose bounding
+		## box contains this clicked cell. Helps verify which record is
+		## *supposed* to be rendered here (vs. which sprite is visually on top).
+		#if not _active_chunk_data.is_empty() \
+				#and _active_chunk_data.has("objects") \
+				#and _active_chunk_data["objects"].has("static_assets"):
+			#var statics_dbg: Array = _active_chunk_data["objects"]["static_assets"]
+			## Use the clicked cell's pixel midpoint so a tile-aligned record
+			## (record_x = cell_x * tile_size) counts as a match.
+			#var mx: int = px + (tile_size / 2)
+			#var my: int = py + (tile_size / 2)
+			#var matches := []
+			#for i in range(statics_dbg.size()):
+				#var rec: Dictionary = statics_dbg[i]
+				#var rx: int = int(rec["x"])
+				#var ry: int = int(rec["y"])
+				#var rs: float = float(int(rec.get("scale", 100))) / 100.0
+				#var rw: int = int(round(int(rec["width"]) * rs))
+				#var rh: int = int(round(int(rec["height"]) * rs))
+				#if mx >= rx and mx < rx + rw and my >= ry and my < ry + rh:
+					#matches.append({"idx": i, "rec": rec})
+			#if matches.is_empty():
+				#print("  no static_asset bounding box contains this cell")
+			#else:
+				#print("  ", matches.size(), " static_asset record(s) overlap this cell:")
+				#for m in matches:
+					#var r: Dictionary = m["rec"]
+					#print("    [#", m["idx"], "] x=", r["x"], " y=", r["y"],
+						#" w=", r["width"], " h=", r["height"],
+						#" atlas_id=", r["atlas_id"],
+						#" atlas=(", r["atlas_x"], ",", r["atlas_y"], ")",
+						#" layer=", r.get("layer", 0),
+						#" layer_flags=", r.get("layer_flags", 0),
+						#" scale=", r.get("scale", 100))
+#
+		## Ensure we are clicking inside the actual map boundaries
+		#if cx >= 0 and cx < map_width and cy >= 0 and cy < map_height:
+			#probe_tile_data(cx, cy)
 
 func probe_tile_data(cx: int, cy: int):
 	var file = FileAccess.open(map_file_path, FileAccess.READ)
@@ -751,6 +756,11 @@ func draw_chunk(chunk_index: int):
 	# directly from chunk_data["objects"] in the blueprint JSON.
 	_draw_chunk_overlays(chunk_data)
 
+	# --- SPAWN NPC ANIMATED SPRITES ---
+	# Visual-only AnimatedSprite2D per scripted_entity that carries a
+	# `sprite_id` in the blueprint.
+	_spawn_npcs(chunk_data)
+
 	# --- DRAW COLLISION OVERLAY (on top of everything) ---
 	_draw_collision_overlay()
 
@@ -999,6 +1009,111 @@ func _render_dynamic_entities(container: Node2D, entities: Array) -> void:
 		print("  DE#%d kind=%s type=%s src=(%d,%d) %dx%d" % [
 			i, kind, rec_type, sx, sy, sw, sh
 		])
+
+
+# ============================================================================
+#  NPC SPRITES
+# ============================================================================
+# Spawns an AnimatedSprite2D for each scripted_entity in the chunk that
+# carries a `sprite_id`. Always rendered (not gated by debug toggles).
+# Sprites are placed top-left at (source_x_px, source_y_px) to match the
+# existing placeholder anchoring, and parented under a single y-sorted
+# container so they interleave with the player by screen-Y.
+func _spawn_npcs(chunk_data: Dictionary) -> void:
+	# Clean up any prior chunk's NPCs.
+	for n in get_children():
+		if n.name == "NpcSprites":
+			remove_child(n)
+			n.free()
+
+	if not chunk_data.has("objects"):
+		return
+	var objects: Dictionary = chunk_data["objects"]
+	var entities: Array = objects.get("dynamic_entities", [])
+	if entities.is_empty():
+		return
+
+	# Pre-load dialogue tables for this town so the first click on any
+	# NPC doesn't hitch on file IO. Safe no-op if already cached.
+	if town_id != "":
+		DialogueLoader.load_for_town(town_id)
+
+	var container: Node2D = null
+	var spawned: int = 0
+	for e in entities:
+		if String(e.get("kind", "")) != "scripted_entity":
+			continue
+		if not e.has("sprite_id"):
+			continue
+		if not (e.has("source_x_px") and e.has("source_y_px")):
+			continue
+
+		var sprite := NpcSpriteBuilder.build(e["sprite_id"])
+		if sprite == null:
+			continue
+
+		if container == null:
+			container = Node2D.new()
+			container.name = "NpcSprites"
+			container.y_sort_enabled = true
+			# Match the player's z so y-sorting interleaves them naturally.
+			container.z_index = 5
+			add_child(container)
+
+		var pos := Vector2(int(e["source_x_px"]), int(e["source_y_px"]))
+		if npc_sprite_scale != 1.0:
+			sprite.scale = Vector2(npc_sprite_scale, npc_sprite_scale)
+		# Build the clickable hit region. Sprite is parented to the
+		# Area2D so they move/sort together, but the Area2D's position
+		# is what determines pick-up coords. Sprite is `centered=false`
+		# (top-left anchored) so the hit rectangle is offset to match.
+		var interactable: Area2D = _make_npc_interactable(e, sprite)
+		interactable.position = pos
+		container.add_child(interactable)
+		spawned += 1
+
+	if spawned > 0:
+		print("NPC sprites: spawned %d animated NPCs" % spawned)
+
+
+# Wraps an NPC AnimatedSprite2D in an Area2D + RectangleShape2D for
+# click-to-talk. Returns the Area2D (with the sprite already parented
+# under it). `npc_interactable.gd` handles the input_event signal and
+# popup spawning.
+func _make_npc_interactable(entity: Dictionary, sprite: AnimatedSprite2D) -> Area2D:
+	var script: Script = preload("res://features/town/npc_interactable.gd")
+	var area: Area2D = script.new()
+	area.dialogue_line_id = int(entity.get("dialogue_line_id", -1))
+	area.town_id = town_id
+
+	# Hit rectangle: prefer the blueprint's declared width/height, fall
+	# back to the sprite's current animation frame size, then to a
+	# single tile as a last resort.
+	var w := int(entity.get("width_px", 0))
+	var h := int(entity.get("height_px", 0))
+	if w <= 0 or h <= 0:
+		var frames := sprite.sprite_frames
+		var anim_name := String(sprite.animation)
+		if frames != null and frames.has_animation(anim_name) and frames.get_frame_count(anim_name) > 0:
+			var tex: Texture2D = frames.get_frame_texture(anim_name, 0)
+			if tex != null:
+				if w <= 0: w = tex.get_width()
+				if h <= 0: h = tex.get_height()
+	if w <= 0: w = tile_size
+	if h <= 0: h = tile_size
+	# Account for the npc_sprite_scale applied to the sprite below.
+	var sx: float = npc_sprite_scale if npc_sprite_scale != 1.0 else 1.0
+
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(w * sx, h * sx)
+	var cs := CollisionShape2D.new()
+	cs.shape = shape
+	# Sprite is centered=false (top-left); shift the rectangle so its
+	# centre lands at top-left + (w/2, h/2).
+	cs.position = Vector2((w * sx) * 0.5, (h * sx) * 0.5)
+	area.add_child(cs)
+	area.add_child(sprite)
+	return area
 
 
 # ============================================================================

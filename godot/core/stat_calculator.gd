@@ -439,7 +439,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			for e in parsed_passive.get("effects", []):
 				if(e.get("type") == "STAT_BOOST_PCT"):
 					for stat in e.get("effect").keys():
-						pct_mods[stat] = e.get("effect")[stat]
+						pct_mods[stat] += e.get("effect")[stat]
 			
 	# TODO: Parse effects_raw for pct_mods here
 
@@ -479,8 +479,9 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	for stat_name in final_profile["stats"].keys():
 		var base = base_calculated.get(stat_name, 0.0)
 		var total_flat = flat_mods.get(stat_name, 0)
-		
-		var final_val = (base * (1.0 + (float(pct_mods.get(stat_name, 0)) / 100.0))) + total_flat
+		var capped_pct = mini(int(pct_mods.get(stat_name, 0)), 400)
+
+		var final_val = (base * (1.0 + (float(capped_pct) / 100.0))) + total_flat
 		final_profile["stats"][stat_name] = int(round(final_val))
 		
 	final_profile["element_resist"] = element_resists

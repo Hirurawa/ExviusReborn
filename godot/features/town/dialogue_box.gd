@@ -83,7 +83,7 @@ func _build_ui() -> void:
 	vbox.add_child(_body_label)
 
 	_hint_label = Label.new()
-	_hint_label.text = "▼ Click or press Enter to continue"
+	_hint_label.text = "▼ Press Enter to continue"
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_hint_label.add_theme_font_size_override("font_size", 12)
 	_hint_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))

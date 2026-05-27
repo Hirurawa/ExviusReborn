@@ -440,6 +440,12 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 				if(e.get("type") == "STAT_BOOST_PCT"):
 					for stat in e.get("effect").keys():
 						pct_mods[stat] += e.get("effect")[stat]
+				if(e.get("type") == "ELEMENT_RESIST"):
+					for el in e.get("effect").keys():
+						element_resists[el.to_upper()] += e.get("effect")[el]
+				if(e.get("type") == "STATUS_RESIIST"):
+					for st in e.get("effect").keys():
+						status_resists[st.to_upper()] += e.get("effect")[st]
 			
 	# TODO: Parse effects_raw for pct_mods here
 

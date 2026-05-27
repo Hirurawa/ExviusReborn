@@ -58,15 +58,6 @@ offset_bottom = 42.0
 texture_normal = ExtResource("3_dkus8")
 texture_pressed = ExtResource("5_g4uvh")
 
-[node name="SortOptionButton" type="OptionButton" parent="VBoxContainer/UnitNamebgChara" unique_id=1472100001]
-layout_mode = 0
-offset_left = 452.0
-offset_top = 10.0
-offset_right = 620.0
-offset_bottom = 42.0
-focus_mode = 0
-alignment = 1
-
 [node name="Back" type="Label" parent="VBoxContainer/UnitNamebgChara/BackButton" unique_id=581372541]
 layout_mode = 0
 offset_left = 29.0
@@ -76,6 +67,15 @@ offset_bottom = 40.0
 text = "Back"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="SortOptionButton" type="OptionButton" parent="VBoxContainer/UnitNamebgChara" unique_id=1472100001]
+layout_mode = 0
+offset_left = 452.0
+offset_top = 10.0
+offset_right = 620.0
+offset_bottom = 42.0
+focus_mode = 0
+alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1874225308]
 layout_mode = 2

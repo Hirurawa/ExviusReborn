@@ -23,3 +23,5 @@ mono_crash.*.json
 
 # Ignore massive asset dumps
 /godot/assets/
+
+/artifacts/

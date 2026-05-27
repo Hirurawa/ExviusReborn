@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://df5j8f9a0x1"]
+[gd_scene format=3 uid="uid://df5j8gaa0x1"]
 
-[ext_resource type="Script" path="res://features/outgame/units/unit_stats_popup.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://lhxeognbbqo0" path="res://features/outgame/units/unit_stats_popup.gd" id="1_script"]
 
-[node name="UnitStatsPopup" type="Control"]
+[node name="UnitStatsPopup" type="Control" unique_id=313372285]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=597616818]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +20,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.705882)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=2005445036]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -34,7 +34,7 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=266242023]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -46,61 +46,65 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="NameLabel" type="Label" parent="Panel/VBoxContainer"]
+[node name="NameLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1448086195]
 layout_mode = 2
 text = "Unit Name"
 horizontal_alignment = 1
 
-[node name="LevelLabel" type="Label" parent="Panel/VBoxContainer"]
+[node name="LevelLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1377718079]
 layout_mode = 2
 text = "Level: 1"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer" unique_id=1339284145]
 layout_mode = 2
 
-[node name="StatsContainer" type="GridContainer" parent="Panel/VBoxContainer"]
+[node name="StatsContainer" type="GridContainer" parent="Panel/VBoxContainer" unique_id=1319387687]
 layout_mode = 2
 columns = 2
 
-[node name="HPLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer"]
+[node name="HPLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer" unique_id=517595175]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "HP:"
 
-[node name="MPLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer"]
+[node name="MPLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer" unique_id=10840604]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "MP:"
 
-[node name="ATKLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer"]
+[node name="ATKLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer" unique_id=564650337]
 layout_mode = 2
 text = "ATK:"
 
-[node name="DEFLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer"]
+[node name="DEFLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer" unique_id=2048091920]
 layout_mode = 2
 text = "DEF:"
 
-[node name="MAGLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer"]
+[node name="MAGLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer" unique_id=155543799]
 layout_mode = 2
 text = "MAG:"
 
-[node name="SPRLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer"]
+[node name="SPRLabel" type="Label" parent="Panel/VBoxContainer/StatsContainer" unique_id=1185794225]
 layout_mode = 2
 text = "SPR:"
 
-[node name="Spacer" type="Control" parent="Panel/VBoxContainer"]
+[node name="Spacer" type="Control" parent="Panel/VBoxContainer" unique_id=1592824071]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SwapButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="SwapButton" type="Button" parent="Panel/VBoxContainer" unique_id=251982303]
 layout_mode = 2
 text = "Swap"
 
-[node name="RemoveButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="EquipButton" type="Button" parent="Panel/VBoxContainer" unique_id=1184947941]
+layout_mode = 2
+text = "Equip"
+
+[node name="RemoveButton" type="Button" parent="Panel/VBoxContainer" unique_id=1698882782]
 layout_mode = 2
 text = "Remove"
 
-[node name="CloseButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="CloseButton" type="Button" parent="Panel/VBoxContainer" unique_id=1362015768]
 layout_mode = 2
 text = "Close"

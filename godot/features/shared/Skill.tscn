@@ -86,8 +86,7 @@ offset_right = 292.0
 offset_bottom = 95.0
 theme_override_font_sizes/font_size = 18
 text = "unit_magic_detail_text_1"
-horizontal_alignment = 2
-autowrap_mode = 1
+autowrap_mode = 2
 
 [node name="unit_magic_icon" type="TextureRect" parent="." unique_id=526603598]
 layout_mode = 0

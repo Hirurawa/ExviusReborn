@@ -102,9 +102,9 @@ func _render_current() -> void:
 	_body_label.text = body
 	# Update hint on the last page.
 	if _index == _pages.size() - 1:
-		_hint_label.text = "▼ Click or press Enter to close"
+		_hint_label.text = "▼ Press Enter to close"
 	else:
-		_hint_label.text = "▼ Click or press Enter to continue"
+		_hint_label.text = "▼ Press Enter to continue"
 
 
 func _advance() -> void:

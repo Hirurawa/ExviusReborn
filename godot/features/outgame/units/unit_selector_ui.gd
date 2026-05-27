@@ -46,6 +46,12 @@ signal materials_selected(units_array: Array)
 static var _shared_texture_cache: Dictionary = {}
 static var _shared_path_exists_cache: Dictionary = {}
 static var _shared_pedestal_cache: Dictionary = {}
+static var _persisted_sort_mode: String = ""
+static var _persisted_sort_loaded: bool = false
+
+const SORT_CONFIG_PATH: String = "user://unit_selector_sort.cfg"
+const SORT_CONFIG_SECTION: String = "unit_selector"
+const SORT_CONFIG_KEY: String = "sort_mode"
 
 var _exclude_instance_id_set: Dictionary = {}
 var _selected_units_map: Dictionary = {}
@@ -335,6 +341,7 @@ func _setup_sort_dropdown() -> void:
 	if sort_option_button == null:
 		return
 
+	_current_sort_mode = _load_persisted_sort_mode()
 	sort_option_button.clear()
 	_add_sort_option("Sort: Default", SORT_DEFAULT)
 	_add_sort_option("Name A->Z", SORT_NAME_ASC)
@@ -369,7 +376,27 @@ func _on_sort_option_selected(index: int) -> void:
 		return
 
 	_current_sort_mode = selected_mode
+	_persist_sort_mode(selected_mode)
 	_request_units_list_refresh()
+
+static func _load_persisted_sort_mode() -> String:
+	if _persisted_sort_loaded:
+		return _persisted_sort_mode
+	_persisted_sort_loaded = true
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(SORT_CONFIG_PATH) == OK:
+		_persisted_sort_mode = str(config.get_value(SORT_CONFIG_SECTION, SORT_CONFIG_KEY, SORT_DEFAULT))
+	else:
+		_persisted_sort_mode = SORT_DEFAULT
+	return _persisted_sort_mode
+
+static func _persist_sort_mode(mode: String) -> void:
+	_persisted_sort_mode = mode
+	_persisted_sort_loaded = true
+	var config: ConfigFile = ConfigFile.new()
+	config.load(SORT_CONFIG_PATH)
+	config.set_value(SORT_CONFIG_SECTION, SORT_CONFIG_KEY, mode)
+	config.save(SORT_CONFIG_PATH)
 
 func _sort_units_for_display(owned_units_ids: Array) -> Array:
 	var sorted_units: Array = []

@@ -11,6 +11,7 @@ extends Control
 
 @onready var close_btn: Button = $Panel/VBoxContainer/CloseButton
 @onready var swap_btn: Button = $Panel/VBoxContainer/SwapButton
+@onready var equip_btn: Button = $Panel/VBoxContainer/EquipButton
 @onready var remove_btn: Button = $Panel/VBoxContainer/RemoveButton
 
 var current_unit_inst: Dictionary
@@ -30,6 +31,7 @@ func init_scene(params: Dictionary) -> void:
 func _ready() -> void:
 	close_btn.pressed.connect(_on_close_pressed)
 	swap_btn.pressed.connect(_on_swap_pressed)
+	equip_btn.pressed.connect(_on_equip_pressed)
 	remove_btn.pressed.connect(_on_remove_pressed)
 
 func _populate_data() -> void:
@@ -75,6 +77,10 @@ func _on_swap_pressed() -> void:
 		"slot_index": target_slot_index,
 		"exclude_list": exclude_list
 	})
+
+func _on_equip_pressed() -> void:
+	UIManager.pop()
+	UIManager.push("unit_detail_ui", {"unit_inst": current_unit_inst})
 
 func _on_remove_pressed() -> void:
 	PartyService.assign_unit_to_party(target_party_index, target_slot_index, "")

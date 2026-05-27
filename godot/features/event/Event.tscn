@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://b08net8laty1n"]
+
+[ext_resource type="Script" uid="uid://br77g35vltjor" path="res://features/event/event_runner.gd" id="1"]
+[ext_resource type="Script" uid="uid://dljdfgda4jbib" path="res://features/town/tile_map.gd" id="3"]
+[ext_resource type="Script" uid="uid://cmdc21xwvrbwn" path="res://features/town/camera_2d.gd" id="4"]
+
+[node name="Event" type="Node2D" unique_id=884494848]
+
+[node name="TileMap" type="TileMap" parent="." unique_id=800132551]
+format = 2
+script = ExtResource("3")
+show_dynamic_entities = false
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1565631052]
+zoom = Vector2(1.5, 1.5)
+script = ExtResource("4")
+
+[node name="DialogLayer" type="CanvasLayer" parent="." unique_id=758197596]
+
+[node name="DialogBg" type="ColorRect" parent="DialogLayer" unique_id=103956298]
+anchors_preset = -1
+anchor_top = 0.75
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 0.7)
+
+[node name="DialogLabel" type="Label" parent="DialogLayer/DialogBg" unique_id=788461274]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="EventRunner" type="Node2D" parent="." unique_id=58157377]
+script = ExtResource("1")
+event_id = "111020201"
+tile_map_path = NodePath("../TileMap")
+camera_path = NodePath("../Camera2D")
+dialog_label_path = NodePath("../DialogLayer/DialogBg/DialogLabel")

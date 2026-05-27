@@ -50,7 +50,7 @@ var _active_chunk_data: Dictionary = {}
 		show_static_placeholders = v
 		trigger_redraw()
 
-@export_range(0.05, 8.0, 0.05) var npc_sprite_scale: float = 1.0 :
+@export_range(0.05, 8.0, 0.05) var npc_sprite_scale: float = 2.0 :
 	set(v):
 		npc_sprite_scale = v
 		trigger_redraw()
@@ -134,11 +134,11 @@ func _ready():
 		var mm: Node = preload("res://features/town/minimap.gd").new()
 		mm.name = "Minimap"
 		add_child(mm)
-	# At runtime the paths are not valid until load_town() (called by
-	# town_map.gd's init_scene) populates them. Drawing here would hit
-	# the placeholder map.bin / blueprint and fail. Editor / @tool
-	# previews still redraw so the inspector-configured town renders.
-	if Engine.is_editor_hint() or town_id != "":
+	# Only auto-draw if a real map has been wired up. Otherwise we hit
+	# the default res://map_blueprint.json placeholder (which doesn't
+	# exist in this project) and spam an error before EventRunner has a
+	# chance to call load_town().
+	if town_id != "" or FileAccess.file_exists(blueprint_path):
 		trigger_redraw()
 
 # Public entry point: switch this TileMap to render the town with the
@@ -164,9 +164,14 @@ func _apply_town_paths() -> void:
 		return
 	var base := town_data_root.rstrip("/") + "/" + town_id
 	map_file_path = base + "/map.bin"
-	blueprint_path = base + "/map_blueprint.json"
 	# All mapchip PNGs live alongside map.bin in the same town folder.
+	# Set this BEFORE blueprint_path: blueprint_path's setter fires a
+	# trigger_redraw() which can build the dynamic tileset on demand;
+	# that build uses mapchip_folder, so it must already point at the
+	# new town or several atlas sources will be skipped (resulting in
+	# "No TileSet atlas source with id N" spam from get_source()).
 	mapchip_folder = base
+	blueprint_path = base + "/map_blueprint.json"
 	_invalidate_blueprint_cache()
 	if is_inside_tree():
 		# Regenerate the tileset from the new bin's manifest, then redraw.
@@ -185,8 +190,11 @@ func _apply_town_paths() -> void:
 				print("Initial spawn from bin header: lid=%d at (%d, %d)" % [init_lid, ix, iy])
 				# Defer so any player node still resolving its own
 				# _ready (and thus group registration) is in the tree
-				# by the time we look it up.
-				call_deferred("warp_to", init_lid, ix, iy)
+				# by the time we look it up. The chunk is drawn
+				# synchronously regardless (warp_to sets target_chunk),
+				# so callers that don't have a player (e.g. EventRunner)
+				# still get the right layer visible immediately.
+				warp_to(init_lid, ix, iy)
 				return
 		trigger_redraw()
 
@@ -584,6 +592,24 @@ func draw_chunk(chunk_index: int):
 		for ev in chunk_data["objects"]["grid_events"]:
 			grid_events_lookup[Vector2i(int(ev["x"]), int(ev["y"]))] = int(ev["event_id"])
 
+	# Make sure the TileMap has at least one Godot layer per visual
+	# sublayer this chunk needs. Map.tscn declares 8 layers inline, but
+	# Event.tscn (and any other scene that instances a bare TileMap)
+	# only ships with layer 0, so higher sublayers would silently be
+	# dropped by set_cell(). Auto-extend here so draw_chunk works
+	# regardless of how the host scene was authored.
+	var needed_layers := 1
+	for sl in chunk_data["sub_layers"]:
+		if sl["type"] == "visual":
+			needed_layers = max(needed_layers, int(sl["index"]) + 1)
+	while get_layers_count() < needed_layers:
+		var new_idx := get_layers_count()
+		add_layer(new_idx)
+		set_layer_name(new_idx, "Layer%d" % new_idx)
+		# Mirror Map.tscn's z_index convention (visual sublayer N at
+		# z = 2*N) so statics interleaved at 2*N + 1 sit on top.
+		set_layer_z_index(new_idx, 2 * new_idx)
+
 	for sub_layer in chunk_data["sub_layers"]:
 		var start_offset = sub_layer["start_hex"].hex_to_int()
 		bin_file.seek(start_offset)
@@ -649,6 +675,16 @@ func draw_chunk(chunk_index: int):
 	
 	# --- DRAW STATIC ASSETS via composite registry ---
 	if chunk_data.has("objects") and chunk_data["objects"].has("static_assets"):
+		# If the dynamic tileset hasn't been built yet (e.g. draw_chunk
+		# was triggered by a stale target_chunk setter before
+		# build_dynamic_tileset() ran), do that now. Without this,
+		# tile_set.get_source(src) below crashes with a null deref.
+		if tile_set == null:
+			print("draw_chunk: tile_set is null; building dynamic tileset on demand")
+			build_dynamic_tileset()
+		if tile_set == null:
+			push_warning("draw_chunk: tile_set still null after build; skipping static assets")
+			return
 		# Clean up any previous placeholder container.
 		var old_container = get_node_or_null("StaticAssets")
 		if old_container: old_container.queue_free()
@@ -990,8 +1026,13 @@ func _render_dynamic_entities(container: Node2D, entities: Array) -> void:
 		container.add_child(rect)
 
 		var label := Label.new()
-		var label_text := "[%s] #%d type=%s\n  src=(%d,%d) %dx%d" % [
-			kind.to_upper(), i, rec_type, sx, sy, sw, sh
+		# Show the parser-assigned `record_id` (stable, matches the
+		# blueprint JSON) rather than the loop index so labels can be
+		# cross-referenced with the bin data. Fall back to the index
+		# only when an entity has no record_id (synthetic recoveries).
+		var rid_text := "rid=%d" % int(e["record_id"]) if e.has("record_id") else "#%d" % i
+		var label_text := "[%s] %s type=%s\n  src=(%d,%d) %dx%d" % [
+			kind.to_upper(), rid_text, rec_type, sx, sy, sw, sh
 		]
 		if e.has("target_lid"):
 			label_text += "\n  -> lid=%d (%d,%d)" % [

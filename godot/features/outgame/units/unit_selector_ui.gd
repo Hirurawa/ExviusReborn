@@ -264,7 +264,8 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 		# Load textures for the Unit scene and let it fit itself inside this cell.
 		var sprite_texture: Texture2D = null
-		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+		var entry_id: String = UnitService.get_entry_id(unit_inst)
+		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 		if _resource_exists(img_path):
 			sprite_texture = _get_dynamic_texture(img_path)
 

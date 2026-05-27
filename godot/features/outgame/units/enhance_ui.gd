@@ -274,11 +274,11 @@ func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():
 		return null
 
-	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	if unit_id == "":
+	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	if entry_id == "":
 		return null
 
-	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	if not ResourceLoader.exists(img_path):
 		return null
 

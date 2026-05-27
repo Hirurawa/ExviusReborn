@@ -199,8 +199,8 @@ func _update_slots(unit_uuids: Array) -> void:
 		if uuid != null and typeof(uuid) == TYPE_STRING and uuid != "":
 			unit_inst = _find_unit_inst(uuid)
 			if not unit_inst.is_empty():
-				var unit_id: String = unit_inst.get("unit_id", "")
-				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+				var entry_id: String = UnitService.get_entry_id(unit_inst)
+				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 				if ResourceLoader.exists(path):
 					slot_tex = _get_dynamic_texture(path)
 				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("rarity", 1)))

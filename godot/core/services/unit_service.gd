@@ -471,6 +471,27 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String) -
 	else:
 		equip_failed.emit("ERR_UNIT_NOT_FOUND")
 	
+func get_entry_id(unit_inst: Dictionary) -> String:
+	"""Return the rarity-specific entry id for asset resolution (illustrations, icons, spritesheets).
+	Falls back to the template unit_id when the hydrated entry_id is missing."""
+	if unit_inst.is_empty():
+		return ""
+	var entry_id: String = str(unit_inst.get("entry_id", ""))
+	if entry_id != "":
+		return entry_id
+	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	if unit_id == "":
+		return ""
+	var rarity: int = int(unit_inst.get("current_rarity", 1))
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var entries: Variant = unit_data.get("entries", {})
+	if entries is Dictionary:
+		for key in (entries as Dictionary).keys():
+			var entry: Variant = (entries as Dictionary)[key]
+			if entry is Dictionary and int((entry as Dictionary).get("rarity", -1)) == rarity:
+				return str(key)
+	return unit_id
+
 func is_material_unit(unit_inst: Dictionary) -> bool:
 	"""Check if a unit is a material unit (non-playable) based on job_id."""
 	if unit_inst.is_empty():
@@ -869,15 +890,19 @@ func _hydrate_owned_units(units: Array) -> Array:
 		var rarity = int(unit_instance.get("current_rarity", 1))
 		var entries = template_data.get("entries", {})
 		var rarity_entry = {}
+		var rarity_entry_key: String = unit_id
 
 		if entries.has(str(unit_id)):
 			rarity_entry = entries[str(unit_id)]
+			rarity_entry_key = str(unit_id)
 		elif entries.has(str(rarity)):
 			rarity_entry = entries[str(rarity)]
+			rarity_entry_key = str(rarity)
 
 		for key in entries.keys():
 			if entries[key].has("rarity") and int(entries[key]["rarity"]) == rarity:
 				rarity_entry = entries[key]
+				rarity_entry_key = str(key)
 				break
 
 		hydrated_unit.merge(rarity_entry, true)
@@ -885,6 +910,7 @@ func _hydrate_owned_units(units: Array) -> Array:
 		# 3. Instance Data
 		hydrated_unit.merge(unit_instance, true)
 		hydrated_unit["equipment"] = _normalize_unit_equipment(unit_instance.get("equipment", {}))
+		hydrated_unit["entry_id"] = rarity_entry_key
 
 		# 4. Calculate Final Stats
 		hydrated_unit["final_stats"] = StatCalculator.calculate_final_stats(hydrated_unit)

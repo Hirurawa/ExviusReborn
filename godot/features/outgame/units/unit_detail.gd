@@ -114,13 +114,14 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
 	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var entry_id: String = UnitService.get_entry_id(unit_inst)
 
 	unit_detail_name_label.text = str(unit_data.get("name", "Unknown"))
 
-	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_id
+	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	var tex: Texture2D = load(img_path) as Texture2D
 	unit_detail_sprite.texture = tex
-	_show_idle_or_static(unit_id)
+	_show_idle_or_static(entry_id)
 
 	var rarity: int = int(unit_inst.get("current_rarity", 1))
 	var max_rarity: int = int(unit_data.get("rarity_max", 5))
@@ -633,5 +634,5 @@ func _on_illustration_pressed() -> void:
 	if current_unit_inst.is_empty():
 		return
 
-	var unit_id: String = str(current_unit_inst.get("unit_id", ""))
-	_play_attack_then_resume_idle(unit_id)
+	var entry_id: String = UnitService.get_entry_id(current_unit_inst)
+	_play_attack_then_resume_idle(entry_id)

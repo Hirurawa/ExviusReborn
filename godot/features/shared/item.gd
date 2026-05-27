@@ -267,11 +267,11 @@ func _apply_equipped_to(item_data: Dictionary, display_options: Dictionary) -> v
 	if unit_inst.is_empty():
 		return
 	
-	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	if unit_id == "":
+	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	if entry_id == "":
 		return
 	
-	var icon_path: String = "res://assets/unit_icons/unit_icon_%s.png" % unit_id
+	var icon_path: String = "res://assets/unit_icons/unit_icon_%s.png" % entry_id
 	equipped_to.texture = _load_texture(icon_path)
 	if equipped_to.texture != null:
 		equipped_to.show()

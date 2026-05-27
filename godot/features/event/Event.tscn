@@ -48,7 +48,7 @@ autowrap_mode = 3
 
 [node name="EventRunner" type="Node2D" parent="." unique_id=58157377]
 script = ExtResource("1")
-event_id = "111020201"
+event_id = "111010105"
 tile_map_path = NodePath("../TileMap")
 camera_path = NodePath("../Camera2D")
 dialog_label_path = NodePath("../DialogLayer/DialogBg/DialogLabel")

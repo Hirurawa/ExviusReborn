@@ -70,7 +70,7 @@ func _refresh_party_sprites() -> void:
 		if unit_inst.is_empty():
 			continue
 
-		var unit_id: String = str(unit_inst.get("unit_id", ""))
+		var unit_id: String = UnitService.get_entry_id(unit_inst)
 		if unit_id == "":
 			continue
 

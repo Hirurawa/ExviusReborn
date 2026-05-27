@@ -724,7 +724,7 @@ func _on_battle_state_ready() -> void:
 			_active_panels.append(panel)
 
 			# Add Combat Sprite to the corresponding UnitDot
-			var template_id: String = str(unit_data.get("unit_id", ""))
+			var template_id: String = UnitService.get_entry_id(unit_data)
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED

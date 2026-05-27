@@ -13,7 +13,7 @@ Two distinct binary families are handled:
   decoded:
   - `town_v1` — the original chunked layout (towns, simple dungeons).
   - `exploration_v2` — a layer-table layout used by exploration zones.
-* **Event bins** (`memorial-assets/.../<event_id>/<event_id>_event.bin`)
+* **Event bins** (`town_data/<event_id>/<event_id>_event.bin`)
   — cutscene / story scripts that play *on top of* a map. Header +
   asset manifest + a variable-length opcode stream.
 
@@ -47,11 +47,11 @@ used as-is.
 
 ### 1.2 Events
 
-Cutscene scripts live under the on-demand asset pack root
-(`event_common.EVENT_ASSET_ROOT`), one folder per event id:
+Cutscene scripts live alongside their parent map under the same
+`town_data` root, one folder per event id:
 
 ```
-assets/memorial-assets/assetpacks/on_demand_asset4/199/199/assets/
+godot/assets/town_data/
     <event_id>/
         <event_id>_event.bin        -- raw FFBE cutscene script
         <event_id>_event_text.txt   -- "<text_id>,<line>" CSV side-car
@@ -496,7 +496,7 @@ depenetration from shoving them back along the stair axis.
 ## 7. Quick recipe: adding a new town
 
 1. Drop the FFBE `map.bin` and its `mapchip_*.png` files into `{town_data_root}/{town_id}/`.
-2. Run `python parse.py {town_id}` to produce `map_blueprint.json` next to the bin. The dispatcher auto-detects whether to invoke `town_parser` or `exploration_parser`.
+2. From the `bin_parser/` directory, run `python parse.py {town_id}` to produce `map_blueprint.json` next to the bin. The dispatcher auto-detects whether to invoke `town_parser`, `exploration_parser`, or (for event ids) `event_parser`.
 3. From game code, call `tile_map.load_town(town_id)` (or open `Map.tscn` with the TileMap's `town_id` inspector field set).
 4. In the editor, the TileMap inspector's `town_id` field gives an editor-time preview without code.
 

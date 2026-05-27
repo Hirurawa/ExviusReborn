@@ -4,11 +4,8 @@ import os
 import math
 import sys
 
-# Project-relative root where each town's data lives in its own subfolder.
-# Mirrors the Godot side's tile_map.gd `town_data_root` export so both
-# scripts agree on where to find a town's assets.
-TOWN_DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                              "assets", "town_data")
+import bin_common
+from bin_common import TOWN_DATA_ROOT
 
 
 def _split_scripted_payload(payload):
@@ -1205,59 +1202,16 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
     return True
 
 
-def resolve_town_folder_id(town_id):
-    """Resolve a short town id (like '1103') to its full folder id (like
-    '111020300') by consulting `assets/town_data/towns.json`. The full
-    folder id is derived from the icon filename: `map_icon_<7digits>.png`
-    -> folder id is `<7digits>` + '00'.
-
-    If the input is already a long folder id, an exact-match folder, or
-    can't be resolved, it is returned unchanged.
-    """
-    town_id = str(town_id)
-    # Already a real folder? Use as-is.
-    if os.path.isdir(os.path.join(TOWN_DATA_ROOT, town_id)):
-        return town_id
-    towns_json = os.path.join(TOWN_DATA_ROOT, "towns.json")
-    if not os.path.isfile(towns_json):
-        return town_id
-    try:
-        with open(towns_json, "r", encoding="utf-8") as fh:
-            towns = json.load(fh)
-    except Exception as exc:
-        print(f"Warning: could not read towns.json ({exc})")
-        return town_id
-    entry = towns.get(town_id)
-    if not entry:
-        return town_id
-    icon = entry.get("icon", "")
-    # icon convention: 'map_icon_<7digits>.png' -> folder = '<7digits>00'
-    base = os.path.splitext(os.path.basename(icon))[0]
-    if base.startswith("map_icon_"):
-        short = base[len("map_icon_"):]
-        candidate = short + "00"
-        if os.path.isdir(os.path.join(TOWN_DATA_ROOT, candidate)):
-            print(f"Resolved short id {town_id} ('{entry['names'][0]}') -> {candidate}")
-            return candidate
-    return town_id
-
-
 def parse_town(town_id):
-    """Resolve `assets/town_data/<town_id>/map.bin` and parse it. The
+    """Resolve `<town_data_root>/<town_id>/map.bin` and parse it. The
     resulting blueprint is written to `map_blueprint.json` in the same
     folder.
 
     Accepts either the short id from towns.json (e.g. '1103') or the
     real folder id derived from the icon name (e.g. '111020300').
     """
-    folder_id = resolve_town_folder_id(town_id)
-    town_folder = os.path.join(TOWN_DATA_ROOT, str(folder_id))
-    if not os.path.isdir(town_folder):
-        print(f"Error: town folder not found: {town_folder}")
-        return False
-    bin_path = os.path.join(town_folder, "map.bin")
-    if not os.path.isfile(bin_path):
-        print(f"Error: no map.bin under {town_folder}")
+    bin_path = bin_common.town_bin_path(town_id)
+    if not bin_path:
         return False
     parse_ffbe_map(bin_path)
     return True

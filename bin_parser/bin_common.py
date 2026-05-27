@@ -20,10 +20,14 @@ import os
 import struct
 
 
-TOWN_DATA_ROOT = os.path.join(
+# Both map.bin and *_event.bin live as siblings under the Godot
+# assets tree (<town_data>/<id>/{map.bin | <id>_event.bin}). Resolve
+# relative to this file so the parsers work when invoked from the
+# bin_parser/ directory.
+TOWN_DATA_ROOT = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "assets", "town_data",
-)
+    "..", "godot", "assets", "town_data",
+))
 
 
 # ---------------------------------------------------------------------------

@@ -27,11 +27,13 @@ import os
 import struct
 
 
-EVENT_ASSET_ROOT = os.path.join(
+# Event bins live alongside map bins under godot/assets/town_data:
+# <root>/<event_id>/<event_id>_event.bin (event ids are siblings of
+# the parent map id; see README §1.2).
+EVENT_ASSET_ROOT = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "assets", "memorial-assets", "assetpacks", "on_demand_asset4",
-    "199", "199", "assets",
-)
+    "..", "godot", "assets", "town_data",
+))
 
 
 def event_bin_path(event_id):

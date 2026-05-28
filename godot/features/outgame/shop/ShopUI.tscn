@@ -1,10 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://gqakqdyq272g"]
 
-[ext_resource type="Script" path="res://features/outgame/shop/shop_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b2mr0adket8cd" path="res://features/outgame/shop/shop_ui.gd" id="1_script"]
 
-[node name="ShopUI" type="Control"]
-script = ExtResource("1_script")
-visible = false
+[node name="ShopUI" type="Control" unique_id=679947962]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,56 +10,58 @@ anchor_bottom = 1.0
 offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_script")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=180950207]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_bottom = -117.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=648743267]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Shop"
 horizontal_alignment = 1
 
-[node name="ShopFeedbackLabel" type="Label" parent="VBoxContainer"]
+[node name="ShopFeedbackLabel" type="Label" parent="VBoxContainer" unique_id=1074844613]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.2, 1)
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=712833325]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=52580092]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 15
 
-[node name="ItemsLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="ItemsLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=562917187]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "Items"
 
-[node name="ItemsContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="ItemsContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1204308379]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=765217909]
 layout_mode = 2
 
-[node name="EquipmentLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="EquipmentLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=58935853]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "Equipments"
 
-[node name="EquipmentContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="EquipmentContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=60280463]
 layout_mode = 2
 theme_override_constants/separation = 10

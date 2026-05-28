@@ -188,7 +188,9 @@ func _update_mode_ui() -> void:
 
 	match mode:
 		"enhance_base_selection":
-			title_label.text = "Select Base"
+			title_label.text = "Select Base to Enhance"
+		"awaken_base_selection":
+			title_label.text = "Select Base to Awaken"
 		"enhance_material_selection":
 			title_label.text = "Select Material Units"
 		_:
@@ -252,6 +254,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var unit_id: String = unit_inst.get("unit_id", "")
 		var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 		var is_disabled_max_trust_material: bool = _is_max_trust_playable_material(unit_inst)
+		var is_disabled_max_rarity_awaken: bool = mode == "awaken_base_selection" and _is_at_max_rarity(unit_inst)
 		if is_disabled_max_trust_material:
 			_selected_units_map.erase(unit_instance_id)
 		
@@ -269,7 +272,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		if _resource_exists(img_path):
 			sprite_texture = _get_dynamic_texture(img_path)
 
-		var pedestal_texture: Texture2D = _get_pedestal_texture(unit_inst.get("rarity", 1))
+		var pedestal_texture: Texture2D = _get_pedestal_texture(int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1))))
 
 		var visual_area_h: int = UNIT_CELL_H
 
@@ -305,9 +308,25 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		click_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))
 		click_btn.z_index = 18
+		if is_disabled_max_rarity_awaken:
+			click_btn.disabled = true
+			click_btn.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
+			click_btn.tooltip_text = "Already at max rarity"
 		container.add_child(click_btn)
-		if is_disabled_max_trust_material:
+		if is_disabled_max_trust_material or is_disabled_max_rarity_awaken:
 			container.modulate = Color(1.0, 1.0, 1.0, 0.45)
+
+		if is_disabled_max_rarity_awaken:
+			var max_badge: Label = Label.new()
+			max_badge.text = "MAX"
+			max_badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			max_badge.position = Vector2(-48, 6)
+			max_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			max_badge.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2, 1.0))
+			max_badge.add_theme_constant_override("outline_size", 2)
+			max_badge.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+			max_badge.z_index = 30
+			container.add_child(max_badge)
 
 		if mode == "enhance_material_selection":
 			var check_box: CheckBox = CheckBox.new()
@@ -405,10 +424,20 @@ func _sort_units_for_display(owned_units_ids: Array) -> Array:
 		if unit_inst is Dictionary:
 			sorted_units.append(unit_inst)
 
-	if _current_sort_mode == SORT_DEFAULT:
-		return sorted_units
+	if _current_sort_mode != SORT_DEFAULT:
+		sorted_units.sort_custom(_compare_units_for_sort_mode)
 
-	sorted_units.sort_custom(_compare_units_for_sort_mode)
+	if mode == "awaken_base_selection":
+		var awakenable: Array = []
+		var maxed: Array = []
+		for unit_inst in sorted_units:
+			if _is_at_max_rarity(unit_inst):
+				maxed.append(unit_inst)
+			else:
+				awakenable.append(unit_inst)
+		awakenable.append_array(maxed)
+		return awakenable
+
 	return sorted_units
 
 func _compare_units_for_sort_mode(a: Dictionary, b: Dictionary) -> bool:
@@ -476,6 +505,29 @@ func _should_display_unit(unit_instance_id: String) -> bool:
 	if mode == "enhance_base_selection" and _selected_units_map.has(unit_instance_id):
 		return false
 	return not _exclude_instance_id_set.has(unit_instance_id)
+
+func _get_unit_max_rarity(unit_inst: Dictionary) -> int:
+	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	if unit_id == "":
+		return 7
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var entries: Variant = unit_data.get("entries", {})
+	if not (entries is Dictionary):
+		return 7
+	var max_rarity: int = 0
+	for key in (entries as Dictionary).keys():
+		var entry: Variant = (entries as Dictionary)[key]
+		if entry is Dictionary:
+			var r: int = int((entry as Dictionary).get("rarity", 0))
+			if r > max_rarity:
+				max_rarity = r
+	if max_rarity <= 0:
+		return 7
+	return max_rarity
+
+func _is_at_max_rarity(unit_inst: Dictionary) -> bool:
+	var current_rarity: int = int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1)))
+	return current_rarity >= _get_unit_max_rarity(unit_inst)
 
 func _set_checkbox_state(check_box: CheckBox, state: bool) -> void:
 	_suppress_checkbox_signal = true
@@ -589,6 +641,13 @@ func _on_unit_clicked(unit_inst: Dictionary) -> void:
 		PartyService.assign_unit_to_party(target_party_index, target_slot_index, unit_inst.instance_id)
 		UIManager.pop()
 	elif mode == "enhance_base_selection":
+		unit_selected.emit(unit_inst)
+		UIManager.pop()
+		if selection_callback.is_valid():
+			selection_callback.call(unit_inst)
+	elif mode == "awaken_base_selection":
+		if _is_at_max_rarity(unit_inst):
+			return
 		unit_selected.emit(unit_inst)
 		UIManager.pop()
 		if selection_callback.is_valid():

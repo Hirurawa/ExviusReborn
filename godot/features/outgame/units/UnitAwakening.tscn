@@ -75,6 +75,16 @@ offset_bottom = 26.0
 texture = ExtResource("4_smab5")
 expand_mode = 1
 
+[node name="after_lvl" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=1526315323]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 6.0
+offset_right = 170.0
+offset_bottom = 32.0
+theme_override_font_sizes/font_size = 18
+text = "after_lvl"
+vertical_alignment = 1
+
 [node name="unit_classup_before_status_label_hp" type="TextureRect" parent="Status/unit_classup_after_status_offset" unique_id=809401807]
 layout_mode = 0
 offset_left = 16.0
@@ -83,6 +93,16 @@ offset_right = 58.0
 offset_bottom = 54.0
 texture = ExtResource("5_ibmi8")
 expand_mode = 1
+
+[node name="after_hp" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=1584408108]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 32.0
+offset_right = 170.0
+offset_bottom = 58.0
+theme_override_font_sizes/font_size = 18
+text = "after_hp"
+vertical_alignment = 1
 
 [node name="unit_classup_before_status_label_mp" type="TextureRect" parent="Status/unit_classup_after_status_offset" unique_id=1900289610]
 layout_mode = 0
@@ -93,6 +113,16 @@ offset_bottom = 82.0
 texture = ExtResource("6_74dip")
 expand_mode = 1
 
+[node name="after_mp" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=1250141257]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 57.0
+offset_right = 170.0
+offset_bottom = 83.0
+theme_override_font_sizes/font_size = 18
+text = "after_mp"
+vertical_alignment = 1
+
 [node name="unit_classup_before_status_label_atk" type="TextureRect" parent="Status/unit_classup_after_status_offset" unique_id=1238187700]
 layout_mode = 0
 offset_left = 16.0
@@ -101,6 +131,16 @@ offset_right = 58.0
 offset_bottom = 110.0
 texture = ExtResource("7_gw5fj")
 expand_mode = 1
+
+[node name="after_atk" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=2012471389]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 84.0
+offset_right = 170.0
+offset_bottom = 110.0
+theme_override_font_sizes/font_size = 18
+text = "after_atk"
+vertical_alignment = 1
 
 [node name="unit_classup_before_status_label_def" type="TextureRect" parent="Status/unit_classup_after_status_offset" unique_id=403625206]
 layout_mode = 0
@@ -111,6 +151,16 @@ offset_bottom = 138.0
 texture = ExtResource("8_qnsw0")
 expand_mode = 1
 
+[node name="after_def" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=1270667105]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 113.0
+offset_right = 170.0
+offset_bottom = 139.0
+theme_override_font_sizes/font_size = 18
+text = "after_def"
+vertical_alignment = 1
+
 [node name="unit_classup_before_status_label_magic" type="TextureRect" parent="Status/unit_classup_after_status_offset" unique_id=1948971693]
 layout_mode = 0
 offset_left = 16.0
@@ -119,6 +169,16 @@ offset_right = 58.0
 offset_bottom = 166.0
 texture = ExtResource("9_kdkmb")
 expand_mode = 1
+
+[node name="after_mag" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=1256013821]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 141.0
+offset_right = 170.0
+offset_bottom = 167.0
+theme_override_font_sizes/font_size = 18
+text = "after_mag"
+vertical_alignment = 1
 
 [node name="unit_classup_before_status_label_mnd" type="TextureRect" parent="Status/unit_classup_after_status_offset" unique_id=653885963]
 layout_mode = 0
@@ -129,7 +189,18 @@ offset_bottom = 194.0
 texture = ExtResource("10_r2k0i")
 expand_mode = 1
 
+[node name="after_spr" type="Label" parent="Status/unit_classup_after_status_offset" unique_id=1851576028]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 169.0
+offset_right = 170.0
+offset_bottom = 195.0
+theme_override_font_sizes/font_size = 18
+text = "after_spr"
+vertical_alignment = 1
+
 [node name="MinibuttonLabelQuestion" type="Sprite2D" parent="Status/unit_classup_after_status_offset" unique_id=522456016]
+visible = false
 position = Vector2(98, 14)
 texture = ExtResource("25_5rdhy")
 
@@ -150,15 +221,14 @@ offset_bottom = 25.0
 texture = ExtResource("4_smab5")
 expand_mode = 1
 
-[node name="unit_classup_before_status_lv_value" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=468453291]
+[node name="before_lvl" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=468453291]
 layout_mode = 0
-offset_left = 67.0
+offset_left = 60.0
 offset_top = 6.0
-offset_right = 378.0
+offset_right = 170.0
 offset_bottom = 32.0
 theme_override_font_sizes/font_size = 18
-text = "unit_classup_before_status_lv_value"
-horizontal_alignment = 1
+text = "before_lvl"
 vertical_alignment = 1
 
 [node name="unit_classup_before_status_label_hp" type="TextureRect" parent="Status/unit_classup_before_status_offset" unique_id=1837393465]
@@ -170,6 +240,16 @@ offset_bottom = 53.0
 texture = ExtResource("5_ibmi8")
 expand_mode = 1
 
+[node name="before_hp" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=129940726]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 32.0
+offset_right = 170.0
+offset_bottom = 58.0
+theme_override_font_sizes/font_size = 18
+text = "before_hp"
+vertical_alignment = 1
+
 [node name="unit_classup_before_status_label_mp" type="TextureRect" parent="Status/unit_classup_before_status_offset" unique_id=1236801532]
 layout_mode = 0
 offset_left = 17.0
@@ -178,6 +258,16 @@ offset_right = 59.0
 offset_bottom = 81.0
 texture = ExtResource("6_74dip")
 expand_mode = 1
+
+[node name="before_mp" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=1281610386]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 57.0
+offset_right = 170.0
+offset_bottom = 83.0
+theme_override_font_sizes/font_size = 18
+text = "before_mp"
+vertical_alignment = 1
 
 [node name="unit_classup_before_status_label_atk" type="TextureRect" parent="Status/unit_classup_before_status_offset" unique_id=1037953876]
 layout_mode = 0
@@ -188,6 +278,16 @@ offset_bottom = 109.0
 texture = ExtResource("7_gw5fj")
 expand_mode = 1
 
+[node name="before_atk" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=1083035352]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 84.0
+offset_right = 170.0
+offset_bottom = 110.0
+theme_override_font_sizes/font_size = 18
+text = "before_atk"
+vertical_alignment = 1
+
 [node name="unit_classup_before_status_label_def" type="TextureRect" parent="Status/unit_classup_before_status_offset" unique_id=2062340839]
 layout_mode = 0
 offset_left = 17.0
@@ -196,6 +296,16 @@ offset_right = 59.0
 offset_bottom = 137.0
 texture = ExtResource("8_qnsw0")
 expand_mode = 1
+
+[node name="before_def" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=1908438320]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 113.0
+offset_right = 170.0
+offset_bottom = 139.0
+theme_override_font_sizes/font_size = 18
+text = "before_def"
+vertical_alignment = 1
 
 [node name="unit_classup_before_status_label_magic" type="TextureRect" parent="Status/unit_classup_before_status_offset" unique_id=544991014]
 layout_mode = 0
@@ -206,6 +316,16 @@ offset_bottom = 165.0
 texture = ExtResource("9_kdkmb")
 expand_mode = 1
 
+[node name="before_mag" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=1023074494]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 141.0
+offset_right = 170.0
+offset_bottom = 167.0
+theme_override_font_sizes/font_size = 18
+text = "before_mag"
+vertical_alignment = 1
+
 [node name="unit_classup_before_status_label_mnd" type="TextureRect" parent="Status/unit_classup_before_status_offset" unique_id=898102445]
 layout_mode = 0
 offset_left = 17.0
@@ -214,6 +334,16 @@ offset_right = 59.0
 offset_bottom = 193.0
 texture = ExtResource("10_r2k0i")
 expand_mode = 1
+
+[node name="before_spr" type="Label" parent="Status/unit_classup_before_status_offset" unique_id=538134070]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 169.0
+offset_right = 170.0
+offset_bottom = 195.0
+theme_override_font_sizes/font_size = 18
+text = "before_spr"
+vertical_alignment = 1
 
 [node name="unit_classup_before_stand" type="TextureRect" parent="Status" unique_id=2140475664]
 layout_mode = 0
@@ -283,9 +413,9 @@ expand_mode = 1
 
 [node name="unit_classup_item_num" type="Label" parent="Material1" unique_id=616859716]
 layout_mode = 0
-offset_left = 64.0
+offset_left = 82.0
 offset_top = 111.0
-offset_right = 289.0
+offset_right = 307.0
 offset_bottom = 139.0
 theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
@@ -299,6 +429,17 @@ offset_right = 129.0
 offset_bottom = 155.0
 texture = ExtResource("2_kdkmb")
 expand_mode = 1
+
+[node name="unit_classup_item_have" type="Label" parent="Material1" unique_id=564031820]
+layout_mode = 0
+offset_left = -25.0
+offset_top = 130.0
+offset_right = 75.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 20
+text = "item_have"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="unit_classup_item_search_off" type="TextureRect" parent="Material1" unique_id=1354492944]
 layout_mode = 0
@@ -330,12 +471,13 @@ expand_mode = 1
 
 [node name="unit_classup_item_name" type="Label" parent="Material1" unique_id=84533146]
 layout_mode = 0
-offset_left = 17.0
-offset_top = 159.0
-offset_right = 229.0
-offset_bottom = 185.0
+offset_left = 12.0
+offset_top = 155.0
+offset_right = 138.0
+offset_bottom = 181.0
 theme_override_font_sizes/font_size = 18
-text = "unit_classup_item_name"
+text = "item_name"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Material2" type="Control" parent="." unique_id=1284664106]
@@ -362,9 +504,9 @@ expand_mode = 1
 
 [node name="unit_classup_item_num" type="Label" parent="Material2" unique_id=1521006840]
 layout_mode = 0
-offset_left = 64.0
+offset_left = 82.0
 offset_top = 111.0
-offset_right = 289.0
+offset_right = 307.0
 offset_bottom = 139.0
 theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
@@ -378,6 +520,17 @@ offset_right = 129.0
 offset_bottom = 155.0
 texture = ExtResource("2_kdkmb")
 expand_mode = 1
+
+[node name="unit_classup_item_have" type="Label" parent="Material2" unique_id=78292061]
+layout_mode = 0
+offset_left = -25.0
+offset_top = 130.0
+offset_right = 75.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 20
+text = "item_have"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="unit_classup_item_search_off" type="TextureRect" parent="Material2" unique_id=585551690]
 layout_mode = 0
@@ -409,12 +562,13 @@ expand_mode = 1
 
 [node name="unit_classup_item_name" type="Label" parent="Material2" unique_id=421960838]
 layout_mode = 0
-offset_left = 17.0
-offset_top = 159.0
-offset_right = 229.0
-offset_bottom = 185.0
+offset_left = 11.0
+offset_top = 155.0
+offset_right = 138.0
+offset_bottom = 181.0
 theme_override_font_sizes/font_size = 18
-text = "unit_classup_item_name"
+text = "item_name"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Material3" type="Control" parent="." unique_id=925427751]
@@ -441,9 +595,9 @@ expand_mode = 1
 
 [node name="unit_classup_item_num" type="Label" parent="Material3" unique_id=1245962946]
 layout_mode = 0
-offset_left = 64.0
+offset_left = 82.0
 offset_top = 111.0
-offset_right = 289.0
+offset_right = 307.0
 offset_bottom = 139.0
 theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
@@ -457,6 +611,17 @@ offset_right = 129.0
 offset_bottom = 155.0
 texture = ExtResource("2_kdkmb")
 expand_mode = 1
+
+[node name="unit_classup_item_have" type="Label" parent="Material3" unique_id=1233592616]
+layout_mode = 0
+offset_left = -25.0
+offset_top = 130.0
+offset_right = 75.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 20
+text = "item_have"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="unit_classup_item_search_off" type="TextureRect" parent="Material3" unique_id=1765514207]
 layout_mode = 0
@@ -488,12 +653,13 @@ expand_mode = 1
 
 [node name="unit_classup_item_name" type="Label" parent="Material3" unique_id=1319162764]
 layout_mode = 0
-offset_left = 17.0
-offset_top = 159.0
-offset_right = 229.0
-offset_bottom = 185.0
+offset_left = 11.0
+offset_top = 155.0
+offset_right = 139.0
+offset_bottom = 181.0
 theme_override_font_sizes/font_size = 18
-text = "unit_classup_item_name"
+text = "item_name"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Material4" type="Control" parent="." unique_id=1456781590]
@@ -520,9 +686,9 @@ expand_mode = 1
 
 [node name="unit_classup_item_num" type="Label" parent="Material4" unique_id=103096302]
 layout_mode = 0
-offset_left = 64.0
+offset_left = 82.0
 offset_top = 111.0
-offset_right = 289.0
+offset_right = 307.0
 offset_bottom = 139.0
 theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
@@ -536,6 +702,17 @@ offset_right = 129.0
 offset_bottom = 155.0
 texture = ExtResource("2_kdkmb")
 expand_mode = 1
+
+[node name="unit_classup_item_have" type="Label" parent="Material4" unique_id=1466799837]
+layout_mode = 0
+offset_left = -25.0
+offset_top = 130.0
+offset_right = 75.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 20
+text = "item_have"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="unit_classup_item_search_off" type="TextureRect" parent="Material4" unique_id=1390217203]
 layout_mode = 0
@@ -567,12 +744,13 @@ expand_mode = 1
 
 [node name="unit_classup_item_name" type="Label" parent="Material4" unique_id=758537191]
 layout_mode = 0
-offset_left = 17.0
-offset_top = 159.0
-offset_right = 229.0
-offset_bottom = 185.0
+offset_left = 12.0
+offset_top = 155.0
+offset_right = 139.0
+offset_bottom = 181.0
 theme_override_font_sizes/font_size = 18
-text = "unit_classup_item_name"
+text = "item_name"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Material5" type="Control" parent="." unique_id=227577631]
@@ -599,9 +777,9 @@ expand_mode = 1
 
 [node name="unit_classup_item_num" type="Label" parent="Material5" unique_id=1241138644]
 layout_mode = 0
-offset_left = 64.0
+offset_left = 82.0
 offset_top = 111.0
-offset_right = 289.0
+offset_right = 307.0
 offset_bottom = 139.0
 theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
@@ -615,6 +793,17 @@ offset_right = 129.0
 offset_bottom = 155.0
 texture = ExtResource("2_kdkmb")
 expand_mode = 1
+
+[node name="unit_classup_item_have" type="Label" parent="Material5" unique_id=724468606]
+layout_mode = 0
+offset_left = -25.0
+offset_top = 130.0
+offset_right = 75.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 20
+text = "item_have"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="unit_classup_item_search_off" type="TextureRect" parent="Material5" unique_id=1676445850]
 layout_mode = 0
@@ -646,12 +835,13 @@ expand_mode = 1
 
 [node name="unit_classup_item_name" type="Label" parent="Material5" unique_id=1714102741]
 layout_mode = 0
-offset_left = 17.0
-offset_top = 159.0
-offset_right = 229.0
-offset_bottom = 185.0
+offset_left = 12.0
+offset_top = 155.0
+offset_right = 139.0
+offset_bottom = 181.0
 theme_override_font_sizes/font_size = 18
-text = "unit_classup_item_name"
+text = "item_name"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Button" type="Control" parent="." unique_id=419761248]
@@ -685,7 +875,7 @@ offset_bottom = 44.0
 texture = ExtResource("15_63yas")
 expand_mode = 1
 
-[node name="unit_classup_button_off" type="TextureButton" parent="Button" unique_id=529739503]
+[node name="unit_classup_button_evo" type="TextureButton" parent="Button" unique_id=529739503]
 layout_mode = 0
 offset_left = 223.0
 offset_top = 768.0
@@ -694,7 +884,7 @@ offset_bottom = 848.0
 texture_normal = ExtResource("16_vcpyo")
 texture_pressed = ExtResource("17_dxkdd")
 
-[node name="unit_classup_button_label" type="TextureRect" parent="Button/unit_classup_button_off" unique_id=1337307422]
+[node name="unit_classup_button_label" type="TextureRect" parent="Button/unit_classup_button_evo" unique_id=1337307422]
 layout_mode = 0
 offset_left = 37.0
 offset_top = 14.0
@@ -723,10 +913,10 @@ expand_mode = 1
 
 [node name="unit_classup_need_money_label" type="Label" parent="Button" unique_id=1588238055]
 layout_mode = 0
-offset_left = 431.0
-offset_top = 811.0
-offset_right = 503.0
-offset_bottom = 866.0
+offset_left = 415.0
+offset_top = 812.0
+offset_right = 511.0
+offset_bottom = 838.0
 theme_override_font_sizes/font_size = 18
 text = "Gil needed"
 vertical_alignment = 1
@@ -752,15 +942,13 @@ text = "unit_classup_need_money_number"
 vertical_alignment = 1
 
 [node name="unit_classup_check_result_text" type="Label" parent="Button" unique_id=1482836588]
-visible = false
 layout_mode = 0
-offset_left = 432.0
+offset_left = 421.0
 offset_top = 771.0
-offset_right = 698.0
+offset_right = 687.0
 offset_bottom = 799.0
 theme_override_font_sizes/font_size = 18
 text = "unit_classup_check_result_text"
-horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=521438241]

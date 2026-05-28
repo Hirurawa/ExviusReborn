@@ -174,14 +174,14 @@ offset_bottom = 79.0
 texture = ExtResource("10_midg1")
 expand_mode = 1
 
-[node name="unit_mix_button_classup" type="TextureRect" parent="unit_mix_ui_bg" unique_id=1741197743]
+[node name="unit_mix_button_classup" type="TextureButton" parent="unit_mix_ui_bg" unique_id=1221425033]
 layout_mode = 0
 offset_left = 36.0
 offset_top = 22.0
 offset_right = 188.0
 offset_bottom = 86.0
-texture = ExtResource("11_033w3")
-expand_mode = 1
+texture_normal = ExtResource("11_033w3")
+texture_pressed = ExtResource("12_l0rcy")
 
 [node name="unit_mix_button_classup_label" type="TextureRect" parent="unit_mix_ui_bg/unit_mix_button_classup" unique_id=1208347959]
 layout_mode = 0

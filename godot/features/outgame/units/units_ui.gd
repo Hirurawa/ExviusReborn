@@ -203,7 +203,7 @@ func _update_slots(unit_uuids: Array) -> void:
 				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 				if ResourceLoader.exists(path):
 					slot_tex = _get_dynamic_texture(path)
-				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("rarity", 1)))
+				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1))))
 
 		# Render slot with the shared unit visual so pedestal style matches rarity.
 		var shared_visual: Control = _get_or_create_slot_visual(slot_btn)
@@ -389,7 +389,7 @@ func _on_awaken_units() -> void:
 				exclude_list.append(material_instance_id)
 	
 	UIManager.push("unit_selector_ui", {
-		"mode": "enhance_base_selection",
+		"mode": "awaken_base_selection",
 		"selection_callback": Callable(self, "_on_awaken_base_selected"),
 		"exclude_list": exclude_list
 	})

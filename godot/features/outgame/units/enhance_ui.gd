@@ -6,6 +6,7 @@ extends Control
 @onready var cancel_button: Button = $EnhanceFlowRoot/UnitNamebgChara/UnitMinibutton1
 @onready var clear_button: Button = $unit_mix_ui_bg/unit_mix_button_clear
 @onready var confirm_button: Button = $unit_mix_ui_bg/unit_mix_button_union
+@onready var classup_button: TextureButton = $unit_mix_ui_bg/unit_mix_button_classup
 @onready var get_exp_number_label: Label = $unit_mix_ui_sell_info/unit_mix_get_exp_label/unit_mix_get_exp_number
 @onready var need_gil_number_label: Label = $unit_mix_ui_sell_info/unit_mix_need_money_label/unit_mix_need_money_number
 
@@ -60,6 +61,8 @@ func _connect_buttons() -> void:
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	clear_button.pressed.connect(_on_clear_pressed)
 	confirm_button.pressed.connect(_on_confirm_pressed)
+	if classup_button != null:
+		classup_button.pressed.connect(_on_classup_pressed)
 
 	for slot in _pedestal_slots:
 		var hit_button: Button = slot.get_node_or_null("HitButton") as Button
@@ -70,6 +73,16 @@ func _refresh_base_unit_ui() -> void:
 	base_unit_id_label.text = "Base Instance ID: %s" % base_unit_instance_id
 	base_unit_sprite.texture = _get_unit_texture(base_unit_inst)
 	_display_unit_stats(base_unit_inst)
+	_refresh_classup_button_state()
+
+func _refresh_classup_button_state() -> void:
+	if classup_button == null:
+		return
+	var current_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var max_rarity: int = int(unit_data.get("rarity_max", 5))
+	classup_button.disabled = current_rarity >= max_rarity
 
 func _redraw_material_slots() -> void:
 	for slot in _pedestal_slots:
@@ -269,6 +282,15 @@ func _on_cancel_pressed() -> void:
 	var new_top: Node = UIManager.get_current_scene()
 	if new_top and new_top.has_method("_on_enhance_units"):
 		new_top.call_deferred("_on_enhance_units")
+
+func _on_classup_pressed() -> void:
+	if base_unit_instance_id == "":
+		return
+	UIManager.pop()
+	UIManager.push("awaken_ui", {
+		"base_unit_instance_id": base_unit_instance_id,
+		"base_unit_inst": base_unit_inst,
+	})
 
 func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():

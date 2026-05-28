@@ -163,23 +163,132 @@ func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	else:
 		return {"error": "ERR_UNIT_NOT_FOUND"}
 
-func awaken_unit(instance_id: String) -> Dictionary:
-	var unit_found: bool = false
-	for unit in owned_units_ids:
-		if unit is Dictionary and unit.get("instance_id", "") == instance_id:
-			var current_rarity: int = int(unit.get("current_rarity", 1))
-			if current_rarity < 7:
-				unit["current_rarity"] = current_rarity + 1
-				unit_found = true
-			break
+func _find_awakening_entry(unit: Dictionary) -> Dictionary:
+	# Returns the static-data entry matching the unit's current_rarity, or {} if not found.
+	var unit_id: String = str(unit.get("unit_id", ""))
+	if unit_id == "":
+		return {}
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var entries_var: Variant = unit_data.get("entries", {})
+	if not (entries_var is Dictionary):
+		return {}
+	var current_rarity: int = int(unit.get("current_rarity", unit.get("rarity", 1)))
+	for key in (entries_var as Dictionary).keys():
+		var entry: Variant = (entries_var as Dictionary)[key]
+		if entry is Dictionary and int((entry as Dictionary).get("rarity", -1)) == current_rarity:
+			return entry as Dictionary
+	return {}
 
-	if unit_found:
-		owned_units_ids = _hydrate_owned_units(owned_units_ids)
-		emit_updated()
-		Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "awaken_unit")
-		return {"success": true}
-	else:
-		return {"error": "ERR_UNIT_NOT_FOUND"}
+func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
+	# Shared validation used by both can_awaken_unit() and awaken_unit().
+	# Returns: { ok: bool, reason: String, unit_index: int, gil_cost: int, materials: Dictionary }
+	var result: Dictionary = {
+		"ok": false,
+		"reason": "",
+		"unit_index": -1,
+		"gil_cost": 0,
+		"materials": {},
+	}
+
+	var unit_index: int = -1
+	for i in range(owned_units_ids.size()):
+		var candidate: Variant = owned_units_ids[i]
+		if candidate is Dictionary and str(candidate.get("instance_id", "")) == instance_id:
+			unit_index = i
+			break
+	if unit_index < 0:
+		result["reason"] = "Unit not found"
+		return result
+	result["unit_index"] = unit_index
+
+	var unit: Dictionary = owned_units_ids[unit_index]
+	var current_rarity: int = int(unit.get("current_rarity", unit.get("rarity", 1)))
+	if current_rarity >= 7:
+		result["reason"] = "Unit is at maximum rarity"
+		return result
+
+	var entry: Dictionary = _find_awakening_entry(unit)
+	var awakening_var: Variant = entry.get("awakening", null) if not entry.is_empty() else null
+	if not (awakening_var is Dictionary):
+		result["reason"] = "Unit is at maximum rarity"
+		return result
+	var awakening: Dictionary = awakening_var as Dictionary
+
+	var max_level: int = int(StatCalculator.RARITY_MAX_LEVELS.get(current_rarity, 15))
+	if int(unit.get("level", 1)) < max_level:
+		result["reason"] = "Unit must be at max level"
+		return result
+
+	var gil_cost: int = int(awakening.get("gil", 0))
+	result["gil_cost"] = gil_cost
+	if PlayerProfile.gil < gil_cost:
+		result["reason"] = "Insufficient gil"
+		return result
+
+	var materials_var: Variant = awakening.get("materials", {})
+	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
+	result["materials"] = materials
+
+	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
+	var stackables: Dictionary = stackables_var as Dictionary if stackables_var is Dictionary else {}
+	for item_key in materials.keys():
+		var item_id: String = str(item_key)
+		var required: int = int(materials[item_key])
+		var owned: int = int(stackables.get(item_id, 0))
+		if owned < required:
+			result["reason"] = "Insufficient materials"
+			return result
+
+	result["ok"] = true
+	return result
+
+func can_awaken_unit(instance_id: String) -> Dictionary:
+	var eval: Dictionary = _evaluate_awakening_requirements(instance_id)
+	return {
+		"can_awaken": bool(eval.get("ok", false)),
+		"reason": str(eval.get("reason", "")),
+	}
+
+func awaken_unit(instance_id: String) -> Dictionary:
+	var eval: Dictionary = _evaluate_awakening_requirements(instance_id)
+	if not bool(eval.get("ok", false)):
+		return {"success": false, "error": str(eval.get("reason", "Unit cannot be awakened"))}
+
+	var unit_index: int = int(eval.get("unit_index", -1))
+	var gil_cost: int = int(eval.get("gil_cost", 0))
+	var materials_var: Variant = eval.get("materials", {})
+	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
+
+	# Consume gil.
+	PlayerProfile.gil -= gil_cost
+
+	# Consume materials.
+	if not InventoryService.owned_items.has("stackables"):
+		InventoryService.owned_items["stackables"] = {}
+	var stackables: Dictionary = InventoryService.owned_items["stackables"]
+	for item_key in materials.keys():
+		var item_id: String = str(item_key)
+		var required: int = int(materials[item_key])
+		var owned: int = int(stackables.get(item_id, 0))
+		stackables[item_id] = max(0, owned - required)
+
+	# Bump rarity.
+	var unit: Dictionary = owned_units_ids[unit_index]
+	unit["current_rarity"] = int(unit.get("current_rarity", 1)) + 1
+	owned_units_ids[unit_index] = unit
+
+	# Persist + signal (mirrors enhance_unit flow).
+	owned_units_ids = _hydrate_owned_units(owned_units_ids)
+	emit_updated()
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "awaken_unit")
+
+	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
+	PlayerProfile.save_snapshot("awaken_unit")
+
+	InventoryService.emit_updated()
+	Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "awaken_unit")
+
+	return {"success": true}
 
 func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Array) -> Dictionary:
 	if base_unit_instance_id == "":

@@ -55,6 +55,30 @@ func _accumulate_named_resists(source: Variant, targets: Dictionary, ordered_key
 			if typeof(resist_value) in [TYPE_INT, TYPE_FLOAT]:
 				targets[target_key] += int(resist_value)
 
+func _apply_parsed_passive_effects(effects: Array, pct_mods: Dictionary, element_resists: Dictionary, status_resists: Dictionary) -> void:
+	for e in effects:
+		var effect_type: String = str(e.get("type", ""))
+		var effect_payload: Dictionary = e.get("effect", {})
+		match effect_type:
+			"STAT_BOOST_PCT":
+				for stat in effect_payload.keys():
+					if pct_mods.has(stat):
+						pct_mods[stat] += effect_payload[stat]
+			"ELEMENT_RESIST":
+				for el in effect_payload.keys():
+					var el_key: String = str(el).to_upper()
+					if element_resists.has(el_key):
+						element_resists[el_key] += effect_payload[el]
+					else:
+						push_warning("Unknown element resist key from passive: %s" % el_key)
+			"STATUS_RESIST":
+				for st in effect_payload.keys():
+					var st_key: String = _normalize_resist_key(str(st))
+					if status_resists.has(st_key):
+						status_resists[st_key] += effect_payload[st]
+					else:
+						push_warning("Unknown status resist key from passive: %s" % st_key)
+
 func _resolve_esper_rank_max_level(entry: Dictionary) -> int:
 	var cp_pattern_value: Variant = entry.get("cp_pattern", [])
 	if cp_pattern_value is Array:
@@ -409,6 +433,12 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			_accumulate_named_resists(item_stats.get("element_resist", null), element_resists, ELEMENTS)
 			_accumulate_named_resists(item_stats.get("status_resist", null), status_resists, STATUSES)
 
+			# Equipment may also encode passive-style effects (stat %, element/status resist, etc.)
+			# inside effects_raw. Parse them through the passive opcode schema and apply.
+			if item_data.has("effects_raw"):
+				var parsed_equip_passive: Dictionary = SkillResolver.parse_passive_effects(item_data)
+				_apply_parsed_passive_effects(parsed_equip_passive.get("effects", []), pct_mods, element_resists, status_resists)
+
 			var equip_skills = item_data.get("skills", [])
 			if equip_skills != null:
 				for skill_id in equip_skills:
@@ -436,16 +466,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			var skill_data = StaticData.game_data_skills_passive.get(skill_id_str)
 			var parsed_passive = SkillResolver.parse_passive_effects(skill_data)
 			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
-			for e in parsed_passive.get("effects", []):
-				if(e.get("type") == "STAT_BOOST_PCT"):
-					for stat in e.get("effect").keys():
-						pct_mods[stat] += e.get("effect")[stat]
-				if(e.get("type") == "ELEMENT_RESIST"):
-					for el in e.get("effect").keys():
-						element_resists[el.to_upper()] += e.get("effect")[el]
-				if(e.get("type") == "STATUS_RESIIST"):
-					for st in e.get("effect").keys():
-						status_resists[st.to_upper()] += e.get("effect")[st]
+			_apply_parsed_passive_effects(parsed_passive.get("effects", []), pct_mods, element_resists, status_resists)
 			
 	# TODO: Parse effects_raw for pct_mods here
 

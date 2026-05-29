@@ -4,8 +4,8 @@
         "keys": ["ATK", "DEF", "MAG", "SPR", "HP", "MP", "UNKNOWN"]
     },
     "2": {
-        "type": "STATUS_RESIIST",
-        "keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify"]
+        "type": "STATUS_RESIST",
+        "keys": ["poison", "blind", "sleep", "silence", "paralysis", "confusion", "disease", "petrify"]
     },
     "3": {
         "type": "ELEMENT_RESIST",

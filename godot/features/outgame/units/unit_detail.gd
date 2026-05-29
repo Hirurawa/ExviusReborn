@@ -283,23 +283,9 @@ func _populate_resistances(final_stats: Dictionary) -> void:
 			label.text = str(val) + "%" if val != 0 else "-"
 
 	var status_resist: Dictionary = final_stats.get("status_resist", {})
-	var status_node_map: Dictionary = {
-		"POISON": "POISON",
-		"BLIND": "BLIND",
-		"SLEEP": "SLEEP",
-		"SILENCE": "SILENCE",
-		"PARALYSIS": "PARALYSIS",
-		"CONFUSION": "CONFUSION",
-		"CONFUSE": "CONFUSION",
-		"DISEASE": "DISEASE",
-		"PETRIFY": "PETRIFY",
-		"PETRIFICATION": "PETRIFY"
-	}
-
-	for status_key in status_node_map.keys():
-		var node_name: String = str(status_node_map[status_key])
-		if status_resist_grid.has_node(node_name):
-			var panel: Node = status_resist_grid.get_node(node_name)
+	for status_key in StatCalculator.STATUSES:
+		if status_resist_grid.has_node(status_key):
+			var panel: Node = status_resist_grid.get_node(status_key)
 			var label: Label = panel.get_node("VBox/ValPanel/Label") as Label
 			var val: int = int(status_resist.get(status_key, 0))
 			label.text = str(val) + "%" if val != 0 else "-"

@@ -29,6 +29,16 @@ func _ready() -> void:
 		parent_layer.follow_viewport_enabled = true
 		_canvas_layer_touched = true
 
+	# Spawn the minimap here (town-only) rather than in tile_map.gd, so
+	# reusing TileMap in non-town scenes (e.g. Event.tscn) doesn't pull
+	# a minimap into their HUD. minimap.gd is a CanvasLayer that
+	# self-registers in the "minimap" group; tile_map.gd's bake and
+	# player.gd's marker update both find it via that group.
+	if get_node_or_null("Minimap") == null:
+		var mm: Node = preload("res://features/town/minimap.gd").new()
+		mm.name = "Minimap"
+		add_child(mm)
+
 	_ui_layer = CanvasLayer.new()
 	_ui_layer.name = "TownMapUILayer"
 	# Sit above the world map but stay screen-locked.
@@ -43,6 +53,20 @@ func _ready() -> void:
 	_leave_dialog.exclusive = false
 	_leave_dialog.confirmed.connect(_on_leave_confirmed)
 	_ui_layer.add_child(_leave_dialog)
+
+	var toggle_minimap_btn := get_node_or_null("HUDLayer/HUD/ToggleMinimap") as BaseButton
+	if toggle_minimap_btn and not toggle_minimap_btn.pressed.is_connected(_on_toggle_minimap_pressed):
+		toggle_minimap_btn.pressed.connect(_on_toggle_minimap_pressed)
+
+	var town_menu_btn := get_node_or_null("HUDLayer/HUD/TownMenu") as BaseButton
+	if town_menu_btn and not town_menu_btn.pressed.is_connected(_prompt_leave_town):
+		town_menu_btn.pressed.connect(_prompt_leave_town)
+
+func _on_toggle_minimap_pressed() -> void:
+	var mm := get_tree().get_first_node_in_group("minimap")
+	if mm == null:
+		return
+	mm.visible = not mm.visible
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

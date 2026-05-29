@@ -15,6 +15,12 @@
 [ext_resource type="Texture2D" uid="uid://bd8yguq7dstq5" path="res://assets/town_data/111020200/mapchip_0010_003.png" id="13_wt665"]
 [ext_resource type="Script" uid="uid://cmdc21xwvrbwn" path="res://features/town/camera_2d.gd" id="14_tpiga"]
 [ext_resource type="PackedScene" uid="uid://l8tskjwqtf8x" path="res://features/town/player.tscn" id="15_oa7bu"]
+[ext_resource type="Texture2D" uid="uid://c4pr2lyd5aitx" path="res://assets/ui/quest/townmenu_icon1.tres" id="16_fqohr"]
+[ext_resource type="Texture2D" uid="uid://ct0rqbegvu7y4" path="res://assets/ui/quest/townmenu_icon2.tres" id="17_djl8x"]
+[ext_resource type="Texture2D" uid="uid://g0yy7h3nbx4c" path="res://assets/ui/quest/minimap_icon1.tres" id="18_8ptfr"]
+[ext_resource type="Texture2D" uid="uid://cjubxtijjly3e" path="res://assets/ui/quest/minimap_icon2.tres" id="19_yfh2o"]
+[ext_resource type="Texture2D" uid="uid://bd7ebxxwdo5" path="res://assets/ui/quest/menu_icon1.tres" id="20_vupn6"]
+[ext_resource type="Texture2D" uid="uid://bj80hasgt2mcs" path="res://assets/ui/quest/menu_icon2.tres" id="21_wt665"]
 [ext_resource type="Script" uid="uid://cv84dfudg2ihb" path="res://features/town/town_map.gd" id="town_map_script"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8dv2y"]
@@ -3583,7 +3589,6 @@ town_id = "111020200"
 map_file_path = "res://assets/town_data/111020200/map.bin"
 blueprint_path = "res://assets/town_data/111020200/map_blueprint.json"
 show_dynamic_entities = false
-npc_sprite_scale = 2.0
 target_chunk = 18
 mapchip_folder = "res://assets/town_data/111020200"
 visible_layers = 4079
@@ -3591,6 +3596,59 @@ visible_layers = 4079
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1502482000]
 enabled = false
 script = ExtResource("14_tpiga")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 50
+
+[node name="HUD" type="Control" parent="HUDLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TownMenu" type="TextureButton" parent="HUDLayer/HUD" unique_id=1754105984]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -120.0
+offset_right = 120.0
+offset_bottom = -16.0
+grow_vertical = 0
+texture_normal = ExtResource("16_fqohr")
+texture_pressed = ExtResource("17_djl8x")
+
+[node name="ToggleMinimap" type="TextureButton" parent="HUDLayer/HUD" unique_id=1319891023]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -240.0
+offset_top = -120.0
+offset_right = -120.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+texture_normal = ExtResource("18_8ptfr")
+texture_pressed = ExtResource("19_yfh2o")
+
+[node name="Menu" type="TextureButton" parent="HUDLayer/HUD" unique_id=238393942]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -120.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+texture_normal = ExtResource("20_vupn6")
+texture_pressed = ExtResource("21_wt665")
 
 [node name="Player" parent="." unique_id=1439593909 instance=ExtResource("15_oa7bu")]
 position = Vector2(2898, 3948)

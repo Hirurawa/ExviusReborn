@@ -12,7 +12,6 @@ script = ExtResource("3")
 show_dynamic_entities = false
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1565631052]
-zoom = Vector2(1.5, 1.5)
 script = ExtResource("4")
 
 [node name="DialogLayer" type="CanvasLayer" parent="." unique_id=758197596]

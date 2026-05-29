@@ -125,15 +125,11 @@ var _lid_to_chunk: Dictionary = {}
 
 func _ready():
 	add_to_group("tile_map")
-	# Spawn the minimap overlay as a CanvasLayer child. CanvasLayers
-	# render in screen space regardless of their parent's transform, so
-	# parenting under the TileMap is cosmetically irrelevant but keeps
-	# the minimap's lifetime tied to the active map. Skip in @tool /
-	# editor previews.
-	if not Engine.is_editor_hint() and get_node_or_null("Minimap") == null:
-		var mm: Node = preload("res://features/town/minimap.gd").new()
-		mm.name = "Minimap"
-		add_child(mm)
+	# Minimap is owned by the town scene (town_map.gd) rather than the
+	# TileMap itself, so reusing this script in non-town scenes (e.g.
+	# Event.tscn) doesn't drag a minimap into the HUD. The bake in
+	# _draw_chunk() looks the minimap up via the "minimap" group and
+	# is a no-op when none exists.
 	# Only auto-draw if a real map has been wired up. Otherwise we hit
 	# the default res://map_blueprint.json placeholder (which doesn't
 	# exist in this project) and spam an error before EventRunner has a

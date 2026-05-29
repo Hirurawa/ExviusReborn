@@ -13,6 +13,7 @@ config_version=5
 config/name="ExviusReborn"
 run/main_scene="uid://b785keqddokby"
 config/features=PackedStringArray("4.6", "Forward Plus")
+run/flush_stdout_on_print=true
 config/icon="res://icon.svg"
 
 [autoload]
@@ -40,6 +41,12 @@ window/size/viewport_height=960
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
 
+[importer_defaults]
+
+texture={
+&"compress/mode": 4
+}
+
 [input]
 
 run={
@@ -55,4 +62,5 @@ run={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_s3tc_bptc=true
 textures/vram_compression/import_etc2_astc=true

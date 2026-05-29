@@ -66,41 +66,59 @@ func list_local_saves() -> Array:
 
 
 func start_new_local_game(username: String) -> Dictionary:
+	_dbg("SNG: enter")
 	var normalized_username: String = username.strip_edges()
 	if normalized_username == "":
 		return {"success": false, "error_message": "Please enter a save name."}
 
+	_dbg("SNG: before StaticData.ensure_ready")
 	await StaticData.ensure_ready()
+	_dbg("SNG: after StaticData.ensure_ready")
 	Persistence.active_local_save_id = Persistence.normalize_local_save_id(normalized_username)
 
+	_dbg("SNG: before UnitService.reset_to_starter")
 	if not UnitService.reset_to_starter():
 		return {"success": false, "error_message": "Failed to initialize starter units."}
+	_dbg("SNG: after UnitService.reset_to_starter")
 
 	PlayerProfile.reset_to_starter()
+	_dbg("SNG: after PlayerProfile.reset_to_starter")
 	MissionService.last_entered_mission_id = ""
 	MissionService.last_played_dungeon_name = ""
 	current_username = normalized_username
 
 	InventoryService.reset_to_starter()
+	_dbg("SNG: after InventoryService.reset_to_starter")
 	CombatItemsService.reset_to_empty()
+	_dbg("SNG: after CombatItemsService.reset_to_empty")
 	MissionService.cleared_missions = {}
 	MissionService.latest_cleared_mission_id = ""
 	EsperService.reset_to_empty()
+	_dbg("SNG: after EsperService.reset_to_empty")
 	PartyService.reset_to_starter(PartyService.build_default_parties(UnitService.STARTER_RAIN_INSTANCE_ID, UnitService.STARTER_LASSWELL_INSTANCE_ID))
+	_dbg("SNG: after PartyService.reset_to_starter")
 
 	save_all_snapshots("new_local_game")
+	_dbg("SNG: after save_all_snapshots")
 	Persistence.upsert_save_index_entry(Persistence.active_local_save_id, current_username)
 
 	PlayerProfile.emit_all()
+	_dbg("SNG: after PlayerProfile.emit_all")
 	InventoryService.emit_updated()
 	CombatItemsService.emit_loaded()
 	UnitService.emit_updated()
 	EsperService.emit_updated()
 	PartyService.emit_all()
+	_dbg("SNG: after all emits")
 	account_updated.emit(current_username)
 	data_loaded.emit()
+	_dbg("SNG: exit success")
 
 	return {"success": true, "save_id": Persistence.active_local_save_id}
+
+func _dbg(msg: String) -> void:
+	var mb: float = float(OS.get_static_memory_usage()) / 1048576.0
+	print("[DBG] %-44s static=%.1fMB" % [msg, mb])
 
 
 func load_local_game(username: String) -> Dictionary:

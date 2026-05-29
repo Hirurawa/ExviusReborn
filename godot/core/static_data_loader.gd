@@ -25,16 +25,23 @@ func start_patching() -> void:
 
 func _load_next_file() -> void:
 	if current_patch_index >= files_to_patch.size():
+		_dbg_mem("patch_complete")
 		patch_complete.emit()
 		return
 		
 	var file_type: String = files_to_patch[current_patch_index]
 	patch_progress.emit(file_type, "Loading...")
 
+	_dbg_mem("before " + file_type)
 	# Load from cache or bundled static data
 	_load_with_fallback(file_type)
+	_dbg_mem("after  " + file_type)
 	current_patch_index += 1
 	call_deferred("_load_next_file")
+
+func _dbg_mem(tag: String) -> void:
+	var mb: float = float(OS.get_static_memory_usage()) / 1048576.0
+	print("[SDL] %-40s static=%.1fMB" % [tag, mb])
 
 func _cache_exists(file_type: String) -> bool:
 	return FileAccess.file_exists("user://data/%s.json" % file_type)
@@ -107,18 +114,28 @@ func get_versions_snapshot() -> Dictionary:
 	return versions
 
 func _build_source_version_token(file_type: String) -> String:
-	var source_path: String = _resolve_source_path(file_type)
-	if source_path == "":
+	# Use only the bundled file's size for the signature. The previously-used
+	# resolved path + mtime were unstable: the path flips between res:// and
+	# user://data/ once _save_to_cache mirrors a JSON, and the mtime changes
+	# every time that mirror is rewritten. That made the sanitized-cache
+	# signature mismatch on every launch and forced a full ~130 MB JSON parse
+	# + sanitize cycle (peaking near 1 GB heap on Android).
+	var bundled_path: String = ""
+	for base_dir in BUNDLED_STATIC_DIRS:
+		var candidate: String = "%s/%s.json" % [base_dir, file_type]
+		if FileAccess.file_exists(candidate):
+			bundled_path = candidate
+			break
+	if bundled_path == "":
 		return "missing"
 
-	var modified_unix: int = FileAccess.get_modified_time(source_path)
 	var file_size: int = -1
-	var file: FileAccess = FileAccess.open(source_path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(bundled_path, FileAccess.READ)
 	if file:
 		file_size = file.get_length()
 		file.close()
 
-	return "%s|%s|%s|%s" % [BUNDLED_STATIC_VERSION, source_path, str(modified_unix), str(file_size)]
+	return "%s|%s" % [BUNDLED_STATIC_VERSION, str(file_size)]
 
 func _resolve_source_path(file_type: String) -> String:
 	var cache_path: String = "user://data/%s.json" % file_type

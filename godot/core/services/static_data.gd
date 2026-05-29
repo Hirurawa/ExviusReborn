@@ -121,35 +121,62 @@ func _run_patch_cycle() -> bool:
 
 
 func _on_patch_complete() -> void:
+	_dbg_mem("_on_patch_complete enter")
 	var cache_signature: String = build_signature()
 
 	if _try_load_sanitized_cache(cache_signature):
+		_dbg_mem("loaded sanitized cache (fast)")
 		_notify_skill_resolver()
 		return
 
-	game_data_units = _sanitize_floats_to_ints(StaticDataLoader.get_data("units"))
-	game_data_items = _sanitize_floats_to_ints(StaticDataLoader.get_data("items"))
-	game_data_equipment = _sanitize_floats_to_ints(StaticDataLoader.get_data("equipment"))
-	game_data_worlds = _sanitize_floats_to_ints(StaticDataLoader.get_data("worlds"))
-	game_data_dungeons = _sanitize_floats_to_ints(StaticDataLoader.get_data("dungeons"))
-	game_data_towns = _sanitize_floats_to_ints(StaticDataLoader.get_data("towns"))
-	game_data_missions = _sanitize_floats_to_ints(StaticDataLoader.get_data("missions"))
-	game_data_skills_magic = _sanitize_floats_to_ints(StaticDataLoader.get_data("skills_magic"))
-	game_data_skills_ability = _sanitize_floats_to_ints(StaticDataLoader.get_data("skills_ability"))
-	game_data_skills_passive = _sanitize_floats_to_ints(StaticDataLoader.get_data("skills_passive"))
-	game_data_limitbursts = _sanitize_floats_to_ints(StaticDataLoader.get_data("limitbursts"))
+	# Memory-friendly sanitize: walk one file at a time and immediately drop the
+	# raw parsed copy held by StaticDataLoader, so we never hold two trees at once.
+	# On Android the raw parse already peaks near the per-process heap cap, so we
+	# cannot afford the previous "double everything in flight" pattern.
+	game_data_units = _sanitize_and_drop("units")
+	_dbg_mem("sanitized units")
+	game_data_items = _sanitize_and_drop("items")
+	_dbg_mem("sanitized items")
+	game_data_equipment = _sanitize_and_drop("equipment")
+	_dbg_mem("sanitized equipment")
+	game_data_worlds = _sanitize_and_drop("worlds")
+	game_data_dungeons = _sanitize_and_drop("dungeons")
+	game_data_towns = _sanitize_and_drop("towns")
+	game_data_missions = _sanitize_and_drop("missions")
+	_dbg_mem("sanitized worlds..missions")
+	game_data_skills_magic = _sanitize_and_drop("skills_magic")
+	game_data_skills_ability = _sanitize_and_drop("skills_ability")
+	game_data_skills_passive = _sanitize_and_drop("skills_passive")
+	_dbg_mem("sanitized skills_*")
+	game_data_limitbursts = _sanitize_and_drop("limitbursts")
 	_normalize_limitburst_effects_raw()
-	game_data_materia = _sanitize_floats_to_ints(StaticDataLoader.get_data("materia"))
-	game_data_equipment_icons = _sanitize_floats_to_ints(StaticDataLoader.get_data("equipment-icons"))
-	game_data_monsters = _sanitize_floats_to_ints(StaticDataLoader.get_data("monsters"))
-	game_data_summons = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons"))
-	game_data_summons_boards = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons_boards"))
-	game_data_summons_exp_patterns = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons_exp_patterns"))
-	game_data_summons_stat_patterns = _sanitize_floats_to_ints(StaticDataLoader.get_data("summons_stat_patterns"))
-	game_data_unit_exp_patterns = _sanitize_floats_to_ints(StaticDataLoader.get_data("unit_exp_patterns"))
+	game_data_materia = _sanitize_and_drop("materia")
+	game_data_equipment_icons = _sanitize_and_drop("equipment-icons")
+	game_data_monsters = _sanitize_and_drop("monsters")
+	_dbg_mem("sanitized lb/materia/icons/monsters")
+	game_data_summons = _sanitize_and_drop("summons")
+	game_data_summons_boards = _sanitize_and_drop("summons_boards")
+	game_data_summons_exp_patterns = _sanitize_and_drop("summons_exp_patterns")
+	game_data_summons_stat_patterns = _sanitize_and_drop("summons_stat_patterns")
+	game_data_unit_exp_patterns = _sanitize_and_drop("unit_exp_patterns")
+	_dbg_mem("sanitized summons/exp")
 
 	_save_sanitized_cache(cache_signature)
+	_dbg_mem("after _save_sanitized_cache")
 	_notify_skill_resolver()
+	_dbg_mem("_on_patch_complete exit")
+
+
+func _sanitize_and_drop(file_type: String) -> Variant:
+	var sanitized: Variant = _sanitize_floats_to_ints(StaticDataLoader.get_data(file_type))
+	# Release the raw parsed copy. After this, the only live reference to this
+	# dataset is the local `sanitized` we return to the caller.
+	StaticDataLoader.cached_data.erase(file_type)
+	return sanitized
+
+func _dbg_mem(tag: String) -> void:
+	var mb: float = float(OS.get_static_memory_usage()) / 1048576.0
+	print("[STD] %-40s static=%.1fMB" % [tag, mb])
 
 
 # === Sanitization & cache ===
@@ -194,24 +221,42 @@ func _try_load_sanitized_cache(signature: String) -> bool:
 
 	var sig_path: String = "user://data/sanitized_cache_sig.txt"
 	var bin_path: String = "user://data/sanitized_data_cache.bin"
+
+	# Fallback: if we shipped a pre-baked cache in res:// (e.g. inside the
+	# Android assets.pck), seed user:// from it. This avoids ever JSON-parsing
+	# the ~130 MB of bundled static data on device, which otherwise peaks the
+	# heap near ~1 GB and OOMs on Android.
+	if not FileAccess.file_exists(bin_path):
+		_seed_user_cache_from_baked()
+
 	if not FileAccess.file_exists(sig_path) or not FileAccess.file_exists(bin_path):
+		print("[STD] fast-path miss: sig_exists=%s bin_exists=%s" % [FileAccess.file_exists(sig_path), FileAccess.file_exists(bin_path)])
 		return false
 
 	var sig_file: FileAccess = FileAccess.open(sig_path, FileAccess.READ)
 	if not sig_file:
+		print("[STD] fast-path miss: could not open sig file")
 		return false
 	var stored_sig: String = sig_file.get_as_text().strip_edges()
 	sig_file.close()
 
 	if stored_sig != signature:
+		print("[STD] fast-path miss: signature mismatch")
+		print("[STD]   stored : %s" % stored_sig.substr(0, 200))
+		print("[STD]   wanted : %s" % signature.substr(0, 200))
 		return false
 
+	_dbg_mem("fast-path: before get_file_as_bytes")
 	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(bin_path)
+	_dbg_mem("fast-path: after get_file_as_bytes size=%d" % bytes.size())
 	if bytes.is_empty():
+		print("[STD] fast-path miss: bin file is empty")
 		return false
 
 	var decoded: Variant = bytes_to_var(bytes)
+	_dbg_mem("fast-path: after bytes_to_var typeof=%d" % typeof(decoded))
 	if not (decoded is Dictionary):
+		print("[STD] fast-path miss: bytes_to_var did not return Dictionary (got type %d)" % typeof(decoded))
 		return false
 
 	var datasets: Dictionary = decoded
@@ -307,6 +352,43 @@ func _save_sanitized_cache(signature: String) -> void:
 	if sig_file:
 		sig_file.store_string(signature)
 		sig_file.close()
+
+
+func _seed_user_cache_from_baked() -> void:
+	# Copy a pre-baked sanitized cache shipped in the PCK into user://data/.
+	# Lets first launch on Android skip JSON parsing of ~130 MB of bundled
+	# static data, which otherwise peaks heap near ~1 GB and OOMs.
+	# Bake instructions: run the game once on desktop, then copy
+	#   <user_data_dir>/data/sanitized_data_cache.bin
+	# into godot/baked_static_cache/ before exporting the Android assets PCK.
+	# (The .sig file is NOT copied — we re-derive it from the device's own
+	# bundled file versions so signature comparison passes.)
+	var baked_bin: String = "res://baked_static_cache/sanitized_data_cache.bin"
+	if not FileAccess.file_exists(baked_bin):
+		return
+
+	var dir: DirAccess = DirAccess.open("user://")
+	if dir and not dir.dir_exists("data"):
+		dir.make_dir("data")
+
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(baked_bin)
+	if bytes.is_empty():
+		return
+	var out_bin: FileAccess = FileAccess.open("user://data/sanitized_data_cache.bin", FileAccess.WRITE)
+	if not out_bin:
+		return
+	out_bin.store_buffer(bytes)
+	out_bin.close()
+
+	# Write a sig matching the device's own resolved bundled file versions so
+	# the subsequent signature check accepts this cache as fresh.
+	var device_sig: String = build_signature()
+	var out_sig: FileAccess = FileAccess.open("user://data/sanitized_cache_sig.txt", FileAccess.WRITE)
+	if out_sig:
+		out_sig.store_string(device_sig)
+		out_sig.close()
+
+	print("[STD] Seeded user:// cache from baked res:// snapshot (%d bytes)" % bytes.size())
 
 
 func _notify_skill_resolver() -> void:

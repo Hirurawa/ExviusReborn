@@ -4,6 +4,8 @@ extends Control
 @onready var background: TextureRect = $Background
 @onready var user_menu_button: MenuButton = $UserMenuButton
 @onready var player_sprites_container: Control = $PlayerSpritesContainer
+@onready var debug_gil_amount: LineEdit = $DebugAddGil/GilAmount
+@onready var debug_add_gil_button: Button = $DebugAddGil/AddGilButton
 
 const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
 const COMBAT_SPRITE_SCRIPT: GDScript = preload("res://features/battle/ui/combat_sprite.gd")
@@ -13,6 +15,7 @@ var _spawned_party_sprites: Array[TextureRect] = []
 func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 	user_menu_button.get_popup().id_pressed.connect(_on_user_menu_pressed)
+	debug_add_gil_button.pressed.connect(_on_debug_add_gil_pressed)
 	if not PartyService.parties_updated.is_connected(_on_parties_updated):
 		PartyService.parties_updated.connect(_on_parties_updated)
 	if not PartyService.active_party_changed.is_connected(_on_active_party_changed):
@@ -113,3 +116,15 @@ func _on_user_menu_pressed(id: int) -> void:
 	elif id == 1:
 		AccountService.logout()
 		UIManager.set_root("login_ui")
+
+func _on_debug_add_gil_pressed() -> void:
+	var text: String = debug_gil_amount.text.strip_edges()
+	if not text.is_valid_int():
+		return
+	var amount: int = int(text)
+	if amount == 0:
+		return
+	PlayerProfile.gil = max(0, PlayerProfile.gil + amount)
+	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
+	PlayerProfile.save_snapshot("debug_add_gil")
+	debug_gil_amount.text = ""

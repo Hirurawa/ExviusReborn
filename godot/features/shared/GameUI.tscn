@@ -47,6 +47,26 @@ popup/item_0/id = 0
 popup/item_1/text = "Logout"
 popup/item_1/id = 1
 
+[node name="DebugAddGil" type="HBoxContainer" parent="." unique_id=8814421001]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -160.0
+offset_top = 8.0
+offset_right = 160.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="GilAmount" type="LineEdit" parent="DebugAddGil" unique_id=8814421002]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+placeholder_text = "Gil amount"
+
+[node name="AddGilButton" type="Button" parent="DebugAddGil" unique_id=8814421003]
+layout_mode = 2
+text = "Add Gil"
+
 [node name="PlayerSpritesContainer" type="Control" parent="." unique_id=15368604]
 anchors_preset = 0
 offset_right = 40.0

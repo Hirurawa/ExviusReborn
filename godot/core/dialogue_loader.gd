@@ -49,7 +49,7 @@ static func get_dialogue(town_id: String, dialogue_line_id) -> Array:
 	var line_id := int(dialogue_line_id)
 	var text_by_id: Dictionary = _cache[town_id]["text"]
 	if not text_by_id.has(line_id):
-		push_warning("DialogueLoader: no map_text entry for id %d (town %s)" % [line_id, town_id])
+		Log.warn("no map_text entry for id %d (town %s)" % [line_id, town_id], "DialogueLoader")
 		return []
 	var name_by_id: Dictionary = _cache[town_id]["name"]
 	return _resolve_pages(String(text_by_id[line_id]), name_by_id)
@@ -60,11 +60,11 @@ static func get_dialogue(town_id: String, dialogue_line_id) -> Array:
 static func _parse_csv_first_comma(path: String) -> Dictionary:
 	var out: Dictionary = {}
 	if not FileAccess.file_exists(path):
-		push_warning("DialogueLoader: missing file %s" % path)
+		Log.warn("missing file %s" % path, "DialogueLoader")
 		return out
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
-		push_warning("DialogueLoader: failed to open %s" % path)
+		Log.warn("failed to open %s" % path, "DialogueLoader")
 		return out
 	while not f.eof_reached():
 		var raw := f.get_line()
@@ -165,6 +165,6 @@ static func _strip_unknown_tags(s: String) -> String:
 		var tag_name := tag_inner.split("=", true, 1)[0].strip_edges().to_lower()
 		if not _warned_tags.has(tag_name):
 			_warned_tags[tag_name] = true
-			push_warning("DialogueLoader: stripping unknown tag <%s>" % tag_inner)
+			Log.warn("stripping unknown tag <%s>" % tag_inner, "DialogueLoader")
 		result = result.substr(0, m.get_start()) + result.substr(m.get_end(), result.length() - m.get_end())
 	return result

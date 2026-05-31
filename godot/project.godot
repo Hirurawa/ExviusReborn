@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Log="*res://core/services/logger.gd"
 StaticDataLoader="*res://core/static_data_loader.gd"
 Persistence="*res://core/services/persistence.gd"
 StaticData="*res://core/services/static_data.gd"
@@ -33,6 +34,12 @@ PartyService="*res://core/services/party_service.gd"
 UnitService="*res://core/services/unit_service.gd"
 UIManager="*res://core/ui_manager.gd"
 StatCalculator="*res://core/stat_calculator.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/exvius.log"
+file_logging/max_log_files=10
 
 [display]
 
@@ -54,6 +61,10 @@ run={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194325,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
 
 [physics]
 

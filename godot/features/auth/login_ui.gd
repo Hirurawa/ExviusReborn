@@ -63,17 +63,17 @@ func _try_mount_android_pck() -> bool:
 
 	if not FileAccess.file_exists(ANDROID_PCK_PATH):
 		feedback_label.text = "Assets not found. Place assets.pck at:\n%s" % ANDROID_PCK_PATH
-		push_warning("Android PCK missing at %s" % ANDROID_PCK_PATH)
+		Log.warn("Android PCK missing at %s" % ANDROID_PCK_PATH, "LoginUI")
 		return false
 
 	var success: bool = ProjectSettings.load_resource_pack(ANDROID_PCK_PATH, true)
 	if not success:
 		feedback_label.text = "Found assets.pck but failed to mount it."
-		push_warning("ProjectSettings.load_resource_pack failed for %s" % ANDROID_PCK_PATH)
+		Log.warn("ProjectSettings.load_resource_pack failed for %s" % ANDROID_PCK_PATH, "LoginUI")
 		return false
 
 	assets_mounted = true
-	print("Successfully mounted Android PCK: %s" % ANDROID_PCK_PATH)
+	Log.info("Successfully mounted Android PCK: %s" % ANDROID_PCK_PATH, "LoginUI")
 	return true
 
 func _set_buttons_enabled(enabled: bool) -> void:
@@ -167,7 +167,7 @@ func _on_new_game_button_pressed() -> void:
 		await get_tree().process_frame
 		_log_mem("after push combat_ui")
 	else:
-		push_warning("Intro mission failed to start after new game creation: %s" % mission_result.get("error", mission_result.get("error_message", "Unknown error")))
+		Log.warn("Intro mission failed to start after new game creation: %s" % mission_result.get("error", mission_result.get("error_message", "Unknown error")), "LoginUI")
 
 func _log_mem(tag: String) -> void:
 	var static_mb: float = float(OS.get_static_memory_usage()) / 1048576.0

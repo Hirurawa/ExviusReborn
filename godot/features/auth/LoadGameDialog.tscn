@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://dq6m4lrj2sva7"]
+
+[ext_resource type="Script" path="res://features/auth/load_game_dialog.gd" id="1_script"]
+
+[node name="LoadGameDialog" type="PopupPanel"]
+title = "Load Game"
+initial_position = 2
+size = Vector2i(480, 480)
+script = ExtResource("1_script")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 472.0
+offset_bottom = 472.0
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Load Game"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+
+[node name="EmptyLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "No saves found."
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SavesList" type="VBoxContainer" parent="VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "Close"

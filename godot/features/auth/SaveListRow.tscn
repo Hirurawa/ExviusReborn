@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://c8r3kq2vp4lne"]
+
+[ext_resource type="Script" path="res://features/auth/save_list_row.gd" id="1_script"]
+
+[node name="SaveListRow" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 56)
+script = ExtResource("1_script")
+
+[node name="InfoVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="InfoVBox"]
+layout_mode = 2
+text = "Save Name"
+theme_override_font_sizes/font_size = 18
+
+[node name="TimeLabel" type="Label" parent="InfoVBox"]
+layout_mode = 2
+text = "Last played: -"
+theme_override_font_sizes/font_size = 12
+
+[node name="LoadButton" type="Button" parent="."]
+layout_mode = 2
+text = "Load"
+
+[node name="DeleteButton" type="Button" parent="."]
+layout_mode = 2
+text = "Delete"

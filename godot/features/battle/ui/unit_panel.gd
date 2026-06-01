@@ -65,7 +65,7 @@ func _gui_input(event: InputEvent) -> void:
 			_is_dragging = false
 			_drag_start_position = event.position
 		else:
-			if not _is_dragging:
+			if not _is_dragging and _is_within_tap_distance(event.position):
 				panel_tapped.emit(_my_index)
 			_is_dragging = false
 
@@ -74,7 +74,7 @@ func _gui_input(event: InputEvent) -> void:
 			_is_dragging = false
 			_drag_start_position = event.position
 		else:
-			if not _is_dragging:
+			if not _is_dragging and _is_within_tap_distance(event.position):
 				panel_tapped.emit(_my_index)
 			_is_dragging = false
 
@@ -110,6 +110,11 @@ func setup(unit_index: int) -> void:
 	_update_visual_state()
 	if _battle_manager:
 		_battle_manager.request_unit_stats(_my_index)
+
+const _TAP_MAX_DISTANCE: float = 8.0
+
+func _is_within_tap_distance(release_position: Vector2) -> bool:
+	return (release_position - _drag_start_position).length() <= _TAP_MAX_DISTANCE
 
 func _on_unit_acted(index: int) -> void:
 	if index == _my_index:

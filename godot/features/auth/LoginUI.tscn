@@ -5,6 +5,8 @@
 [ext_resource type="Texture2D" uid="uid://f2kl45oulutu" path="res://assets/ui/title/copyright.tres" id="3_et3dy"]
 [ext_resource type="Texture2D" uid="uid://vc8xmfrobytc" path="res://assets/ui/title/sqex_button.tres" id="4_wi7ej"]
 [ext_resource type="Texture2D" uid="uid://c52m5max8mcny" path="res://assets/ui/title/title_button_mini1.tres" id="5_eyk3j"]
+[ext_resource type="PackedScene" uid="uid://b7n8x4y2pm5gd" path="res://features/auth/NewGameDialog.tscn" id="6_newgame"]
+[ext_resource type="PackedScene" uid="uid://dq6m4lrj2sva7" path="res://features/auth/LoadGameDialog.tscn" id="7_loadgame"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p4s6d"]
 bg_color = Color(1, 0, 0, 0.2)
@@ -103,28 +105,29 @@ layout_mode = 2
 text = "Please Login"
 horizontal_alignment = 1
 
-[node name="EmailInput" type="LineEdit" parent="VBoxContainer" unique_id=489568172]
+[node name="ContinueButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "qwe@qwe.com"
-placeholder_text = "Email"
+text = "Continue"
+disabled = true
 
-[node name="SaveSelect" type="OptionButton" parent="VBoxContainer"]
+[node name="NewGameButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+text = "New Game"
 
-[node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=874706628]
+[node name="LoadGameButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Qweqweqwe"
-placeholder_text = "Password"
-secret = true
+text = "Load Game"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1396620204]
-layout_mode = 2
-alignment = 1
+[node name="NewGameDialog" parent="." instance=ExtResource("6_newgame")]
+visible = false
 
-[node name="LoginButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=93700707]
-layout_mode = 2
-text = "Login"
+[node name="LoadGameDialog" parent="." instance=ExtResource("7_loadgame")]
+visible = false
 
-[node name="GoToRegisterButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1425397868]
-layout_mode = 2
-text = "Go to Register"
+[node name="DeleteConfirmDialog" type="ConfirmationDialog" parent="."]
+title = "Delete Save"
+initial_position = 2
+size = Vector2i(320, 120)
+ok_button_text = "Delete"
+cancel_button_text = "Cancel"
+dialog_text = "Delete this save?"

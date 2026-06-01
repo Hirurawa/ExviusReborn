@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://b7n8x4y2pm5gd"]
+
+[ext_resource type="Script" path="res://features/auth/new_game_dialog.gd" id="1_script"]
+
+[node name="NewGameDialog" type="AcceptDialog"]
+title = "New Game"
+initial_position = 2
+size = Vector2i(320, 160)
+ok_button_text = "Create"
+script = ExtResource("1_script")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 312.0
+offset_bottom = 112.0
+
+[node name="PromptLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Player Name:"
+
+[node name="NameInput" type="LineEdit" parent="VBox"]
+layout_mode = 2
+placeholder_text = "Enter player name"
+
+[node name="FeedbackLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1

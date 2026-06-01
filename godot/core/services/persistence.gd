@@ -194,6 +194,54 @@ func find_save_id_for_username(username: String) -> String:
 	return ""
 
 
+func get_most_recent_save() -> Dictionary:
+	var best: Dictionary = {}
+	var best_ts: int = -1
+	for entry_var in list_local_saves():
+		if not (entry_var is Dictionary):
+			continue
+		var entry: Dictionary = entry_var
+		var ts: int = int(entry.get("last_loaded_unix", entry.get("created_at_unix", 0)))
+		if ts > best_ts:
+			best_ts = ts
+			best = entry
+	return best
+
+
+func delete_local_save(save_id: String) -> bool:
+	var trimmed_id: String = save_id.strip_edges()
+	if trimmed_id == "":
+		return false
+
+	ensure_game_state_dir()
+	var dir: DirAccess = DirAccess.open("user://game_state")
+	if dir != null:
+		for file_name in ALL_DOMAIN_SNAPSHOT_FILES:
+			var scoped_name: String = "%s__%s" % [trimmed_id, file_name]
+			if dir.file_exists(scoped_name):
+				var err: Error = dir.remove(scoped_name)
+				if err != OK:
+					push_warning("delete_local_save: failed to remove %s (err %d)" % [scoped_name, err])
+
+	var index_data: Dictionary = load_save_index()
+	var saves: Array = index_data.get("saves", [])
+	var filtered: Array = []
+	var removed: bool = false
+	for entry_var in saves:
+		if entry_var is Dictionary and str((entry_var as Dictionary).get("id", "")) == trimmed_id:
+			removed = true
+			continue
+		filtered.append(entry_var)
+	if removed:
+		index_data["saves"] = filtered
+		save_save_index(index_data)
+
+	if active_local_save_id == trimmed_id:
+		active_local_save_id = "default"
+
+	return removed
+
+
 # === Legacy (pre-scoped) snapshot migration ===
 
 func legacy_snapshot_exists() -> bool:

@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://1xxjfhssmrvc" path="res://assets/ui/home/mypage_craft2.tres" id="7_osm8x"]
 [ext_resource type="Texture2D" uid="uid://bqn802q1v7u8d" path="res://assets/ui/home/mypage_craft3.tres" id="8_cuay8"]
 [ext_resource type="Texture2D" uid="uid://cf0jp1ib4l0fs" path="res://assets/ui/home/mypage_colosseum1.tres" id="9_lqah2"]
+[ext_resource type="Texture2D" uid="uid://deq37c1gqi40r" path="res://assets/ui/home/mypage_expedition1.png" id="10_0nn3b"]
 [ext_resource type="Texture2D" uid="uid://6a463hx3dhmx" path="res://assets/ui/home/mypage_colosseum2.tres" id="10_fjgrq"]
 [ext_resource type="Texture2D" uid="uid://cl770oi7x2ft4" path="res://assets/ui/home/mypage_colosseum3.tres" id="11_rbtoe"]
 
@@ -20,6 +21,7 @@
 offset_top = 570.0
 offset_right = 640.0
 offset_bottom = 851.0
+vertical_scroll_mode = 0
 script = ExtResource("1_nh7tg")
 
 [node name="MypageBgBottom" type="Sprite2D" parent="." unique_id=302592526]
@@ -55,6 +57,11 @@ layout_mode = 2
 texture_normal = ExtResource("6_0nn3b")
 texture_pressed = ExtResource("7_osm8x")
 texture_disabled = ExtResource("8_cuay8")
+
+[node name="Exploration" type="TextureButton" parent="ButtonRow" unique_id=1809335071]
+layout_mode = 2
+texture_normal = ExtResource("10_0nn3b")
+stretch_mode = 5
 
 [node name="Arena" type="TextureButton" parent="ButtonRow" unique_id=1987525561]
 layout_mode = 2

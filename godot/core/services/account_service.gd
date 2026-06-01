@@ -65,6 +65,20 @@ func list_local_saves() -> Array:
 	return Persistence.list_local_saves()
 
 
+func get_continue_save() -> Dictionary:
+	return Persistence.get_most_recent_save()
+
+
+func delete_local_save(save_id: String) -> Dictionary:
+	var trimmed_id: String = save_id.strip_edges()
+	if trimmed_id == "":
+		return {"success": false, "error_message": "Missing save id."}
+	var removed: bool = Persistence.delete_local_save(trimmed_id)
+	if not removed:
+		return {"success": false, "error_message": "Save not found."}
+	return {"success": true, "save_id": trimmed_id}
+
+
 func start_new_local_game(username: String) -> Dictionary:
 	_dbg("SNG: enter")
 	var normalized_username: String = username.strip_edges()

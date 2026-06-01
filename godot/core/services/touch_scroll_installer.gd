@@ -10,6 +10,8 @@ extends Node
 const _TouchDragScrollScript: Script = preload("res://features/shared/touch_drag_scroll.gd")
 const _HELPER_NAME: String = "_TouchDragScroll"
 
+var _attached_count: int = 0
+
 
 func _ready() -> void:
 	get_tree().node_added.connect(_on_node_added)
@@ -41,3 +43,4 @@ func _attach(sc: ScrollContainer) -> void:
 	helper.name = _HELPER_NAME
 	helper.set_script(_TouchDragScrollScript)
 	sc.add_child(helper)
+	_attached_count += 1

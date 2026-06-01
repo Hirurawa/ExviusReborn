@@ -15,7 +15,6 @@ run/main_scene="uid://b785keqddokby"
 config/features=PackedStringArray("4.6", "Forward Plus")
 run/flush_stdout_on_print=true
 config/icon="res://icon.svg"
-config/use_external_storage=true
 
 [autoload]
 

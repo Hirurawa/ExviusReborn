@@ -1,20 +1,35 @@
 class_name TouchDragScroll
 extends Node
 
-## Attach as a child of a ScrollContainer to enable drag-anywhere touch
-## scrolling with inertial momentum. Designed for Android/touch builds where
-## interactive child Controls (Buttons, etc.) would otherwise eat the touch
-## event before the ScrollContainer can interpret it as a drag.
-##
-## Behavior:
-##   - Coerces descendant Controls from MOUSE_FILTER_STOP to MOUSE_FILTER_PASS
-##     so the parent ScrollContainer receives touch events as well. PASS
-##     preserves click handling on Buttons, unlike IGNORE.
-##   - Tracks touch position; once movement exceeds `drag_threshold`, treats
-##     subsequent motion as a drag and calls accept_event() so child Buttons
-##     do not fire `pressed` on release.
-##   - On release after a drag, applies an exponentially decaying velocity
-##     for a native-feeling flick.
+# Attach as a child of a ScrollContainer to enable touch-drag scrolling on
+# mobile / touch builds.
+#
+# Why this exists (Android specifics):
+#   Setting descendant Controls to MOUSE_FILTER_PASS is the textbook fix,
+#   but on Android BaseButton captures the press internally, so the
+#   follow-up InputEventScreenDrag events do not always reach the
+#   ScrollContainer's _gui_input. The engine's built-in scroll then never
+#   engages, which is why scrolling fails on a real device even though it
+#   works on desktop (mouse-emulated touch).
+#
+# What this script does:
+#   1. Coerces descendant Controls' mouse_filter from STOP to PASS so the
+#      visual press/click behavior is preserved and code relying on
+#      gui_input on those Controls still gets the events.
+#   2. Listens at the Node-level _input, which receives every event in the
+#      viewport regardless of focus/capture. When a touch begins inside
+#      the ScrollContainer's global rect, we track subsequent drags and
+#      scroll manually. Past a small threshold we mark the gesture as a
+#      drag, force the focused Button to un-press, and mark the release as
+#      handled so no pressed signal fires.
+#   3. Applies a brief exponential momentum after release for natural feel.
+#
+# Cross-axis swipes (e.g. left/right swipe inside a vertical-only list to
+# trigger a swipe-close handler on a parent) are not consumed: we ignore
+# the gesture as soon as we see its dominant axis is not a scrollable one.
+#
+# Per-Control opt-out: set_meta("touch_drag_keep_stop", true) on a
+# descendant Control to leave its mouse_filter unchanged.
 
 @export var drag_threshold: float = 8.0
 @export var friction: float = 8.0
@@ -22,9 +37,9 @@ extends Node
 @export var velocity_smoothing: float = 0.35
 
 var _target: ScrollContainer
-var _pressed: bool = false
+var _tracking: bool = false
 var _dragging: bool = false
-var _gesture_ignored: bool = false
+var _ignored_gesture: bool = false
 var _press_position: Vector2 = Vector2.ZERO
 var _last_position: Vector2 = Vector2.ZERO
 var _velocity: Vector2 = Vector2.ZERO
@@ -39,17 +54,8 @@ func _ready() -> void:
 		queue_free()
 		return
 	_target = parent
-	_refresh_scroll_axes()
-	_target.gui_input.connect(_on_target_gui_input)
-	# Coerce existing descendants now; further coercion happens on each press
-	# to cover Controls added dynamically at any depth.
 	_coerce_subtree(_target)
 	set_process(false)
-
-
-func _refresh_scroll_axes() -> void:
-	_can_scroll_h = _target.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED
-	_can_scroll_v = _target.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED
 
 
 func _on_descendant_added(node: Node) -> void:
@@ -61,73 +67,83 @@ func _coerce_subtree(root: Node) -> void:
 		var c: Control = root
 		if c.mouse_filter == Control.MOUSE_FILTER_STOP and not c.has_meta("touch_drag_keep_stop"):
 			c.mouse_filter = Control.MOUSE_FILTER_PASS
-	# Hook descendants added later at this depth so the coercion propagates
-	# into dynamically built lists/grids no matter when they appear.
 	if not root.child_entered_tree.is_connected(_on_descendant_added):
 		root.child_entered_tree.connect(_on_descendant_added)
 	for child in root.get_children():
 		_coerce_subtree(child)
 
 
-func _on_target_gui_input(event: InputEvent) -> void:
+func _refresh_scroll_axes() -> void:
+	_can_scroll_h = _target.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED
+	_can_scroll_v = _target.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED
+
+
+func _input(event: InputEvent) -> void:
+	if not is_instance_valid(_target) or not _target.is_visible_in_tree():
+		return
+
 	if event is InputEventScreenTouch:
 		_handle_press(event.pressed, event.position)
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		_handle_press(event.pressed, event.position)
 	elif event is InputEventScreenDrag:
-		_handle_motion(event.position)
-	elif event is InputEventMouseMotion and _pressed:
 		_handle_motion(event.position)
 
 
 func _handle_press(pressed: bool, position: Vector2) -> void:
 	if pressed:
-		_pressed = true
+		var rect: Rect2 = _target.get_global_rect()
+		if not rect.has_point(position):
+			_tracking = false
+			return
+		_refresh_scroll_axes()
+		if not _can_scroll_h and not _can_scroll_v:
+			_tracking = false
+			return
+		_tracking = true
 		_dragging = false
-		_gesture_ignored = false
+		_ignored_gesture = false
 		_press_position = position
 		_last_position = position
 		_velocity = Vector2.ZERO
 		set_process(false)
-		_refresh_scroll_axes()
 	else:
+		if not _tracking:
+			return
 		var was_dragging := _dragging
-		_pressed = false
+		_tracking = false
 		_dragging = false
-		_gesture_ignored = false
+		_ignored_gesture = false
 		if was_dragging:
-			# Swallow the release so the underlying Button does not fire `pressed`.
-			_target.accept_event()
+			get_viewport().set_input_as_handled()
 			if _velocity.length() > min_momentum_velocity:
 				set_process(true)
 
 
 func _handle_motion(position: Vector2) -> void:
-	if not _pressed or _gesture_ignored:
+	if not _tracking or _ignored_gesture:
 		return
 	var delta: Vector2 = position - _last_position
 	_last_position = position
+
 	if not _dragging:
 		var total: Vector2 = position - _press_position
 		if total.length() < drag_threshold:
 			return
-		# Only engage if the dominant axis of the gesture matches an enabled
-		# scroll axis. Otherwise let the event propagate to ancestors
-		# (e.g. a swipe-to-close handler on a parent panel).
 		var wants_horizontal: bool = absf(total.x) > absf(total.y)
 		if wants_horizontal and not _can_scroll_h:
-			_gesture_ignored = true
+			_ignored_gesture = true
 			return
 		if not wants_horizontal and not _can_scroll_v:
-			_gesture_ignored = true
+			_ignored_gesture = true
 			return
 		_dragging = true
+		_release_pressed_focus()
+
 	_apply_scroll_delta(delta)
 	var frame_dt: float = get_process_delta_time()
 	if frame_dt > 0.0:
-		var instant_velocity: Vector2 = delta / frame_dt
-		_velocity = _velocity.lerp(instant_velocity, velocity_smoothing)
-	_target.accept_event()
+		var instant: Vector2 = delta / frame_dt
+		_velocity = _velocity.lerp(instant, velocity_smoothing)
+	get_viewport().set_input_as_handled()
 
 
 func _apply_scroll_delta(delta: Vector2) -> void:
@@ -137,8 +153,18 @@ func _apply_scroll_delta(delta: Vector2) -> void:
 		_target.scroll_vertical -= int(round(delta.y))
 
 
+func _release_pressed_focus() -> void:
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var focused: Control = vp.gui_get_focus_owner()
+	if focused is BaseButton:
+		(focused as BaseButton).button_pressed = false
+		focused.release_focus()
+
+
 func _process(delta: float) -> void:
-	if _pressed:
+	if _tracking:
 		set_process(false)
 		return
 	_apply_scroll_delta(_velocity * delta)

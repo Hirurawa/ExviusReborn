@@ -9,6 +9,7 @@ extends Node
 signal units_updated(units: Array)
 signal equip_successful()
 signal equip_failed(error_message: String)
+signal equip_conflict(target_unit_id: String, slot_id: String, item_id: String, conflicting_unit_id: String)
 
 const SNAPSHOT_FILE: String = "units.json"
 
@@ -487,98 +488,111 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 	}
 	return response
 
-func request_equip_item(instance_id: String, slot_id: String, item_id: String) -> void:
+func request_equip_item(instance_id: String, slot_id: String, item_id: String, allow_transfer: bool = false) -> void:
 	if item_id != "" and not InventoryService.equipment_instance_exists(item_id):
 		equip_failed.emit("ERR_EQUIPMENT_NOT_FOUND")
 		return
 
+	var game_data_equipment: Dictionary = StaticData.game_data_equipment
+	var target_unit_inst: Dictionary = {}
+	for unit in owned_units_ids:
+		if unit is Dictionary and str(unit.get("instance_id", "")) == instance_id:
+			target_unit_inst = unit
+			break
+	if target_unit_inst.is_empty():
+		equip_failed.emit("ERR_UNIT_NOT_FOUND")
+		return
+
+	var item_template: Dictionary = {}
 	if item_id != "":
 		var requested_item: Dictionary = InventoryService.get_equipment_instance(item_id)
-		var equipped_to: String = str(requested_item.get("equipped_to", ""))
-		if equipped_to != "" and equipped_to != instance_id:
-			equip_failed.emit("ERR_EQUIPMENT_ALREADY_EQUIPPED")
-			return
+		var template_id: String = str(requested_item.get("template_id", ""))
+		item_template = game_data_equipment.get(template_id, {})
+		if item_template.is_empty():
+			# Materia instances live in the same equipment collection but resolve
+			# their template via game_data_materia. The validator only needs the
+			# template for weapon-shape checks (slot/is_twohanded/type_id), which
+			# materia simply won't satisfy — so the dual-wield branch falls through
+			# while the sharing-conflict branch still runs.
+			item_template = StaticData.game_data_materia.get(template_id, {})
 
-		for existing_unit in owned_units_ids:
-			if not (existing_unit is Dictionary):
-				continue
-			var existing_unit_instance_id: String = str(existing_unit.get("instance_id", ""))
-			var existing_equipment: Dictionary = _normalize_unit_equipment(existing_unit.get("equipment", {}))
-			for existing_slot_id in existing_equipment.keys():
-				if str(existing_equipment.get(existing_slot_id, "")) != item_id:
-					continue
-				if existing_unit_instance_id == instance_id and str(existing_slot_id) == slot_id:
-					continue
-				equip_failed.emit("ERR_EQUIPMENT_ALREADY_EQUIPPED")
+		var validation: Dictionary = EquipmentValidator.can_equip(target_unit_inst, slot_id, item_template, owned_units_ids, item_id)
+		if not bool(validation.get("ok", false)):
+			var reason: String = str(validation.get("reason", ""))
+			if reason == EquipmentValidator.ERR_EQUIPMENT_ALREADY_EQUIPPED:
+				if not allow_transfer:
+					equip_conflict.emit(instance_id, slot_id, item_id, str(validation.get("conflicting_unit_id", "")))
+					return
+				# Caller approved transfer: clear the conflicting unit's slot here so
+				# the equip below succeeds. Inventory `equipped_to` is rewritten by
+				# the shared cleanup loop further down.
+				_clear_item_from_unit(str(validation.get("conflicting_unit_id", "")), item_id)
+			else:
+				equip_failed.emit(reason)
 				return
 
 	var owned_items: Dictionary = InventoryService.owned_items
-	var game_data_equipment: Dictionary = StaticData.game_data_equipment
 	var removed_item_ids: Array[String] = []
 
+	if item_id != "" and bool(item_template.get("is_twohanded", false)):
+		var other_hand: String = "l_hand" if slot_id == "r_hand" else "r_hand"
+		var current_equipment_th: Dictionary = _normalize_unit_equipment(target_unit_inst.get("equipment", {}))
+		var removed_other_hand_item_id: String = str(current_equipment_th.get(other_hand, ""))
+		current_equipment_th.erase(other_hand)
+		if removed_other_hand_item_id != "":
+			removed_item_ids.append(removed_other_hand_item_id)
+		target_unit_inst["equipment"] = current_equipment_th
+
+	var current_equipment: Dictionary = _normalize_unit_equipment(target_unit_inst.get("equipment", {}))
 	if item_id != "":
-		var item_data_dict: Dictionary = {}
-		if owned_items.has("equipment"):
-			for item in owned_items["equipment"]:
-				if item is Dictionary and item.get("instance_id") == item_id:
-					var template_id: String = item.get("template_id", "")
-					if game_data_equipment.has(template_id):
-						item_data_dict = game_data_equipment[template_id]
-					break
+		for equipped_slot_id in current_equipment.keys():
+			if str(current_equipment.get(equipped_slot_id, "")) == item_id and str(equipped_slot_id) != slot_id:
+				equip_failed.emit("ERR_EQUIPMENT_ALREADY_IN_USE")
+				return
 
-		if item_data_dict.get("is_twohanded", false):
-			var other_hand: String = "l_hand" if slot_id == "r_hand" else "r_hand"
-			for unit in owned_units_ids:
-				if unit is Dictionary and unit.get("instance_id", "") == instance_id:
-					var current_equipment: Dictionary = _normalize_unit_equipment(unit.get("equipment", {}))
-					var removed_other_hand_item_id: String = str(current_equipment.get(other_hand, ""))
-					current_equipment.erase(other_hand)
-					if removed_other_hand_item_id != "":
-						removed_item_ids.append(removed_other_hand_item_id)
-					unit["equipment"] = current_equipment
-					break
-
-	var unit_found: bool = false
-	for unit in owned_units_ids:
-		if unit is Dictionary and unit.get("instance_id", "") == instance_id:
-			var current_equipment: Dictionary = _normalize_unit_equipment(unit.get("equipment", {}))
-			if item_id != "":
-				for equipped_slot_id in current_equipment.keys():
-					if str(current_equipment.get(equipped_slot_id, "")) == item_id and str(equipped_slot_id) != slot_id:
-						equip_failed.emit("ERR_EQUIPMENT_ALREADY_IN_USE")
-						return
-
-			var previously_equipped_item_id: String = str(current_equipment.get(slot_id, ""))
-			if item_id == "":
-				current_equipment.erase(slot_id)
-			else:
-				current_equipment[slot_id] = item_id
-			if previously_equipped_item_id != "" and previously_equipped_item_id != item_id:
-				removed_item_ids.append(previously_equipped_item_id)
-			unit["equipment"] = current_equipment
-			unit_found = true
-			break
-
-	if unit_found:
-		if owned_items.has("equipment"):
-			for raw_item in owned_items["equipment"]:
-				if not (raw_item is Dictionary):
-					continue
-				var inv_item: Dictionary = raw_item
-				var inv_item_instance_id: String = str(inv_item.get("instance_id", ""))
-				if inv_item_instance_id == item_id:
-					inv_item["equipped_to"] = instance_id
-				elif inv_item_instance_id in removed_item_ids:
-					inv_item["equipped_to"] = ""
-
-		owned_units_ids = _hydrate_owned_units(owned_units_ids)
-		emit_updated()
-		Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "equip_item")
-		Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "equip_item")
-		InventoryService.emit_updated()
-		equip_successful.emit()
+	var previously_equipped_item_id: String = str(current_equipment.get(slot_id, ""))
+	if item_id == "":
+		current_equipment.erase(slot_id)
 	else:
-		equip_failed.emit("ERR_UNIT_NOT_FOUND")
+		current_equipment[slot_id] = item_id
+	if previously_equipped_item_id != "" and previously_equipped_item_id != item_id:
+		removed_item_ids.append(previously_equipped_item_id)
+	target_unit_inst["equipment"] = current_equipment
+
+	if owned_items.has("equipment"):
+		for raw_item in owned_items["equipment"]:
+			if not (raw_item is Dictionary):
+				continue
+			var inv_item: Dictionary = raw_item
+			var inv_item_instance_id: String = str(inv_item.get("instance_id", ""))
+			if inv_item_instance_id == item_id:
+				inv_item["equipped_to"] = instance_id
+			elif inv_item_instance_id in removed_item_ids:
+				inv_item["equipped_to"] = ""
+
+	owned_units_ids = _hydrate_owned_units(owned_units_ids)
+	emit_updated()
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "equip_item")
+	Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "equip_item")
+	InventoryService.emit_updated()
+	equip_successful.emit()
+
+
+func _clear_item_from_unit(unit_instance_id: String, item_id: String) -> void:
+	if unit_instance_id == "" or item_id == "":
+		return
+	for unit in owned_units_ids:
+		if not (unit is Dictionary) or str(unit.get("instance_id", "")) != unit_instance_id:
+			continue
+		var equipment: Dictionary = _normalize_unit_equipment(unit.get("equipment", {}))
+		var changed: bool = false
+		for existing_slot_id in equipment.keys():
+			if str(equipment.get(existing_slot_id, "")) == item_id:
+				equipment.erase(existing_slot_id)
+				changed = true
+		if changed:
+			unit["equipment"] = equipment
+		return
 	
 func get_entry_id(unit_inst: Dictionary) -> String:
 	"""Return the rarity-specific entry id for asset resolution (illustrations, icons, spritesheets).

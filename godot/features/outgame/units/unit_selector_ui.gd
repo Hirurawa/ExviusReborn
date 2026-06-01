@@ -467,14 +467,14 @@ func _compare_units_for_sort_mode(a: Dictionary, b: Dictionary) -> bool:
 				return _compare_unit_tie_breaker(a, b)
 			return a_level > b_level
 		SORT_RARITY_ASC:
-			var a_rarity: int = int(a.get("rarity", 1))
-			var b_rarity: int = int(b.get("rarity", 1))
+			var a_rarity: int = int(a.get("current_rarity", a.get("rarity", 1)))
+			var b_rarity: int = int(b.get("current_rarity", b.get("rarity", 1)))
 			if a_rarity == b_rarity:
 				return _compare_unit_tie_breaker(a, b)
 			return a_rarity < b_rarity
 		SORT_RARITY_DESC:
-			var a_rarity: int = int(a.get("rarity", 1))
-			var b_rarity: int = int(b.get("rarity", 1))
+			var a_rarity: int = int(a.get("current_rarity", a.get("rarity", 1)))
+			var b_rarity: int = int(b.get("current_rarity", b.get("rarity", 1)))
 			if a_rarity == b_rarity:
 				return _compare_unit_tie_breaker(a, b)
 			return a_rarity > b_rarity

@@ -389,16 +389,7 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 
 		var item_id: String = str(equipment.get(slot_info.id, ""))
 		var item_data: Dictionary = {}
-		var is_locked: bool = false
-
-		var other_hand: String = "l_hand" if slot_info.id == "r_hand" else "r_hand"
-		if slot_info.id in ["r_hand", "l_hand"]:
-			var other_item_id: String = str(equipment.get(other_hand, ""))
-			if other_item_id != "":
-				var other_template_id: String = InventoryService.get_equipment_template_id(other_item_id)
-				var other_item_data: Dictionary = StaticData.game_data_equipment.get(other_template_id, {})
-				if bool(other_item_data.get("is_twohanded", false)):
-					is_locked = true
+		var is_locked: bool = EquipmentValidator.is_slot_locked_by_two_handed(unit_inst, str(slot_info.id))
 
 		if is_locked:
 			item_data = {"name": str(slot_info.name), "slot": "", "type": "", "stats": {}}

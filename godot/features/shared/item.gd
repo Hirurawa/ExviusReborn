@@ -165,6 +165,8 @@ func setup_placeholder(title: String, detail_text: String = "", display_options:
 		equip_cat.texture = _load_texture(type_badge_path)
 		equip_cat.visible = equip_cat.texture != null
 
+	_apply_equipped_to({}, display_options)
+
 func _reset_visual_state() -> void:
 	if item_icon != null:
 		item_icon.texture = null

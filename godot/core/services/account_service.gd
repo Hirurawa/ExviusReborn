@@ -131,6 +131,8 @@ func start_new_local_game(username: String) -> Dictionary:
 	return {"success": true, "save_id": Persistence.active_local_save_id}
 
 func _dbg(msg: String) -> void:
+	if not OS.is_debug_build():
+		return
 	var mb: float = float(OS.get_static_memory_usage()) / 1048576.0
 	print("[DBG] %-44s static=%.1fMB" % [msg, mb])
 

@@ -687,10 +687,11 @@ func _generate_enemy_data(dungeon_monster_data: Dictionary) -> Dictionary:
 	var monster_name = dungeon_monster_data.get("name", "")
 
 	if monster_name != "":
-		for monster in StaticData.game_data_monsters:
-			if typeof(monster) == TYPE_DICTIONARY and str(monster.get("name", "")) == str(monster_name):
-				global_monster_data = monster.duplicate(true)
-				break
+		# O(1) name lookup via StaticData's side-index instead of an O(n) scan
+		# of game_data_monsters on every spawn.
+		var found: Dictionary = StaticData.get_monster_by_name(str(monster_name))
+		if not found.is_empty():
+			global_monster_data = found.duplicate(true)
 
 	var enemy_data = global_monster_data.duplicate(true)
 	for key in dungeon_monster_data:

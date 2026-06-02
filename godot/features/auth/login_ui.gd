@@ -21,11 +21,12 @@ var _pending_delete_username: String = ""
 
 
 func _ready() -> void:
-	# Reset memory trace file so each launch is fresh.
-	var f: FileAccess = FileAccess.open("user://mem_trace.log", FileAccess.WRITE)
-	if f:
-		f.store_line("=== LoginUI _ready @ %s ===" % Time.get_datetime_string_from_system())
-		f.close()
+	# Reset memory trace file so each launch is fresh (debug builds only).
+	if OS.is_debug_build():
+		var f: FileAccess = FileAccess.open("user://mem_trace.log", FileAccess.WRITE)
+		if f:
+			f.store_line("=== LoginUI _ready @ %s ===" % Time.get_datetime_string_from_system())
+			f.close()
 
 	continue_button.pressed.connect(_on_continue_button_pressed)
 	new_game_button.pressed.connect(_on_new_game_button_pressed)
@@ -40,9 +41,15 @@ func _ready() -> void:
 	if OS.get_name() != "Android":
 		assets_mounted = true
 
+	# Surface cold-path progress so the player sees forward motion instead of a
+	# freeze on first launch (signature mismatch).
+	if not StaticDataLoader.patch_progress.is_connected(_on_static_data_progress):
+		StaticDataLoader.patch_progress.connect(_on_static_data_progress)
+
 	if assets_mounted:
 		_refresh_continue_button()
 		feedback_label.text = "Choose an option"
+		_kick_off_priming()
 	else:
 		_begin_android_mount_flow()
 
@@ -58,6 +65,7 @@ func _begin_android_mount_flow() -> void:
 
 	if await _try_mount_android_pck():
 		_restore_normal_button_state()
+		_kick_off_priming()
 	else:
 		_show_retry_state()
 
@@ -112,6 +120,7 @@ func _on_retry_mount_pressed() -> void:
 	await get_tree().process_frame
 	if await _try_mount_android_pck():
 		_restore_normal_button_state()
+		_kick_off_priming()
 	else:
 		_show_retry_state()
 
@@ -162,6 +171,7 @@ func _on_new_game_created(username: String) -> void:
 	_log_mem("after request_start_mission")
 	if mission_result.get("success", false) == true:
 		_log_mem("before push combat_ui")
+
 		UIManager.push("combat_ui", {"mission_id": INTRO_MISSION_ID})
 		await get_tree().process_frame
 		_log_mem("after push combat_ui")
@@ -224,7 +234,25 @@ func _on_delete_confirmed() -> void:
 
 # === Diagnostics ===
 
+func _kick_off_priming() -> void:
+	# Start static-data priming the moment assets are reachable. On the warm
+	# path this is a cheap signature check that completes before the user can
+	# tap "New Game". On the cold path, the patch_progress signal feeds the
+	# feedback label so the UI doesn't appear frozen.
+	if StaticData.is_ready or StaticData._loading:
+		return
+	StaticData.prime_cache.call_deferred()
+
+
+func _on_static_data_progress(file_name: String, _status: String) -> void:
+	if StaticData.is_ready:
+		return
+	feedback_label.text = "Preparing data: %s…" % file_name
+
+
 func _log_mem(tag: String) -> void:
+	if not OS.is_debug_build():
+		return
 	var static_mb: float = float(OS.get_static_memory_usage()) / 1048576.0
 	var peak_mb: float = float(OS.get_static_memory_peak_usage()) / 1048576.0
 	var line: String = "[MEM] %-32s static=%.1fMB peak=%.1fMB" % [tag, static_mb, peak_mb]

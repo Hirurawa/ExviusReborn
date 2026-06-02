@@ -279,12 +279,9 @@ func _get_or_load_mission_data(mission_id: String) -> Dictionary:
 
 func _get_or_load_mission_data_local(mission_id: String) -> Dictionary:
 	var mission_key: String = str(mission_id)
-	if StaticData.game_data_missions.is_empty() and FileAccess.file_exists("user://data/missions.json"):
-		var mission_text: String = FileAccess.get_file_as_string("user://data/missions.json")
-		var parsed_missions: Variant = JSON.parse_string(mission_text)
-		if parsed_missions is Dictionary:
-			StaticData.game_data_missions = StaticData.sanitize_floats_to_ints(parsed_missions)
-
+	# Note: the legacy user://data/missions.json mirror has been removed in
+	# favor of the per-dataset .bin cache. StaticData lazy-loads missions on
+	# first property access.
 	var mission_data: Dictionary = StaticData.game_data_missions.get(mission_key, {})
 	mission_data = _normalize_mission_data(mission_data)
 	if not mission_data.is_empty():

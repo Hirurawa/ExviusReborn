@@ -40,6 +40,8 @@ func _load_next_file() -> void:
 	call_deferred("_load_next_file")
 
 func _dbg_mem(tag: String) -> void:
+	if not OS.is_debug_build():
+		return
 	var mb: float = float(OS.get_static_memory_usage()) / 1048576.0
 	print("[SDL] %-40s static=%.1fMB" % [tag, mb])
 
@@ -78,6 +80,9 @@ func _load_with_fallback(file_type: String) -> void:
 	_load_from_cache(file_type)
 
 func _load_from_bundled_static(file_type: String) -> bool:
+	# Note: no longer mirrors the JSON into user://data/<file>.json. The per-dataset
+	# .bin cache written by StaticData supersedes that mirror, and the mirror was
+	# ~130 MB of duplicated storage plus a synchronous write on the cold path.
 	for base_dir in BUNDLED_STATIC_DIRS:
 		var path: String = "%s/%s.json" % [base_dir, file_type]
 		if not FileAccess.file_exists(path):
@@ -95,7 +100,6 @@ func _load_from_bundled_static(file_type: String) -> bool:
 			continue
 
 		cached_data[file_type] = parsed
-		_save_to_cache(file_type, json_string)
 		patch_progress.emit(file_type, "Loaded from bundled static data")
 		return true
 
@@ -105,6 +109,24 @@ func get_data(file_type: String) -> Variant:
 	if cached_data.has(file_type):
 		return cached_data[file_type]
 	return {}
+
+# Streaming, non-caching parse of a single dataset. Returns the freshly-parsed
+# Variant without populating `cached_data`, so the caller controls lifetime
+# (StaticData uses this for memory-bounded cold-path sanitize-and-write).
+func load_one(file_type: String) -> Variant:
+	for base_dir in BUNDLED_STATIC_DIRS:
+		var path: String = "%s/%s.json" % [base_dir, file_type]
+		if not FileAccess.file_exists(path):
+			continue
+		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+		if not file:
+			continue
+		var content: String = file.get_as_text()
+		file.close()
+		var parsed: Variant = JSON.parse_string(content)
+		if parsed != null:
+			return parsed
+	return null
 
 func get_versions_snapshot() -> Dictionary:
 	# Return source-aware version info so downstream caches invalidate when JSON changes.

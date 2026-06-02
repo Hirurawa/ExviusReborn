@@ -599,6 +599,11 @@ func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String
 		print("CombatUI: Background not found at ", bg_path)
 
 func init_scene(params: Dictionary) -> void:
+	# Free outgame-only static data (worlds, towns, summon boards, equip icons,
+	# pattern tables) before combat allocates its own atlases/animations. Datasets
+	# transparently re-load lazily if they're touched again later. Safe to call
+	# every combat entry.
+	StaticData.evict_outgame_only_datasets()
 	current_mission_id = params.get("mission_id", "")
 	var dungeon_id: String = params.get("dungeon_id", "")
 	var formatted_name: String = ""

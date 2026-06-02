@@ -1148,11 +1148,13 @@ func _on_finish_pressed() -> void:
 	battle_manager._trigger_mission_complete()
 
 func _on_mission_completed(rewards_text: String = "") -> void:
+	AudioService.play_music("res://assets/audio/bgm/la009_battleend.wav", false)
 	rewards_popup.dialog_text = "Mission completed successfully!" + rewards_text
 	rewards_popup.popup_centered()
 
 func _on_mission_failed(error_msg: String = "") -> void:
 	print("Failed to complete mission: ", error_msg)
+	AudioService.play_music("res://assets/audio/bgm/la009_battleend.wav", false)
 	rewards_popup.dialog_text = "Mission Failed!"
 	rewards_popup.popup_centered()
 

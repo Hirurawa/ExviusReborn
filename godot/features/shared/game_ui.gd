@@ -116,6 +116,8 @@ func _on_user_menu_pressed(id: int) -> void:
 	elif id == 1:
 		AccountService.logout()
 		UIManager.set_root("login_ui")
+	elif id == 2:
+		UIManager.push("settings_ui")
 
 func _on_debug_add_gil_pressed() -> void:
 	var text: String = debug_gil_amount.text.strip_edges()

@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Log="*res://core/services/logger.gd"
+AudioService="*res://core/services/audio_service.gd"
 StaticDataLoader="*res://core/static_data_loader.gd"
 Persistence="*res://core/services/persistence.gd"
 StaticData="*res://core/services/static_data.gd"
@@ -36,6 +37,7 @@ EquipmentValidator="*res://core/services/equipment_validator.gd"
 UIManager="*res://core/ui_manager.gd"
 StatCalculator="*res://core/stat_calculator.gd"
 TouchScrollInstaller="*res://core/services/touch_scroll_installer.gd"
+ButtonSoundInstaller="*res://core/services/button_sound_installer.gd"
 
 [debug]
 

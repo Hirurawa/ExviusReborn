@@ -35,8 +35,32 @@ var _scenes_map: Dictionary = {
 	"esper_enhancement_ui": "res://features/outgame/espers/EsperEnhancementUI.tscn",
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn",
-	"town_map_ui": "res://features/town/Map.tscn"
+	"town_map_ui": "res://features/town/Map.tscn",
+	"settings_ui": "res://features/outgame/profile/SettingsUI.tscn"
 }
+
+# === BGM routing ===
+# Scene key → BGM resource path. Keys not listed fall back to BGM_DEFAULT
+# (the standard "main pages" track). Use BGM_NONE to suppress music for a key.
+const BGM_LOGIN: String = "res://assets/audio/bgm/la001_prelude.wav"
+const BGM_MAIN: String = "res://assets/audio/bgm/la003_mypage_normal1.wav"
+const BGM_BATTLE: String = "res://assets/audio/bgm/la005_battle1.wav"
+const BGM_MAP: String = "res://assets/audio/bgm/la004_map_world1.wav"
+const BGM_NONE: String = ""
+
+var _bgm_for_scene: Dictionary = {
+	"login_ui": BGM_LOGIN,
+	"register_ui": BGM_LOGIN,
+	"combat_ui": BGM_BATTLE,
+	"map_ui": BGM_MAP,
+	"settings_ui": BGM_NONE,
+}
+
+# When true, the next scene transition will not change music. Used so the
+# battle-end jingle started in BattleUI is not overwritten by the main-page
+# music when we pop back out of combat_ui.
+var _suppress_next_bgm_change: bool = false
+
 
 func _ready() -> void:
 	canvas_layer = CanvasLayer.new()
@@ -84,7 +108,7 @@ func _update_overlays() -> void:
 	var current_scene_name: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui", "town_map_ui", "townmapui"]
+	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui", "town_map_ui", "townmapui", "settings_ui", "settingsui"]
 	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "esper_detail_ui", "mapui", "editprofileui", "esperdetailui"]
 
 	if top_header:
@@ -112,6 +136,27 @@ func _update_overlays() -> void:
 		canvas_layer.move_child(bottom_nav, -1)
 	if home_buttons and home_buttons.get_parent():
 		canvas_layer.move_child(home_buttons, -1)
+
+	_update_bgm(current_scene_name)
+
+
+func _update_bgm(scene_key: String) -> void:
+	if _suppress_next_bgm_change:
+		_suppress_next_bgm_change = false
+		return
+	if get_node_or_null("/root/AudioService") == null:
+		return
+	var path: String = _bgm_for_scene.get(scene_key, BGM_MAIN)
+	if path == BGM_NONE:
+		return
+	AudioService.play_music(path)
+
+
+## Call from BattleUI right before showing the rewards popup so the next
+## UIManager.pop() (which switches back to the main pages) does NOT clobber
+## the battle-end jingle.
+func suppress_next_bgm_change() -> void:
+	_suppress_next_bgm_change = true
 
 func push(scene_name_key: String, params: Dictionary = {}) -> void:
 	if not _scenes_map.has(scene_name_key):

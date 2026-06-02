@@ -41,11 +41,13 @@ offset_right = -10.0
 offset_bottom = 41.0
 grow_horizontal = 0
 text = "User Options"
-item_count = 2
+item_count = 3
 popup/item_0/text = "Edit Profile"
 popup/item_0/id = 0
-popup/item_1/text = "Logout"
-popup/item_1/id = 1
+popup/item_1/text = "Settings"
+popup/item_1/id = 2
+popup/item_2/text = "Logout"
+popup/item_2/id = 1
 
 [node name="DebugAddGil" type="HBoxContainer" parent="." unique_id=8814421001]
 layout_mode = 1

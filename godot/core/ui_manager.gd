@@ -239,3 +239,72 @@ func get_current_scene() -> Node:
 	if _menu_stack.is_empty():
 		return null
 	return _menu_stack.back()
+
+
+# === Android / Escape back-button routing ===
+#
+# Listens for the Android hardware back button (NOTIFICATION_WM_GO_BACK_REQUEST)
+# and the desktop ui_cancel action (Escape by default). Finds the current
+# scene's back button by name and emits its `pressed` signal so any existing
+# handler logic, lambdas, confirmation popups, and back-button SFX all fire
+# naturally. Falls back to `pop()` if no back button is found.
+#
+# Scenes can opt out by setting `set_meta("block_back_request", true)` on
+# their root node.
+
+# Same convention used by ButtonSoundInstaller to identify back-style buttons.
+const _BACK_NAME_PATTERNS: Array[String] = [
+	"back", "close", "cancel", "exit",
+]
+const _META_BLOCK_BACK: StringName = &"block_back_request"
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_handle_back_request()
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		if _handle_back_request():
+			get_viewport().set_input_as_handled()
+
+
+func _handle_back_request() -> bool:
+	var current: Node = get_current_scene()
+	if current == null:
+		return false
+
+	if current.has_meta(_META_BLOCK_BACK) and bool(current.get_meta(_META_BLOCK_BACK)):
+		return false
+
+	var back_button: BaseButton = _find_back_button(current)
+	if back_button != null:
+		back_button.emit_signal("pressed")
+		return true
+
+	if _menu_stack.size() > 1:
+		pop()
+		return true
+
+	return false
+
+
+func _find_back_button(node: Node) -> BaseButton:
+	if node is BaseButton:
+		var btn: BaseButton = node
+		if btn.is_visible_in_tree() and not btn.disabled and _is_back_button_name(btn.name):
+			return btn
+	for child in node.get_children():
+		var found: BaseButton = _find_back_button(child)
+		if found != null:
+			return found
+	return null
+
+
+func _is_back_button_name(node_name: StringName) -> bool:
+	var name_lc: String = String(node_name).to_lower()
+	for pattern in _BACK_NAME_PATTERNS:
+		if name_lc.find(pattern) != -1:
+			return true
+	return false

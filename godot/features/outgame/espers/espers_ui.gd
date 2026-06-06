@@ -32,6 +32,8 @@ func _populate_espers_list() -> void:
 	for child in espers_list_container.get_children():
 		child.queue_free()
 
+	_maybe_add_remove_entry()
+
 	var summons: Dictionary = StaticData.game_data_summons
 	if summons.is_empty():
 		_add_empty_state_label("No espers available.")
@@ -152,6 +154,40 @@ func _is_summon_disabled_for_selection(summon_id: String) -> bool:
 	if summon_id == "" or summon_id == current_summon_id:
 		return false
 	return _party_used_summons.has(summon_id)
+
+func _maybe_add_remove_entry() -> void:
+	if mode != "select":
+		return
+	if current_summon_id == "":
+		return
+
+	var frame: Button = esper_frame_template.duplicate()
+	frame.visible = true
+	frame.disabled = false
+	frame.modulate = Color(1, 1, 1, 1)
+
+	if frame.has_node("NameLabel"):
+		frame.get_node("NameLabel").text = "Remove"
+	if frame.has_node("LvlLabel"):
+		frame.get_node("LvlLabel").visible = false
+	if frame.has_node("SummonIcon"):
+		frame.get_node("SummonIcon").visible = false
+	if frame.has_node("RarityStar"):
+		frame.get_node("RarityStar").visible = false
+
+	frame.pressed.connect(_on_remove_pressed)
+	espers_list_container.add_child(frame)
+
+func _on_remove_pressed() -> void:
+	if mode != "select":
+		return
+
+	if selection_callback.is_valid():
+		selection_callback.call("", "")
+	elif target_party_index >= 0 and target_slot_index >= 0:
+		PartyService.assign_esper_to_party(target_party_index, target_slot_index, "")
+
+	UIManager.pop()
 
 func _add_empty_state_label(message: String) -> void:
 	var empty_label := Label.new()

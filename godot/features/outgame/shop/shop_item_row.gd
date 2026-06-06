@@ -32,10 +32,12 @@ func setup(id: String, data: Dictionary, type: String) -> void:
 	
 	var strings: Dictionary = data.get("strings", {})
 	var desc_short_list: Array = strings.get("desc_short", [])
-	if desc_short_list and desc_short_list.size() > 0:
-		desc_label.text = desc_short_list[0]
-	else:
-		desc_label.text = ""
+	var desc_text: String = ""
+	for entry in desc_short_list:
+		if entry != null and str(entry) != "":
+			desc_text = str(entry)
+			break
+	desc_label.text = desc_text
 		
 	var icon_name: String = data.get("icon", "")
 	if icon_name != "":

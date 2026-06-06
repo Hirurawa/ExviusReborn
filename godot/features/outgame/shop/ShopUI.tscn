@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://gqakqdyq272g"]
 
 [ext_resource type="Script" uid="uid://b2mr0adket8cd" path="res://features/outgame/shop/shop_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dmunqh6phrvfg" path="res://assets/ui/create/cre_btn4_1.tres" id="2_y08we"]
+[ext_resource type="Texture2D" uid="uid://dn5ikad3sia4y" path="res://assets/ui/create/cre_btn4_2.tres" id="3_1fev2"]
 
 [node name="ShopUI" type="Control" unique_id=679947962]
 layout_mode = 3
@@ -33,6 +35,94 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.2, 1)
 horizontal_alignment = 1
 
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1038269930]
+layout_mode = 2
+alignment = 1
+
+[node name="Items" type="TextureButton" parent="VBoxContainer/HBoxContainer" unique_id=581821311]
+layout_mode = 2
+texture_normal = ExtResource("2_y08we")
+texture_focused = ExtResource("3_1fev2")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/Items" unique_id=1913017625]
+layout_mode = 0
+offset_left = 52.0
+offset_top = 23.0
+offset_right = 96.0
+offset_bottom = 46.0
+text = "Items"
+horizontal_alignment = 1
+
+[node name="AwakeningMaterials" type="TextureButton" parent="VBoxContainer/HBoxContainer" unique_id=293876136]
+layout_mode = 2
+texture_normal = ExtResource("2_y08we")
+texture_focused = ExtResource("3_1fev2")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/AwakeningMaterials" unique_id=466939614]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 9.0
+offset_right = 127.0
+offset_bottom = 58.0
+text = "Awakening
+Materials"
+horizontal_alignment = 1
+
+[node name="Prisms" type="TextureButton" parent="VBoxContainer/HBoxContainer" unique_id=1043201432]
+layout_mode = 2
+texture_normal = ExtResource("2_y08we")
+texture_focused = ExtResource("3_1fev2")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/Prisms" unique_id=971135182]
+layout_mode = 0
+offset_left = 57.0
+offset_top = 21.0
+offset_right = 101.0
+offset_bottom = 44.0
+text = "Prisms"
+horizontal_alignment = 1
+
+[node name="Equipments" type="TextureButton" parent="VBoxContainer/HBoxContainer" unique_id=465755399]
+layout_mode = 2
+texture_normal = ExtResource("2_y08we")
+texture_focused = ExtResource("3_1fev2")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/Equipments" unique_id=660663503]
+layout_mode = 0
+offset_left = 33.0
+offset_top = 21.0
+offset_right = 126.0
+offset_bottom = 44.0
+text = "Equipments"
+horizontal_alignment = 1
+
+[node name="SearchBar" type="Control" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 0)
+clip_contents = true
+mouse_filter = 1
+
+[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchBar"]
+layout_mode = 1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = -120.0
+offset_bottom = 48.0
+placeholder_text = "Filter by name"
+caret_blink = true
+
+[node name="ClearButton" type="Button" parent="VBoxContainer/SearchBar"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = 48.0
+focus_mode = 0
+text = "Clear"
+
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=712833325]
 layout_mode = 2
 size_flags_vertical = 3
@@ -43,25 +133,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 15
 
-[node name="ItemsLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=562917187]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 20
-text = "Items"
-
-[node name="ItemsContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1204308379]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=765217909]
-layout_mode = 2
-
-[node name="EquipmentLabel" type="Label" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=58935853]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 20
-text = "Equipments"
-
-[node name="EquipmentContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=60280463]
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1204308379]
 layout_mode = 2
 theme_override_constants/separation = 10

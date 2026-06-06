@@ -675,7 +675,26 @@ func _is_standard_summonable_unit(unit_data: Variant) -> bool:
 		return false
 
 	var rarity_min: int = int(data.get("rarity_min", 0))
-	return rarity_min < 7
+	if rarity_min >= 7:
+		return false
+
+	# Exclude untranslated units whose display name contains non-Latin
+	# characters. Allows basic ASCII plus Latin-1 / Latin Extended (for
+	# accented names like "Délita").
+	if not _name_is_latin(str(data.get("name", ""))):
+		return false
+
+	return true
+
+func _name_is_latin(name: String) -> bool:
+	if name == "":
+		return false
+	for i in name.length():
+		var cp: int = name.unicode_at(i)
+		# Basic Latin, Latin-1 Supplement, Latin Extended-A/B (0x0000..0x024F)
+		if cp > 0x024F:
+			return false
+	return true
 
 func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 	return {

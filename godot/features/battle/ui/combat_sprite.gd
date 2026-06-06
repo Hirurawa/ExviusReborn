@@ -19,23 +19,75 @@ var current_frame_timer: float = 0.0
 
 var party_index: int = -1
 
-@onready var battle_manager: Node = get_node("/root/Main/BattleManager") if get_tree().root.has_node("Main/BattleManager") else null
+signal short_tapped(unit_index: int)
+signal long_pressed(unit_index: int)
+
+const LONG_PRESS_THRESHOLD: float = 0.5
+
+var _is_pressed: bool = false
+var _press_elapsed: float = 0.0
+var _long_press_emitted: bool = false
+
+# BattleManager reference is injected via setup() so the sprite can be reused in
+# non-combat contexts (e.g. unit gallery) without depending on scene paths.
+var battle_manager: Node = null
 
 func _ready() -> void:
-	if not battle_manager:
-		# Fallback if the path is not standard
-		var bt = get_tree().root.find_child("BattleManager", true, false)
-		if bt:
-			battle_manager = bt
+	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	if battle_manager:
-		battle_manager.unit_action_started.connect(_on_unit_action_started)
-		battle_manager.enemy_action_started.connect(_on_enemy_action_started)
-		battle_manager.action_queued.connect(_on_action_queued)
+func _exit_tree() -> void:
+	# Disconnect from BattleManager so a re-entered battle scene doesn't end up with
+	# stale listeners pointing at freed nodes.
+	if not is_instance_valid(battle_manager):
+		return
+	if battle_manager.unit_action_started.is_connected(_on_unit_action_started):
+		battle_manager.unit_action_started.disconnect(_on_unit_action_started)
+	if battle_manager.enemy_action_started.is_connected(_on_enemy_action_started):
+		battle_manager.enemy_action_started.disconnect(_on_enemy_action_started)
+	if battle_manager.action_queued.is_connected(_on_action_queued):
+		battle_manager.action_queued.disconnect(_on_action_queued)
 
-func setup(p_index: int, template_id: String, p_is_enemy: bool = false) -> void:
+func _gui_input(event: InputEvent) -> void:
+	if party_index < 0:
+		return
+
+	var press_started: bool = false
+	var press_ended: bool = false
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			press_started = true
+		else:
+			press_ended = true
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			press_started = true
+		else:
+			press_ended = true
+
+	if press_started:
+		_is_pressed = true
+		_press_elapsed = 0.0
+		_long_press_emitted = false
+	elif press_ended and _is_pressed:
+		_is_pressed = false
+		if not _long_press_emitted:
+			short_tapped.emit(party_index)
+
+func setup(p_index: int, template_id: String, p_is_enemy: bool = false, p_battle_manager: Node = null) -> void:
 	party_index = p_index
 	is_enemy = p_is_enemy
+
+	# Wire up battle signals only when running inside a battle. In outgame
+	# contexts (e.g. unit gallery) the sprite just plays its idle animation.
+	battle_manager = p_battle_manager
+	if battle_manager:
+		if not battle_manager.unit_action_started.is_connected(_on_unit_action_started):
+			battle_manager.unit_action_started.connect(_on_unit_action_started)
+		if not battle_manager.enemy_action_started.is_connected(_on_enemy_action_started):
+			battle_manager.enemy_action_started.connect(_on_enemy_action_started)
+		if not battle_manager.action_queued.is_connected(_on_action_queued):
+			battle_manager.action_queued.connect(_on_action_queued)
 
 	# Load animation data using TextureBuilder
 	if is_enemy:
@@ -133,6 +185,13 @@ func _play_atk() -> void:
 	texture = atk_anim["frames"][current_frame_idx]
 
 func _process(delta: float) -> void:
+	# Long-press detection
+	if _is_pressed and not _long_press_emitted:
+		_press_elapsed += delta
+		if _press_elapsed >= LONG_PRESS_THRESHOLD:
+			_long_press_emitted = true
+			long_pressed.emit(party_index)
+
 	# Convert delta (seconds) to frame delays logic? Wait, how are frame delays structured?
 	# In JSON they look like: "frameDelays": [3, 3, 3, ...].
 	# A frame delay of "1" is typically 1 unit. Wait, what unit? Let's check typical FFBE.

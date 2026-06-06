@@ -18,23 +18,27 @@ func setup(unit_data: Dictionary) -> void:
 
 	# Header
 	var unit_name = unit_data.get("name", "Unknown")
-	var current_hp = unit_data.get("current_hp", 0)
-	var current_mp = unit_data.get("current_mp", 0)
+	var current_hp = unit_data.get("current_hp", unit_data.get("hp", 0))
+	var current_mp = unit_data.get("current_mp", unit_data.get("mp", 0))
 
 	var final_stats = unit_data.get("final_stats", {})
-	var max_hp = unit_data.get("max_hp", 0)
-	var max_mp = unit_data.get("max_mp", 0)
+	var max_hp = unit_data.get("max_hp", unit_data.get("hp", 0))
+	var max_mp = unit_data.get("max_mp", unit_data.get("mp", 0))
 
 	text_content += "[b][u]%s[/u][/b]\n" % unit_name
 	text_content += "HP: %d / %d\n" % [current_hp, max_hp]
 	text_content += "MP: %d / %d\n\n" % [current_mp, max_mp]
 
 	# Stats
+	# Player units have nested final_stats.stats; enemies have flat ATK/DEF/MAG/SPR keys
+	# (and monster templates often omit them entirely — combat defaults to 10 in that case).
 	var stats = final_stats.get("stats", {})
-	var atk = stats.get("ATK", 0)
-	var def = stats.get("DEF", 0)
-	var mag = stats.get("MAG", 0)
-	var spr = stats.get("SPR", 0)
+	var is_enemy: bool = unit_data.get("team", "") == "enemy"
+	var stat_default: int = 10 if is_enemy else 0
+	var atk = stats.get("ATK", unit_data.get("ATK", stat_default))
+	var def = stats.get("DEF", unit_data.get("DEF", stat_default))
+	var mag = stats.get("MAG", unit_data.get("MAG", stat_default))
+	var spr = stats.get("SPR", unit_data.get("SPR", stat_default))
 
 	text_content += "[b]Stats[/b]\n"
 	text_content += "ATK: %d  |  DEF: %d\n" % [atk, def]

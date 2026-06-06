@@ -42,14 +42,15 @@ func _ready() -> void:
 		if not _battle_manager.turn_changed.is_connected(_on_turn_changed):
 			_battle_manager.turn_changed.connect(_on_turn_changed)
 
-	cmd_baloon.mouse_filter = Control.MOUSE_FILTER_STOP
-	cmd_baloon.gui_input.connect(_on_cmd_baloon_input)
-
-func _on_cmd_baloon_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		info_tapped.emit(_my_index)
-	elif event is InputEventScreenTouch and not event.pressed:
-		info_tapped.emit(_my_index)
+func _exit_tree() -> void:
+	if not is_instance_valid(_battle_manager):
+		return
+	if _battle_manager.unit_stats_updated.is_connected(_on_unit_stats_updated):
+		_battle_manager.unit_stats_updated.disconnect(_on_unit_stats_updated)
+	if _battle_manager.unit_acted.is_connected(_on_unit_acted):
+		_battle_manager.unit_acted.disconnect(_on_unit_acted)
+	if _battle_manager.turn_changed.is_connected(_on_turn_changed):
+		_battle_manager.turn_changed.disconnect(_on_turn_changed)
 
 func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:
@@ -61,15 +62,6 @@ func _gui_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			_is_dragging = false
-			_drag_start_position = event.position
-		else:
-			if not _is_dragging and _is_within_tap_distance(event.position):
-				panel_tapped.emit(_my_index)
-			_is_dragging = false
-
-	elif event is InputEventScreenTouch:
 		if event.pressed:
 			_is_dragging = false
 			_drag_start_position = event.position

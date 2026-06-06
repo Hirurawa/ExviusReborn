@@ -34,6 +34,16 @@ func _ready() -> void:
 	if info_button:
 		info_button.pressed.connect(_on_info_button_pressed)
 
+func _exit_tree() -> void:
+	if not is_instance_valid(_battle_manager):
+		return
+	if _battle_manager.unit_stats_updated.is_connected(_on_unit_stats_updated):
+		_battle_manager.unit_stats_updated.disconnect(_on_unit_stats_updated)
+	if _battle_manager.unit_acted.is_connected(_on_unit_acted):
+		_battle_manager.unit_acted.disconnect(_on_unit_acted)
+	if _battle_manager.turn_changed.is_connected(_on_turn_changed):
+		_battle_manager.turn_changed.disconnect(_on_turn_changed)
+
 func _on_info_button_pressed() -> void:
 	info_tapped.emit(_my_index)
 
@@ -47,15 +57,6 @@ func _gui_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			_is_dragging = false
-			_drag_start_position = event.position
-		else:
-			if not _is_dragging and _is_within_tap_distance(event.position):
-				panel_tapped.emit(_my_index)
-			_is_dragging = false
-
-	elif event is InputEventScreenTouch:
 		if event.pressed:
 			_is_dragging = false
 			_drag_start_position = event.position

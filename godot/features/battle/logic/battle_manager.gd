@@ -22,11 +22,24 @@ enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
+## Chance (0..1) that defeating an enemy with a player attack drops a Limit Crystal
+## targeted at the attacking unit. See _try_drop_limit_crystal.
 const LIMIT_CRYSTAL_DROP_CHANCE: float = 0.20
 const LIMIT_CRYSTAL_GAIN: int = 1
-const COVER_STATE_AOE: String = "is_aoe_covering"
-const COVER_STATE_ST: String = "is_st_covering"
-const COVER_STATE_MITIGATION: String = "active_cover_mitigation"
+
+## Chain system tuning.
+## A chain breaks when more than CHAIN_BREAK_FRAME_THRESHOLD frames elapse between
+## hits on the same target, OR when the same unit hits the target consecutively.
+const CHAIN_BREAK_FRAME_THRESHOLD: int = 20
+## Hard cap on the chain counter applied to any single target.
+const MAX_CHAIN_COUNT: int = 10
+## Damage multiplier added per chain step (chain_count * step). At MAX_CHAIN_COUNT this
+## yields a 1.0 + 10*0.3 = 4.0x final multiplier.
+const CHAIN_DAMAGE_STEP: float = 0.3
+# Legacy aliases preserved for any external references; canonical names live on CoverSystem.
+const COVER_STATE_AOE: String = CoverSystem.STATE_AOE
+const COVER_STATE_ST: String = CoverSystem.STATE_ST
+const COVER_STATE_MITIGATION: String = CoverSystem.STATE_MITIGATION
 
 var action_processor
 var result_processor
@@ -51,19 +64,12 @@ var used_items: Dictionary = {}
 var challenge_results: Array[bool] = []
 
 func _ready() -> void:
-	# 1. Instantiate the script purely in code
+	# Processors are stateless logic; instantiate as RefCounted (no add_child).
+	# Keeping them out of the scene tree avoids needless per-frame iteration.
 	action_processor = preload("res://features/battle/logic/action_processor.gd").new()
 	result_processor = preload("res://features/battle/logic/result_processor.gd").new()
-	
-	# 2. Give it a name so it shows up cleanly in the debugger
-	action_processor.name = "ActionProcessor"
-	result_processor.name = "ResultProcessor"
-	
-	# 3. Add it as a child to the BattleManager
-	add_child(action_processor)
-	add_child(result_processor)
 
-func _physics_process(_delta: float) -> void:
+func _process(_delta: float) -> void:
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
 		return
 
@@ -90,18 +96,18 @@ func _physics_process(_delta: float) -> void:
 					var base_damage = damage
 
 					# Check for Chain Break
-					if frame_gap > 20 or current_attacker == target.get("last_attacker_index", -1):
+					if frame_gap > CHAIN_BREAK_FRAME_THRESHOLD or current_attacker == target.get("last_attacker_index", -1):
 						target["chain_count"] = 0
 					# Check for Chain Build
-					elif frame_gap <= 20 and current_attacker != target.get("last_attacker_index", -1):
+					elif frame_gap <= CHAIN_BREAK_FRAME_THRESHOLD and current_attacker != target.get("last_attacker_index", -1):
 						target["chain_count"] += 1
-						target["chain_count"] = min(target["chain_count"], 10)
+						target["chain_count"] = min(target["chain_count"], MAX_CHAIN_COUNT)
 
-					var chain_multiplier = 1.0 + (target["chain_count"] * 0.3)
+					var chain_multiplier = 1.0 + (target["chain_count"] * CHAIN_DAMAGE_STEP)
 					final_damage = int(base_damage * chain_multiplier)
 
 					if str(hit.get("type", "")).to_lower() == "damage":
-						final_damage = _apply_active_cover_mitigation(target, final_damage)
+						final_damage = CoverSystem.apply_active_cover_mitigation(target, final_damage)
 
 					# Update the hit amount before passing it to the ResultProcessor
 					hit["amount"] = final_damage
@@ -188,7 +194,8 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 	_grant_limit_to_unit(target_unit_index, LIMIT_CRYSTAL_GAIN)
 	limit_crystal_dropped.emit(enemy_index, target_unit_index)
 
-
+## Entry point for a new battle. Loads mission data, builds the party / first wave,
+## resets per-battle state, then emits battle_state_ready and starts the player turn.
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
@@ -249,10 +256,7 @@ func initialize_battle(mission_id: String) -> void:
 				var max_limit_gauge: int = SkillResolver.get_limitburst_max_gauge(limitburst_id)
 				battle_unit["limit_gauge"] = 0
 				battle_unit["max_limit"] = max_limit_gauge
-				battle_unit["queued_action"] = CombatAction.ATTACK
-				battle_unit["queued_action_name"] = ""
-				battle_unit["queued_action_id"] = ""
-				battle_unit["is_defending"] = false
+				_reset_unit_queued_action(battle_unit)
 
 				battle_unit["chain_count"] = 0
 				battle_unit["last_hit_frame"] = -100
@@ -302,6 +306,20 @@ func set_enemy_hp(enemy_index: int, new_hp: int) -> void:
 		pct = int((float(enemy["current_hp"]) / float(max_hp)) * 100.0)
 	enemy_hp_changed.emit(enemy_index, enemy["current_hp"], max_hp, pct)
 
+# Clears all per-turn queued action state on a unit dict in place.
+# Used by battle init, end-of-turn (PLAYER->ENEMY->PLAYER), and wave transitions.
+func _reset_unit_queued_action(unit: Dictionary) -> void:
+	unit["queued_action"] = CombatAction.ATTACK
+	unit["queued_action_name"] = ""
+	unit["queued_action_id"] = ""
+	unit.erase("queued_payload")
+	# Reset target so stale per-skill targets (e.g. self-targeting) don't bleed into the next basic attack.
+	unit["queued_target_team"] = "enemy"
+	unit["queued_target_index"] = 0
+	unit["is_defending"] = false
+
+## Records a unit's intent for the upcoming resolve. Called both from drag gestures
+## (ATTACK/DEFEND) and from menu confirms (SKILL/ITEM with action_id + payload).
 func set_queued_action(unit_index: int, new_action: CombatAction, action_name: String = "", action_id: String = "", payload: Dictionary = {}) -> void:
 	if unit_index < 0 or unit_index >= party_data.size():
 		return
@@ -346,6 +364,8 @@ func _try_spend_skill_mp(unit_index: int, unit_data: Dictionary, payload_data: D
 
 	var source_type: String = str(payload_data.get("source_type", "skill"))
 	if source_type == "limitburst":
+		unit_data["limit_gauge"] = 0
+		request_unit_stats(unit_index)
 		return true
 
 	var mp_cost: int = _extract_skill_mp_cost(skill_data)
@@ -370,7 +390,16 @@ func execute_queued_action(attacker_index: int) -> void:
 	var attacker_data: Dictionary = party_data[attacker_index] if attacker_index < party_data.size() else {}
 	if attacker_data.is_empty(): return
 	var action: int = attacker_data.get("queued_action", CombatAction.ATTACK)
-	
+
+	# Snapshot the executed action so the reload button can re-queue it on later turns.
+	attacker_data["last_action"] = action
+	attacker_data["last_action_name"] = attacker_data.get("queued_action_name", "")
+	attacker_data["last_action_id"] = attacker_data.get("queued_action_id", "")
+	var _last_payload_src: Dictionary = attacker_data.get("queued_payload", {})
+	attacker_data["last_payload"] = _last_payload_src.duplicate(true)
+	attacker_data["last_target_team"] = attacker_data.get("queued_target_team", "enemy")
+	attacker_data["last_target_index"] = attacker_data.get("queued_target_index", 0)
+
 	unit_acted.emit(attacker_index)
 
 	if action == CombatAction.DEFEND:
@@ -381,7 +410,8 @@ func execute_queued_action(attacker_index: int) -> void:
 		var action_name: String = attacker_data.get("queued_action_name", "")
 		var action_id: String = attacker_data.get("queued_action_id", "")
 		var payload_data: Dictionary = attacker_data.get("queued_payload", {})
-		print("Executing: ", action_name)
+		if OS.is_debug_build():
+			print("Executing: ", action_name)
 
 		unit_action_started.emit(attacker_index, action)
 
@@ -399,7 +429,7 @@ func execute_queued_action(attacker_index: int) -> void:
 
 		if action == CombatAction.SKILL:
 			if not _try_spend_skill_mp(attacker_index, attacker_data, payload_data, target_skill_data):
-				print("BattleManager: Not enough MP to execute skill: ", action_name)
+				push_warning("BattleManager: Not enough MP to execute skill: %s" % action_name)
 				_check_turn_progression()
 				return
 
@@ -408,7 +438,8 @@ func execute_queued_action(attacker_index: int) -> void:
 			parsed_data = resolved_action.get("parsed_data", {}) if not resolved_action.is_empty() else {}
 		if parsed_data.is_empty():
 			parsed_data = SkillResolver.parse_skill_effects(target_skill_data)
-		print("Parsed Skill/Item: ", parsed_data)
+		if OS.is_debug_build():
+			print("Parsed Skill/Item: ", parsed_data)
 
 		# queued_target_index is always a party_data index (stable slot reference)
 		var target_team: String = attacker_data.get("queued_target_team", "enemy")
@@ -456,6 +487,11 @@ func execute_queued_action(attacker_index: int) -> void:
 			if target_index < 0 or target_index >= party_data.size(): target_index = 0
 			if party_data.size() > 0: target_data = party_data[target_index]
 
+		if target_data.is_empty():
+			push_warning("execute_queued_action: ATTACK has no valid target (team=%s idx=%d)" % [target_team, target_index])
+			_check_turn_progression()
+			return
+
 		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
 		dummy_effect["attack_frames"] = attack_frames
 		dummy_effect["attack_damage"] = attack_damage
@@ -466,6 +502,12 @@ func _check_turn_progression() -> void:
 		return
 
 	check_battle_state()
+
+	# If the battle just ended (wave clear / defeat), check_battle_state() has
+	# started an async transition. Bail out so we don't fire an enemy turn against
+	# a dead wave (which caused the "last dead enemy attacks back" bug).
+	if is_transitioning:
+		return
 
 	if current_state == BattleState.PLAYER_TURN:
 		var all_acted: bool = true
@@ -489,14 +531,11 @@ func _check_turn_progression() -> void:
 		_tick_active_effect_durations(enemy_units)
 		# Transition back to PLAYER_TURN
 		player_units_acted_this_turn.clear()
+		current_battle_frame = 0  # Avoid unbounded growth and stale chain timing across turns.
 		for unit in player_units:
 			if not unit.is_empty():
-				unit["is_defending"] = false
-				unit.erase("queued_payload")
-				# Reset target so stale per-skill targets (e.g. self-targeting) don't bleed into next turn's basic attack
-				unit["queued_target_team"] = "enemy"
-				unit["queued_target_index"] = 0
-				
+				_reset_unit_queued_action(unit)
+
 		turn_count += 1
 		turn_changed.emit(turn_count)
 		current_state = BattleState.PLAYER_TURN
@@ -533,15 +572,22 @@ func _execute_enemy_turn() -> void:
 		if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
 			living_player_indices.append(i)
 
-	if living_player_indices.size() > 0:
+	# Pick the attacker from living enemies only. Previously this hardcoded
+	# index 0, so a dead enemy could still queue an attack.
+	var living_enemy_indices: Array[int] = []
+	for i in range(enemy_units.size()):
+		var e: Dictionary = enemy_units[i]
+		if not e.is_empty() and e.get("current_hp", 0) > 0:
+			living_enemy_indices.append(i)
+
+	if living_player_indices.size() > 0 and living_enemy_indices.size() > 0:
 		var random_idx: int = randi() % living_player_indices.size()
 		var target_index: int = living_player_indices[random_idx]
 		var target_unit: Dictionary = {}
 		if target_index >= 0 and target_index < player_units.size():
 			target_unit = player_units[target_index]
 
-		# Let's assume enemy index 0 for now
-		var attacker_index: int = 0
+		var attacker_index: int = living_enemy_indices[randi() % living_enemy_indices.size()]
 		
 		# Emit signal so the UI can play the attack animation
 		enemy_action_started.emit(attacker_index, CombatAction.ATTACK)
@@ -579,6 +625,8 @@ func _execute_enemy_turn() -> void:
 		dummy_effect["attack_damage"] = attack_damage
 		_queue_effect_hits(dummy_effect, caster_data, target_unit)
 
+## Re-emits unit_stats_updated for the given party slot so UI can pull fresh values
+## without holding a direct reference to party_data.
 func request_unit_stats(index: int) -> void:
 	if index < 0 or index >= party_data.size():
 		return
@@ -596,7 +644,6 @@ func request_unit_stats(index: int) -> void:
 	var max_limit: int = unit_data.get("max_limit", 100)
 
 	unit_stats_updated.emit(index, unit_name, cur_hp, max_hp, cur_mp, max_mp, cur_limit, max_limit)
-
 
 func _are_all_units_dead(team: Array) -> bool:
 	if team.size() == 0:
@@ -629,13 +676,15 @@ func check_battle_state() -> void:
 	# print("BattleManager: Both sides still standing.")
 
 func _trigger_defeat() -> void:
-	print("BattleManager: Defeat! All allies have fallen.")
+	if OS.is_debug_build():
+		print("BattleManager: Defeat! All allies have fallen.")
 	if MissionService.has_method("request_finish_mission"):
 		await MissionService.request_finish_mission(false, current_mission_id, used_items)
 	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
-	print("BattleManager: Wave %d cleared!" % current_wave)
+	if OS.is_debug_build():
+		print("BattleManager: Wave %d cleared!" % current_wave)
 
 	# 1. Wait for the death tweens to finish (0.5 to 1.0 seconds)
 	await get_tree().create_timer(1.0).timeout
@@ -652,8 +701,9 @@ func _trigger_wave_clear() -> void:
 		_spawn_next_wave()
 
 func _trigger_mission_complete() -> void:
-	print("BattleManager: Final wave cleared. Initiating mission rewards...")
-	print("Mission Drops: ", mission_drops)
+	if OS.is_debug_build():
+		print("BattleManager: Final wave cleared. Initiating mission rewards...")
+		print("Mission Drops: ", mission_drops)
 
 	if MissionService.has_method("request_finish_mission"):
 		await MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
@@ -662,7 +712,8 @@ func _trigger_mission_complete() -> void:
 
 func _spawn_next_wave() -> void:
 	current_wave += 1
-	print("BattleManager: Spawning Wave %d..." % current_wave)
+	if OS.is_debug_build():
+		print("BattleManager: Spawning Wave %d..." % current_wave)
 
 	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
 	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
@@ -676,6 +727,13 @@ func _spawn_next_wave() -> void:
 	player_units_acted_this_turn.clear()
 	current_battle_frame = 0
 	pending_hits.clear()
+
+	# Clear queued actions so previous wave's selections don't bleed into the new wave.
+	# Without this, BattleComIcon resets visually but execute_queued_action still reads
+	# the stale queued_action/queued_action_id and fires the prior ability.
+	for unit in party_data:
+		if not unit.is_empty():
+			_reset_unit_queued_action(unit)
 
 	battle_state_ready.emit()
 
@@ -727,7 +785,6 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	mission_drops.append(selected_item_id)
 	item_dropped.emit(enemy_index, selected_item_id)
 
-
 func _build_monster_spawn_pool(mission_data: Dictionary, dungeon_data: Dictionary) -> Array:
 	var mission_monsters: Variant = mission_data.get("monsters", [])
 	var dungeon_monsters: Variant = dungeon_data.get("monsters", [])
@@ -777,14 +834,9 @@ func _spawn_enemies_for_wave(mission_data: Dictionary, dungeon_data: Dictionary)
 			fully_hydrated_enemy["index"] = enemy_units.size()
 			enemy_units.append(fully_hydrated_enemy)
 
-
 # Helper function to grab only living units
 static func _get_living_units(team_array: Array) -> Array[Dictionary]:
-	var living: Array[Dictionary] = []
-	for unit in team_array:
-		if not unit.is_empty() and unit.get("current_hp", 0) > 0:
-			living.append(unit)
-	return living
+	return TargetResolver.get_living_units(team_array)
 
 func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, primary_target: Dictionary) -> Array[Dictionary]:
 	var is_player_caster: bool = caster.get("team", "") == "player"
@@ -792,38 +844,7 @@ func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, pr
 	# For player casters, allies are all party_data slots (stable indices, includes empty/dead slots).
 	var enemy_pool: Array = enemy_units if is_player_caster else player_units
 	var ally_pool: Array = party_data if is_player_caster else enemy_units
-
-	# TYPE 3: SELF
-	if target_type == 3:
-		return [caster]
-
-	# TYPE 1: ENEMY (opposing team) - never target dead enemies
-	if target_type == 1:
-		var living_enemies: Array[Dictionary] = _get_living_units(enemy_pool)
-		if living_enemies.is_empty(): return [] # Win condition safety
-
-		if target_area == 2: # AOE
-			return living_enemies
-		else: # Single Target
-			if primary_target.get("current_hp", 0) > 0:
-				return [primary_target]
-			else:
-				return [living_enemies[0]] # Fallback to first alive if target died
-
-	# TYPE 2: ALLY (own team)
-	if target_type in [2, 6]:
-		if target_area == 2: # AOE - living allies only
-			var living_allies: Array[Dictionary] = _get_living_units(ally_pool)
-			if living_allies.is_empty(): return []
-			return living_allies
-		else: # Single Target - dead allies are valid targets (e.g. revive)
-			if not primary_target.is_empty():
-				return [primary_target]
-			else:
-				return [caster]
-
-	# Fallback catch-all
-	return []
+	return TargetResolver.resolve(target_area, target_type, caster, primary_target, enemy_pool, ally_pool)
 
 func _queue_effect_hits(effect: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var actual_targets: Array[Dictionary] = _resolve_targets(
@@ -834,7 +855,7 @@ func _queue_effect_hits(effect: Dictionary, caster: Dictionary, primary_target: 
 	)
 
 	if effect.get("target_type", 1) == 1:
-		actual_targets = _evaluate_cover_interception(actual_targets, effect, _get_defending_pool(caster))
+		actual_targets = CoverSystem.evaluate_interception(actual_targets, effect, _get_defending_pool(caster))
 
 	var hit_payloads: Array[Dictionary] = action_processor.execute_parsed_effect(effect, caster, actual_targets)
 	for hit in hit_payloads:
@@ -847,202 +868,14 @@ func _get_defending_pool(caster: Dictionary) -> Array:
 	var caster_team: String = str(caster.get("team", "")).to_lower()
 	return player_units if caster_team == "enemy" else enemy_units
 
-func _is_cover_interceptable_effect(effect: Dictionary) -> bool:
-	var effect_type: String = str(effect.get("type", "")).to_lower()
-	return effect_type in ["physical_damage", "magic_damage"]
-
-func _ensure_transient_turn_state(unit: Dictionary) -> Dictionary:
-	var transient: Dictionary = unit.get("transient_turn_state", {})
-	if transient.is_empty():
-		transient = {}
-		unit["transient_turn_state"] = transient
-	return transient
-
-func _find_active_aoe_coverer(defending_pool: Array) -> Dictionary:
-	for unit_data in defending_pool:
-		var unit: Dictionary = unit_data
-		if unit.is_empty() or int(unit.get("current_hp", 0)) <= 0:
-			continue
-		var transient: Dictionary = unit.get("transient_turn_state", {})
-		if bool(transient.get(COVER_STATE_AOE, false)):
-			return unit
-	return {}
-
-func _cover_supports_effect_type(cover_effect: Dictionary, incoming_effect_type: String) -> bool:
-	var effect_type: String = incoming_effect_type.to_lower()
-	if effect_type not in ["physical_damage", "magic_damage"]:
-		return false
-
-	var params: Dictionary = cover_effect.get("params", {})
-	var phys_mag_mode = params.get("phys_mag", "both")
-
-	if typeof(phys_mag_mode) == TYPE_STRING:
-		var mode_text: String = str(phys_mag_mode).to_lower()
-		if mode_text in ["physical", "phys"]:
-			return effect_type == "physical_damage"
-		if mode_text in ["magic", "mag"]:
-			return effect_type == "magic_damage"
-		return true
-
-	if typeof(phys_mag_mode) in [TYPE_INT, TYPE_FLOAT]:
-		var mode_id: int = int(phys_mag_mode)
-		if mode_id == 1:
-			return effect_type == "physical_damage"
-		if mode_id == 2:
-			return effect_type == "magic_damage"
-
-	return true
-
-func _get_best_aoe_cover_effect(defender: Dictionary, incoming_effect_type: String) -> Dictionary:
-	var best_effect: Dictionary = {}
-	var best_chance: float = -1.0
-
-	for active_effect_data in defender.get("active_effects", []):
-		var active_effect: Dictionary = active_effect_data
-		if str(active_effect.get("type", "")).to_lower() != "aoe_cover":
-			continue
-		if not _cover_supports_effect_type(active_effect, incoming_effect_type):
-			continue
-
-		var chance: float = clampf(float(active_effect.get("params", {}).get("pct_chance", 0.0)), 0.0, 100.0)
-		if chance > best_chance:
-			best_chance = chance
-			best_effect = active_effect
-
-	return best_effect
-
-func _is_unit_currently_st_covered(unit: Dictionary, defending_pool: Array) -> bool:
-	var unit_identity: String = str(unit.get("identity", ""))
-	if unit_identity == "":
-		return false
-
-	for other_data in defending_pool:
-		var other: Dictionary = other_data
-		if other == unit:
-			continue
-		if other.is_empty() or int(other.get("current_hp", 0)) <= 0:
-			continue
-		var transient: Dictionary = other.get("transient_turn_state", {})
-		if str(transient.get(COVER_STATE_ST, "")) == unit_identity:
-			return true
-
-	return false
-
-func _flag_cover_mitigation(defender: Dictionary, cover_effect: Dictionary) -> void:
-	var transient: Dictionary = _ensure_transient_turn_state(defender)
-	var params: Dictionary = cover_effect.get("params", {})
-
-	var mitigation_min: int = int(params.get("dmg_reduce_min", 0))
-	var mitigation_max: int = int(params.get("dmg_reduce_max", mitigation_min))
-
-	if mitigation_max < mitigation_min:
-		var swap_value: int = mitigation_min
-		mitigation_min = mitigation_max
-		mitigation_max = swap_value
-
-	mitigation_min = clampi(mitigation_min, 0, 100)
-	mitigation_max = clampi(mitigation_max, 0, 100)
-
-	var rolled_mitigation: int = mitigation_min
-	if mitigation_max > mitigation_min:
-		rolled_mitigation = (randi() % ((mitigation_max - mitigation_min) + 1)) + mitigation_min
-
-	transient[COVER_STATE_MITIGATION] = rolled_mitigation
-	defender["transient_turn_state"] = transient
-
-func _apply_active_cover_mitigation(target: Dictionary, incoming_damage: int) -> int:
-	if incoming_damage <= 0:
-		return incoming_damage
-
-	var transient: Dictionary = target.get("transient_turn_state", {})
-	if transient.is_empty() or not transient.has(COVER_STATE_MITIGATION):
-		return incoming_damage
-
-	var mitigation_pct: int = clampi(int(transient.get(COVER_STATE_MITIGATION, 0)), 0, 100)
-	var mitigated_damage: int = int(round(float(incoming_damage) * (100.0 - float(mitigation_pct)) / 100.0))
-	return maxi(0, mitigated_damage)
-
-func _evaluate_cover_interception(intended_targets: Array[Dictionary], effect: Dictionary, defending_pool: Array) -> Array[Dictionary]:
-	if intended_targets.is_empty():
-		return intended_targets
-	if not _is_cover_interceptable_effect(effect):
-		return intended_targets
-
-	var active_aoe_coverer: Dictionary = _find_active_aoe_coverer(defending_pool)
-	if not active_aoe_coverer.is_empty():
-		var already_covered_targets: Array[Dictionary] = []
-		for i in range(intended_targets.size()):
-			already_covered_targets.append(active_aoe_coverer)
-		return already_covered_targets
-
-	var incoming_effect_type: String = str(effect.get("type", "")).to_lower()
-
-	for defender_data in defending_pool:
-		var defender: Dictionary = defender_data
-		if defender.is_empty() or int(defender.get("current_hp", 0)) <= 0:
-			continue
-		if _is_unit_currently_st_covered(defender, defending_pool):
-			continue
-
-		var cover_effect: Dictionary = _get_best_aoe_cover_effect(defender, incoming_effect_type)
-		if cover_effect.is_empty():
-			continue
-
-		var allies_in_danger: int = 0
-		for target in intended_targets:
-			if target != defender:
-				allies_in_danger += 1
-
-		if allies_in_danger <= 0:
-			continue
-
-		var chance: float = clampf(float(cover_effect.get("params", {}).get("pct_chance", 0.0)), 0.0, 100.0)
-		if chance <= 0.0:
-			continue
-
-		var procced: bool = false
-		for i in range(allies_in_danger):
-			if randf() * 100.0 < chance:
-				procced = true
-				break
-
-		if not procced:
-			continue
-
-		var transient: Dictionary = _ensure_transient_turn_state(defender)
-		transient[COVER_STATE_AOE] = true
-		defender["transient_turn_state"] = transient
-		_flag_cover_mitigation(defender, cover_effect)
-
-		var covered_targets: Array[Dictionary] = []
-		for i in range(intended_targets.size()):
-			covered_targets.append(defender)
-		return covered_targets
-
-	return intended_targets
-
-func _clear_cover_transient_state(defending_pool: Array) -> void:
-	for unit_data in defending_pool:
-		var unit: Dictionary = unit_data
-		if unit.is_empty():
-			continue
-		var transient: Dictionary = unit.get("transient_turn_state", {})
-		if transient.is_empty():
-			continue
-
-		transient.erase(COVER_STATE_AOE)
-		transient.erase(COVER_STATE_ST)
-		transient.erase(COVER_STATE_MITIGATION)
-
-		if transient.is_empty():
-			unit.erase("transient_turn_state")
-		else:
-			unit["transient_turn_state"] = transient
-
 func _on_turn_end(active_team: String) -> void:
 	var defending_pool: Array = player_units if active_team.to_lower() == "enemy" else enemy_units
-	_clear_cover_transient_state(defending_pool)
+	CoverSystem.clear_transient_state(defending_pool)
 
+## Executes a parsed skill against a primary target.
+## target_area: 1 = single target, 2 = AOE.
+## target_type: 1 = enemy, 2/6 = ally, 3 = self.
+## Resolves the actual target list via TargetResolver, then queues per-effect hits.
 func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var effects = parsed_skill.get("effects", [])
 

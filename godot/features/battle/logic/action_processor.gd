@@ -61,6 +61,7 @@ func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targe
 
 	for target in targets:
 		var target_stats = target.get("final_stats", target)
+		target_stats = target_stats.get("stats", target_stats)
 		var ATK = _get_stat_safe(caster_stats, "ATK", 10)
 		var DEF = _get_stat_safe(target_stats, "DEF", 10)
 
@@ -82,6 +83,7 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 
 	for target in targets:
 		var target_stats = target.get("final_stats", target)
+		target_stats = target_stats.get("stats", target_stats)
 		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
 		var SPR = _get_stat_safe(target_stats, "SPR", 10)
 			

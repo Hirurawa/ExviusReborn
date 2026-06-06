@@ -1,6 +1,7 @@
 extends Control
 
 const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
+const TargetArrowTexture: Texture2D = preload("res://assets/ui/common/mini_arrow_b.tres")
 const MagicScene = preload("res://features/shared/Skill.tscn")
 const LIMIT_CRYSTAL_TEXTURE: Texture2D = preload("res://assets/ui/battle/battle_limit_crystal.png")
 const LIMIT_CRYSTAL_ANIM_DURATION: float = 0.7
@@ -32,6 +33,11 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var unit_info_popup: Control = %UnitInfoPopup
 @onready var background: TextureRect = $Background
 @onready var monster_hp_bar: Sprite2D = $BattleEnemyHpBar1
+@onready var action_feedback_label: Label = %ActionFeedbackLabel
+@onready var reload_button: TextureButton = %ReloadButtonDecor
+
+const ACTION_FEEDBACK_DURATION: float = 1.5
+var _action_feedback_token: int = 0
 
 var _texture_cache: Dictionary = {}
 var _hit_flash: ColorRect
@@ -47,7 +53,8 @@ var _menu_tween: Tween
 var _is_dragging_menu: bool = false
 var _menu_drag_start_position: Vector2
 
-var combat_inventory: Dictionary = {}
+var combat_inventory: CombatInventory = CombatInventory.new()
+var _damage_numbers: DamageNumberSpawner
 
 var _is_ally_targeting_mode: bool = false
 var _pending_skill_action_id: String = ""
@@ -63,6 +70,12 @@ func _get_dynamic_texture(path: String) -> Texture2D:
 	_texture_cache[path] = tex
 	return tex
 
+func _exit_tree() -> void:
+	# Prevent unbounded memory growth across repeated battle entries.
+	_texture_cache.clear()
+	if _damage_numbers:
+		_damage_numbers.clear_pool()
+
 func _ready() -> void:
 	finish_button.pressed.connect(_on_finish_pressed)
 	rewards_popup.confirmed.connect(_on_rewards_confirmed)
@@ -76,6 +89,10 @@ func _ready() -> void:
 	battle_manager.item_dropped.connect(_on_item_dropped)
 	battle_manager.limit_crystal_dropped.connect(_on_limit_crystal_dropped)
 	battle_manager.item_refunded.connect(_on_item_refunded)
+	battle_manager.unit_action_started.connect(_on_unit_action_started_feedback)
+	battle_manager.enemy_action_started.connect(_on_enemy_action_started_feedback)
+
+	reload_button.pressed.connect(_on_reload_pressed)
 
 	MissionService.mission_completed.connect(_on_mission_completed)
 	battle_manager.mission_failed.connect(_on_mission_failed)
@@ -90,6 +107,7 @@ func _ready() -> void:
 
 	_setup_action_menu()
 	_setup_cancel_target_button()
+	_damage_numbers = DamageNumberSpawner.new(self)
 	_init_combat_inventory()
 
 func _enter_ally_selection_state(action_type: int, action_name: String, action_id: String, action_payload: Dictionary = {}) -> void:
@@ -107,24 +125,7 @@ func _enter_ally_selection_state(action_type: int, action_name: String, action_i
 		p.modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
 
 func _init_combat_inventory() -> void:
-	combat_inventory.clear()
-	var stackables: Dictionary = InventoryService.owned_items.get("stackables", {})
-	var selected_slots: Array = CombatItemsService.combat_items
-
-	for slot_value in selected_slots:
-		var item_id: String = str(slot_value)
-		if item_id == "":
-			continue
-
-		var quantity: int = int(stackables.get(item_id, 0))
-		if quantity <= 0:
-			continue
-		if not StaticData.game_data_items.has(item_id):
-			continue
-
-		var item_data: Dictionary = StaticData.game_data_items[item_id]
-		if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
-			combat_inventory[item_id] = quantity
+	combat_inventory.reload_from_services()
 
 func _exit_ally_selection_state() -> void:
 	_is_ally_targeting_mode = false
@@ -156,9 +157,8 @@ func _queue_resolved_action(unit_index: int, action_type: int, action_name: Stri
 	if resolution.get("source_type", "") == "item":
 		var original_item_id: String = str(resolution.get("original_item_id", ""))
 		if should_consume_item:
-			if not combat_inventory.has(original_item_id) or combat_inventory[original_item_id] <= 0:
+			if not combat_inventory.consume(original_item_id):
 				return false
-			combat_inventory[original_item_id] -= 1
 
 		action_payload["is_item"] = true
 		action_payload["original_item_id"] = original_item_id
@@ -309,8 +309,8 @@ func _open_item_menu(unit_index: int) -> void:
 
 	var options: Array = []
 
-	for item_id in combat_inventory.keys():
-		var quantity: int = combat_inventory[item_id]
+	for item_id in combat_inventory.entries().keys():
+		var quantity: int = combat_inventory.quantity(item_id)
 		if quantity > 0 and StaticData.game_data_items.has(item_id):
 			var item_data: Dictionary = StaticData.game_data_items[item_id]
 			var item_name: String = item_data.get("name", "Unknown Item")
@@ -596,9 +596,13 @@ func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String
 	if ResourceLoader.exists(bg_path):
 		background.texture = load(bg_path)
 	else:
-		print("CombatUI: Background not found at ", bg_path)
+		push_warning("CombatUI: Background not found at %s" % bg_path)
 
 func init_scene(params: Dictionary) -> void:
+	# Yield one frame so any caller-side loading overlay can render before we
+	# start synchronous data work (dataset eviction, mission lookup, sprite
+	# allocation). This keeps the UI responsive on battle entry.
+	await get_tree().process_frame
 	# Free outgame-only static data (worlds, towns, summon boards, equip icons,
 	# pattern tables) before combat allocates its own atlases/animations. Datasets
 	# transparently re-load lazily if they're touched again later. Safe to call
@@ -657,7 +661,7 @@ func _on_battle_state_ready() -> void:
 		enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 		wrapper.add_child(enemy_sprite)
-		enemy_sprite.setup(i, monster_id, true)
+		enemy_sprite.setup(i, monster_id, true, battle_manager)
 
 		var damage_container = Control.new()
 		damage_container.name = "DamageContainer"
@@ -665,13 +669,31 @@ func _on_battle_state_ready() -> void:
 		damage_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		wrapper.add_child(damage_container)
 
+		var target_arrow := TextureRect.new()
+		target_arrow.name = "TargetArrow"
+		target_arrow.texture = TargetArrowTexture
+		target_arrow.custom_minimum_size = Vector2(48, 28)
+		target_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		target_arrow.anchor_left = 0.5
+		target_arrow.anchor_right = 0.5
+		target_arrow.anchor_top = 0.0
+		target_arrow.anchor_bottom = 0.0
+		target_arrow.offset_left = -24
+		target_arrow.offset_right = 24
+		target_arrow.offset_top = -32
+		target_arrow.offset_bottom = -4
+		target_arrow.visible = (i == 0)
+		wrapper.add_child(target_arrow)
+
 		var is_staggered = (i % 2 != 0)
 		if is_staggered:
 			enemy_sprite.position.x += 30
 			damage_container.position.x += 30
+			target_arrow.position.x += 30
 
-		# Connect click input for targeting
-		enemy_sprite.gui_input.connect(Callable(self, "_on_enemy_clicked").bind(i))
+		# Connect click input for targeting (short tap) and info popup (long press)
+		enemy_sprite.short_tapped.connect(_on_enemy_short_tapped)
+		enemy_sprite.long_pressed.connect(_on_enemy_long_pressed)
 
 	# Initialize top bar to target the first enemy (index 0) if it exists
 	if battle_manager.enemy_units.size() > 0:
@@ -734,7 +756,8 @@ func _on_battle_state_ready() -> void:
 			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 			combat_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
-			combat_sprite.setup(party_idx, template_id)
+			combat_sprite.setup(party_idx, template_id, false, battle_manager)
+			combat_sprite.long_pressed.connect(_on_unit_info_tapped)
 
 			player_sprites_container.get_child(grid_idx).add_child(combat_sprite)
 
@@ -808,11 +831,51 @@ func _on_enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent
 			if wrapper.get_child_count() > 0:
 				var enemy_sprite = wrapper.get_child(0)
 				_play_enemy_death(enemy_sprite)
+			var arrow := wrapper.get_node_or_null("TargetArrow")
+			if arrow:
+				arrow.visible = false
+
+		# If the dead enemy was the current target, advance the UI to the next
+		# living enemy so the HP gauge and target arrow match what attacks will
+		# actually hit (battle_manager._resolve_targets falls back to the first
+		# living enemy when the queued target is dead).
+		if enemy_index == _current_target_enemy_index:
+			var next_index: int = _find_first_living_enemy_index()
+			if next_index >= 0:
+				_set_current_target_enemy(next_index)
+
+func _find_first_living_enemy_index() -> int:
+	for i in range(battle_manager.enemy_units.size()):
+		var enemy_data: Dictionary = battle_manager.enemy_units[i]
+		if enemy_data.get("current_hp", 0) > 0:
+			return i
+	return -1
+
+func _set_current_target_enemy(enemy_index: int) -> void:
+	if enemy_index < 0 or enemy_index >= battle_manager.enemy_units.size():
+		return
+
+	_current_target_enemy_index = enemy_index
+
+	# Apply this target to all player units (mirrors _on_enemy_clicked).
+	for i in range(battle_manager.party_data.size()):
+		var unit_data = battle_manager.party_data[i]
+		if not unit_data.is_empty():
+			unit_data["queued_target_team"] = "enemy"
+			unit_data["queued_target_index"] = enemy_index
+
+	# Refresh info bar (name + HP gauge) for the new target.
+	var enemy_data: Dictionary = battle_manager.enemy_units[enemy_index]
+	enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
+	battle_manager.set_enemy_hp(enemy_index, enemy_data.get("current_hp", 0))
+
+	_refresh_target_arrow()
 
 func _on_unit_info_tapped(unit_index: int) -> void:
 	if unit_index >= 0 and unit_index < battle_manager.party_data.size():
 		var unit_data = battle_manager.party_data[unit_index]
 		unit_info_popup.setup(unit_data)
+		unit_info_popup.move_to_front()
 		unit_info_popup.show()
 
 func _on_panel_tapped(unit_index: int) -> void:
@@ -840,28 +903,48 @@ func _on_panel_tapped(unit_index: int) -> void:
 		# Normal execution
 		battle_manager.execute_queued_action(unit_index)
 
-func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _is_ally_targeting_mode:
-			_exit_ally_selection_state()
-			return
+func _on_enemy_short_tapped(enemy_index: int) -> void:
+	if _is_ally_targeting_mode:
+		_exit_ally_selection_state()
+		return
 
+	if OS.is_debug_build():
 		print("Enemy tapped! Global target set to index: ", enemy_index)
 
-		_current_target_enemy_index = enemy_index
+	_current_target_enemy_index = enemy_index
 
-		# Apply this target to all player units
-		for i in range(battle_manager.party_data.size()):
-			var unit_data = battle_manager.party_data[i]
-			if not unit_data.is_empty():
-				unit_data["queued_target_team"] = "enemy"
-				unit_data["queued_target_index"] = enemy_index
+	# Apply this target to all player units
+	for i in range(battle_manager.party_data.size()):
+		var unit_data = battle_manager.party_data[i]
+		if not unit_data.is_empty():
+			unit_data["queued_target_team"] = "enemy"
+			unit_data["queued_target_index"] = enemy_index
 
-		# Update info bar with newly targeted enemy
-		if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
-			var enemy_data = battle_manager.enemy_units[enemy_index]
-			enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
-			battle_manager.set_enemy_hp(enemy_index, enemy_data.get("current_hp", 0))
+	# Update info bar with newly targeted enemy
+	if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
+		var enemy_data = battle_manager.enemy_units[enemy_index]
+		enemy_name_label.text = enemy_data.get("name", "Unknown Monster")
+		battle_manager.set_enemy_hp(enemy_index, enemy_data.get("current_hp", 0))
+
+	_refresh_target_arrow()
+
+func _on_enemy_long_pressed(enemy_index: int) -> void:
+	if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
+		var enemy_data = battle_manager.enemy_units[enemy_index]
+		unit_info_popup.setup(enemy_data)
+		unit_info_popup.move_to_front()
+		unit_info_popup.show()
+
+func _on_enemy_clicked(event: InputEvent, enemy_index: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_on_enemy_short_tapped(enemy_index)
+
+func _refresh_target_arrow() -> void:
+	for i in range(enemies_container.get_child_count()):
+		var wrapper := enemies_container.get_child(i)
+		var arrow := wrapper.get_node_or_null("TargetArrow")
+		if arrow:
+			arrow.visible = (i == _current_target_enemy_index)
 
 func _shake_enemy(enemy_node: Node) -> void:
 	# Ensure we don't overlap tweens if hit rapidly
@@ -911,7 +994,7 @@ func _spawn_damage_number(damage: int, target_index: int) -> void:
 	var damage_container = wrapper.get_node_or_null("DamageContainer")
 	if not damage_container:
 		return
-	_spawn_damage_number_in_container(damage, damage_container)
+	_damage_numbers.spawn(damage, damage_container)
 
 func _spawn_player_damage_number(damage: int, party_index: int) -> void:
 	if party_index < 0:
@@ -921,7 +1004,7 @@ func _spawn_player_damage_number(damage: int, party_index: int) -> void:
 	if damage_container == null:
 		return
 
-	_spawn_damage_number_in_container(damage, damage_container)
+	_damage_numbers.spawn(damage, damage_container)
 
 func _find_player_damage_container(party_index: int) -> Control:
 	for grid_idx in range(min(player_sprites_container.get_child_count(), GRID_TO_PARTY_MAP.size())):
@@ -938,42 +1021,6 @@ func _find_player_damage_container(party_index: int) -> Control:
 		return damage_container
 		break
 	return null
-
-func _spawn_damage_number_in_container(damage: int, damage_container: Control) -> void:
-
-	var label = Label.new()
-	label.text = str(damage)
-	# Set appearance
-	label.add_theme_font_size_override("font_size", 32)
-	label.add_theme_color_override("font_color", Color(1, 0.2, 0.2)) # Red damage color
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	label.add_theme_constant_override("outline_size", 4)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.set_anchors_preset(Control.PRESET_FULL_RECT)
-
-	# To ensure we push up by a known amount, we'll estimate or read the label size
-	# But Label size isn't immediately known before drawing, so we use a fixed offset.
-	var push_amount = 40.0
-
-	# Move existing labels up
-	for child in damage_container.get_children():
-		if child is Label:
-			var move_tween = create_tween()
-			move_tween.tween_property(child, "position:y", child.position.y - push_amount, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	# Add new label at bottom
-	damage_container.add_child(label)
-	label.position = Vector2.ZERO
-
-	# Animate the new label
-	# We want it to fade out over 1 second and then delete itself.
-	# We'll use a Tween that runs for 1 second, fading the alpha to 0.
-	var fade_tween = create_tween()
-	fade_tween.tween_property(label, "modulate:a", 0.0, 1.0).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
-	fade_tween.finished.connect(func():
-		label.queue_free()
-	)
 
 func _on_turn_changed(new_turn: int) -> void:
 	turn_label.text = "Turn %d" % new_turn
@@ -1020,10 +1067,7 @@ func _play_wave_one_intro(total_waves: int) -> void:
 	tween.tween_callback(transition_ui.hide)
 
 func _on_item_refunded(item_id: String) -> void:
-	if combat_inventory.has(item_id):
-		combat_inventory[item_id] += 1
-	else:
-		combat_inventory[item_id] = 1
+	combat_inventory.refund(item_id)
 
 	if _current_open_menu == "ITEM":
 		_open_item_menu(_menu_target_unit_index)
@@ -1113,6 +1157,11 @@ func _on_limit_crystal_dropped(enemy_index: int, target_unit_index: int) -> void
 	tween.tween_callback(crystal_sprite.queue_free)
 
 func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: int) -> void:
+	# Defensive: if the player was mid-skill-targeting when the wave cleared,
+	# drop pending targeting state so it can't leak into the next wave.
+	if _is_ally_targeting_mode:
+		_exit_ally_selection_state()
+
 	# Setup the labels
 	var transition_ui = %TransitionUI
 	var current_num = transition_ui.get_node("HBox/NumberMask/CurrentNum")
@@ -1158,10 +1207,98 @@ func _on_mission_completed(rewards_text: String = "") -> void:
 	rewards_popup.popup_centered()
 
 func _on_mission_failed(error_msg: String = "") -> void:
-	print("Failed to complete mission: ", error_msg)
+	push_error("Failed to complete mission: %s" % error_msg)
 	AudioService.play_music("res://assets/audio/bgm/la009_battleend.wav", false)
 	rewards_popup.dialog_text = "Mission Failed!"
 	rewards_popup.popup_centered()
 
 func _on_rewards_confirmed() -> void:
 	UIManager.pop()
+
+func _on_unit_action_started_feedback(unit_index: int, action: int) -> void:
+	var text: String = ""
+	match action:
+		battle_manager.CombatAction.ATTACK:
+			text = "Attack"
+		battle_manager.CombatAction.DEFEND:
+			text = "Defend"
+		battle_manager.CombatAction.SKILL, battle_manager.CombatAction.ITEM:
+			if unit_index >= 0 and unit_index < battle_manager.party_data.size():
+				var unit: Dictionary = battle_manager.party_data[unit_index]
+				text = str(unit.get("queued_action_name", ""))
+			if text == "":
+				text = "Skill" if action == battle_manager.CombatAction.SKILL else "Item"
+	if text != "":
+		var unit_name: String = ""
+		if unit_index >= 0 and unit_index < battle_manager.party_data.size():
+			unit_name = str(battle_manager.party_data[unit_index].get("name", ""))
+		if unit_name != "":
+			text = "%s - %s" % [unit_name, text]
+		_show_action_feedback(text)
+
+func _on_enemy_action_started_feedback(enemy_index: int, _action: int) -> void:
+	var text: String = "Enemy attacks"
+	if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
+		var enemy: Dictionary = battle_manager.enemy_units[enemy_index]
+		var name: String = str(enemy.get("name", ""))
+		if name != "":
+			text = "%s attacks" % name
+	_show_action_feedback(text)
+
+func _show_action_feedback(text: String) -> void:
+	if action_feedback_label == null:
+		return
+	action_feedback_label.text = text
+	action_feedback_label.visible = true
+	action_feedback_label.modulate.a = 1.0
+	_action_feedback_token += 1
+	var token: int = _action_feedback_token
+	await get_tree().create_timer(ACTION_FEEDBACK_DURATION).timeout
+	if token == _action_feedback_token and action_feedback_label != null:
+		action_feedback_label.visible = false
+
+func _on_reload_pressed() -> void:
+	if _is_ally_targeting_mode:
+		return
+	if battle_manager.current_state != battle_manager.BattleState.PLAYER_TURN:
+		return
+
+	var acted: Array = battle_manager.player_units_acted_this_turn
+	var requeued_any: bool = false
+
+	for unit_index in range(battle_manager.party_data.size()):
+		if unit_index in acted:
+			continue
+		var unit_data: Dictionary = battle_manager.party_data[unit_index]
+		if unit_data.is_empty():
+			continue
+		if int(unit_data.get("current_hp", 0)) <= 0:
+			continue
+		if not unit_data.has("last_action"):
+			continue
+
+		var last_action: int = int(unit_data.get("last_action", battle_manager.CombatAction.ATTACK))
+		var last_name: String = str(unit_data.get("last_action_name", ""))
+		var last_id: String = str(unit_data.get("last_action_id", ""))
+		var last_payload_src: Dictionary = unit_data.get("last_payload", {})
+		var last_payload: Dictionary = last_payload_src.duplicate(true)
+		var last_target_team: String = str(unit_data.get("last_target_team", "enemy"))
+		var last_target_index: int = int(unit_data.get("last_target_index", 0))
+
+		# Items: only repeat if we still have at least one in the combat inventory; consume one now.
+		if last_action == battle_manager.CombatAction.ITEM:
+			var item_id: String = str(last_payload.get("original_item_id", ""))
+			if item_id == "":
+				continue
+			if not combat_inventory.consume(item_id):
+				continue
+
+		battle_manager.set_queued_action(unit_index, last_action, last_name, last_id, last_payload)
+		unit_data["queued_target_team"] = last_target_team
+		unit_data["queued_target_index"] = last_target_index
+		requeued_any = true
+
+	if requeued_any:
+		for p in _active_panels:
+			p.update_action_visuals()
+		_show_action_feedback("Reload last actions")

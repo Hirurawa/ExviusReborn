@@ -14,6 +14,7 @@ config/name="ExviusReborn"
 run/main_scene="uid://b785keqddokby"
 config/features=PackedStringArray("4.6", "Forward Plus")
 run/flush_stdout_on_print=true
+run/max_fps=240
 config/icon="uid://b3vn2d3jyqs7p"
 
 [autoload]

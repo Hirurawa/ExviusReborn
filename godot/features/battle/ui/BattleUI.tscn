@@ -11,12 +11,16 @@
 [ext_resource type="Texture2D" uid="uid://dbxly1tkl57rt" path="res://assets/ui/battle/battle_summon_bar.tres" id="8_ebndp"]
 [ext_resource type="Texture2D" uid="uid://758l4gko0axu" path="res://assets/ui/battle/battle_com_memory_btn1.tres" id="9_memory_btn"]
 [ext_resource type="Texture2D" uid="uid://chf6c26j4khh" path="res://assets/ui/battle/battle_com_menu_btn1.tres" id="10_menu_btn"]
+[ext_resource type="Texture2D" uid="uid://w5yyot4xwxwt" path="res://assets/ui/battle/battle_com_auto_btn2.tres" id="11_3l5rm"]
 [ext_resource type="Texture2D" uid="uid://bw4t1ihyfbfm1" path="res://assets/ui/battle/battle_gaugebg.tres" id="11_summon_bg"]
 [ext_resource type="Texture2D" uid="uid://ddp473bv0h4bs" path="res://assets/ui/battle/battle_summon_gauge.tres" id="12_summon_fill"]
+[ext_resource type="Texture2D" uid="uid://cmhuf6j5ymmhf" path="res://assets/ui/battle/battle_com_memory_btn2.tres" id="12_tdefo"]
 [ext_resource type="Texture2D" uid="uid://djy7ch8eas7na" path="res://assets/ui/battle/battle_com_reload_btn1.tres" id="12_wwlun"]
 [ext_resource type="Texture2D" uid="uid://bjmms2xio563p" path="res://assets/ui/battle/battle_bg_enemy.tres" id="13_hl17h"]
+[ext_resource type="Texture2D" uid="uid://c88r88c1d3t3y" path="res://assets/ui/battle/battle_com_reload_btn2.tres" id="13_yi0rw"]
 [ext_resource type="Texture2D" uid="uid://cdpixjjnnbkjw" path="res://assets/ui/battle/battle_enemy_hp_bar1.tres" id="14_ebndp"]
 [ext_resource type="Texture2D" uid="uid://cyifnjpf1mkx5" path="res://assets/ui/battle/battle_enemy_hp_gauge.tres" id="14_snfla"]
+[ext_resource type="Texture2D" uid="uid://cr4r1rijeygpb" path="res://assets/ui/battle/battle_com_menu_btn2.tres" id="16_3l5rm"]
 
 [node name="BattleUI" type="Control" unique_id=993553313]
 layout_mode = 3
@@ -175,36 +179,38 @@ grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="AutoButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=642913203]
+[node name="AutoButtonDecor" type="TextureButton" parent="VisualLayer/CommandButtons" unique_id=2099406144]
 layout_mode = 0
 offset_right = 164.0
 offset_bottom = 80.0
-texture = ExtResource("8_auto_btn")
-expand_mode = 1
+texture_normal = ExtResource("8_auto_btn")
+texture_pressed = ExtResource("11_3l5rm")
 
-[node name="MemoryButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=927617625]
+[node name="MemoryButtonDecor" type="TextureButton" parent="VisualLayer/CommandButtons" unique_id=1775203524]
 layout_mode = 0
 offset_left = 156.0
 offset_right = 320.0
 offset_bottom = 80.0
-texture = ExtResource("9_memory_btn")
-expand_mode = 1
+texture_normal = ExtResource("9_memory_btn")
+texture_pressed = ExtResource("12_tdefo")
 
-[node name="ReloadButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=205012880]
+[node name="ReloadButtonDecor" type="TextureButton" parent="VisualLayer/CommandButtons" unique_id=910191936]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 313.0
 offset_right = 478.0
 offset_bottom = 80.0
-texture = ExtResource("12_wwlun")
+texture_normal = ExtResource("12_wwlun")
+texture_pressed = ExtResource("13_yi0rw")
 
-[node name="MenuButtonDecor" type="TextureRect" parent="VisualLayer/CommandButtons" unique_id=2132310257]
+[node name="MenuButtonDecor" type="TextureButton" parent="VisualLayer/CommandButtons" unique_id=2041781837]
 layout_mode = 0
 offset_left = 472.0
 offset_top = -4.0
 offset_right = 640.0
 offset_bottom = 84.0
-texture = ExtResource("10_menu_btn")
-expand_mode = 1
+texture_normal = ExtResource("10_menu_btn")
+texture_pressed = ExtResource("16_3l5rm")
 
 [node name="MainLayout" type="VBoxContainer" parent="." unique_id=1977068219]
 layout_mode = 1
@@ -214,7 +220,7 @@ anchor_bottom = 1.0
 offset_left = 10.0
 offset_top = 10.0
 offset_right = -10.0
-offset_bottom = -495.0
+offset_bottom = -510.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
@@ -279,6 +285,7 @@ layout_mode = 2
 text = "Enemy Name"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo" unique_id=1593568957]
+visible = false
 layout_mode = 2
 
 [node name="EnemyHPBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EnemyInfo/HBoxContainer" unique_id=1210531152]
@@ -293,6 +300,7 @@ layout_mode = 2
 text = "100%"
 
 [node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=183465724]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -303,6 +311,22 @@ text = "Esper Gauge"
 [node name="EsperBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=891301653]
 layout_mode = 2
 size_flags_vertical = 4
+
+[node name="ActionFeedbackLabel" type="Label" parent="." unique_id=1730845001]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 4.0
+offset_bottom = 44.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 0.4, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BottomUIWrapper" type="Control" parent="." unique_id=809296941]
 unique_name_in_owner = true

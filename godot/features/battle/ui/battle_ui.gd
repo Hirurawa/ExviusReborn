@@ -77,6 +77,11 @@ func _exit_tree() -> void:
 		_damage_numbers.clear_pool()
 
 func _ready() -> void:
+	# Block the Android hardware back button / Escape key during combat — the
+	# scene has its own retreat/menu flow and accidental backing out would
+	# desync battle state.
+	set_meta("block_back_request", true)
+
 	finish_button.pressed.connect(_on_finish_pressed)
 	rewards_popup.confirmed.connect(_on_rewards_confirmed)
 

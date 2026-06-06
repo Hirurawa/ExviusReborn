@@ -31,10 +31,13 @@ const LIMIT_CRYSTAL_GAIN: int = 1
 ## A chain breaks when more than CHAIN_BREAK_FRAME_THRESHOLD frames elapse between
 ## hits on the same target, OR when the same unit hits the target consecutively.
 const CHAIN_BREAK_FRAME_THRESHOLD: int = 20
-## Hard cap on the chain counter applied to any single target.
-const MAX_CHAIN_COUNT: int = 10
-## Damage multiplier added per chain step (chain_count * step). At MAX_CHAIN_COUNT this
-## yields a 1.0 + 10*0.3 = 4.0x final multiplier.
+## Maximum number of chain steps that contribute to the damage multiplier. The
+## chain counter itself is uncapped and keeps incrementing for display purposes;
+## only the multiplier contribution saturates here.
+const MAX_CHAIN_MULTIPLIER_STEPS: int = 10
+## Damage multiplier added per chain step (effective_steps * step). At
+## MAX_CHAIN_MULTIPLIER_STEPS this yields a 1.0 + 10*0.3 = 4.0x final multiplier,
+## and stays at 4.0x for any higher chain count.
 const CHAIN_DAMAGE_STEP: float = 0.3
 # Legacy aliases preserved for any external references; canonical names live on CoverSystem.
 const COVER_STATE_AOE: String = CoverSystem.STATE_AOE
@@ -98,12 +101,12 @@ func _process(_delta: float) -> void:
 					# Check for Chain Break
 					if frame_gap > CHAIN_BREAK_FRAME_THRESHOLD or current_attacker == target.get("last_attacker_index", -1):
 						target["chain_count"] = 0
-					# Check for Chain Build
+					# Check for Chain Build (counter is unbounded; multiplier saturates below).
 					elif frame_gap <= CHAIN_BREAK_FRAME_THRESHOLD and current_attacker != target.get("last_attacker_index", -1):
 						target["chain_count"] += 1
-						target["chain_count"] = min(target["chain_count"], MAX_CHAIN_COUNT)
 
-					var chain_multiplier = 1.0 + (target["chain_count"] * CHAIN_DAMAGE_STEP)
+					var effective_steps: int = min(target["chain_count"], MAX_CHAIN_MULTIPLIER_STEPS)
+					var chain_multiplier = 1.0 + (effective_steps * CHAIN_DAMAGE_STEP)
 					final_damage = int(base_damage * chain_multiplier)
 
 					if str(hit.get("type", "")).to_lower() == "damage":

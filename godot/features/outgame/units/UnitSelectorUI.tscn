@@ -77,6 +77,33 @@ offset_bottom = 42.0
 focus_mode = 0
 alignment = 1
 
+[node name="SearchBar" type="Control" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 0)
+clip_contents = true
+mouse_filter = 1
+
+[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchBar"]
+layout_mode = 1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = -120.0
+offset_bottom = 48.0
+placeholder_text = "Filter by name"
+caret_blink = true
+
+[node name="ClearButton" type="Button" parent="VBoxContainer/SearchBar"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = 48.0
+focus_mode = 0
+text = "Clear"
+
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1874225308]
 layout_mode = 2
 size_flags_vertical = 3

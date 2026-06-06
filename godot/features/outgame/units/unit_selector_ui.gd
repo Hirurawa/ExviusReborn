@@ -7,6 +7,9 @@ const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 @onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
 @onready var sort_option_button: OptionButton = $VBoxContainer/UnitNamebgChara/SortOptionButton
+@onready var search_bar: Control = $VBoxContainer/SearchBar
+@onready var search_input: LineEdit = $VBoxContainer/SearchBar/SearchInput
+@onready var search_clear_button: Button = $VBoxContainer/SearchBar/ClearButton
 
 @onready var back_button: TextureButton = $VBoxContainer/UnitNamebgChara/BackButton
 
@@ -53,6 +56,12 @@ const SORT_CONFIG_PATH: String = "user://unit_selector_sort.cfg"
 const SORT_CONFIG_SECTION: String = "unit_selector"
 const SORT_CONFIG_KEY: String = "sort_mode"
 
+const SEARCH_BAR_EXPANDED_H: float = 56.0
+const PULL_REVEAL_THRESHOLD_PX: float = 40.0
+const PULL_COLLAPSE_THRESHOLD_PX: float = 40.0
+const REVEAL_TWEEN_TIME: float = 0.18
+const SEARCH_DEBOUNCE_SEC: float = 0.15
+
 var _exclude_instance_id_set: Dictionary = {}
 var _selected_units_map: Dictionary = {}
 var _material_checkboxes: Dictionary = {}
@@ -62,6 +71,11 @@ var _has_received_init_params: bool = false
 var _has_rendered_once: bool = false
 var _refresh_scheduled: bool = false
 var _last_effective_cell_width: int = -1
+var _search_query: String = ""
+var _search_bar_expanded: bool = false
+var _pull_accumulator: float = 0.0
+var _search_debounce_timer: Timer = null
+var _search_reveal_tween: Tween = null
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _shared_texture_cache.has(path):
@@ -157,6 +171,7 @@ func _ready() -> void:
 	units_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	units_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	_setup_sort_dropdown()
+	_setup_search_bar()
 	
 	back_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	back_button.pressed.connect(_on_back_pressed)
@@ -171,6 +186,7 @@ func _ready() -> void:
 	_configure_vertical_scrollbar()
 	units_list_container.columns = GRID_COLUMNS
 	units_scroll_container.resized.connect(_on_scroll_metrics_changed)
+	units_scroll_container.gui_input.connect(_on_scroll_gui_input)
 	UnitService.units_updated.connect(_on_units_updated)
 	call_deferred("_refresh_after_ready_without_params")
 
@@ -239,7 +255,10 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 
 	if sorted_units.is_empty():
 		var empty_label := Label.new()
-		empty_label.text = "No units owned."
+		if _search_query != "":
+			empty_label.text = "No units match '%s'." % _search_query
+		else:
+			empty_label.text = "No units owned."
 		units_list_container.add_child(empty_label)
 		return
 
@@ -418,11 +437,152 @@ static func _persist_sort_mode(mode: String) -> void:
 	config.set_value(SORT_CONFIG_SECTION, SORT_CONFIG_KEY, mode)
 	config.save(SORT_CONFIG_PATH)
 
+func _setup_search_bar() -> void:
+	if search_bar == null:
+		return
+
+	search_bar.custom_minimum_size = Vector2(search_bar.custom_minimum_size.x, 0.0)
+	search_bar.mouse_filter = Control.MOUSE_FILTER_PASS
+	_search_bar_expanded = false
+	_pull_accumulator = 0.0
+	_search_query = ""
+
+	if search_input != null:
+		search_input.text = ""
+		search_input.placeholder_text = "Filter by name"
+		if not search_input.text_changed.is_connected(_on_search_text_changed):
+			search_input.text_changed.connect(_on_search_text_changed)
+		if not search_input.text_submitted.is_connected(_on_search_text_submitted):
+			search_input.text_submitted.connect(_on_search_text_submitted)
+
+	if search_clear_button != null:
+		if not search_clear_button.pressed.is_connected(_on_search_clear_pressed):
+			search_clear_button.pressed.connect(_on_search_clear_pressed)
+
+	if _search_debounce_timer == null:
+		_search_debounce_timer = Timer.new()
+		_search_debounce_timer.one_shot = true
+		_search_debounce_timer.wait_time = SEARCH_DEBOUNCE_SEC
+		_search_debounce_timer.timeout.connect(_apply_search_query)
+		add_child(_search_debounce_timer)
+
+func _on_scroll_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
+			_pull_accumulator = 0.0
+	elif event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if not st.pressed:
+			_pull_accumulator = 0.0
+	elif event is InputEventMouseMotion:
+		var mm := event as InputEventMouseMotion
+		if mm.button_mask & MOUSE_BUTTON_MASK_LEFT:
+			_process_pull_delta(mm.relative.y)
+	elif event is InputEventScreenDrag:
+		var sd := event as InputEventScreenDrag
+		_process_pull_delta(sd.relative.y)
+
+func _process_pull_delta(delta_y: float) -> void:
+	if units_scroll_container == null:
+		return
+	if units_scroll_container.scroll_vertical > 0:
+		_pull_accumulator = 0.0
+		return
+
+	if not _search_bar_expanded:
+		if delta_y > 0.0:
+			_pull_accumulator += delta_y
+			if _pull_accumulator >= PULL_REVEAL_THRESHOLD_PX:
+				_pull_accumulator = 0.0
+				_expand_search_bar()
+		else:
+			_pull_accumulator = 0.0
+		return
+
+	if _search_query != "":
+		_pull_accumulator = 0.0
+		return
+
+	if delta_y < 0.0:
+		_pull_accumulator += -delta_y
+		if _pull_accumulator >= PULL_COLLAPSE_THRESHOLD_PX:
+			_pull_accumulator = 0.0
+			_collapse_search_bar()
+	else:
+		_pull_accumulator = 0.0
+
+func _expand_search_bar() -> void:
+	if _search_bar_expanded or search_bar == null:
+		return
+	_search_bar_expanded = true
+	_tween_search_bar_height(SEARCH_BAR_EXPANDED_H, Tween.EASE_OUT)
+	if search_input != null:
+		search_input.grab_focus()
+
+func _collapse_search_bar() -> void:
+	if not _search_bar_expanded or search_bar == null:
+		return
+	_search_bar_expanded = false
+	if search_input != null:
+		search_input.release_focus()
+	_tween_search_bar_height(0.0, Tween.EASE_IN)
+
+func _tween_search_bar_height(target_h: float, ease_mode: int) -> void:
+	if _search_reveal_tween != null and _search_reveal_tween.is_running():
+		_search_reveal_tween.kill()
+	_search_reveal_tween = create_tween()
+	_search_reveal_tween.tween_property(
+		search_bar,
+		"custom_minimum_size:y",
+		target_h,
+		REVEAL_TWEEN_TIME
+	).set_trans(Tween.TRANS_SINE).set_ease(ease_mode)
+
+func _on_search_text_changed(_new_text: String) -> void:
+	if _search_debounce_timer != null:
+		_search_debounce_timer.start()
+
+func _on_search_text_submitted(_new_text: String) -> void:
+	if _search_debounce_timer != null:
+		_search_debounce_timer.stop()
+	_apply_search_query()
+
+func _on_search_clear_pressed() -> void:
+	if search_input == null:
+		return
+	if search_input.text == "" and _search_query == "":
+		return
+	search_input.text = ""
+	if _search_debounce_timer != null:
+		_search_debounce_timer.stop()
+	if _search_query != "":
+		_search_query = ""
+		_request_units_list_refresh()
+
+func _apply_search_query() -> void:
+	if search_input == null:
+		return
+	var normalized: String = search_input.text.strip_edges().to_lower()
+	if normalized == _search_query:
+		return
+	_search_query = normalized
+	_request_units_list_refresh()
+
+func _unit_matches_search_query(unit_inst: Dictionary) -> bool:
+	if _search_query == "":
+		return true
+	var display_name: String = _get_unit_display_name(unit_inst)
+	return display_name.find(_search_query) != -1
+
 func _sort_units_for_display(owned_units_ids: Array) -> Array:
 	var sorted_units: Array = []
 	for unit_inst in owned_units_ids:
-		if unit_inst is Dictionary:
-			sorted_units.append(unit_inst)
+		if not (unit_inst is Dictionary):
+			continue
+		if _search_query != "" and not _unit_matches_search_query(unit_inst):
+			continue
+		sorted_units.append(unit_inst)
 
 	if _current_sort_mode != SORT_DEFAULT:
 		sorted_units.sort_custom(_compare_units_for_sort_mode)

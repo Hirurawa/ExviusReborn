@@ -42,7 +42,7 @@ layout_mode = 2
 
 [node name="PerformSummonButton" type="Button" parent="VBoxContainer/SummonButtonsRow" unique_id=216101240]
 layout_mode = 2
-text = "Summon 3 Units"
+text = "Summon 10+1 Units"
 
 [node name="GetCactuarButton" type="Button" parent="VBoxContainer/SummonButtonsRow"]
 layout_mode = 2

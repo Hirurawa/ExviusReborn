@@ -1,12 +1,13 @@
 extends PanelContainer
 
-signal buy_requested(item_id: String, type: String)
+signal buy_requested(item_id: String, type: String, quantity: int)
 
 @onready var icon_rect: TextureRect = $HBoxContainer/IconRect
 @onready var name_label: Label = $HBoxContainer/VBoxContainer/NameLabel
 @onready var desc_label: Label = $HBoxContainer/VBoxContainer/DescLabel
 @onready var price_label: Label = $HBoxContainer/VBoxContainer2/PriceLabel
-@onready var buy_button: Button = $HBoxContainer/VBoxContainer2/BuyButton
+@onready var buy_button: Button = $HBoxContainer/VBoxContainer2/HBoxContainer/BuyButton
+@onready var buy_ten_button: Button = $HBoxContainer/VBoxContainer2/HBoxContainer/BuyTenButton
 
 var _item_id: String
 var _type: String
@@ -22,6 +23,7 @@ func _get_dynamic_texture(path: String) -> Texture2D:
 
 func _ready() -> void:
 	buy_button.pressed.connect(_on_buy_pressed)
+	buy_ten_button.pressed.connect(_on_buy_ten_pressed)
 
 func setup(id: String, data: Dictionary, type: String) -> void:
 	_item_id = id
@@ -52,4 +54,7 @@ func setup(id: String, data: Dictionary, type: String) -> void:
 				icon_rect.texture = equip_tex
 
 func _on_buy_pressed() -> void:
-	buy_requested.emit(_item_id, _type)
+	buy_requested.emit(_item_id, _type, 1)
+
+func _on_buy_ten_pressed() -> void:
+	buy_requested.emit(_item_id, _type, 10)

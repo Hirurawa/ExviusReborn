@@ -253,8 +253,8 @@ func _apply_search_query() -> void:
 	_search_query = normalized
 	_populate_for_current_tab()
 
-func _on_buy_requested(id: String, type: String) -> void:
-	InventoryService.request_buy_item(id, 1)
+func _on_buy_requested(id: String, type: String, quantity: int) -> void:
+	InventoryService.request_buy_item(id, quantity)
 
 func _on_purchase_successful() -> void:
 	shop_feedback_label.text = "Item purchased successfully!"

@@ -36,6 +36,8 @@ const EXP_UNIT_JOB_ID: int = 901
 const TRUST_MATERIAL_JOB_ID: int = 903
 
 const SORT_DEFAULT: String = "default"
+const SORT_NEWEST: String = "newest"
+const SORT_OLDEST: String = "oldest"
 const SORT_NAME_ASC: String = "name_asc"
 const SORT_NAME_DESC: String = "name_desc"
 const SORT_LEVEL_ASC: String = "level_asc"
@@ -383,6 +385,8 @@ func _setup_sort_dropdown() -> void:
 	_current_sort_mode = _load_persisted_sort_mode()
 	sort_option_button.clear()
 	_add_sort_option("Sort: Default", SORT_DEFAULT)
+	_add_sort_option("Newest First", SORT_NEWEST)
+	_add_sort_option("Oldest First", SORT_OLDEST)
 	_add_sort_option("Name A->Z", SORT_NAME_ASC)
 	_add_sort_option("Name Z->A", SORT_NAME_DESC)
 	_add_sort_option("Level Low->High", SORT_LEVEL_ASC)
@@ -584,8 +588,15 @@ func _sort_units_for_display(owned_units_ids: Array) -> Array:
 			continue
 		sorted_units.append(unit_inst)
 
-	if _current_sort_mode != SORT_DEFAULT:
-		sorted_units.sort_custom(_compare_units_for_sort_mode)
+	# owned_units_ids preserves acquisition order (new units are appended), so
+	# the filtered array is already oldest-first. Newest-first simply reverses it.
+	match _current_sort_mode:
+		SORT_DEFAULT, SORT_OLDEST:
+			pass
+		SORT_NEWEST:
+			sorted_units.reverse()
+		_:
+			sorted_units.sort_custom(_compare_units_for_sort_mode)
 
 	if mode == "awaken_base_selection":
 		var awakenable: Array = []

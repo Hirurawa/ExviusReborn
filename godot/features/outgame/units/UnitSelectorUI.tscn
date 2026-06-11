@@ -77,6 +77,15 @@ offset_bottom = 42.0
 focus_mode = 0
 alignment = 1
 
+[node name="SellButton" type="Button" parent="VBoxContainer/UnitNamebgChara" unique_id=1472100002]
+layout_mode = 0
+offset_left = 452.0
+offset_top = 48.0
+offset_right = 620.0
+offset_bottom = 80.0
+focus_mode = 0
+text = "Sell"
+
 [node name="SearchBar" type="Control" parent="VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 0)

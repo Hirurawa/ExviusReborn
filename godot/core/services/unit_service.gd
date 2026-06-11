@@ -20,6 +20,7 @@ const STARTER_LASSWELL_INSTANCE_ID: String = "starter_100000202"
 
 const ENHANCE_MAX_TRUST_VALUE: float = 100.0
 const ENHANCE_GIL_COST_PER_MATERIAL: int = 1000
+const SELL_GIL_PER_UNIT: int = 1000
 const ENHANCE_BASE_XP_GAIN: int = 100
 const ENHANCE_XP_PER_RARITY: int = 100
 const ENHANCE_XP_PER_LEVEL: int = 20
@@ -487,6 +488,60 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		"enhanced_unit": updated_base_unit
 	}
 	return response
+
+func sell_units(instance_ids: Array) -> Dictionary:
+	if instance_ids == null or instance_ids.is_empty():
+		return {"success": false, "error": "No units selected to sell"}
+
+	var sell_id_set: Dictionary = {}
+	for id_value in instance_ids:
+		var instance_id: String = str(id_value)
+		if instance_id == "":
+			return {"success": false, "error": "All unit ids must be non-empty strings"}
+		if sell_id_set.has(instance_id):
+			return {"success": false, "error": "Duplicate unit ids are not allowed"}
+		sell_id_set[instance_id] = true
+
+	for instance_id in sell_id_set.keys():
+		var sell_unit: Dictionary = {}
+		var found_unit: bool = false
+		for unit_value in owned_units_ids:
+			if unit_value is Dictionary and str(unit_value.get("instance_id", "")) == instance_id:
+				sell_unit = unit_value
+				found_unit = true
+				break
+		if not found_unit:
+			return {"success": false, "error": "Ownership check failed for one or more units"}
+		if bool(sell_unit.get("is_locked", false)):
+			return {"success": false, "error": "One or more units are locked"}
+		if PartyService.is_unit_assigned_to_any_party(instance_id):
+			return {"success": false, "error": "One or more units are assigned to a party"}
+
+	var filtered_units: Array = []
+	for unit_value in owned_units_ids:
+		if unit_value is Dictionary:
+			var instance_id: String = str(unit_value.get("instance_id", ""))
+			if sell_id_set.has(instance_id):
+				continue
+		filtered_units.append(unit_value)
+
+	var sold_count: int = sell_id_set.size()
+	var gil_gained: int = sold_count * SELL_GIL_PER_UNIT
+
+	owned_units_ids = _hydrate_owned_units(filtered_units)
+	PlayerProfile.gil = max(0, PlayerProfile.gil + gil_gained)
+
+	emit_updated()
+	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "sell_units")
+	PlayerProfile.save_snapshot("sell_units")
+
+	return {
+		"success": true,
+		"sold_count": sold_count,
+		"gil_gained": gil_gained,
+		"sold_instance_ids": sell_id_set.keys()
+	}
 
 func request_equip_item(instance_id: String, slot_id: String, item_id: String, allow_transfer: bool = false) -> void:
 	if item_id != "" and not InventoryService.equipment_instance_exists(item_id):

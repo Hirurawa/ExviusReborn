@@ -7,6 +7,7 @@ const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 @onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer
 @onready var sort_option_button: OptionButton = $VBoxContainer/UnitNamebgChara/SortOptionButton
+@onready var sell_button: Button = $VBoxContainer/UnitNamebgChara/SellButton
 @onready var search_bar: Control = $VBoxContainer/SearchBar
 @onready var search_input: LineEdit = $VBoxContainer/SearchBar/SearchInput
 @onready var search_clear_button: Button = $VBoxContainer/SearchBar/ClearButton
@@ -69,6 +70,9 @@ var _selected_units_map: Dictionary = {}
 var _material_checkboxes: Dictionary = {}
 var _suppress_checkbox_signal: bool = false
 var _current_sort_mode: String = SORT_DEFAULT
+var _sell_mode_active: bool = false
+var _pending_sell_ids: Array = []
+var _sell_confirm_dialog: ConfirmationDialog = null
 var _has_received_init_params: bool = false
 var _has_rendered_once: bool = false
 var _refresh_scheduled: bool = false
@@ -183,6 +187,10 @@ func _ready() -> void:
 
 	confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	confirm_button.pressed.connect(_on_confirm_material_selection)
+
+	if sell_button != null:
+		sell_button.mouse_filter = Control.MOUSE_FILTER_STOP
+		sell_button.pressed.connect(_on_sell_toggle_pressed)
 	
 	_update_mode_ui()
 	_configure_vertical_scrollbar()
@@ -218,8 +226,14 @@ func _update_mode_ui() -> void:
 		return
 
 	# Always show action row in selector modes
-	var selector_mode: bool = mode == "select" or mode == "enhance_material_selection"
+	var selector_mode: bool = mode == "select" or mode == "enhance_material_selection" or _sell_mode_active
 	action_row.visible = selector_mode
+
+	if _sell_mode_active:
+		title_label.text = "Select Units to Sell"
+
+	if sell_button != null:
+		sell_button.visible = mode == "view"
 
 func _on_clear_material_selection() -> void:
 	_selected_units_map.clear()
@@ -276,7 +290,8 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
 		var is_disabled_max_trust_material: bool = _is_max_trust_playable_material(unit_inst)
 		var is_disabled_max_rarity_awaken: bool = mode == "awaken_base_selection" and _is_at_max_rarity(unit_inst)
-		if is_disabled_max_trust_material:
+		var is_disabled_sell_blocked: bool = _is_unit_sell_blocked(unit_inst)
+		if is_disabled_max_trust_material or is_disabled_sell_blocked:
 			_selected_units_map.erase(unit_instance_id)
 		
 		# Keep five columns and shrink cell width only when viewport is tight.
@@ -333,8 +348,12 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			click_btn.disabled = true
 			click_btn.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 			click_btn.tooltip_text = "Already at max rarity"
+		elif is_disabled_sell_blocked:
+			click_btn.disabled = true
+			click_btn.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
+			click_btn.tooltip_text = "Locked or in-party units cannot be sold"
 		container.add_child(click_btn)
-		if is_disabled_max_trust_material or is_disabled_max_rarity_awaken:
+		if is_disabled_max_trust_material or is_disabled_max_rarity_awaken or is_disabled_sell_blocked:
 			container.modulate = Color(1.0, 1.0, 1.0, 0.45)
 
 		if is_disabled_max_rarity_awaken:
@@ -349,7 +368,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			max_badge.z_index = 30
 			container.add_child(max_badge)
 
-		if mode == "enhance_material_selection":
+		if _is_multi_select_active():
 			var check_box: CheckBox = CheckBox.new()
 			check_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 			check_box.position = Vector2(4, 4)
@@ -357,9 +376,11 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			check_box.mouse_filter = Control.MOUSE_FILTER_STOP
 			var checked: bool = _selected_units_map.has(unit_instance_id)
 			_set_checkbox_state(check_box, checked)
-			check_box.disabled = is_disabled_max_trust_material
+			check_box.disabled = is_disabled_max_trust_material or is_disabled_sell_blocked
 			if is_disabled_max_trust_material:
 				check_box.tooltip_text = "Cannot use a playable unit at 100% trust as enhancement material"
+			elif is_disabled_sell_blocked:
+				check_box.tooltip_text = "Locked or in-party units cannot be sold"
 			check_box.toggled.connect(_on_material_checkbox_toggled.bind(unit_inst))
 			container.add_child(check_box)
 			_material_checkboxes[unit_instance_id] = check_box
@@ -732,7 +753,7 @@ func _apply_material_toggle(unit_inst: Dictionary, checked: bool) -> void:
 	var instance_id: String = str(unit_inst.get("instance_id", ""))
 	if instance_id == "":
 		return
-	if _is_max_trust_playable_material(unit_inst):
+	if _is_max_trust_playable_material(unit_inst) or _is_unit_sell_blocked(unit_inst):
 		_selected_units_map.erase(instance_id)
 		var check_box: CheckBox = _material_checkboxes.get(instance_id, null) as CheckBox
 		if check_box != null:
@@ -742,7 +763,7 @@ func _apply_material_toggle(unit_inst: Dictionary, checked: bool) -> void:
 	if checked:
 		if _selected_units_map.has(instance_id):
 			return
-		if _selected_units_map.size() >= MAX_MATERIAL_SELECTION:
+		if not _sell_mode_active and _selected_units_map.size() >= MAX_MATERIAL_SELECTION:
 			var check_box: CheckBox = _material_checkboxes.get(instance_id, null) as CheckBox
 			if check_box != null:
 				_set_checkbox_state(check_box, false)
@@ -753,6 +774,9 @@ func _apply_material_toggle(unit_inst: Dictionary, checked: bool) -> void:
 	_selected_units_map.erase(instance_id)
 
 func _on_confirm_material_selection() -> void:
+	if _sell_mode_active:
+		_on_confirm_sell()
+		return
 	if mode != "enhance_material_selection":
 		return
 
@@ -770,6 +794,84 @@ func _on_confirm_material_selection() -> void:
 	materials_selected.emit(ordered_selection)
 	if selection_callback.is_valid():
 		selection_callback.call(ordered_selection)
+
+func _is_multi_select_active() -> bool:
+	return mode == "enhance_material_selection" or _sell_mode_active
+
+func _is_unit_sell_blocked(unit_inst: Dictionary) -> bool:
+	if not _sell_mode_active:
+		return false
+	if bool(unit_inst.get("is_locked", false)):
+		return true
+	var instance_id: String = str(unit_inst.get("instance_id", ""))
+	if instance_id == "":
+		return true
+	return PartyService.is_unit_assigned_to_any_party(instance_id)
+
+func _on_sell_toggle_pressed() -> void:
+	if _sell_mode_active:
+		_exit_sell_mode()
+	else:
+		_enter_sell_mode()
+
+func _enter_sell_mode() -> void:
+	if mode != "view":
+		return
+	_sell_mode_active = true
+	_selected_units_map.clear()
+	if sell_button != null:
+		sell_button.text = "Cancel"
+	_update_mode_ui()
+	_request_units_list_refresh()
+
+func _exit_sell_mode() -> void:
+	_sell_mode_active = false
+	_selected_units_map.clear()
+	_pending_sell_ids.clear()
+	if sell_button != null:
+		sell_button.text = "Sell"
+	if title_label != null:
+		title_label.text = "View Units"
+	_update_mode_ui()
+	_request_units_list_refresh()
+
+func _on_confirm_sell() -> void:
+	var ordered_selection: Array = []
+	for entry in UnitService.owned_units_ids:
+		if not (entry is Dictionary):
+			continue
+		var instance_id: String = str(entry.get("instance_id", ""))
+		if instance_id == "":
+			continue
+		if _selected_units_map.has(instance_id):
+			ordered_selection.append(instance_id)
+
+	if ordered_selection.is_empty():
+		return
+
+	_pending_sell_ids = ordered_selection
+	var total_gil: int = ordered_selection.size() * UnitService.SELL_GIL_PER_UNIT
+	var dialog: ConfirmationDialog = _ensure_sell_confirm_dialog()
+	dialog.dialog_text = "Sell %d unit(s) for %d gil?" % [ordered_selection.size(), total_gil]
+	dialog.popup_centered()
+
+func _ensure_sell_confirm_dialog() -> ConfirmationDialog:
+	if _sell_confirm_dialog == null:
+		_sell_confirm_dialog = ConfirmationDialog.new()
+		_sell_confirm_dialog.title = "Sell Units"
+		_sell_confirm_dialog.confirmed.connect(_on_sell_confirmed)
+		add_child(_sell_confirm_dialog)
+	return _sell_confirm_dialog
+
+func _on_sell_confirmed() -> void:
+	if _pending_sell_ids.is_empty():
+		return
+	var ids: Array = _pending_sell_ids.duplicate()
+	_pending_sell_ids.clear()
+	var result: Dictionary = UnitService.sell_units(ids)
+	if not bool(result.get("success", false)):
+		return
+	_exit_sell_mode()
 
 func _on_scroll_metrics_changed() -> void:
 	_configure_vertical_scrollbar()
@@ -805,6 +907,17 @@ func _get_effective_cell_width() -> int:
 	return maxi(1, mini(UNIT_CELL_W, fitted_cell_width))
 
 func _on_unit_clicked(unit_inst: Dictionary) -> void:
+	if _sell_mode_active:
+		if _is_unit_sell_blocked(unit_inst):
+			return
+		var sell_instance_id: String = str(unit_inst.get("instance_id", ""))
+		var sell_check_box: CheckBox = _material_checkboxes.get(sell_instance_id, null) as CheckBox
+		if sell_check_box == null:
+			return
+		var sell_next_state: bool = not sell_check_box.button_pressed
+		_set_checkbox_state(sell_check_box, sell_next_state)
+		_apply_material_toggle(unit_inst, sell_next_state)
+		return
 	if mode == "view":
 		UIManager.push("unit_detail_ui", {"unit_inst": unit_inst})
 	elif mode == "select":

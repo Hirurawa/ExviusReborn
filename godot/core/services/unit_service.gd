@@ -354,7 +354,7 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	InventoryService.emit_updated()
 	Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "awaken_unit")
 
-	return {"success": true}
+	return {"success": true, "unit": get_owned_unit(instance_id)}
 
 func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Array) -> Dictionary:
 	if base_unit_instance_id == "":
@@ -715,6 +715,12 @@ func _clear_item_from_unit(unit_instance_id: String, item_id: String) -> void:
 			unit["equipment"] = equipment
 		return
 	
+func get_owned_unit(instance_id: String) -> Dictionary:
+	for candidate in owned_units_ids:
+		if candidate is Dictionary and str(candidate.get("instance_id", "")) == instance_id:
+			return (candidate as Dictionary).duplicate(true)
+	return {}
+
 func get_entry_id(unit_inst: Dictionary) -> String:
 	"""Return the rarity-specific entry id for asset resolution (illustrations, icons, spritesheets).
 	Falls back to the template unit_id when the hydrated entry_id is missing."""

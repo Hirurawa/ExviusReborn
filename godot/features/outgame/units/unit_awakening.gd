@@ -287,18 +287,14 @@ func _refresh_button_state() -> void:
 			result_text_label.text = reason
 			result_text_label.visible = reason != ""
 
-func _fetch_fresh_unit_instance(instance_id: String) -> Dictionary:
-	for unit_value in UnitService.owned_units_ids:
-		if unit_value is Dictionary and str(unit_value.get("instance_id", "")) == instance_id:
-			return (unit_value as Dictionary).duplicate(true)
-	return base_unit_inst.duplicate(true)
-
 func _on_awaken_pressed() -> void:
 	if base_unit_instance_id == "":
 		return
 	var response: Dictionary = UnitService.awaken_unit(base_unit_instance_id)
 	if bool(response.get("success", false)):
-		base_unit_inst = _fetch_fresh_unit_instance(base_unit_instance_id)
+		var updated_unit: Variant = response.get("unit")
+		if updated_unit is Dictionary and not (updated_unit as Dictionary).is_empty():
+			base_unit_inst = updated_unit as Dictionary
 		_refresh_before_visual()
 		_show_result_popup("Awakening successful!")
 	else:

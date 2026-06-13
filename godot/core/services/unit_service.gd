@@ -87,6 +87,7 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 		exp_pattern = 5
 	var next_xp_required: int = _calculate_xp_for_level_local(1, exp_pattern)
 	if next_xp_required <= 0:
+		push_warning("build_starter_unit: no XP row for level 2 in exp pattern %d; using fallback" % exp_pattern)
 		next_xp_required = 1000
 
 	return {
@@ -251,6 +252,58 @@ func can_awaken_unit(instance_id: String) -> Dictionary:
 		"reason": str(eval.get("reason", "")),
 	}
 
+func predict_level_after_awakening(unit: Dictionary) -> int:
+	var unit_id: String = str(unit.get("unit_id", ""))
+	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var old_rarity: int = int(unit.get("current_rarity", 1))
+	var old_level: int = int(unit.get("level", 1))
+	var new_rarity: int = old_rarity + 1
+	var progression: Dictionary = _resolve_awakening_progression(
+		unit, unit_data, old_rarity, old_level, new_rarity)
+	return int(progression.get("level", 1))
+
+func _resolve_awakening_progression(
+		unit: Dictionary,
+		unit_data: Dictionary,
+		old_rarity: int,
+		old_level: int,
+		new_rarity: int) -> Dictionary:
+	# Regular awakenings reset to level 1; 6★→7★ preserves level (+1 when at cap).
+	if old_rarity == 6 and new_rarity == 7:
+		var max_six: int = int(StatCalculator.RARITY_MAX_LEVELS.get(6, 100))
+		var new_level: int = old_level + 1 if old_level >= max_six else old_level
+		var unit_id: String = str(unit.get("unit_id", ""))
+		var exp_pattern: int = _get_raw_unit_exp_pattern(unit_id, unit_data, new_rarity)
+		if exp_pattern <= 0:
+			exp_pattern = 5
+		var xp: int = _calculate_total_xp_for_level_local(new_level, exp_pattern)
+		return {"level": new_level, "xp": xp}
+
+	return {"level": 1, "xp": 0}
+
+func _apply_seven_star_awaken_level_floor(
+		unit_index: int,
+		old_rarity: int,
+		old_level: int,
+		new_rarity: int) -> void:
+	if unit_index < 0 or old_rarity != 6 or new_rarity != 7:
+		return
+
+	var max_six: int = int(StatCalculator.RARITY_MAX_LEVELS.get(6, 100))
+	if old_level < max_six:
+		return
+
+	var unit: Dictionary = owned_units_ids[unit_index]
+	var min_level: int = old_level + 1
+	if int(unit.get("level", 1)) >= min_level:
+		return
+
+	unit["level"] = min_level
+	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit.get("unit_id", "")), {})
+	_update_unit_next_xp_local(unit, unit_data)
+	unit["final_stats"] = StatCalculator.calculate_final_stats(unit)
+	owned_units_ids[unit_index] = unit
+
 func awaken_unit(instance_id: String) -> Dictionary:
 	var eval: Dictionary = _evaluate_awakening_requirements(instance_id)
 	if not bool(eval.get("ok", false)):
@@ -274,13 +327,24 @@ func awaken_unit(instance_id: String) -> Dictionary:
 		var owned: int = int(stackables.get(item_id, 0))
 		stackables[item_id] = max(0, owned - required)
 
-	# Bump rarity.
+	# Bump rarity and apply FFBE awakening level/XP rules.
 	var unit: Dictionary = owned_units_ids[unit_index]
-	unit["current_rarity"] = int(unit.get("current_rarity", 1)) + 1
+	var old_rarity: int = int(unit.get("current_rarity", 1))
+	var old_level: int = int(unit.get("level", 1))
+	var new_rarity: int = old_rarity + 1
+	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit.get("unit_id", "")), {})
+
+	unit["current_rarity"] = new_rarity
+	var progression: Dictionary = _resolve_awakening_progression(
+		unit, unit_data, old_rarity, old_level, new_rarity)
+	unit["level"] = int(progression.get("level", 1))
+	# FFBE: 6★→7★ becomes level 101 with fresh 7★ XP baseline; excess 6★ XP is not carried over.
+	unit["xp"] = int(progression.get("xp", 0))
 	owned_units_ids[unit_index] = unit
 
 	# Persist + signal (mirrors enhance_unit flow).
 	owned_units_ids = _hydrate_owned_units(owned_units_ids)
+	_apply_seven_star_awaken_level_floor(unit_index, old_rarity, old_level, new_rarity)
 	emit_updated()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "awaken_unit")
 
@@ -409,7 +473,9 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 			if _get_unit_type(material_unit_data) == UNIT_TYPE_PLAYABLE and _is_duplicate_unit(base_unit, base_unit_data, material_unit, material_unit_data):
 				total_trust_gain += PLAYABLE_DUPLICATE_TRUST_BONUS + _get_material_accumulated_trust(material_unit)
 
-		base_unit["xp"] = int(base_unit.get("xp", 0)) + total_xp_gain
+		# FFBE discards fusion XP once a unit is at its current rarity level cap (trust can still rise).
+		if int(base_unit.get("level", 1)) < base_max_level:
+			base_unit["xp"] = int(base_unit.get("xp", 0)) + total_xp_gain
 		var exp_pattern: int = _get_raw_unit_exp_pattern(str(base_unit.get("unit_id", "")), base_unit_data, int(base_unit.get("current_rarity", 1)))
 		if exp_pattern <= 0:
 			exp_pattern = 5
@@ -1014,12 +1080,14 @@ func _ensure_unit_exp_patterns_loaded() -> void:
 	if _unit_exp_patterns_cache.is_empty():
 		push_error("unit_exp_patterns.json loaded but no valid pattern rows were parsed")
 
-func _calculate_xp_for_level_local(level: int, exp_pattern: int) -> int:
+func _calculate_xp_for_level_local(current_level: int, exp_pattern: int) -> int:
+	# FFBE unit_exp_patterns rows are keyed by destination level: row N is XP to go from N-1 → N.
 	_ensure_unit_exp_patterns_loaded()
 	if not _unit_exp_patterns_cache.has(exp_pattern):
 		return 0
 	var table: Dictionary = _unit_exp_patterns_cache[exp_pattern]
-	return int(table.get(level, 0))
+	var destination_level: int = current_level + 1
+	return int(table.get(destination_level, 0))
 
 func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:
 	var total: int = 0
@@ -1027,12 +1095,26 @@ func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:
 		total += _calculate_xp_for_level_local(l, exp_pattern)
 	return total
 
+func _is_seven_star_free_level_transition(
+		current_level: int,
+		destination_level: int,
+		max_level: int,
+		_exp_pattern: int) -> bool:
+	# 7★ units always pass through level 101 when coming from level 100 (FFBE 6★→7★ +1).
+	return max_level > 100 and current_level == 100 and destination_level == 101
+
 func _calculate_level_from_xp_local(total_xp: int, exp_pattern: int, max_level: int) -> int:
 	var level: int = 1
 	var remaining: int = maxi(0, total_xp)
 	while level < max_level:
+		var destination_level: int = level + 1
 		var required: int = _calculate_xp_for_level_local(level, exp_pattern)
-		if required <= 0 or remaining < required:
+		if required <= 0:
+			if _is_seven_star_free_level_transition(level, destination_level, max_level, exp_pattern):
+				level += 1
+				continue
+			break
+		if remaining < required:
 			break
 		remaining -= required
 		level += 1
@@ -1109,7 +1191,17 @@ func _hydrate_owned_units(units: Array) -> Array:
 		hydrated_unit["equipment"] = _normalize_unit_equipment(unit_instance.get("equipment", {}))
 		hydrated_unit["entry_id"] = rarity_entry_key
 
-		# 4. Calculate Final Stats
+		# Recompute level/next_xp from stored XP so saves stay consistent with exp tables.
+		if _get_unit_type(template_data) == UNIT_TYPE_PLAYABLE:
+			var exp_pattern: int = _get_raw_unit_exp_pattern(unit_id, template_data, rarity)
+			if exp_pattern <= 0:
+				exp_pattern = 5
+			var max_level: int = _get_unit_max_level_local(hydrated_unit)
+			hydrated_unit["level"] = _calculate_level_from_xp_local(
+				int(hydrated_unit.get("xp", 0)), exp_pattern, max_level)
+			_update_unit_next_xp_local(hydrated_unit, template_data)
+
+		# 4. Calculate Final Stats (uses level for stat interpolation)
 		hydrated_unit["final_stats"] = StatCalculator.calculate_final_stats(hydrated_unit)
 
 		hydrated_units.append(hydrated_unit)

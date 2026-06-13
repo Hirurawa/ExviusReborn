@@ -146,7 +146,8 @@ func _populate_after_stats() -> void:
 	hypothetical.merge(next_entry, true)
 	hypothetical["current_rarity"] = next_rarity
 
-	var level: int = int(base_unit_inst.get("level", 1))
+	var level: int = UnitService.predict_level_after_awakening(base_unit_inst)
+	hypothetical["level"] = level
 	var max_level: int = int(StatCalculator.RARITY_MAX_LEVELS.get(next_rarity, 15))
 
 	var final_profile: Dictionary = StatCalculator.calculate_final_stats(hypothetical)
@@ -286,13 +287,18 @@ func _refresh_button_state() -> void:
 			result_text_label.text = reason
 			result_text_label.visible = reason != ""
 
+func _fetch_fresh_unit_instance(instance_id: String) -> Dictionary:
+	for unit_value in UnitService.owned_units_ids:
+		if unit_value is Dictionary and str(unit_value.get("instance_id", "")) == instance_id:
+			return (unit_value as Dictionary).duplicate(true)
+	return base_unit_inst.duplicate(true)
+
 func _on_awaken_pressed() -> void:
 	if base_unit_instance_id == "":
 		return
 	var response: Dictionary = UnitService.awaken_unit(base_unit_instance_id)
 	if bool(response.get("success", false)):
-		var new_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1))) + 1
-		base_unit_inst["current_rarity"] = new_rarity
+		base_unit_inst = _fetch_fresh_unit_instance(base_unit_instance_id)
 		_refresh_before_visual()
 		_show_result_popup("Awakening successful!")
 	else:

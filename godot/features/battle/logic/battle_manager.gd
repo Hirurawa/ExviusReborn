@@ -22,6 +22,11 @@ enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
+## HP applied to an enemy when its bestiary entry has no usable encounter HP.
+const DEFAULT_ENEMY_HP: int = 1000
+## Offensive/defensive stat applied to an enemy when no MONSTER_PARTS row exists
+## (the bestiary carries no atk/def/mag/spr). Matches the action_processor default.
+const DEFAULT_ENEMY_STAT: int = 10
 ## Chance (0..1) that defeating an enemy with a player attack drops a Limit Crystal
 ## targeted at the attacking unit. See _try_drop_limit_crystal.
 const LIMIT_CRYSTAL_DROP_CHANCE: float = 0.20
@@ -61,6 +66,10 @@ var is_transitioning: bool = false
 
 var current_wave: int = 1
 var total_waves: int = 1
+## Ordered, data-driven wave descriptors for the active mission (from
+## EncounterResolver). Empty when the mission has no mapped encounter chain, in
+## which case the legacy random dungeon spawner is used.
+var wave_plan: Array = []
 var current_mission_id: String = ""
 var mission_drops: Array[String] = []
 var used_items: Dictionary = {}
@@ -204,7 +213,13 @@ func initialize_battle(mission_id: String) -> void:
 	current_mission_id = mission_id
 	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
 
-	total_waves = mission_data.get("wave_count", 1)
+	# Resolve the data-driven wave plan (MISSION_PHASE / scenario battles). When a
+	# mission has no mapped plan, fall back to the legacy wave_count + random spawn.
+	wave_plan = EncounterResolver.build_wave_plan(str(current_mission_id))
+	if wave_plan.size() > 0:
+		total_waves = wave_plan.size()
+	else:
+		total_waves = mission_data.get("wave_count", 1)
 	current_wave = 1
 	mission_drops.clear()
 	used_items.clear()
@@ -277,10 +292,8 @@ func initialize_battle(mission_id: String) -> void:
 		if not unit.is_empty():
 			player_units.append(unit)
 
-	# Load enemy data
-	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
-	var dungeon_data = StaticData.game_data_dungeons.get(str(dungeon_id), {})
-	_spawn_enemies_for_wave(mission_data, dungeon_data)
+	# Load enemy data for the first wave.
+	_spawn_wave(1, mission_data)
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()
@@ -719,10 +732,8 @@ func _spawn_next_wave() -> void:
 		print("BattleManager: Spawning Wave %d..." % current_wave)
 
 	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
-	var dungeon_id = str(int(mission_data.get("dungeon_id", "")))
-	var dungeon_data = StaticData.game_data_dungeons.get(str(dungeon_id), {})
 
-	_spawn_enemies_for_wave(mission_data, dungeon_data)
+	_spawn_wave(current_wave, mission_data)
 
 	wave_changed.emit(current_wave, total_waves)
 
@@ -743,32 +754,6 @@ func _spawn_next_wave() -> void:
 	# Only unlock after everything is fully set up
 	is_transitioning = false
 
-func _generate_enemy_data(dungeon_monster_data: Dictionary) -> Dictionary:
-	var global_monster_data = {}
-	var monster_name = dungeon_monster_data.get("name", "")
-
-	if monster_name != "":
-		# O(1) name lookup via StaticData's side-index instead of an O(n) scan
-		# of game_data_monsters on every spawn.
-		var found: Dictionary = StaticData.get_monster_by_name(str(monster_name))
-		if not found.is_empty():
-			global_monster_data = found.duplicate(true)
-
-	var enemy_data = global_monster_data.duplicate(true)
-	for key in dungeon_monster_data:
-		enemy_data[key] = dungeon_monster_data[key]
-
-	var enemy_max_hp = int(enemy_data.get("hp", 1000))
-	enemy_data["max_hp"] = enemy_max_hp
-	enemy_data["current_hp"] = enemy_max_hp
-
-	# Tracking variables
-	enemy_data["chain_count"] = 0
-	enemy_data["last_hit_frame"] = -100
-	enemy_data["last_attacker_index"] = -1
-
-	return enemy_data
-
 func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	var loot_table = enemy_data.get("loot", {})
 	var drops = loot_table.get("drops", [])
@@ -788,54 +773,104 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	mission_drops.append(selected_item_id)
 	item_dropped.emit(enemy_index, selected_item_id)
 
-func _build_monster_spawn_pool(mission_data: Dictionary, dungeon_data: Dictionary) -> Array:
-	var mission_monsters: Variant = mission_data.get("monsters", [])
-	var dungeon_monsters: Variant = dungeon_data.get("monsters", [])
-
-	var mission_pool: Array = []
-	var dungeon_by_name: Dictionary = {}
-	if dungeon_monsters is Array:
-		for dungeon_monster in dungeon_monsters:
-			if dungeon_monster is Dictionary:
-				var monster_name: String = str((dungeon_monster as Dictionary).get("name", ""))
-				if monster_name != "":
-					dungeon_by_name[monster_name] = (dungeon_monster as Dictionary)
-
-	if mission_monsters is Array and mission_monsters.size() > 0:
-		for mission_monster in mission_monsters:
-			if mission_monster is Dictionary:
-				mission_pool.append((mission_monster as Dictionary).duplicate(true))
-			elif mission_monster is String:
-				var mission_monster_name: String = str(mission_monster)
-				if dungeon_by_name.has(mission_monster_name):
-					mission_pool.append((dungeon_by_name[mission_monster_name] as Dictionary).duplicate(true))
-				else:
-					mission_pool.append({"name": mission_monster_name})
-
-	if mission_pool.size() > 0:
-		return mission_pool
-
-	if dungeon_monsters is Array:
-		return dungeon_monsters
-
-	return []
-
-func _spawn_enemies_for_wave(mission_data: Dictionary, dungeon_data: Dictionary) -> void:
+## Spawns the enemy formation for `wave_no` from the data-driven encounter chain
+## (EncounterResolver). Missions with no resolvable formation get no enemies:
+## exploration missions (type 2) are expected to be empty here (their encounters
+## are random while traversing the map); any other type is a content gap and is
+## logged as an error.
+func _spawn_wave(wave_no: int, mission_data: Dictionary) -> void:
 	enemy_units.clear()
-	var monsters_in_dungeon: Array = _build_monster_spawn_pool(mission_data, dungeon_data)
 
-	if monsters_in_dungeon.size() > 0:
-		var spawn_count = randi() % 3 + 1 # Random number between 1 and 3
+	if wave_plan.size() > 0 and wave_no >= 1 and wave_no <= wave_plan.size():
+		var wave: Dictionary = wave_plan[wave_no - 1]
+		var formation: Array = EncounterResolver.resolve_formation(
+			str(current_mission_id), str(wave.get("target_id", "")))
+		if formation.size() > 0:
+			for desc in formation:
+				var enemy: Dictionary = _generate_enemy_from_descriptor(desc)
+				enemy["team"] = "enemy"
+				enemy["index"] = enemy_units.size()
+				enemy_units.append(enemy)
+			return
 
-		for i in range(spawn_count):
-			var random_monster_idx = randi() % monsters_in_dungeon.size()
-			var selected_monster_data = monsters_in_dungeon[random_monster_idx]
+	if str(mission_data.get("type", "")) != "EXPLORATION":
+		push_error("BattleManager: mission %s wave %d has no encounter data (no MISSION_PHASE or scenario battle)." % [current_mission_id, wave_no])
 
-			var fully_hydrated_enemy = _generate_enemy_data(selected_monster_data)
+## Builds a combat-ready enemy dict from an EncounterResolver formation descriptor.
+## Name, elemental resistances and loot drops come from the descriptor (sourced
+## from the MONSTER_PARTS DB row); the combat stat block (hp/mp/atk/def/mag/spr)
+## comes from MONSTER_PARTS keyed by the exact 9-digit monsterId, defaulting when
+## no parts row exists.
+func _generate_enemy_from_descriptor(desc: Dictionary) -> Dictionary:
+	var enemy_data: Dictionary = {}
+	enemy_data["id"] = str(desc.get("id", ""))
+	enemy_data["instance_id"] = str(desc.get("instance_id", ""))
+	enemy_data["name"] = str(desc.get("name", "Unknown Monster"))
+	enemy_data["disp_pos"] = desc.get("disp_pos", Vector2.ZERO)
+	enemy_data["is_boss"] = bool(desc.get("is_boss", false))
+	enemy_data["resistances"] = desc.get("resistances", {})
+	enemy_data["loot"] = desc.get("loot", {})
 
-			fully_hydrated_enemy["team"] = "enemy"
-			fully_hydrated_enemy["index"] = enemy_units.size()
-			enemy_units.append(fully_hydrated_enemy)
+	# Per-instance combat stats from MONSTER_PARTS (exact hp/mp/atk/def/mag/spr for
+	# THIS spawn); modest defaults when the monster has no parts row.
+	var parts: Dictionary = EncounterResolver.get_monster_parts_stats(str(desc.get("instance_id", "")))
+	var combat_stats: Dictionary = _resolve_enemy_combat_stats(parts, {})
+
+	var max_hp: int = int(combat_stats["HP"])
+	enemy_data["max_hp"] = max_hp
+	enemy_data["current_hp"] = max_hp
+	enemy_data["hp"] = max_hp
+
+	var max_mp: int = int(combat_stats["MP"])
+	enemy_data["max_mp"] = max_mp
+	enemy_data["current_mp"] = max_mp
+	enemy_data["level"] = int(combat_stats["level"])
+
+	# Combat damage formulas read attacker/target stats from final_stats.stats
+	# (same shape as player units). Without this, enemy ATK/DEF/MAG/SPR fell back
+	# to 10 and the action processor logged a CRITICAL error every hit.
+	enemy_data["final_stats"] = {"stats": {
+		"HP": max_hp,
+		"MP": max_mp,
+		"ATK": int(combat_stats["ATK"]),
+		"DEF": int(combat_stats["DEF"]),
+		"MAG": int(combat_stats["MAG"]),
+		"SPR": int(combat_stats["SPR"]),
+	}}
+
+	# Tracking variables (mirror _generate_enemy_data).
+	enemy_data["chain_count"] = 0
+	enemy_data["last_hit_frame"] = -100
+	enemy_data["last_attacker_index"] = -1
+	return enemy_data
+
+## Resolves an enemy's combat stat block from its MONSTER_PARTS stats. Falls back
+## to modest defaults when the monster has no parts row. Always returns keys
+## HP, MP, ATK, DEF, MAG, SPR, level.
+func _resolve_enemy_combat_stats(parts: Dictionary, _unused: Dictionary = {}) -> Dictionary:
+	if not parts.is_empty():
+		var parts_hp: int = int(parts.get("HP", 0))
+		if parts_hp <= 0:
+			parts_hp = DEFAULT_ENEMY_HP
+		return {
+			"HP": parts_hp,
+			"MP": maxi(0, int(parts.get("MP", 0))),
+			"ATK": maxi(1, int(parts.get("ATK", DEFAULT_ENEMY_STAT))),
+			"DEF": maxi(1, int(parts.get("DEF", DEFAULT_ENEMY_STAT))),
+			"MAG": maxi(1, int(parts.get("MAG", DEFAULT_ENEMY_STAT))),
+			"SPR": maxi(1, int(parts.get("SPR", DEFAULT_ENEMY_STAT))),
+			"level": maxi(1, int(parts.get("level", 1))),
+		}
+
+	return {
+		"HP": DEFAULT_ENEMY_HP,
+		"MP": 0,
+		"ATK": DEFAULT_ENEMY_STAT,
+		"DEF": DEFAULT_ENEMY_STAT,
+		"MAG": DEFAULT_ENEMY_STAT,
+		"SPR": DEFAULT_ENEMY_STAT,
+		"level": 1,
+	}
 
 # Helper function to grab only living units
 static func _get_living_units(team_array: Array) -> Array[Dictionary]:

@@ -1,32 +1,160 @@
 extends Control
 
+# World map driven by the WORLD/LAND/AREA/DUNGEON/TOWN/MISSION tables of the
+# bundled SQLite datamine, queried on demand through the GameDatabase autoload.
+# Three view levels share the same zoomable/pannable canvas:
+#   * "world"   — shows the selected world's `dispOrder` background image with one
+#     clickable ColorRect + name Label per land (LAND touchRect/labelPos).
+#   * "area"    — entered by clicking a land; shows that land's areas as clickable
+#     ColorRects + name Labels (AREA touchRect/labelPos). No background image
+#     asset exists for this level, so the canvas is left blank.
+#   * "dungeon" — entered by clicking an area; shows that area's detailed map
+#     texture (assets/maps/map<areaId>.png) with one icon + name Label per dungeon
+#     (DUNGEON position/iconFile) and per town (TOWN position/iconFile). If the
+#     area map texture is missing the canvas is left blank but the dungeon/town
+#     markers are still placed.
+#
+# The dungeon mission-list popup also reads the MISSION table just to list a
+# dungeon's missions; the start/finish flow goes through MissionService, which
+# also reads the MISSION + CHALLENGE tables via GameDatabase.
+
+const WORLD_IMAGE_DIR: String = "res://assets/world/"
+const AREA_MAP_DIR: String = "res://assets/maps/"
+const REGION_MAP_DIR: String = "res://assets/maps/region/"
+const MAP_ICON_DIR: String = "res://assets/map_icons/"
+
+const DEFAULT_CANVAS_SIZE: Vector2 = Vector2(2000.0, 2000.0)
+const AREA_CANVAS_FALLBACK: Vector2 = Vector2(640.0, 1136.0)
+const DUNGEON_CANVAS_FALLBACK: Vector2 = Vector2(2000.0, 2000.0)
+const DUNGEON_CANVAS_PADDING: float = 200.0
+
+# Size assumed for a grid column/row whose tile file is missing, so the remaining
+# tiles stay in their correct cells (FFBE map tiles are ~2048 px).
+const AREA_MAP_TILE_FALLBACK_SIZE: float = 2048.0
+
+const LAND_RECT_COLOR: Color = Color(0.3, 0.6, 1.0, 0.35)
+const AREA_RECT_COLOR: Color = Color(1.0, 0.6, 0.3, 0.35)
+
 @onready var map_scroll: ScrollContainer = $VBoxContainer/MapScrollContainer
 @onready var map_sizer: Control = $VBoxContainer/MapScrollContainer/MapSizer
 @onready var map_content: Control = $VBoxContainer/MapScrollContainer/MapSizer/MapContent
 @onready var background_image: TextureRect = $VBoxContainer/MapScrollContainer/MapSizer/MapContent/BackgroundImage
 
 @onready var map_world_option: OptionButton = $VBoxContainer/HBoxContainer/WorldOptionButton
-@onready var map_region_option: OptionButton = $VBoxContainer/HBoxContainer/RegionOptionButton
-@onready var map_subregion_option: OptionButton = $VBoxContainer/HBoxContainer/SubregionOptionButton
 @onready var map_back_button: TextureButton = $VBoxContainer/TopBar/UnitNamebgChara/BackButton
-
-@onready var mission_details_popup: PopupPanel = $MissionDetailsPopup
-@onready var mission_dungeon_name: Label = $MissionDetailsPopup/VBoxContainer/DungeonNameLabel
-@onready var missions_list_container: VBoxContainer = $MissionDetailsPopup/VBoxContainer/ScrollContainer/MissionsListContainer
-@onready var enter_town_dialog: ConfirmationDialog = $EnterTownDialog
 
 var map_zoom_level: float = 1.0
 var _is_panning_map: bool = false
-var _last_mouse_pos: Vector2 = Vector2.ZERO
 
+var current_view: String = "world" # "world" | "area" | "dungeon"
 var current_selected_world: String = ""
-var current_selected_region: String = ""
-var current_selected_subregion: String = ""
-var current_selected_dungeon_id: String = ""
-var _pending_town_id: String = ""
+var current_selected_land: String = ""
+var current_selected_area: String = ""
 
 var _texture_cache: Dictionary = {}
-var _map_canvas_base_size: Vector2 = Vector2(2000.0, 2000.0)
+var _map_canvas_base_size: Vector2 = DEFAULT_CANVAS_SIZE
+
+# Inline dungeon mission-list popup overlay (built in code, kept above the map
+# canvas so it ignores zoom/pan) and a lazily-created error dialog.
+var _mission_popup: Control = null
+var _mission_error_dialog: AcceptDialog = null
+
+# Town-entry confirmation. `_pending_town_id` is the TOWN `townId`, handed to
+# town_map_ui, which looks it up in the DB TOWN table (name + icon/folder).
+var enter_town_dialog: ConfirmationDialog = null
+var _pending_town_id: String = ""
+
+func _ready() -> void:
+	map_back_button.pressed.connect(_on_back_pressed)
+	map_world_option.item_selected.connect(_on_map_world_selected)
+	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
+
+	_populate_world_options()
+	map_zoom_level = 1.0
+	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+	_apply_map_canvas_size(_map_canvas_base_size)
+	_apply_default_view()
+
+
+# === Default view ===
+
+## Opens the map on the area of the player's most recent mission instead of the
+## empty world picker, so returning players land where they left off. Uses the
+## last-entered mission (falling back to the last cleared one), resolves its area
+## via the MISSION table, and jumps straight to that area's dungeon view. Silently
+## leaves the default "Select a World" state when there's no recent mission or its
+## location can't be resolved.
+func _apply_default_view() -> void:
+	var mission_id: String = MissionService.last_entered_mission_id
+	if mission_id == "":
+		mission_id = MissionService.latest_cleared_mission_id
+	if mission_id == "":
+		return
+
+	var location: Dictionary = GameDatabase.get_mission_location(mission_id)
+	if location.is_empty():
+		return
+
+	var world_id: String = str(location.get("worldId", ""))
+	var land_id: String = str(location.get("landId", ""))
+	var area_id: String = str(location.get("areaId", ""))
+	if world_id == "" or land_id == "" or area_id == "":
+		return
+
+	# Reflect the world in the dropdown, then open the area directly. Back
+	# navigation still walks dungeon -> area -> world as usual.
+	_select_world_option(world_id)
+	_show_dungeon_view(world_id, land_id, area_id)
+
+	# Pan so the originating dungeon sits in the middle of the viewport instead
+	# of the default top-left corner.
+	var dungeon_pos: Vector2 = _parse_pos(str(location.get("dungeonPosition", "")))
+	if dungeon_pos != Vector2.ZERO:
+		_center_view_on(dungeon_pos)
+
+
+## Scrolls the map so canvas-space point `target` (map_content local coordinates)
+## is centered in the viewport. Deferred one frame because the enclosing view was
+## (re)built this same frame: the ScrollContainer only recomputes its scroll range
+## on the next layout pass, so setting scroll any earlier clamps it back to zero.
+func _center_view_on(target: Vector2) -> void:
+	await get_tree().process_frame
+	if not is_instance_valid(self) or current_view != "dungeon":
+		return
+	var viewport: Vector2 = map_scroll.size
+	var scroll: Vector2 = target * map_zoom_level - viewport * 0.5
+	map_scroll.scroll_horizontal = int(max(0.0, scroll.x))
+	map_scroll.scroll_vertical = int(max(0.0, scroll.y))
+
+
+## Selects the world dropdown entry whose metadata matches `world_id` (no-op if
+## not present). Uses OptionButton.select(), which does not emit item_selected, so
+## the caller drives the resulting view explicitly.
+func _select_world_option(world_id: String) -> void:
+	for i in range(map_world_option.item_count):
+		if str(map_world_option.get_item_metadata(i)) == world_id:
+			map_world_option.select(i)
+			return
+
+
+# === Coordinate parsing ===
+
+func _parse_pos(raw: String) -> Vector2:
+	# Format "x:y".
+	var parts: PackedStringArray = raw.split(":")
+	if parts.size() < 2:
+		return Vector2.ZERO
+	return Vector2(float(parts[0]), float(parts[1]))
+
+func _parse_rect(raw: String) -> Rect2:
+	# Format "x:y:w:h".
+	var parts: PackedStringArray = raw.split(":")
+	if parts.size() < 4:
+		return Rect2()
+	return Rect2(float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3]))
+
+
+# === Canvas / texture helpers ===
 
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
@@ -42,86 +170,30 @@ func _apply_map_canvas_size(map_size: Vector2) -> void:
 	background_image.size = map_size
 	map_sizer.custom_minimum_size = map_size * map_zoom_level
 
-func _set_background_for_subregion(subregion_id: String) -> void:
-	if subregion_id == "":
-		background_image.texture = null
-		_apply_map_canvas_size(Vector2(2000.0, 2000.0))
-		return
+func _clear_overlays() -> void:
+	for child in map_content.get_children():
+		if child != background_image:
+			child.queue_free()
 
-	var map_texture_path: String = "res://assets/maps/map%s.png" % subregion_id
-	var map_texture: Texture2D = _get_dynamic_texture(map_texture_path)
-	if map_texture:
-		background_image.texture = map_texture
-		_apply_map_canvas_size(Vector2(map_texture.get_size()))
-		return
-
-	background_image.texture = null
-	_apply_map_canvas_size(Vector2(2000.0, 2000.0))
-	push_warning("Map texture missing for subregion '%s': %s" % [subregion_id, map_texture_path])
-
-func _ready() -> void:
-	map_back_button.pressed.connect(func(): UIManager.pop())
-	map_world_option.item_selected.connect(_on_map_world_selected)
-	map_region_option.item_selected.connect(_on_map_region_selected)
-	map_subregion_option.item_selected.connect(_on_map_subregion_selected)
-	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
-	MissionService.dungeon_missions_ready.connect(_on_dungeon_missions_ready)
-	enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
-
-	_populate_world_options()
-	await _apply_latest_cleared_map_selection()
+func _reset_view_transform() -> void:
 	map_zoom_level = 1.0
 	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
-	_apply_map_canvas_size(_map_canvas_base_size)
+	map_sizer.custom_minimum_size = _map_canvas_base_size * map_zoom_level
+	map_scroll.scroll_horizontal = 0
+	map_scroll.scroll_vertical = 0
 
-func _apply_latest_cleared_map_selection() -> void:
-	var selection: Dictionary = await MissionService.get_latest_cleared_map_selection()
-	if selection.is_empty():
-		return
 
-	var world_id: String = str(selection.get("world_id", ""))
-	var region_id: String = str(selection.get("region_id", ""))
-	var subregion_id: String = str(selection.get("subregion_id", ""))
-
-	var world_idx: int = _select_option_by_metadata(map_world_option, world_id)
-	if world_idx == -1:
-		return
-	_on_map_world_selected(world_idx)
-
-	var region_idx: int = _select_option_by_metadata(map_region_option, region_id)
-	if region_idx == -1:
-		return
-	_on_map_region_selected(region_idx)
-
-	var subregion_idx: int = _select_option_by_metadata(map_subregion_option, subregion_id)
-	if subregion_idx == -1:
-		return
-	_on_map_subregion_selected(subregion_idx)
-
-func _select_option_by_metadata(option_button: OptionButton, metadata_id: String) -> int:
-	if metadata_id == "":
-		return -1
-
-	for idx in range(option_button.get_item_count()):
-		if str(option_button.get_item_metadata(idx)) == metadata_id:
-			option_button.select(idx)
-			return idx
-
-	return -1
+# === Input (zoom + pan) ===
 
 func _on_map_scroll_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				_is_panning_map = true
-				_last_mouse_pos = event.global_position
-			else:
-				_is_panning_map = false
+			_is_panning_map = event.pressed
 		elif event.pressed and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-			var old_zoom = map_zoom_level
+			var old_zoom: float = map_zoom_level
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				map_zoom_level = clamp(map_zoom_level + 0.1, 0.5, 3.0)
-			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			else:
 				map_zoom_level = clamp(map_zoom_level - 0.1, 0.5, 3.0)
 
 			if old_zoom != map_zoom_level:
@@ -133,329 +205,496 @@ func _on_map_scroll_gui_input(event: InputEvent) -> void:
 		map_scroll.scroll_horizontal -= int(event.relative.x)
 		map_scroll.scroll_vertical -= int(event.relative.y)
 
+# === World dropdown ===
+
 func _populate_world_options() -> void:
 	map_world_option.clear()
-	map_region_option.clear()
-	map_subregion_option.clear()
-
-	for child in map_content.get_children():
-		if child != background_image:
-			child.queue_free()
+	_clear_overlays()
 
 	map_world_option.add_item("Select a World", 0)
 	map_world_option.set_item_metadata(0, "")
 
-	var idx = 1
-	for world_id in StaticData.game_data_worlds.keys():
-		var world_data = StaticData.game_data_worlds[world_id]
-		var world_name = "Unknown World"
-		if world_data.has("names") and world_data.names.size() > 0 and world_data.names[0]:
-			world_name = world_data.names[0]
+	var idx: int = 1
+	for world in GameDatabase.get_worlds():
+		var world_id: String = str(world.get("worldId", ""))
+		if world_id == "":
+			continue
+		var world_name: String = str(world.get("worldName", "Unknown World"))
 		map_world_option.add_item(world_name, idx)
 		map_world_option.set_item_metadata(idx, world_id)
 		idx += 1
 
 func _on_map_world_selected(index: int) -> void:
-	map_region_option.clear()
-	map_subregion_option.clear()
-	current_selected_world = map_world_option.get_item_metadata(index)
-	_set_background_for_subregion("")
-
-	for child in map_content.get_children():
-		if child != background_image:
-			child.queue_free()
-
-	if current_selected_world == "":
+	var world_id: String = str(map_world_option.get_item_metadata(index))
+	if world_id == "":
+		current_view = "world"
+		current_selected_world = ""
+		current_selected_land = ""
+		current_selected_area = ""
+		_clear_overlays()
+		background_image.texture = null
+		_apply_map_canvas_size(DEFAULT_CANVAS_SIZE)
+		_reset_view_transform()
 		return
+	_show_world_view(world_id)
 
-	var world_data = StaticData.game_data_worlds.get(current_selected_world, {})
-	var regions = world_data.get("regions", {})
 
-	map_region_option.add_item("Select a Region", 0)
-	map_region_option.set_item_metadata(0, "")
+# === World view ===
 
-	var idx = 1
-	for region_id in regions.keys():
-		var region_data = regions[region_id]
-		var region_name = "Unknown Region"
-		if region_data.has("names") and region_data.names.size() > 0 and region_data.names[0]:
-			region_name = region_data.names[0]
-		map_region_option.add_item(region_name, idx)
-		map_region_option.set_item_metadata(idx, region_id)
-		idx += 1
+func _show_world_view(world_id: String) -> void:
+	current_view = "world"
+	current_selected_world = world_id
+	current_selected_land = ""
+	current_selected_area = ""
+	_clear_overlays()
+	_close_mission_popup()
 
-func _on_map_region_selected(index: int) -> void:
-	map_subregion_option.clear()
-	current_selected_region = map_region_option.get_item_metadata(index)
-	_set_background_for_subregion("")
-
-	for child in map_content.get_children():
-		if child != background_image:
-			child.queue_free()
-
-	if current_selected_region == "" or current_selected_world == "":
-		return
-
-	var world_data = StaticData.game_data_worlds.get(current_selected_world, {})
-	var regions = world_data.get("regions", {})
-	var region_data = regions.get(current_selected_region, {})
-	var subregions = region_data.get("subregions", {})
-
-	map_subregion_option.add_item("Select a Subregion", 0)
-	map_subregion_option.set_item_metadata(0, "")
-
-	var idx = 1
-	for subregion_id in subregions.keys():
-		var subregion_data = subregions[subregion_id]
-		var subregion_name = "Unknown Subregion"
-		if subregion_data.has("names") and subregion_data.names.size() > 0 and subregion_data.names[0]:
-			subregion_name = subregion_data.names[0]
-		map_subregion_option.add_item(subregion_name, idx)
-		map_subregion_option.set_item_metadata(idx, subregion_id)
-		idx += 1
-
-func _on_map_subregion_selected(index: int) -> void:
-	current_selected_subregion = map_subregion_option.get_item_metadata(index)
-	_set_background_for_subregion(current_selected_subregion)
-
-	for child in map_content.get_children():
-		if child != background_image:
-			child.queue_free()
-
-	if current_selected_subregion == "" or current_selected_region == "" or current_selected_world == "":
-		return
-
-	var world_data = StaticData.game_data_worlds.get(current_selected_world, {})
-	var regions = world_data.get("regions", {})
-	var region_data = regions.get(current_selected_region, {})
-	var subregions = region_data.get("subregions", {})
-	var subregion_data = subregions.get(current_selected_subregion, {})
-	var dungeons = subregion_data.get("dungeons", {})
-
-	var dungeon_ids = []
-	if dungeons is Dictionary:
-		dungeon_ids = dungeons.keys()
-	elif dungeons is Array:
-		dungeon_ids = dungeons
-	elif dungeons is String:
-		dungeon_ids = [dungeons]
-
-	for dungeon_id in dungeon_ids:
-		var dungeon_data = StaticData.game_data_dungeons.get(str(dungeon_id), {})
-		if dungeon_data.is_empty():
-			continue
-
-		var pos: Array = dungeon_data.get("position", [0, 0])
-		var x: int = pos[0]
-		var y: int = pos[1]
-
-		var icon_name: String = dungeon_data.get("icon", "")
-		var icon_path: String = "res://assets/map_icons/" + icon_name
-
-		var btn: TextureButton = TextureButton.new()
-		var tex: Texture2D = _get_dynamic_texture(icon_path)
-		if not tex:
-			tex = _get_dynamic_texture("res://icon.svg") # Fallback
-
+	var world: Dictionary = GameDatabase.get_world(world_id)
+	var disp_order: String = str(world.get("dispOrder", ""))
+	if disp_order != "":
+		var tex: Texture2D = _get_dynamic_texture(WORLD_IMAGE_DIR + disp_order)
 		if tex:
-			btn.texture_normal = tex
-			btn.position = Vector2(x, y)
+			background_image.texture = tex
+			_apply_map_canvas_size(Vector2(tex.get_size()))
+		else:
+			background_image.texture = null
+			_apply_map_canvas_size(DEFAULT_CANVAS_SIZE)
+			push_warning("World map image missing: %s%s" % [WORLD_IMAGE_DIR, disp_order])
+	else:
+		background_image.texture = null
+		_apply_map_canvas_size(DEFAULT_CANVAS_SIZE)
 
-			var lbl = Label.new()
-			var d_names = dungeon_data.get("names", [])
-			if d_names.size() > 0 and d_names[0]:
-				lbl.text = d_names[0]
-			else:
-				lbl.text = "Unknown Dungeon"
+	for land in GameDatabase.get_lands(world_id):
+		_add_region_marker(
+			_parse_rect(str(land.get("touchRect", ""))),
+			_parse_pos(str(land.get("labelPos", ""))),
+			str(land.get("landName", "")),
+			LAND_RECT_COLOR,
+			_on_land_clicked.bind(world_id, str(land.get("landId", "")))
+		)
 
-			lbl.position = Vector2(-lbl.get_minimum_size().x/2 + btn.size.x/2, btn.size.y)
-			lbl.add_theme_font_size_override("font_size", 14)
-			lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-			lbl.add_theme_constant_override("outline_size", 4)
-			btn.add_child(lbl)
+	_reset_view_transform()
 
-			btn.pressed.connect(_on_dungeon_clicked.bind(str(dungeon_id)))
-			map_content.add_child(btn)
+func _on_land_clicked(world_id: String, land_id: String) -> void:
+	_show_area_view(world_id, land_id)
 
-	# Render towns for the current subregion. Towns are not listed under
-	# subregion data in worlds.json, so we filter towns.json by matching ids.
-	for town_id in StaticData.game_data_towns.keys():
-		var town_data: Dictionary = StaticData.game_data_towns.get(town_id, {})
-		if town_data.is_empty():
+
+# === Area view ===
+
+func _show_area_view(world_id: String, land_id: String) -> void:
+	current_view = "area"
+	current_selected_world = world_id
+	current_selected_land = land_id
+	current_selected_area = ""
+	_clear_overlays()
+	_close_mission_popup()
+
+	var areas: Array = GameDatabase.get_areas(world_id, land_id)
+
+	# Canvas must cover both the land's region-map background (LAND.mapFiles, a
+	# single texture in assets/maps/region) and every area marker, since a few
+	# lands have markers extending past the map image.
+	var canvas: Vector2 = AREA_CANVAS_FALLBACK
+	var land_map: String = GameDatabase.get_land_map(world_id, land_id)
+	var tex: Texture2D = _get_dynamic_texture(REGION_MAP_DIR + land_map) if land_map != "" else null
+	if tex:
+		background_image.texture = tex
+		canvas = canvas.max(Vector2(tex.get_size()))
+	else:
+		background_image.texture = null
+	for area in areas:
+		var rect: Rect2 = _parse_rect(str(area.get("touchRect", "")))
+		canvas.x = max(canvas.x, rect.position.x + rect.size.x)
+		canvas.y = max(canvas.y, rect.position.y + rect.size.y)
+		var label_pos: Vector2 = _parse_pos(str(area.get("labelPos", "")))
+		canvas.x = max(canvas.x, label_pos.x)
+		canvas.y = max(canvas.y, label_pos.y)
+	_apply_map_canvas_size(canvas)
+
+	for area in areas:
+		var area_id: String = str(area.get("areaId", ""))
+		_add_region_marker(
+			_parse_rect(str(area.get("touchRect", ""))),
+			_parse_pos(str(area.get("labelPos", ""))),
+			str(area.get("areaName", "")),
+			AREA_RECT_COLOR,
+			_on_area_clicked.bind(world_id, land_id, area_id)
+		)
+
+	_reset_view_transform()
+
+func _on_area_clicked(world_id: String, land_id: String, area_id: String) -> void:
+	_show_dungeon_view(world_id, land_id, area_id)
+
+
+# === Area background tiles ===
+
+## Builds the area's background as a grid of map tiles (AREA.mapFiles arranged by
+## AREA.mapDimensions "cols:rows", row-major) added to map_content behind the
+## markers. Returns the stitched canvas size, or Vector2.ZERO when the area has no
+## mapFiles (the caller then falls back to the legacy single texture).
+##
+## Tiles aren't uniform but they tile cleanly — every tile in a column shares one
+## width and every tile in a row shares one height — so summing the per-column
+## widths and per-row heights reproduces the full map and keeps the dungeon/town
+## marker coordinates aligned.
+func _build_area_map_tiles(area_id: String) -> Vector2:
+	var area_map: Dictionary = GameDatabase.get_area_map(area_id)
+	var files: PackedStringArray = str(area_map.get("mapFiles", "")).split(",", false)
+	if files.is_empty():
+		return Vector2.ZERO
+
+	var grid: Vector2i = _parse_map_dimensions(str(area_map.get("mapDimensions", "")), files.size())
+	var cols: int = grid.x
+	var rows: int = grid.y
+	var cell_count: int = min(files.size(), cols * rows)
+
+	# Load tiles and measure per-column widths / per-row heights.
+	var textures: Array = []
+	textures.resize(cell_count)
+	var col_w: PackedFloat32Array = PackedFloat32Array()
+	col_w.resize(cols)
+	var row_h: PackedFloat32Array = PackedFloat32Array()
+	row_h.resize(rows)
+	for i in range(cell_count):
+		var tex: Texture2D = _get_dynamic_texture(AREA_MAP_DIR + str(files[i]).strip_edges())
+		textures[i] = tex
+		if tex:
+			var size: Vector2 = Vector2(tex.get_size())
+			col_w[i % cols] = max(col_w[i % cols], size.x)
+			row_h[i / cols] = max(row_h[i / cols], size.y)
+
+	# Columns/rows whose tiles are all missing still need a size so the tiles that
+	# do exist stay in their correct grid cells.
+	for c in range(cols):
+		if col_w[c] <= 0.0:
+			col_w[c] = AREA_MAP_TILE_FALLBACK_SIZE
+	for r in range(rows):
+		if row_h[r] <= 0.0:
+			row_h[r] = AREA_MAP_TILE_FALLBACK_SIZE
+
+	# Cumulative pixel offset of each column/row.
+	var x_off: PackedFloat32Array = PackedFloat32Array()
+	x_off.resize(cols)
+	var total_w: float = 0.0
+	for c in range(cols):
+		x_off[c] = total_w
+		total_w += col_w[c]
+	var y_off: PackedFloat32Array = PackedFloat32Array()
+	y_off.resize(rows)
+	var total_h: float = 0.0
+	for r in range(rows):
+		y_off[r] = total_h
+		total_h += row_h[r]
+
+	# Place each tile (missing ones are skipped; their cells stay reserved above).
+	for i in range(cell_count):
+		var tex2: Texture2D = textures[i]
+		if tex2 == null:
 			continue
-		if str(town_data.get("world_id", "")) != str(current_selected_world):
-			continue
-		if str(town_data.get("region_id", "")) != str(current_selected_region):
-			continue
-		if str(town_data.get("subregion_id", "")) != str(current_selected_subregion):
-			continue
+		var tile: TextureRect = TextureRect.new()
+		tile.texture = tex2
+		tile.position = Vector2(x_off[i % cols], y_off[i / cols])
+		tile.size = Vector2(tex2.get_size())
+		tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		map_content.add_child(tile)
 
-		var t_pos: Array = town_data.get("position", [0, 0])
-		var t_x: int = t_pos[0]
-		var t_y: int = t_pos[1]
+	return Vector2(total_w, total_h)
 
-		var t_icon_name: String = town_data.get("icon", "")
-		var t_icon_path: String = "res://assets/map_icons/" + t_icon_name
 
-		var t_btn: TextureButton = TextureButton.new()
-		var t_tex: Texture2D = _get_dynamic_texture(t_icon_path)
-		if not t_tex:
-			t_tex = _get_dynamic_texture("res://icon.svg") # Fallback
+## Parses AREA.mapDimensions ("cols:rows") into a Vector2i grid. Falls back to a
+## single row of `file_count` tiles when the value is missing/invalid, and trims
+## the row count so the grid never has more cells than files (a few areas declare
+## more cells than they actually list files for).
+func _parse_map_dimensions(raw: String, file_count: int) -> Vector2i:
+	var parts: PackedStringArray = raw.split(":")
+	var cols: int = int(parts[0]) if parts.size() >= 1 and str(parts[0]).is_valid_int() else 0
+	var rows: int = int(parts[1]) if parts.size() >= 2 and str(parts[1]).is_valid_int() else 0
+	if cols <= 0 or rows <= 0:
+		return Vector2i(maxi(file_count, 1), 1)
+	if cols * rows > file_count:
+		rows = maxi(int(ceil(float(file_count) / float(cols))), 1)
+	return Vector2i(cols, rows)
 
-		if t_tex:
-			t_btn.texture_normal = t_tex
-			t_btn.position = Vector2(t_x, t_y)
 
-			var t_lbl = Label.new()
-			var t_names = town_data.get("names", [])
-			if t_names.size() > 0 and t_names[0]:
-				t_lbl.text = t_names[0]
-			else:
-				t_lbl.text = "Unknown Town"
+# === Dungeon view ===
 
-			t_lbl.position = Vector2(-t_lbl.get_minimum_size().x/2 + t_btn.size.x/2, t_btn.size.y)
-			t_lbl.add_theme_font_size_override("font_size", 14)
-			t_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-			t_lbl.add_theme_constant_override("outline_size", 4)
-			t_btn.add_child(t_lbl)
+func _show_dungeon_view(world_id: String, land_id: String, area_id: String) -> void:
+	current_view = "dungeon"
+	current_selected_world = world_id
+	current_selected_land = land_id
+	current_selected_area = area_id
+	_clear_overlays()
+	_close_mission_popup()
 
-			t_btn.pressed.connect(_on_town_clicked.bind(str(town_id), town_data))
-			map_content.add_child(t_btn)
+	var dungeons: Array = GameDatabase.get_dungeons(area_id)
+	var towns: Array = GameDatabase.get_towns(area_id)
 
-func _on_town_clicked(town_id: String, town_data: Dictionary) -> void:
+	# Background: the area's map is a grid of tile textures (AREA.mapFiles arranged
+	# per AREA.mapDimensions). Falls back to the legacy single map<areaId>.png, then
+	# to a blank canvas sized to fit the dungeon/town markers.
+	background_image.texture = null
+	var tiled_size: Vector2 = _build_area_map_tiles(area_id)
+	if tiled_size != Vector2.ZERO:
+		_apply_map_canvas_size(tiled_size)
+	else:
+		var tex: Texture2D = _get_dynamic_texture("%smap%s.png" % [AREA_MAP_DIR, area_id])
+		if tex:
+			background_image.texture = tex
+			_apply_map_canvas_size(Vector2(tex.get_size()))
+		else:
+			var canvas: Vector2 = DUNGEON_CANVAS_FALLBACK
+			for dungeon in dungeons:
+				var pos: Vector2 = _parse_pos(str(dungeon.get("position", "")))
+				canvas.x = max(canvas.x, pos.x + DUNGEON_CANVAS_PADDING)
+				canvas.y = max(canvas.y, pos.y + DUNGEON_CANVAS_PADDING)
+			for town in towns:
+				var town_pos: Vector2 = _parse_pos(str(town.get("position", "")))
+				canvas.x = max(canvas.x, town_pos.x + DUNGEON_CANVAS_PADDING)
+				canvas.y = max(canvas.y, town_pos.y + DUNGEON_CANVAS_PADDING)
+			_apply_map_canvas_size(canvas)
+
+	for town in towns:
+		var town_id: String = str(town.get("townId", ""))
+		var town_name: String = str(town.get("townName", ""))
+		_add_point_marker(
+			_parse_pos(str(town.get("position", ""))),
+			MAP_ICON_DIR + str(town.get("iconFile", "")),
+			town_name,
+			_on_town_clicked.bind(town_id, town_name)
+		)
+
+	for dungeon in dungeons:
+		var dungeon_id: String = str(dungeon.get("dungeonId", ""))
+		var dungeon_name: String = str(dungeon.get("name", ""))
+		_add_point_marker(
+			_parse_pos(str(dungeon.get("position", ""))),
+			MAP_ICON_DIR + str(dungeon.get("iconFile", "")),
+			dungeon_name,
+			_on_dungeon_clicked.bind(dungeon_id, dungeon_name)
+		)
+
+	_reset_view_transform()
+
+
+# === Shared marker builder ===
+
+func _add_region_marker(rect: Rect2, label_pos: Vector2, marker_name: String, color: Color, on_click: Callable) -> void:
+	var color_rect: ColorRect = ColorRect.new()
+	color_rect.color = color
+	color_rect.position = rect.position
+	color_rect.size = rect.size
+	if on_click.is_valid():
+		# PASS (not STOP) so wheel-zoom and drag-pan still reach the scroll
+		# container when the cursor is over a large land/area rect. We only treat
+		# a press+release that barely moved as a "tap" to drill in, leaving drags
+		# free to pan.
+		color_rect.mouse_filter = Control.MOUSE_FILTER_PASS
+		var tap_state: Dictionary = {"press_pos": Vector2.ZERO}
+		color_rect.gui_input.connect(func(event: InputEvent) -> void:
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					tap_state["press_pos"] = event.global_position
+				elif event.global_position.distance_to(tap_state["press_pos"]) <= 8.0:
+					on_click.call()
+		)
+	else:
+		color_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	map_content.add_child(color_rect)
+
+	var lbl: Label = Label.new()
+	lbl.text = marker_name
+	lbl.position = label_pos
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	lbl.add_theme_constant_override("outline_size", 4)
+	map_content.add_child(lbl)
+
+
+# Point-based marker for dungeons and towns (image centered on `position`, name
+# below). When `on_click` is valid the icon becomes tappable; towns pass no
+# callable and stay non-interactive.
+func _add_point_marker(position: Vector2, icon_path: String, marker_name: String, on_click: Callable = Callable()) -> void:
+	var icon_size: Vector2 = Vector2.ZERO
+	var tex: Texture2D = _get_dynamic_texture(icon_path)
+	if tex:
+		var icon: TextureRect = TextureRect.new()
+		icon.texture = tex
+		icon_size = Vector2(tex.get_size())
+		icon.position = position - icon_size * 0.5
+		if on_click.is_valid():
+			# PASS (not STOP) so wheel-zoom and drag-pan still reach the scroll
+			# container; only a press+release that barely moved counts as a tap.
+			icon.mouse_filter = Control.MOUSE_FILTER_PASS
+			var tap_state: Dictionary = {"press_pos": Vector2.ZERO}
+			icon.gui_input.connect(func(event: InputEvent) -> void:
+				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+					if event.pressed:
+						tap_state["press_pos"] = event.global_position
+					elif event.global_position.distance_to(tap_state["press_pos"]) <= 8.0:
+						on_click.call()
+			)
+		else:
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		map_content.add_child(icon)
+
+	var lbl: Label = Label.new()
+	lbl.text = marker_name
+	lbl.custom_minimum_size = Vector2(200.0, 0.0)
+	lbl.position = Vector2(position.x - 100.0, position.y + icon_size.y * 0.5)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	lbl.add_theme_constant_override("outline_size", 4)
+	map_content.add_child(lbl)
+
+
+# === Navigation ===
+
+func _on_back_pressed() -> void:
+	_close_mission_popup()
+	if current_view == "dungeon":
+		_show_area_view(current_selected_world, current_selected_land)
+		return
+	if current_view == "area":
+		_show_world_view(current_selected_world)
+		return
+	UIManager.pop()
+
+
+# === Dungeon mission-list popup ===
+
+func _on_dungeon_clicked(dungeon_id: String, dungeon_name: String) -> void:
+	_close_mission_popup()
+
+	var missions: Array = GameDatabase.get_missions(dungeon_id)
+
+	# Full-screen overlay anchored to the map root, so it sits above the map
+	# canvas and ignores zoom/pan. STOP blocks map input while the popup is open.
+	var overlay: Control = Control.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+	_mission_popup = overlay
+
+	# Dimmer: tapping outside the panel closes the popup.
+	var dimmer: ColorRect = ColorRect.new()
+	dimmer.color = Color(0.0, 0.0, 0.0, 0.6)
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	dimmer.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_close_mission_popup()
+	)
+	overlay.add_child(dimmer)
+
+	# Center the panel without blocking dimmer clicks around it.
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(center)
+
+	var panel: PanelContainer = PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.custom_minimum_size = Vector2(440.0, 0.0)
+	center.add_child(panel)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+
+	var title: Label = Label.new()
+	title.text = dungeon_name if dungeon_name != "" else "Missions"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	vbox.add_child(title)
+
+	if missions.is_empty():
+		var empty_lbl: Label = Label.new()
+		empty_lbl.text = "No missions available"
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(empty_lbl)
+	else:
+		var scroll: ScrollContainer = ScrollContainer.new()
+		scroll.custom_minimum_size = Vector2(0.0, 360.0)
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		vbox.add_child(scroll)
+
+		var list: VBoxContainer = VBoxContainer.new()
+		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		list.add_theme_constant_override("separation", 4)
+		scroll.add_child(list)
+
+		for mission in missions:
+			var mission_id: String = str(mission.get("missionId", ""))
+			var mission_name: String = str(mission.get("name", ""))
+			if mission_name == "":
+				mission_name = mission_id
+			var cost: String = str(mission.get("cost", "0"))
+			var exp_reward: String = str(mission.get("exp", "0"))
+			var gil_reward: String = str(mission.get("gil", "0"))
+			var waves: String = str(mission.get("waveCount", "0"))
+
+			var row: Button = Button.new()
+			row.text = "%s\nNRG %s · EXP %s · Gil %s · Waves %s" % [mission_name, cost, exp_reward, gil_reward, waves]
+			row.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			row.custom_minimum_size = Vector2(400.0, 0.0)
+			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.pressed.connect(_on_mission_row_pressed.bind(mission_id))
+			list.add_child(row)
+
+	var close_btn: Button = Button.new()
+	close_btn.text = "Close"
+	close_btn.pressed.connect(_close_mission_popup)
+	vbox.add_child(close_btn)
+
+
+func _close_mission_popup() -> void:
+	if _mission_popup != null and is_instance_valid(_mission_popup):
+		_mission_popup.queue_free()
+	_mission_popup = null
+
+
+func _on_mission_row_pressed(mission_id: String) -> void:
+	_close_mission_popup()
+	# Start flow goes through MissionService (mission data from the DB). Missions
+	# with no encounter data return success=false and surface a friendly error.
+	var result: Dictionary = await MissionService.request_start_mission(mission_id)
+	if result.get("success", false) == true:
+		UIManager.push("combat_ui", {"mission_id": mission_id})
+	else:
+		_show_mission_error(str(result.get("error", "Could not start this mission.")))
+
+
+func _show_mission_error(message: String) -> void:
+	if _mission_error_dialog == null or not is_instance_valid(_mission_error_dialog):
+		_mission_error_dialog = AcceptDialog.new()
+		_mission_error_dialog.title = "Cannot Start Mission"
+		add_child(_mission_error_dialog)
+	_mission_error_dialog.dialog_text = message
+	_mission_error_dialog.popup_centered()
+
+
+# === Town entry ===
+
+func _on_town_clicked(town_id: String, town_name: String) -> void:
 	_pending_town_id = town_id
-	var names: Array = town_data.get("names", [])
-	var town_name: String = "this town"
-	if names.size() > 0 and names[0]:
-		town_name = str(names[0])
-	enter_town_dialog.dialog_text = "Enter %s?" % town_name
+	if enter_town_dialog == null or not is_instance_valid(enter_town_dialog):
+		enter_town_dialog = ConfirmationDialog.new()
+		enter_town_dialog.title = "Enter Town"
+		enter_town_dialog.ok_button_text = "Yes"
+		enter_town_dialog.cancel_button_text = "No"
+		enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
+		add_child(enter_town_dialog)
+	var display_name: String = town_name if town_name != "" else "this town"
+	enter_town_dialog.dialog_text = "Enter %s?" % display_name
 	enter_town_dialog.popup_centered()
+
 
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return
-	# Folder existence is validated inside town_map.gd after it resolves
-	# the short towns.json id to the real on-disk folder id via the
-	# entry's icon name.
-	var town_id_to_load: String = _pending_town_id
-	_pending_town_id = ""
-	UIManager.push("town_map_ui", {"town_id": town_id_to_load})
-
-func _on_dungeon_clicked(dungeon_id: String) -> void:
-	current_selected_dungeon_id = dungeon_id
-	var dungeon_data = StaticData.game_data_dungeons.get(dungeon_id, {})
-	var d_names = dungeon_data.get("names", [])
-	if d_names.size() > 0 and d_names[0]:
-		mission_dungeon_name.text = d_names[0]
-	else:
-		mission_dungeon_name.text = "Unknown Dungeon"
-
-	for child in missions_list_container.get_children():
-		child.queue_free()
-
-	var dungeon_missions = dungeon_data.get("missions", {})
-	var mission_ids = []
-	if dungeon_missions is Dictionary:
-		mission_ids = dungeon_missions.keys()
-	elif dungeon_missions is Array:
-		mission_ids = dungeon_missions
-	elif dungeon_missions is String:
-		mission_ids = [dungeon_missions]
-
-	for mission_id in mission_ids:
-		var mission_data = MissionService.get_mission_data_local(str(mission_id))
-		if mission_data.is_empty():
-			continue
-
-		var vbox = VBoxContainer.new()
-
-		var name_lbl = Label.new()
-		name_lbl.text = mission_data.get("name", "Unknown Mission")
-		name_lbl.add_theme_font_size_override("font_size", 16)
-		vbox.add_child(name_lbl)
-
-		var cost_lbl = Label.new()
-		cost_lbl.text = "Cost: %d %s" % [mission_data.get("cost", 0), mission_data.get("cost_type", "NRG")]
-		cost_lbl.add_theme_font_size_override("font_size", 12)
-		vbox.add_child(cost_lbl)
-
-		var sep = HSeparator.new()
-		vbox.add_child(sep)
-
-		var actions_hbox = HBoxContainer.new()
-		var btn_start = Button.new()
-		btn_start.text = "Start"
-		btn_start.pressed.connect(_on_start_mission_pressed.bind(str(mission_id)))
-		actions_hbox.add_child(btn_start)
-		vbox.add_child(actions_hbox)
-
-		missions_list_container.add_child(vbox)
-
-	mission_details_popup.popup_centered()
-
-	# Lazy load actual mission data
-	MissionService.request_dungeon_missions(mission_ids)
-
-func _on_dungeon_missions_ready(mission_ids: Array) -> void:
-	if not mission_details_popup.visible:
-		return # Closed before loading
-
-	for child in missions_list_container.get_children():
-		child.queue_free()
-
-	for mission_id in mission_ids:
-		var mission_data = MissionService.get_mission_data_local(str(mission_id))
-		if mission_data.is_empty():
-			continue
-
-		var vbox = VBoxContainer.new()
-
-		var name_lbl = Label.new()
-		name_lbl.text = mission_data.get("name", "Unknown Mission")
-		name_lbl.add_theme_font_size_override("font_size", 16)
-		vbox.add_child(name_lbl)
-
-		var cost_lbl = Label.new()
-		cost_lbl.text = "Cost: %d %s" % [mission_data.get("cost", 0), mission_data.get("cost_type", "NRG")]
-		cost_lbl.add_theme_font_size_override("font_size", 12)
-		vbox.add_child(cost_lbl)
-
-		var challenges = mission_data.get("challenges", [])
-		if challenges.size() > 0:
-			var ch_lbl = Label.new()
-			ch_lbl.text = "Challenges:"
-			ch_lbl.add_theme_font_size_override("font_size", 12)
-			vbox.add_child(ch_lbl)
-			for ch in challenges:
-				var ch_item_lbl = Label.new()
-				ch_item_lbl.text = "- " + ch.get("string", "")
-				ch_item_lbl.add_theme_font_size_override("font_size", 10)
-				vbox.add_child(ch_item_lbl)
-
-		var sep = HSeparator.new()
-		vbox.add_child(sep)
-
-		var actions_hbox = HBoxContainer.new()
-		var btn_start = Button.new()
-		btn_start.text = "Start"
-		btn_start.pressed.connect(_on_start_mission_pressed.bind(str(mission_id)))
-		actions_hbox.add_child(btn_start)
-		vbox.add_child(actions_hbox)
-
-		missions_list_container.add_child(vbox)
-
-
-func _on_start_mission_pressed(mission_id: String) -> void:
-	var result: Dictionary = await MissionService.request_start_mission(mission_id)
-
-	if result.get("success") == true:
-		mission_details_popup.hide()
-		UIManager.push("combat_ui", {"mission_id": mission_id, "dungeon_id": current_selected_dungeon_id})
-	else:
-		var error_msg = result.get("error", "Unknown error occurred")
-		var error_dialog = AcceptDialog.new()
-		error_dialog.dialog_text = error_msg
-		error_dialog.title = "Mission Failed to Start"
-		add_child(error_dialog)
-		error_dialog.popup_centered()
-		error_dialog.confirmed.connect(func(): error_dialog.queue_free())
+	UIManager.push("town_map_ui", {"town_id": _pending_town_id})

@@ -19,40 +19,32 @@ signal dungeon_missions_ready(mission_ids: Array)
 
 const SNAPSHOT_FILE: String = "mission_progress.json"
 
+# First-clear ESPER rewards are not encoded in the DB MISSION.rewards yet (it only
+# carries the LAPIS reward), so the 20 mission -> esper-id unlocks are seeded here
+# and overlaid onto the DB rewards in `_get_or_load_mission_data_local`. Remove an
+# entry once its ESPER reward lands in the database. mission_id -> summon id.
+const SEEDED_ESPER_REWARDS: Dictionary = {
+	"1110404": "1", "1115005": "2", "1125105": "6", "1125204": "3",
+	"1135505": "7", "1230105": "5", "1325105": "4", "1425105": "10",
+	"1515005": "8", "1625105": "11", "1715105": "19", "1815105": "9",
+	"1920801": "15", "11215105": "16", "11315101": "12", "11425105": "14",
+	"11515105": "13", "11515205": "17", "11720701": "18", "21010201": "20",
+}
+
 var cleared_missions: Dictionary = {}
 var latest_cleared_mission_id: String = ""
 var last_entered_mission_id: String = ""
 var last_played_dungeon_name: String = ""
+
+# Per-session cache of reconstructed mission dicts (keyed by mission id), so the
+# repeated get_mission_data_local calls during a battle don't re-query the DB.
+var _mission_cache: Dictionary = {}
 
 
 # === Public lookups ===
 
 func get_mission_data_local(mission_id: String) -> Dictionary:
 	return _get_or_load_mission_data_local(mission_id)
-
-
-func get_latest_cleared_map_selection() -> Dictionary:
-	if latest_cleared_mission_id == "":
-		return {}
-	return await get_map_selection_for_mission(latest_cleared_mission_id)
-
-
-func get_map_selection_for_mission(mission_id: String) -> Dictionary:
-	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
-	if mission_data.is_empty():
-		return {}
-
-	var dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
-	if dungeon_id == "":
-		return {}
-
-	var map_location: Dictionary = _find_dungeon_location_in_worlds(dungeon_id)
-	if map_location.is_empty():
-		return {}
-
-	map_location["mission_id"] = mission_id
-	map_location["dungeon_id"] = dungeon_id
-	return map_location
 
 
 # === State management ===
@@ -95,12 +87,8 @@ func update_last_played_dungeon_from_mission(mission_id: String) -> void:
 	if dungeon_id == "":
 		return
 
-	var dungeon_data: Dictionary = StaticData.game_data_dungeons.get(dungeon_id, {})
-	if dungeon_data.is_empty():
-		return
-
-	if dungeon_data.has("names") and dungeon_data["names"] is Array and dungeon_data["names"].size() > 0:
-		var dungeon_name: String = str(dungeon_data["names"][0])
+	var dungeon_name: String = GameDatabase.get_dungeon_name(dungeon_id)
+	if dungeon_name != "":
 		last_played_dungeon_name = dungeon_name.replace(" ", "_")
 
 
@@ -110,6 +98,13 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
 	if mission_data.is_empty():
 		return {"success": false, "error": "Mission not found"}
+
+	# Exploration missions (type 2) are a separate, not-yet-implemented mode
+	# (free-roam map with random encounters), not the wave-based combat the
+	# battle scene provides. Refuse to launch them so they don't drop the player
+	# into a scenario fight, and don't charge NRG.
+	if str(mission_data.get("type", "")) == "EXPLORATION":
+		return {"success": false, "error": "Exploration missions aren't available yet."}
 
 	var cost_type: String = str(mission_data.get("cost_type", "NRG")).to_upper()
 	var cost_amount: int = int(mission_data.get("cost", 0))
@@ -255,19 +250,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 
 
 func request_dungeon_missions(mission_ids: Array) -> void:
-	var detailed_missions: Dictionary = {}
-	for mission_id in mission_ids:
-		var mission_key: String = str(mission_id)
-		var mission_data: Dictionary = await _get_or_load_mission_data(mission_key)
-		if not mission_data.is_empty():
-			detailed_missions[mission_key] = mission_data
-
-	for mission_id in mission_ids:
-		assert(detailed_missions.has(str(mission_id)), "CRITICAL ERROR: detailed_missions is missing mission_id: " + str(mission_id))
-		if not detailed_missions.has(str(mission_id)): push_error("CRITICAL ERROR: detailed_missions is missing mission_id: " + str(mission_id))
-		var mission_data = detailed_missions[str(mission_id)] if detailed_missions.has(str(mission_id)) else {}
-		if not mission_data.is_empty():
-			StaticData.game_data_missions[str(mission_id)] = mission_data # Cache it
 	dungeon_missions_ready.emit(mission_ids)
 
 
@@ -279,29 +261,27 @@ func _get_or_load_mission_data(mission_id: String) -> Dictionary:
 
 func _get_or_load_mission_data_local(mission_id: String) -> Dictionary:
 	var mission_key: String = str(mission_id)
-	# Note: the legacy user://data/missions.json mirror has been removed in
-	# favor of the per-dataset .bin cache. StaticData lazy-loads missions on
-	# first property access.
-	var mission_data: Dictionary = StaticData.game_data_missions.get(mission_key, {})
-	mission_data = _normalize_mission_data(mission_data)
-	if not mission_data.is_empty():
-		StaticData.game_data_missions[mission_key] = mission_data
+	if _mission_cache.has(mission_key):
+		return _mission_cache[mission_key]
 
-	return mission_data
-
-
-func _normalize_mission_data(mission_data: Dictionary) -> Dictionary:
+	# Mission data now comes from the MISSION + CHALLENGE tables (was missions.json).
+	var mission_data: Dictionary = GameDatabase.get_mission(mission_key)
 	if mission_data.is_empty():
-		return mission_data
+		return {}
 
-	if mission_data.has("challenges"):
-		var raw_challenges: Variant = mission_data.get("challenges")
-		if raw_challenges is Dictionary and raw_challenges.is_empty():
-			mission_data["challenges"] = []
-		elif raw_challenges == null:
-			mission_data["challenges"] = []
-
+	_apply_seeded_esper_reward(mission_key, mission_data)
+	_mission_cache[mission_key] = mission_data
 	return mission_data
+
+
+# Overlays the seeded first-clear ESPER reward (not yet in the DB) onto the
+# mission's reward list so esper unlocks keep working through the normal flow.
+func _apply_seeded_esper_reward(mission_key: String, mission_data: Dictionary) -> void:
+	if not SEEDED_ESPER_REWARDS.has(mission_key):
+		return
+	var rewards: Array = mission_data.get("rewards", [])
+	rewards.append(["ESPER", str(SEEDED_ESPER_REWARDS[mission_key])])
+	mission_data["rewards"] = rewards
 
 
 func _get_latest_cleared_mission_id_from_progress(progress: Dictionary) -> String:
@@ -332,45 +312,6 @@ func _extract_mission_numeric_id(mission_key: String) -> int:
 		return -1
 
 	return int(numeric_str)
-
-
-func _find_dungeon_location_in_worlds(dungeon_id: String) -> Dictionary:
-	for world_id in StaticData.game_data_worlds.keys():
-		var world_data: Dictionary = StaticData.game_data_worlds.get(world_id, {})
-		var regions: Dictionary = world_data.get("regions", {})
-		for region_id in regions.keys():
-			var region_data: Dictionary = regions.get(region_id, {})
-			var subregions: Dictionary = region_data.get("subregions", {})
-			for subregion_id in subregions.keys():
-				var subregion_data: Dictionary = subregions.get(subregion_id, {})
-				var dungeons: Variant = subregion_data.get("dungeons", [])
-				if _subregion_contains_dungeon(dungeons, dungeon_id):
-					return {
-						"world_id": str(world_id),
-						"region_id": str(region_id),
-						"subregion_id": str(subregion_id)
-					}
-
-	return {}
-
-
-func _subregion_contains_dungeon(dungeons: Variant, dungeon_id: String) -> bool:
-	if dungeons is Dictionary:
-		for candidate_id in dungeons.keys():
-			if str(candidate_id) == dungeon_id:
-				return true
-		return false
-
-	if dungeons is Array:
-		for candidate_id in dungeons:
-			if str(candidate_id) == dungeon_id:
-				return true
-		return false
-
-	if dungeons is String:
-		return str(dungeons) == dungeon_id
-
-	return false
 
 
 func _load_progress_from_local() -> Dictionary:

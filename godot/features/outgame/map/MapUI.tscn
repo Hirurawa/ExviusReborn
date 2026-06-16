@@ -80,20 +80,6 @@ text_overrun_behavior = 3
 clip_text = true
 fit_to_longest_item = false
 
-[node name="RegionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer" unique_id=320417280]
-layout_mode = 2
-size_flags_horizontal = 3
-text_overrun_behavior = 3
-clip_text = true
-fit_to_longest_item = false
-
-[node name="SubregionOptionButton" type="OptionButton" parent="VBoxContainer/HBoxContainer" unique_id=1057496023]
-layout_mode = 2
-size_flags_horizontal = 3
-text_overrun_behavior = 3
-clip_text = true
-fit_to_longest_item = false
-
 [node name="MapScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1348964588]
 layout_mode = 2
 size_flags_vertical = 3
@@ -115,33 +101,3 @@ offset_right = 2000.0
 offset_bottom = 2000.0
 mouse_filter = 2
 stretch_mode = 5
-
-[node name="MissionDetailsPopup" type="PopupPanel" parent="." unique_id=1002482684]
-size = Vector2i(400, 400)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MissionDetailsPopup" unique_id=971260839]
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 396.0
-offset_bottom = 396.0
-
-[node name="DungeonNameLabel" type="Label" parent="MissionDetailsPopup/VBoxContainer" unique_id=219395190]
-layout_mode = 2
-text = "Dungeon Name"
-horizontal_alignment = 1
-
-[node name="ScrollContainer" type="ScrollContainer" parent="MissionDetailsPopup/VBoxContainer" unique_id=62661457]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MissionsListContainer" type="VBoxContainer" parent="MissionDetailsPopup/VBoxContainer/ScrollContainer" unique_id=711388605]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="EnterTownDialog" type="ConfirmationDialog" parent="."]
-title = "Enter Town"
-initial_position = 2
-size = Vector2i(320, 120)
-ok_button_text = "Yes"
-cancel_button_text = "No"
-dialog_text = "Enter this town?"

@@ -24,6 +24,7 @@ AudioService="*res://core/services/audio_service.gd"
 StaticDataLoader="*res://core/static_data_loader.gd"
 Persistence="*res://core/services/persistence.gd"
 StaticData="*res://core/services/static_data.gd"
+GameDatabase="*res://core/services/game_database.gd"
 SkillResolver="*res://core/services/skill_resolver.gd"
 FriendsService="*res://core/services/friends_service.gd"
 CombatItemsService="*res://core/services/combat_items_service.gd"
@@ -52,6 +53,10 @@ window/size/viewport_width=640
 window/size/viewport_height=960
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot-sqlite/plugin.cfg")
 
 [importer_defaults]
 

@@ -88,14 +88,7 @@ func _prompt_leave_town() -> void:
 func _resolve_town_name(town_id: String) -> String:
 	if town_id == "":
 		return ""
-	var towns: Dictionary = StaticData.game_data_towns
-	if not towns.has(town_id):
-		return ""
-	var data: Dictionary = towns.get(town_id, {})
-	var names = data.get("names", [])
-	if names is Array and names.size() > 0 and names[0]:
-		return str(names[0])
-	return ""
+	return str(GameDatabase.get_town(town_id).get("townName", ""))
 
 func _on_leave_confirmed() -> void:
 	UIManager.pop()
@@ -115,16 +108,12 @@ func init_scene(params: Dictionary) -> void:
 	current_town_id = town_id
 	_load_town(town_id)
 
-# The towns.json key (e.g. "1102") is NOT the on-disk folder name. The
-# real folder id is encoded in the town's icon: "map_icon_<digits>.png"
-# -> "<digits>00". Returns "" if the short id is unknown or its icon
-# doesn't follow the expected convention.
-func _resolve_town_folder_id(short_id: String) -> String:
-	var towns: Dictionary = StaticData.game_data_towns
-	if not towns.has(short_id):
-		return ""
-	var entry: Dictionary = towns.get(short_id, {})
-	var icon: String = str(entry.get("icon", ""))
+# The town id (e.g. "1102") is NOT the on-disk folder name. The real folder id
+# is encoded in the town's icon (TOWN.iconFile): "map_icon_<digits>.png" ->
+# "<digits>00". Returns "" if the town is unknown or its icon doesn't follow the
+# expected convention.
+func _resolve_town_folder_id(town_id: String) -> String:
+	var icon: String = str(GameDatabase.get_town(town_id).get("iconFile", ""))
 	if icon == "":
 		return ""
 	var base: String = icon.get_file().get_basename()

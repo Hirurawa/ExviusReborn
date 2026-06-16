@@ -21,7 +21,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var rewards_popup: AcceptDialog = %RewardsPopup
 
 @onready var enemy_region: Control = %EnemyRegion
-@onready var enemies_container: VBoxContainer = %EnemiesContainer
+@onready var enemies_container: Control = %EnemiesContainer
 @onready var turn_label: Label = %TurnLabel
 @onready var player_sprites_container: Control = %PlayerSpritesContainer
 @onready var chain_count_label: Label = %ChainCountLabel
@@ -37,6 +37,14 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var reload_button: TextureButton = %ReloadButtonDecor
 
 const ACTION_FEEDBACK_DURATION: float = 1.5
+
+## Enemy layout tuning. `dispPos` values from BATTLE_GROUP are authored in an
+## abstract field space (observed roughly x:110-260, y:206-426); they are mapped
+## proportionally into the EnemyRegion using DISP_REFERENCE as the assumed field
+## size. Tweak DISP_REFERENCE to shift/scale the whole enemy arrangement.
+const DISP_REFERENCE: Vector2 = Vector2(320, 480)
+const ENEMY_WRAPPER_SIZE: Vector2 = Vector2(140, 140)
+const ENEMY_REGION_FALLBACK_SIZE: Vector2 = Vector2(360, 400)
 var _action_feedback_token: int = 0
 
 var _texture_cache: Dictionary = {}
@@ -618,18 +626,17 @@ func init_scene(params: Dictionary) -> void:
 	var formatted_name: String = ""
 
 	if dungeon_id != "":
-		var dungeon_data = StaticData.game_data_dungeons.get(dungeon_id, {})
-		if dungeon_data.has("names"):
-			var dungeon_name = str(dungeon_data["names"][0])
+		var dungeon_name: String = GameDatabase.get_dungeon_name(dungeon_id)
+		if dungeon_name != "":
 			formatted_name = dungeon_name.replace(" ", "_")
 
 	if formatted_name == "" and current_mission_id != "":
 		var mission_data: Dictionary = MissionService.get_mission_data_local(str(current_mission_id))
 		var mission_dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
 		if mission_dungeon_id != "":
-			var mission_dungeon_data: Dictionary = StaticData.game_data_dungeons.get(mission_dungeon_id, {})
-			if mission_dungeon_data.has("names") and mission_dungeon_data["names"] is Array and mission_dungeon_data["names"].size() > 0:
-				formatted_name = str(mission_dungeon_data["names"][0]).replace(" ", "_")
+			var mission_dungeon_name: String = GameDatabase.get_dungeon_name(mission_dungeon_id)
+			if mission_dungeon_name != "":
+				formatted_name = mission_dungeon_name.replace(" ", "_")
 
 	if formatted_name == "":
 		formatted_name = MissionService.last_played_dungeon_name
@@ -654,9 +661,13 @@ func _on_battle_state_ready() -> void:
 
 		var wrapper = Control.new()
 		wrapper.name = "EnemyWrapper_" + str(i)
-		wrapper.custom_minimum_size = Vector2(100, 100)
-		wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		wrapper.custom_minimum_size = ENEMY_WRAPPER_SIZE
+		wrapper.size = ENEMY_WRAPPER_SIZE
+		wrapper.mouse_filter = Control.MOUSE_FILTER_PASS
+		# Position the wrapper from the monster's authored dispPos (BATTLE_GROUP),
+		# falling back to an even vertical stagger when no position is available.
+		wrapper.position = _compute_enemy_wrapper_position(
+			i, battle_manager.enemy_units.size(), enemy_data.get("disp_pos", Vector2.ZERO))
 		enemies_container.add_child(wrapper)
 
 		var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
@@ -689,12 +700,6 @@ func _on_battle_state_ready() -> void:
 		target_arrow.offset_bottom = -4
 		target_arrow.visible = (i == 0)
 		wrapper.add_child(target_arrow)
-
-		var is_staggered = (i % 2 != 0)
-		if is_staggered:
-			enemy_sprite.position.x += 30
-			damage_container.position.x += 30
-			target_arrow.position.x += 30
 
 		# Connect click input for targeting (short tap) and info popup (long press)
 		enemy_sprite.short_tapped.connect(_on_enemy_short_tapped)
@@ -771,6 +776,31 @@ func _on_battle_state_ready() -> void:
 			damage_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 			damage_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			player_sprites_container.get_child(grid_idx).add_child(damage_container)
+
+## Computes an enemy wrapper's top-left position inside `enemies_container`.
+## When `disp_pos` is set (data-driven spawn), it is mapped proportionally from
+## DISP_REFERENCE space into the region and centered on the wrapper. Otherwise an
+## even vertical distribution with a horizontal stagger reproduces the legacy look.
+func _compute_enemy_wrapper_position(i: int, count: int, disp_pos: Vector2) -> Vector2:
+	var region_size: Vector2 = enemies_container.size
+	if region_size.x <= 1.0 or region_size.y <= 1.0:
+		region_size = enemy_region.size
+	if region_size.x <= 1.0 or region_size.y <= 1.0:
+		region_size = ENEMY_REGION_FALLBACK_SIZE
+
+	var half: Vector2 = ENEMY_WRAPPER_SIZE * 0.5
+
+	if disp_pos != Vector2.ZERO:
+		var nx: float = clampf(disp_pos.x / DISP_REFERENCE.x, 0.0, 1.0)
+		var ny: float = clampf(disp_pos.y / DISP_REFERENCE.y, 0.0, 1.0)
+		return Vector2(nx * region_size.x, ny * region_size.y) - half
+
+	# Legacy fallback: even vertical slots, centered, odd indices nudged right.
+	var slot_h: float = region_size.y / float(max(count, 1))
+	var pos: Vector2 = Vector2(region_size.x * 0.5, slot_h * (float(i) + 0.5)) - half
+	if i % 2 != 0:
+		pos.x += 30.0
+	return pos
 
 func _create_slot_placeholder() -> TextureRect:
 	var placeholder := TextureRect.new()

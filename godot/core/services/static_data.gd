@@ -49,17 +49,12 @@ const _PROP_TO_KEY: Dictionary = {
 	"game_data_units": "units",
 	"game_data_items": "items",
 	"game_data_equipment": "equipment",
-	"game_data_worlds": "worlds",
-	"game_data_dungeons": "dungeons",
-	"game_data_towns": "towns",
-	"game_data_missions": "missions",
 	"game_data_skills_magic": "skills_magic",
 	"game_data_skills_ability": "skills_ability",
 	"game_data_skills_passive": "skills_passive",
 	"game_data_limitbursts": "limitbursts",
 	"game_data_materia": "materia",
 	"game_data_equipment_icons": "equipment-icons",
-	"game_data_monsters": "monsters",
 	"game_data_summons": "summons",
 	"game_data_summons_boards": "summons_boards",
 	"game_data_summons_exp_patterns": "summons_exp_patterns",
@@ -67,12 +62,12 @@ const _PROP_TO_KEY: Dictionary = {
 	"game_data_unit_exp_patterns": "unit_exp_patterns",
 }
 
-# Dataset key -> default empty value (everything is Dictionary except monsters).
+# Dataset key -> default empty value.
 const _DEFAULTS: Dictionary = {
-	"units": {}, "items": {}, "equipment": {}, "worlds": {}, "dungeons": {},
-	"towns": {}, "missions": {}, "skills_magic": {}, "skills_ability": {},
+	"units": {}, "items": {}, "equipment": {},
+	"skills_magic": {}, "skills_ability": {},
 	"skills_passive": {}, "limitbursts": {}, "materia": {}, "equipment-icons": {},
-	"monsters": [], "summons": {}, "summons_boards": {},
+	"summons": {}, "summons_boards": {},
 	"summons_exp_patterns": {}, "summons_stat_patterns": {}, "unit_exp_patterns": {},
 }
 
@@ -202,13 +197,10 @@ func needs_refresh() -> bool:
 
 func evict_dataset(key: String) -> void:
 	_loaded.erase(key)
-	if key == "monsters":
-		_monsters_by_name.clear()
 
 
 func evict_all() -> void:
 	_loaded.clear()
-	_monsters_by_name.clear()
 	# Keep _keys_index — it's tiny and we rebuild from disk if needed.
 
 
@@ -217,31 +209,8 @@ func evict_all() -> void:
 # touches them again.
 func evict_outgame_only_datasets() -> void:
 	for k in ["summons_boards", "summons_exp_patterns", "summons_stat_patterns",
-			"equipment-icons", "unit_exp_patterns", "worlds", "towns"]:
+			"equipment-icons", "unit_exp_patterns"]:
 		_loaded.erase(k)
-
-
-# Side-index over the monsters Array (which is stored as an Array, not a dict).
-# Built lazily on first call; rebuilt after `evict_dataset("monsters")`. Avoids
-# the O(n) scan in `battle_manager._generate_enemy_data` on every spawn.
-var _monsters_by_name: Dictionary = {}
-
-func get_monster_by_name(name: String) -> Dictionary:
-	if name == "":
-		return {}
-	if _monsters_by_name.is_empty():
-		var arr: Variant = _ensure_dataset("monsters")
-		if not (arr is Array):
-			return {}
-		for monster in arr:
-			if monster is Dictionary:
-				var n: String = str(monster.get("name", ""))
-				if n != "":
-					_monsters_by_name[n] = monster
-	var hit: Variant = _monsters_by_name.get(name, null)
-	if hit is Dictionary:
-		return hit
-	return {}
 
 
 # === Lightweight keys-only index ===

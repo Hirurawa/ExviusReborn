@@ -1087,13 +1087,12 @@ func _ensure_unit_exp_patterns_loaded() -> void:
 		push_error("unit_exp_patterns.json loaded but no valid pattern rows were parsed")
 
 func _calculate_xp_for_level_local(current_level: int, exp_pattern: int) -> int:
-	# FFBE unit_exp_patterns rows are keyed by destination level: row N is XP to go from N-1 → N.
+	# FFBE unit_exp_patterns rows are keyed by current level: row N is XP to go from level N → N+1.
 	_ensure_unit_exp_patterns_loaded()
 	if not _unit_exp_patterns_cache.has(exp_pattern):
 		return 0
 	var table: Dictionary = _unit_exp_patterns_cache[exp_pattern]
-	var destination_level: int = current_level + 1
-	return int(table.get(destination_level, 0))
+	return int(table.get(current_level, 0))
 
 func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:
 	var total: int = 0
@@ -1101,29 +1100,20 @@ func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:
 		total += _calculate_xp_for_level_local(l, exp_pattern)
 	return total
 
-func _is_seven_star_free_level_transition(
-		current_level: int,
-		destination_level: int,
-		max_level: int,
-		_exp_pattern: int) -> bool:
-	# 7★ units always pass through level 101 when coming from level 100 (FFBE 6★→7★ +1).
-	return max_level > 100 and current_level == 100 and destination_level == 101
-
 func _calculate_level_from_xp_local(total_xp: int, exp_pattern: int, max_level: int) -> int:
 	var level: int = 1
 	var remaining: int = maxi(0, total_xp)
-	while level < max_level:
-		var destination_level: int = level + 1
-		var required: int = _calculate_xp_for_level_local(level, exp_pattern)
+	for current_level in range(1, max_level):
+		var required: int = _calculate_xp_for_level_local(current_level, exp_pattern)
 		if required <= 0:
-			if _is_seven_star_free_level_transition(level, destination_level, max_level, exp_pattern):
-				level += 1
-				continue
-			break
+			# Missing XP table entry: allow free progression to next level.
+			# This keeps max-level progression working when the table uses a placeholder entry.
+			level = current_level + 1
+			continue
 		if remaining < required:
 			break
 		remaining -= required
-		level += 1
+		level = current_level + 1
 	return level
 
 func _update_unit_next_xp_local(unit: Dictionary, unit_data: Dictionary) -> void:

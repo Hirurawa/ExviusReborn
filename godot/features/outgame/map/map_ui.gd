@@ -22,6 +22,7 @@ const WORLD_IMAGE_DIR: String = "res://assets/world/"
 const AREA_MAP_DIR: String = "res://assets/maps/"
 const REGION_MAP_DIR: String = "res://assets/maps/region/"
 const MAP_ICON_DIR: String = "res://assets/map_icons/"
+const MISSION_POPUP_SCENE: PackedScene = preload("res://features/outgame/map/DungeonMissionListPopup.tscn")
 
 const DEFAULT_CANVAS_SIZE: Vector2 = Vector2(2000.0, 2000.0)
 const AREA_CANVAS_FALLBACK: Vector2 = Vector2(640.0, 1136.0)
@@ -41,6 +42,8 @@ const AREA_RECT_COLOR: Color = Color(1.0, 0.6, 0.3, 0.35)
 @onready var background_image: TextureRect = $VBoxContainer/MapScrollContainer/MapSizer/MapContent/BackgroundImage
 
 @onready var map_world_option: OptionButton = $VBoxContainer/HBoxContainer/WorldOptionButton
+@onready var map_world_row: Control = $VBoxContainer/HBoxContainer
+@onready var map_top_bar: Control = $VBoxContainer/TopBar
 @onready var map_back_button: TextureButton = $VBoxContainer/TopBar/UnitNamebgChara/BackButton
 
 var map_zoom_level: float = 1.0
@@ -54,9 +57,9 @@ var current_selected_area: String = ""
 var _texture_cache: Dictionary = {}
 var _map_canvas_base_size: Vector2 = DEFAULT_CANVAS_SIZE
 
-# Inline dungeon mission-list popup overlay (built in code, kept above the map
-# canvas so it ignores zoom/pan) and a lazily-created error dialog.
-var _mission_popup: Control = null
+# Dungeon mission-list popup overlay (standalone scene, parented here so it stays
+# above the zoomable map canvas) and a lazily-created error dialog.
+var _mission_popup: DungeonMissionListPopup = null
 var _mission_error_dialog: AcceptDialog = null
 
 # Town-entry confirmation. `_pending_town_id` is the TOWN `townId`, handed to
@@ -186,6 +189,9 @@ func _reset_view_transform() -> void:
 # === Input (zoom + pan) ===
 
 func _on_map_scroll_gui_input(event: InputEvent) -> void:
+	if _is_mission_popup_open():
+		_is_panning_map = false
+		return
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_is_panning_map = event.pressed
@@ -554,7 +560,9 @@ func _add_point_marker(position: Vector2, icon_path: String, marker_name: String
 # === Navigation ===
 
 func _on_back_pressed() -> void:
-	_close_mission_popup()
+	if _is_mission_popup_open():
+		_close_mission_popup()
+		return
 	if current_view == "dungeon":
 		_show_area_view(current_selected_world, current_selected_land)
 		return
@@ -567,95 +575,58 @@ func _on_back_pressed() -> void:
 # === Dungeon mission-list popup ===
 
 func _on_dungeon_clicked(dungeon_id: String, dungeon_name: String) -> void:
+	var missions: Array[Dictionary] = _build_mission_popup_entries(GameDatabase.get_missions(dungeon_id))
+	_open_mission_popup(dungeon_name, missions)
+
+
+func _open_mission_popup(dungeon_name: String, missions: Array[Dictionary]) -> void:
 	_close_mission_popup()
 
-	var missions: Array = GameDatabase.get_missions(dungeon_id)
+	var popup: DungeonMissionListPopup = MISSION_POPUP_SCENE.instantiate() as DungeonMissionListPopup
+	if popup == null:
+		return
 
-	# Full-screen overlay anchored to the map root, so it sits above the map
-	# canvas and ignores zoom/pan. STOP blocks map input while the popup is open.
-	var overlay: Control = Control.new()
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(overlay)
-	_mission_popup = overlay
+	add_child(popup)
+	_mission_popup = popup
+	_set_map_top_bar_visible(false)
 
-	# Dimmer: tapping outside the panel closes the popup.
-	var dimmer: ColorRect = ColorRect.new()
-	dimmer.color = Color(0.0, 0.0, 0.0, 0.6)
-	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
-	dimmer.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_close_mission_popup()
-	)
-	overlay.add_child(dimmer)
+	popup.init_scene({
+		"dungeon_name": dungeon_name,
+		"missions": missions,
+	})
+	popup.mission_selected.connect(_on_mission_row_pressed)
+	popup.home_pressed.connect(_on_mission_popup_home_pressed)
+	popup.back_pressed.connect(_on_back_pressed)
 
-	# Center the panel without blocking dimmer clicks around it.
-	var center: CenterContainer = CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	overlay.add_child(center)
 
-	var panel: PanelContainer = PanelContainer.new()
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	panel.custom_minimum_size = Vector2(440.0, 0.0)
-	center.add_child(panel)
+func _build_mission_popup_entries(missions: Array) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for mission_value in missions:
+		if not (mission_value is Dictionary):
+			continue
+		var mission: Dictionary = (mission_value as Dictionary).duplicate(true)
+		var mission_id: String = str(mission.get("missionId", ""))
+		if mission_id == "":
+			continue
+		mission["row_state"] = _resolve_mission_row_state(mission_id)
+		entries.append(mission)
+	return entries
 
-	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	panel.add_child(vbox)
 
-	var title: Label = Label.new()
-	title.text = dungeon_name if dungeon_name != "" else "Missions"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
-	vbox.add_child(title)
-
-	if missions.is_empty():
-		var empty_lbl: Label = Label.new()
-		empty_lbl.text = "No missions available"
-		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(empty_lbl)
-	else:
-		var scroll: ScrollContainer = ScrollContainer.new()
-		scroll.custom_minimum_size = Vector2(0.0, 360.0)
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		vbox.add_child(scroll)
-
-		var list: VBoxContainer = VBoxContainer.new()
-		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		list.add_theme_constant_override("separation", 4)
-		scroll.add_child(list)
-
-		for mission in missions:
-			var mission_id: String = str(mission.get("missionId", ""))
-			var mission_name: String = str(mission.get("name", ""))
-			if mission_name == "":
-				mission_name = mission_id
-			var cost: String = str(mission.get("cost", "0"))
-			var exp_reward: String = str(mission.get("exp", "0"))
-			var gil_reward: String = str(mission.get("gil", "0"))
-			var waves: String = str(mission.get("waveCount", "0"))
-
-			var row: Button = Button.new()
-			row.text = "%s\nNRG %s · EXP %s · Gil %s · Waves %s" % [mission_name, cost, exp_reward, gil_reward, waves]
-			row.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			row.custom_minimum_size = Vector2(400.0, 0.0)
-			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.pressed.connect(_on_mission_row_pressed.bind(mission_id))
-			list.add_child(row)
-
-	var close_btn: Button = Button.new()
-	close_btn.text = "Close"
-	close_btn.pressed.connect(_close_mission_popup)
-	vbox.add_child(close_btn)
+func _resolve_mission_row_state(mission_id: String) -> String:
+	var progress: Variant = MissionService.cleared_missions.get(mission_id, {})
+	if progress is Dictionary and bool((progress as Dictionary).get("cleared", false)):
+		return "clear"
+	if mission_id == MissionService.last_entered_mission_id:
+		return "achieving"
+	return "default"
 
 
 func _close_mission_popup() -> void:
 	if _mission_popup != null and is_instance_valid(_mission_popup):
 		_mission_popup.queue_free()
 	_mission_popup = null
+	_set_map_top_bar_visible(true)
 
 
 func _on_mission_row_pressed(mission_id: String) -> void:
@@ -667,6 +638,22 @@ func _on_mission_row_pressed(mission_id: String) -> void:
 		UIManager.push("combat_ui", {"mission_id": mission_id})
 	else:
 		_show_mission_error(str(result.get("error", "Could not start this mission.")))
+
+
+func _on_mission_popup_home_pressed() -> void:
+	_close_mission_popup()
+	UIManager.set_root("game_ui")
+
+
+func _is_mission_popup_open() -> bool:
+	return _mission_popup != null and is_instance_valid(_mission_popup)
+
+
+func _set_map_top_bar_visible(show_bar: bool) -> void:
+	if map_top_bar != null:
+		map_top_bar.visible = show_bar
+	if map_world_row != null:
+		map_world_row.visible = show_bar
 
 
 func _show_mission_error(message: String) -> void:

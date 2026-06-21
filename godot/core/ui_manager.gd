@@ -15,6 +15,7 @@ var _scenes_map: Dictionary = {
 	"edit_profile_ui": "res://features/outgame/profile/EditProfileUI.tscn",
 	"shop_ui": "res://features/outgame/shop/ShopUI.tscn",
 	"map_ui": "res://features/outgame/map/MapUI.tscn",
+	"dungeon_mission_list_popup": "res://features/outgame/map/DungeonMissionListPopup.tscn",
 	"units_ui": "res://features/outgame/units/UnitsUI.tscn",
 	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
 	"awaken_ui": "res://features/outgame/units/UnitAwakening.tscn",

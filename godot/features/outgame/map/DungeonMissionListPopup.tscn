@@ -1,0 +1,177 @@
+[gd_scene format=3 uid="uid://sxj1w16uc3gt"]
+
+[ext_resource type="Script" path="res://features/outgame/map/dungeon_mission_list_popup.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/locationnamebg.tres" id="2_title_plate"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/home_icon1.tres" id="4_home_btn"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/home_icon2.tres" id="5_home_btn_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/unit/unit_minibutton1.tres" id="6_back_btn"]
+[ext_resource type="Texture2D" path="res://assets/ui/unit/unit_minibutton2.tres" id="7_back_btn_pressed"]
+
+[node name="DungeonMissionListPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+z_index = 100
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+modulate = Color(1, 1, 1, 0)
+
+[node name="ContentRoot" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -240.0
+offset_right = 320.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ContentRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentRoot/VBoxContainer"]
+custom_minimum_size = Vector2(640, 440)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ListHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="EmptyLabel" type="Label" parent="ContentRoot/VBoxContainer"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "No missions available"
+horizontal_alignment = 1
+
+[node name="HeaderLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="HeaderAnchor" type="Control" parent="HeaderLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitlePlate" type="Control" parent="HeaderLayer/HeaderAnchor"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 0.0
+offset_top = 108.0
+offset_right = 424.0
+offset_bottom = 180.0
+mouse_filter = 2
+
+[node name="Plate" type="TextureRect" parent="HeaderLayer/HeaderAnchor/TitlePlate"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_title_plate")
+stretch_mode = 0
+
+[node name="TitleLabel" type="Label" parent="HeaderLayer/HeaderAnchor/TitlePlate"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 88.0
+offset_top = 16.0
+offset_right = -32.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 19
+text = "Dungeon Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="BackButton" type="TextureButton" parent="HeaderLayer/HeaderAnchor"]
+z_index = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 114.0
+offset_right = 104.0
+offset_bottom = 174.0
+mouse_filter = 0
+texture_normal = ExtResource("6_back_btn")
+texture_pressed = ExtResource("7_back_btn_pressed")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="BackLabel" type="Label" parent="HeaderLayer/HeaderAnchor/BackButton"]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HomeButton" type="TextureButton" parent="HeaderLayer/HeaderAnchor"]
+z_index = 2
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 92.0
+offset_right = -8.0
+offset_bottom = 196.0
+grow_horizontal = 0
+mouse_filter = 0
+texture_normal = ExtResource("4_home_btn")
+texture_pressed = ExtResource("5_home_btn_pressed")
+texture_hover = ExtResource("5_home_btn_pressed")
+ignore_texture_size = true
+stretch_mode = 5

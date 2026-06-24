@@ -276,6 +276,11 @@ func _show_world_view(world_id: String) -> void:
 	_reset_view_transform()
 
 func _on_land_clicked(world_id: String, land_id: String) -> void:
+	var areas: Array = GameDatabase.get_areas(world_id, land_id)
+	if areas.size() == 1:
+		var area_id: String = str(areas[0].get("areaId", ""))
+		_show_dungeon_view(world_id, land_id, area_id)
+		return
 	_show_area_view(world_id, land_id)
 
 
@@ -556,7 +561,11 @@ func _add_point_marker(position: Vector2, icon_path: String, marker_name: String
 func _on_back_pressed() -> void:
 	_close_mission_popup()
 	if current_view == "dungeon":
-		_show_area_view(current_selected_world, current_selected_land)
+		var areas: Array = GameDatabase.get_areas(current_selected_world, current_selected_land)
+		if areas.size() == 1:
+			_show_world_view(current_selected_world)
+		else:
+			_show_area_view(current_selected_world, current_selected_land)
 		return
 	if current_view == "area":
 		_show_world_view(current_selected_world)

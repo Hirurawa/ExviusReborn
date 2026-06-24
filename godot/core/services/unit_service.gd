@@ -149,6 +149,7 @@ func summon_exp_boost_units(amount: int = 3) -> Dictionary:
 func summon_trust_units(amount: int = 3) -> Dictionary:
 	return _summon_fixed_units_local("904000105", amount, "summon_trust_units")
 
+## CAN BE REMOVED ???
 func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	var unit_found: bool = false
 	for unit in owned_units_ids:
@@ -164,6 +165,15 @@ func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 		return {"success": true}
 	else:
 		return {"error": "ERR_UNIT_NOT_FOUND"}
+
+func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
+	if unit_inst.is_empty():
+		return 0
+
+	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit_inst.get("unit_id", "")), {})
+	var runtime_unit: Dictionary = unit_inst.duplicate(true)
+	_update_unit_next_xp_local(runtime_unit, unit_data)
+	return int(runtime_unit.get("next_xp", 0))
 
 func _find_awakening_entry(unit: Dictionary) -> Dictionary:
 	# Returns the static-data entry matching the unit's current_rarity, or {} if not found.
@@ -548,7 +558,6 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 		equip_failed.emit("ERR_EQUIPMENT_NOT_FOUND")
 		return
 
-	var game_data_equipment: Dictionary = StaticData.game_data_equipment
 	var target_unit_inst: Dictionary = {}
 	for unit in owned_units_ids:
 		if unit is Dictionary and str(unit.get("instance_id", "")) == instance_id:
@@ -562,7 +571,7 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 	if item_id != "":
 		var requested_item: Dictionary = InventoryService.get_equipment_instance(item_id)
 		var template_id: String = str(requested_item.get("template_id", ""))
-		item_template = game_data_equipment.get(template_id, {})
+		item_template = GameDatabase.get_equipment(template_id)
 		if item_template.is_empty():
 			# Materia instances live in the same equipment collection but resolve
 			# their template via game_data_materia. The validator only needs the
@@ -755,7 +764,6 @@ func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 	return {
 		"xp": int(hydrated_unit.get("xp", 0)),
 		"level": int(hydrated_unit.get("level", 1)),
-		"next_xp": int(hydrated_unit.get("next_xp", 0)),
 		"unit_id": str(hydrated_unit.get("unit_id", "")),
 		"instance_id": str(hydrated_unit.get("instance_id", "")),
 		"equipment": _normalize_unit_equipment(hydrated_unit.get("equipment", {})),
@@ -911,7 +919,6 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 	if unit_data.is_empty():
 		return {"error": "Missing unit static data for trust reward"}
 
-	var game_data_equipment: Dictionary = StaticData.game_data_equipment
 	var game_data_materia: Dictionary = StaticData.game_data_materia
 
 	var tmr_value: Variant = unit_data.get("TMR", null)
@@ -919,7 +926,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 		var reward_type: String = str(tmr_value[0])
 		var reward_id: String = str(tmr_value[1])
 		if reward_type == "EQUIP":
-			if not game_data_equipment.has(reward_id):
+			if GameDatabase.get_equipment(reward_id).is_empty():
 				return {"error": "Trust reward equipment template not found"}
 			return {"reward_type": "EQUIP", "template_id": reward_id}
 		elif reward_type == "MATERIA":
@@ -931,7 +938,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 
 	var trust_mastery_id: String = str(unit_data.get("trust_mastery_id", ""))
 	if trust_mastery_id != "":
-		if game_data_equipment.has(trust_mastery_id):
+		if not GameDatabase.get_equipment(trust_mastery_id).is_empty():
 			return {"reward_type": "EQUIP", "template_id": trust_mastery_id}
 		if game_data_materia.has(trust_mastery_id):
 			return {"reward_type": "MATERIA", "template_id": trust_mastery_id}
@@ -958,67 +965,33 @@ func _get_unit_max_level_local(unit: Dictionary) -> int:
 	var rarity: int = int(unit.get("current_rarity", 1))
 	return int(StatCalculator.RARITY_MAX_LEVELS.get(rarity, 15))
 
-func _ensure_unit_exp_patterns_loaded() -> void:
-	if not _unit_exp_patterns_cache.is_empty():
+# Marginal-XP table for a single exp pattern, lazily fetched from the DB
+# (unit_exp_pattern table) and cached per pattern. The DB stores needExp[L] as
+# the cumulative XP required to REACH level L (with an L=1=0 row), while the
+# leveling math below wants the MARGINAL XP to advance from L to L+1, so the
+# table is built as marginal[L] = needExp[L+1].
+func _ensure_exp_pattern_loaded(pattern_id: int) -> void:
+	if pattern_id <= 0 or _unit_exp_patterns_cache.has(pattern_id):
 		return
 
-	if not StaticData:
-		push_error("Unit exp patterns unavailable: StaticData autoload is missing")
+	if not GameDatabase:
+		push_error("Unit exp patterns unavailable: GameDatabase autoload is missing")
 		return
 
-	var source_patterns: Dictionary = StaticData.game_data_unit_exp_patterns
-	if source_patterns.is_empty():
-		push_error("unit_exp_patterns.json is empty or not loaded in StaticData")
-		return
+	var marginal: Dictionary = {}
+	for row in GameDatabase.get_unit_exp_pattern(pattern_id):
+		var level: int = int(row.get("level", 0))
+		# needExp at level L is the cost to reach L, i.e. the marginal cost of
+		# the previous level step (L-1 -> L) -> marginal[L - 1].
+		if level >= 2:
+			marginal[level - 1] = int(row.get("needExp", 0))
 
-	for raw_pattern_key in source_patterns.keys():
-		var normalized_pattern_text: String = str(raw_pattern_key).strip_edges()
-		if normalized_pattern_text.begins_with("Gr "):
-			normalized_pattern_text = normalized_pattern_text.trim_prefix("Gr ").strip_edges()
-		if not normalized_pattern_text.is_valid_int():
-			continue
-
-		var pattern_id: int = int(normalized_pattern_text)
-		if pattern_id <= 0:
-			continue
-
-		var pattern_rows_value: Variant = source_patterns.get(raw_pattern_key, {})
-		if not (pattern_rows_value is Dictionary):
-			continue
-
-		var pattern_rows: Dictionary = pattern_rows_value
-		if not _unit_exp_patterns_cache.has(pattern_id):
-			_unit_exp_patterns_cache[pattern_id] = {}
-
-		for raw_level_key in pattern_rows.keys():
-			var normalized_level_text: String = str(raw_level_key).strip_edges()
-			if not normalized_level_text.is_valid_int():
-				continue
-
-			var level: int = int(normalized_level_text)
-			if level <= 0:
-				continue
-
-			var xp_raw: Variant = pattern_rows.get(raw_level_key, 0)
-			var xp_value: int = 0
-			if xp_raw is String:
-				var xp_text: String = str(xp_raw).strip_edges()
-				if xp_text != "" and xp_text != "-" and xp_text.is_valid_int():
-					xp_value = int(xp_text)
-			else:
-				xp_value = int(xp_raw)
-
-			var runtime_rows: Dictionary = _unit_exp_patterns_cache[pattern_id]
-			runtime_rows[level] = xp_value
-
-	if _unit_exp_patterns_cache.is_empty():
-		push_error("unit_exp_patterns.json loaded but no valid pattern rows were parsed")
+	# Cache even when empty so an unknown pattern isn't re-queried on every call.
+	_unit_exp_patterns_cache[pattern_id] = marginal
 
 func _calculate_xp_for_level_local(level: int, exp_pattern: int) -> int:
-	_ensure_unit_exp_patterns_loaded()
-	if not _unit_exp_patterns_cache.has(exp_pattern):
-		return 0
-	var table: Dictionary = _unit_exp_patterns_cache[exp_pattern]
+	_ensure_exp_pattern_loaded(exp_pattern)
+	var table: Dictionary = _unit_exp_patterns_cache.get(exp_pattern, {})
 	return int(table.get(level, 0))
 
 func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:

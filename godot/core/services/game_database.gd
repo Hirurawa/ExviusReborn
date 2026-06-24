@@ -500,6 +500,12 @@ func get_unit_exp_pattern(pattern_id: int) -> Array:
 	)
 
 
+## All per-level XP rows across all unit exp patterns, ordered by pattern id then level.
+## Each row: { expPatternId, level, needExp }.
+func get_all_unit_exp_patterns() -> Array:
+	return query("SELECT expPatternId, level, needExp FROM unit_exp_pattern ORDER BY expPatternId, level")
+
+
 # === Skills: magic ===
 
 const _MAGIC_TYPE_NAMES: Dictionary = {"1": "White", "2": "Black", "3": "Green", "4": "Blue"}

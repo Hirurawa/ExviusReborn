@@ -103,8 +103,8 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	# (free-roam map with random encounters), not the wave-based combat the
 	# battle scene provides. Refuse to launch them so they don't drop the player
 	# into a scenario fight, and don't charge NRG.
-	if str(mission_data.get("type", "")) == "EXPLORATION":
-		return {"success": false, "error": "Exploration missions aren't available yet."}
+	#if str(mission_data.get("type", "")) == "EXPLORATION":
+		#return {"success": false, "error": "Exploration missions aren't available yet."}
 
 	var cost_type: String = str(mission_data.get("cost_type", "NRG")).to_upper()
 	var cost_amount: int = int(mission_data.get("cost", 0))

@@ -299,7 +299,7 @@ const _MISSION_TYPE_NAMES: Dictionary = {"1": "BATTLE", "2": "EXPLORATION"}
 ## overlays them.)
 func get_mission(mission_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT missionId, name, dungeonId, type, cost, exp, gil, waveCount, rewards"
+		"SELECT missionId, name, dungeonId, type, cost, exp, gil, waveCount, rewards, openSwitch"
 		+ " FROM mission WHERE missionId = ? LIMIT 1",
 		[mission_id]
 	)
@@ -317,6 +317,7 @@ func get_mission(mission_id: String) -> Dictionary:
 		"gil": int(r.get("gil", 0)),
 		"rewards": _parse_reward_list(str(r.get("rewards", ""))),
 		"challenges": get_mission_challenges(mission_id),
+		"open_switches": str(r.get("openSwitch", "")),
 	}
 
 

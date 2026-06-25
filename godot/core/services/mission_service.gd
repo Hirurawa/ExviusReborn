@@ -191,6 +191,10 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	if mission_data.has("exp"):
 		rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
 
+	var any_switches_unlocked: bool = false
+	if mission_data.has("open_switches"):
+		any_switches_unlocked = SwitchService.unlock_switches(mission_data["open_switches"])
+
 	var did_unlock_esper: bool = false
 	if not was_already_cleared:
 		var raw_rewards: Variant = mission_data.get("rewards", [])
@@ -241,6 +245,8 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	PlayerProfile.save_snapshot("finish_mission")
 	if did_unlock_esper:
 		Persistence.save_snapshot(EsperService.SNAPSHOT_FILE, EsperService.snapshot_payload(), "finish_mission")
+	if any_switches_unlocked:
+		Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "finish_mission")
 
 	PlayerProfile.emit_all()
 	InventoryService.emit_updated()

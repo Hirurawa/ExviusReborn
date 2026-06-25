@@ -160,14 +160,14 @@ func query(sql: String, params: Array = []) -> Array:
 ## with no map art -> "" so they render blank). The result keys (worldName,
 ## dispOrder) are aliases kept stable for the map UI consumer.
 func get_worlds() -> Array:
-	return query("SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder FROM world ORDER BY rowid")
+	return query("SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder, switchInfo FROM world ORDER BY rowid")
 
 
 ## A single world row (worldId, worldName, dispOrder), or {} if not found.
 ## `dispOrder` is the background image filename (world.imageInfo), aliased.
 func get_world(world_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder FROM world WHERE worldId = ? LIMIT 1",
+		"SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder, switchInfo FROM world WHERE worldId = ? LIMIT 1",
 		[world_id]
 	)
 	return rows[0] if not rows.is_empty() else {}
@@ -176,7 +176,7 @@ func get_world(world_id: String) -> Dictionary:
 ## Lands belonging to a world (clickable regions on the world view).
 func get_lands(world_id: String) -> Array:
 	return query(
-		"SELECT landId, name AS landName, touchRect, labelPos FROM land WHERE worldId = ? ORDER BY rowid",
+		"SELECT landId, name AS landName, touchRect, labelPos, switchInfo FROM land WHERE worldId = ? ORDER BY rowid",
 		[world_id]
 	)
 
@@ -195,7 +195,7 @@ func get_land_map(world_id: String, land_id: String) -> String:
 ## Areas within a land (clickable regions on the area view).
 func get_areas(world_id: String, land_id: String) -> Array:
 	return query(
-		"SELECT areaId, name AS areaName, touchRect, labelPos FROM area WHERE worldId = ? AND landId = ? ORDER BY rowid",
+		"SELECT areaId, name AS areaName, touchRect, labelPos, switchInfo FROM area WHERE worldId = ? AND landId = ? ORDER BY rowid",
 		[world_id, land_id]
 	)
 
@@ -218,7 +218,7 @@ func get_area_map(area_id: String) -> Dictionary:
 ## and aliased so the map UI consumer keeps reading the same key.
 func get_towns(area_id: String) -> Array:
 	return query(
-		"SELECT t.townId, t.name AS townName, t.position, COALESCE(i.iconFile, '') AS iconFile FROM town t"
+		"SELECT t.townId, t.name AS townName, t.position, COALESCE(i.iconFile, '') AS iconFile, t.switchInfo FROM town t"
 		+ " LEFT JOIN icon i ON i.iconId = t.iconId"
 		+ " WHERE t.areaId = ?"
 		+ " ORDER BY t.rowid",
@@ -231,7 +231,7 @@ func get_towns(area_id: String) -> Array:
 ## resolved through the icon master (dungeon.iconId -> icon.iconFile) and aliased.
 func get_dungeons(area_id: String) -> Array:
 	return query(
-		"SELECT d.dungeonId, d.name, d.position, COALESCE(i.iconFile, '') AS iconFile FROM dungeon d"
+		"SELECT d.dungeonId, d.name, d.position, COALESCE(i.iconFile, '') AS iconFile, d.switchInfo FROM dungeon d"
 		+ " LEFT JOIN icon i ON i.iconId = d.iconId"
 		+ " WHERE d.areaId = ?"
 		+ " AND (COALESCE(d.fileInfo, '') = '' OR d.fileInfo NOT IN (SELECT fileInfo FROM town WHERE COALESCE(fileInfo, '') != ''))"
@@ -243,7 +243,7 @@ func get_dungeons(area_id: String) -> Array:
 ## Missions for a dungeon, in intended progression order (dispOrder is INTEGER).
 func get_missions(dungeon_id: String) -> Array:
 	return query(
-		"SELECT missionId, name, cost, exp, gil, waveCount FROM mission WHERE dungeonId = ? ORDER BY dispOrder",
+		"SELECT missionId, name, cost, exp, gil, waveCount, switchInfo FROM mission WHERE dungeonId = ? ORDER BY dispOrder",
 		[dungeon_id]
 	)
 

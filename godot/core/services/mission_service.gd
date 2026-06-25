@@ -19,17 +19,6 @@ signal dungeon_missions_ready(mission_ids: Array)
 
 const SNAPSHOT_FILE: String = "mission_progress.json"
 
-# First-clear ESPER rewards are not encoded in the DB MISSION.rewards yet (it only
-# carries the LAPIS reward), so the 20 mission -> esper-id unlocks are seeded here
-# and overlaid onto the DB rewards in `_get_or_load_mission_data_local`. Remove an
-# entry once its ESPER reward lands in the database. mission_id -> summon id.
-const SEEDED_ESPER_REWARDS: Dictionary = {
-	"1110404": "1", "1115005": "2", "1125105": "6", "1125204": "3",
-	"1135505": "7", "1230105": "5", "1325105": "4", "1425105": "10",
-	"1515005": "8", "1625105": "11", "1715105": "19", "1815105": "9",
-	"1920801": "15", "11215105": "16", "11315101": "12", "11425105": "14",
-	"11515105": "13", "11515205": "17", "11720701": "18", "21010201": "20",
-}
 
 var cleared_missions: Dictionary = {}
 var latest_cleared_mission_id: String = ""
@@ -192,10 +181,32 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
 
 	var any_switches_unlocked: bool = false
-	if mission_data.has("open_switches"):
-		any_switches_unlocked = SwitchService.unlock_switches(mission_data["open_switches"])
-
 	var did_unlock_esper: bool = false
+	if mission_data.has("open_switches"):
+		var switches_str: String = str(mission_data["open_switches"])
+		any_switches_unlocked = SwitchService.unlock_switches(switches_str)
+
+		# Parse switches for esper unlocks (Format: 82{beastId}100, length 8)
+		# Only check for new unlocks if mission wasn't already cleared.
+		if not was_already_cleared and any_switches_unlocked:
+			var switch_parts: PackedStringArray = switches_str.split(",")
+			for part in switch_parts:
+				var switch_id: String = part.strip_edges()
+				if switch_id.length() == 8 and switch_id.begins_with("82") and switch_id.ends_with("100"):
+					var beast_id_str: String = switch_id.substr(2, 3)
+					var summon_id: String = str(int(beast_id_str)) # parse as int to drop leading zeros, then back to string
+
+					var unlock_result: Dictionary = EsperService.unlock_esper(summon_id)
+					if bool(unlock_result.get("success", false)):
+						did_unlock_esper = true
+						var esper_name: String = summon_id
+						var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+						if not summon_template.is_empty():
+							esper_name = str(summon_template.get("name", summon_id))
+						rewards_text += "[First Clear] Esper unlocked: %s\n" % esper_name
+					else:
+						push_warning("Failed to unlock mission reward esper %s (from switch %s): %s" % [summon_id, switch_id, str(unlock_result.get("error", "unknown_error"))])
+
 	if not was_already_cleared:
 		var raw_rewards: Variant = mission_data.get("rewards", [])
 		if raw_rewards is Array:
@@ -218,25 +229,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 						if lapis_amount > 0:
 							PlayerProfile.lapis += lapis_amount
 							rewards_text += "[First Clear] Lapis +%s\n" % str(lapis_amount)
-					"ESPER":
-						if reward.size() < 2:
-							push_warning("Mission first-clear ESPER reward is missing summon id")
-							continue
-						var summon_id: String = str(reward[1]).strip_edges()
-						if summon_id == "":
-							push_warning("Mission first-clear ESPER reward has empty summon id")
-							continue
-
-						var unlock_result: Dictionary = EsperService.unlock_esper(summon_id)
-						if bool(unlock_result.get("success", false)):
-							did_unlock_esper = true
-							var esper_name: String = summon_id
-							var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
-							if not summon_template.is_empty():
-								esper_name = str(summon_template.get("name", summon_id))
-							rewards_text += "[First Clear] Esper unlocked: %s\n" % esper_name
-						else:
-							push_warning("Failed to unlock mission reward esper %s: %s" % [summon_id, str(unlock_result.get("error", "unknown_error"))])
 					_:
 						push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
 
@@ -275,19 +267,9 @@ func _get_or_load_mission_data_local(mission_id: String) -> Dictionary:
 	if mission_data.is_empty():
 		return {}
 
-	_apply_seeded_esper_reward(mission_key, mission_data)
 	_mission_cache[mission_key] = mission_data
 	return mission_data
 
-
-# Overlays the seeded first-clear ESPER reward (not yet in the DB) onto the
-# mission's reward list so esper unlocks keep working through the normal flow.
-func _apply_seeded_esper_reward(mission_key: String, mission_data: Dictionary) -> void:
-	if not SEEDED_ESPER_REWARDS.has(mission_key):
-		return
-	var rewards: Array = mission_data.get("rewards", [])
-	rewards.append(["ESPER", str(SEEDED_ESPER_REWARDS[mission_key])])
-	mission_data["rewards"] = rewards
 
 
 func _get_latest_cleared_mission_id_from_progress(progress: Dictionary) -> String:

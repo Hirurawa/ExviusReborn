@@ -63,6 +63,7 @@ var _mission_error_dialog: AcceptDialog = null
 # town_map_ui, which looks it up in the DB TOWN table (name + icon/folder).
 var enter_town_dialog: ConfirmationDialog = null
 var _pending_town_id: String = ""
+var _town_unlock_button: Button = null
 
 func _ready() -> void:
 	map_back_button.pressed.connect(_on_back_pressed)
@@ -722,13 +723,39 @@ func _on_town_clicked(town_id: String, town_name: String) -> void:
 		enter_town_dialog.ok_button_text = "Yes"
 		enter_town_dialog.cancel_button_text = "No"
 		enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
+		_town_unlock_button = enter_town_dialog.add_button("Unlock Progression", true, "unlock_progression")
+		enter_town_dialog.custom_action.connect(_on_enter_town_custom_action)
 		add_child(enter_town_dialog)
+
+	var town_data: Dictionary = GameDatabase.get_town(town_id)
+	var open_switch: String = str(town_data.get("openSwitch", ""))
+
+	if _town_unlock_button != null and is_instance_valid(_town_unlock_button):
+		_town_unlock_button.visible = (open_switch != "")
+
 	var display_name: String = town_name if town_name != "" else "this town"
 	enter_town_dialog.dialog_text = "Enter %s?" % display_name
 	enter_town_dialog.popup_centered()
 
 
+func _on_enter_town_custom_action(action: String) -> void:
+	if action == "unlock_progression":
+		_unlock_town_progression()
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
+
+func _unlock_town_progression() -> void:
+	if _pending_town_id == "":
+		return
+	var town_data: Dictionary = GameDatabase.get_town(_pending_town_id)
+	var open_switch: String = str(town_data.get("openSwitch", ""))
+	if open_switch != "":
+		var unlocked: bool = SwitchService.unlock_switches(open_switch)
+		if unlocked:
+			Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "unlock_town_progression")
+
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return
+	_unlock_town_progression()
 	UIManager.push("town_map_ui", {"town_id": _pending_town_id})

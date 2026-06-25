@@ -15,6 +15,7 @@ const ITEMS_SNAPSHOT_FILE: String = "items.json"
 const STATS_SNAPSHOT_FILE: String = "stats.json"
 const UNITS_SNAPSHOT_FILE: String = "units.json"
 const ESPERS_SNAPSHOT_FILE: String = "espers.json"
+const SWITCHES_SNAPSHOT_FILE: String = "switches.json"
 const LOCAL_SAVE_INDEX_PATH: String = "user://game_state/save_index.json"
 
 const ALL_DOMAIN_SNAPSHOT_FILES: Array[String] = [
@@ -25,6 +26,7 @@ const ALL_DOMAIN_SNAPSHOT_FILES: Array[String] = [
 	ESPERS_SNAPSHOT_FILE,
 	PARTIES_SNAPSHOT_FILE,
 	MISSION_PROGRESS_SNAPSHOT_FILE,
+	SWITCHES_SNAPSHOT_FILE,
 ]
 
 var active_local_save_id: String = "default"

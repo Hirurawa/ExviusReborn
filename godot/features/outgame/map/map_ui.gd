@@ -216,6 +216,8 @@ func _populate_world_options() -> void:
 
 	var idx: int = 1
 	for world in GameDatabase.get_worlds():
+		if not SwitchService.is_unlocked(world.get("switchInfo")):
+			continue
 		var world_id: String = str(world.get("worldId", ""))
 		if world_id == "":
 			continue
@@ -265,6 +267,8 @@ func _show_world_view(world_id: String) -> void:
 		_apply_map_canvas_size(DEFAULT_CANVAS_SIZE)
 
 	for land in GameDatabase.get_lands(world_id):
+		if not SwitchService.is_unlocked(land.get("switchInfo")):
+			continue
 		_add_region_marker(
 			_parse_rect(str(land.get("touchRect", ""))),
 			_parse_pos(str(land.get("labelPos", ""))),
@@ -276,7 +280,11 @@ func _show_world_view(world_id: String) -> void:
 	_reset_view_transform()
 
 func _on_land_clicked(world_id: String, land_id: String) -> void:
-	var areas: Array = GameDatabase.get_areas(world_id, land_id)
+	var areas: Array = []
+	for area in GameDatabase.get_areas(world_id, land_id):
+		if SwitchService.is_unlocked(area.get("switchInfo")):
+			areas.append(area)
+
 	if areas.size() == 1:
 		var area_id: String = str(areas[0].get("areaId", ""))
 		_show_dungeon_view(world_id, land_id, area_id)
@@ -294,7 +302,10 @@ func _show_area_view(world_id: String, land_id: String) -> void:
 	_clear_overlays()
 	_close_mission_popup()
 
-	var areas: Array = GameDatabase.get_areas(world_id, land_id)
+	var areas: Array = []
+	for area in GameDatabase.get_areas(world_id, land_id):
+		if SwitchService.is_unlocked(area.get("switchInfo")):
+			areas.append(area)
 
 	# Canvas must cover both the land's region-map background (LAND.mapFiles, a
 	# single texture in assets/maps/region) and every area marker, since a few
@@ -432,8 +443,15 @@ func _show_dungeon_view(world_id: String, land_id: String, area_id: String) -> v
 	_clear_overlays()
 	_close_mission_popup()
 
-	var dungeons: Array = GameDatabase.get_dungeons(area_id)
-	var towns: Array = GameDatabase.get_towns(area_id)
+	var dungeons: Array = []
+	for d in GameDatabase.get_dungeons(area_id):
+		if SwitchService.is_unlocked(d.get("switchInfo")):
+			dungeons.append(d)
+
+	var towns: Array = []
+	for t in GameDatabase.get_towns(area_id):
+		if SwitchService.is_unlocked(t.get("switchInfo")):
+			towns.append(t)
 
 	# Background: the area's map is a grid of tile textures (AREA.mapFiles arranged
 	# per AREA.mapDimensions). Falls back to the legacy single map<areaId>.png, then
@@ -561,7 +579,11 @@ func _add_point_marker(position: Vector2, icon_path: String, marker_name: String
 func _on_back_pressed() -> void:
 	_close_mission_popup()
 	if current_view == "dungeon":
-		var areas: Array = GameDatabase.get_areas(current_selected_world, current_selected_land)
+		var areas: Array = []
+		for area in GameDatabase.get_areas(current_selected_world, current_selected_land):
+			if SwitchService.is_unlocked(area.get("switchInfo")):
+				areas.append(area)
+
 		if areas.size() == 1:
 			_show_world_view(current_selected_world)
 		else:
@@ -578,7 +600,10 @@ func _on_back_pressed() -> void:
 func _on_dungeon_clicked(dungeon_id: String, dungeon_name: String) -> void:
 	_close_mission_popup()
 
-	var missions: Array = GameDatabase.get_missions(dungeon_id)
+	var missions: Array = []
+	for m in GameDatabase.get_missions(dungeon_id):
+		if SwitchService.is_unlocked(m.get("switchInfo")):
+			missions.append(m)
 
 	# Full-screen overlay anchored to the map root, so it sits above the map
 	# canvas and ignores zoom/pan. STOP blocks map input while the popup is open.

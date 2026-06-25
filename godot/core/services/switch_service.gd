@@ -27,6 +27,25 @@ func load_progress() -> void:
 	else:
 		opened_switches = []
 
+func is_unlocked(switch_info: Variant) -> bool:
+	if switch_info == null:
+		return false
+
+	var switch_str: String = str(switch_info).strip_edges()
+	if switch_str == "" or switch_str == "null":
+		return false
+
+	if switch_str == "0":
+		return true
+
+	var switch_parts: PackedStringArray = switch_str.split(",")
+	for part in switch_parts:
+		var switch_id: String = part.strip_edges()
+		if switch_id != "" and not opened_switches.has(switch_id):
+			return false
+
+	return true
+
 func unlock_switches(switches_str: String) -> bool:
 	if switches_str == "":
 		return false

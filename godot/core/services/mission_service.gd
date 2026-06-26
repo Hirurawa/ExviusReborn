@@ -192,20 +192,42 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 			var switch_parts: PackedStringArray = switches_str.split(",")
 			for part in switch_parts:
 				var switch_id: String = part.strip_edges()
-				if switch_id.length() == 8 and switch_id.begins_with("82") and switch_id.ends_with("100"):
+				if switch_id.length() == 8 and switch_id.begins_with("82"):
 					var beast_id_str: String = switch_id.substr(2, 3)
 					var summon_id: String = str(int(beast_id_str)) # parse as int to drop leading zeros, then back to string
 
-					var unlock_result: Dictionary = EsperService.unlock_esper(summon_id)
-					if bool(unlock_result.get("success", false)):
-						did_unlock_esper = true
-						var esper_name: String = summon_id
-						var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
-						if not summon_template.is_empty():
-							esper_name = str(summon_template.get("name", summon_id))
-						rewards_text += "[First Clear] Esper unlocked: %s\n" % esper_name
-					else:
-						push_warning("Failed to unlock mission reward esper %s (from switch %s): %s" % [summon_id, switch_id, str(unlock_result.get("error", "unknown_error"))])
+					if switch_id.ends_with("100"):
+						var unlock_result: Dictionary = EsperService.unlock_esper(summon_id)
+						if bool(unlock_result.get("success", false)):
+							did_unlock_esper = true
+							var esper_name: String = summon_id
+							var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+							if not summon_template.is_empty():
+								esper_name = str(summon_template.get("name", summon_id))
+							rewards_text += "[First Clear] Esper unlocked: %s\n" % esper_name
+						else:
+							push_warning("Failed to unlock mission reward esper %s (from switch %s): %s" % [summon_id, switch_id, str(unlock_result.get("error", "unknown_error"))])
+					elif switch_id.ends_with("200") or switch_id.ends_with("300"):
+						var new_rank: int = 2 if switch_id.ends_with("200") else 3
+						# Only process if esper is already unlocked
+						if EsperService.is_esper_unlocked(summon_id):
+							var progression: Dictionary = EsperService.get_esper_progression(summon_id)
+							var current_rank: int = int(progression.get("rank", 1))
+							if current_rank < new_rank:
+								var rank_up_result: Dictionary = EsperService.set_esper_progression(summon_id, new_rank, 1, 0, -1)
+								if bool(rank_up_result.get("success", false)):
+									did_unlock_esper = true
+									var esper_name: String = summon_id
+									var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+									if not summon_template.is_empty():
+										esper_name = str(summon_template.get("name", summon_id))
+									# Only display the name if it is unlocked, plus append rank upgrade message
+									rewards_text += "[First Clear] Esper %s reached Rank %d!\n" % [esper_name, new_rank]
+								else:
+									push_warning("Failed to rank up esper %s to rank %d (from switch %s): %s" % [summon_id, new_rank, switch_id, str(rank_up_result.get("error", "unknown_error"))])
+						else:
+							push_warning("Tried to rank up locked esper %s to rank %d (from switch %s)" % [summon_id, new_rank, switch_id])
+
 
 	if not was_already_cleared:
 		var raw_rewards: Variant = mission_data.get("rewards", [])

@@ -264,7 +264,7 @@ func get_dungeon_name(dungeon_id: String) -> String:
 ## on-disk town-data folder id.
 func get_town(town_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile FROM town t"
+		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile, COALESCE(t.openSwitch, '') AS openSwitch FROM town t"
 		+ " LEFT JOIN icon i ON i.iconId = t.iconId"
 		+ " WHERE t.townId = ? LIMIT 1",
 		[town_id]

@@ -1,5 +1,7 @@
 extends Node
 
+signal switches_unlocked
+
 const SNAPSHOT_FILE: String = "switches.json"
 
 var opened_switches: Array = []
@@ -58,5 +60,8 @@ func unlock_switches(switches_str: String) -> bool:
 		if switch_id != "" and not opened_switches.has(switch_id):
 			opened_switches.append(switch_id)
 			any_unlocked = true
+
+	if any_unlocked:
+		switches_unlocked.emit()
 
 	return any_unlocked

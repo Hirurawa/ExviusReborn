@@ -69,6 +69,7 @@ func _ready() -> void:
 	map_back_button.pressed.connect(_on_back_pressed)
 	map_world_option.item_selected.connect(_on_map_world_selected)
 	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
+	SwitchService.switches_unlocked.connect(_on_switches_unlocked)
 
 	_populate_world_options()
 	map_zoom_level = 1.0
@@ -759,3 +760,34 @@ func _on_enter_town_confirmed() -> void:
 		return
 	_unlock_town_progression()
 	UIManager.push("town_map_ui", {"town_id": _pending_town_id})
+
+
+# === Map Refresh ===
+
+func _on_switches_unlocked() -> void:
+	var old_zoom: float = map_zoom_level
+	var old_scroll_h: int = map_scroll.scroll_horizontal
+	var old_scroll_v: int = map_scroll.scroll_vertical
+
+	if current_view == "world":
+		_populate_world_options()
+		if current_selected_world != "":
+			_show_world_view(current_selected_world)
+	elif current_view == "area":
+		_populate_world_options()
+		_select_world_option(current_selected_world)
+		_show_area_view(current_selected_world, current_selected_land)
+	elif current_view == "dungeon":
+		_populate_world_options()
+		_select_world_option(current_selected_world)
+		_show_dungeon_view(current_selected_world, current_selected_land, current_selected_area)
+
+	map_zoom_level = old_zoom
+	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+	map_sizer.custom_minimum_size = _map_canvas_base_size * map_zoom_level
+
+	await get_tree().process_frame
+	if not is_instance_valid(self):
+		return
+	map_scroll.scroll_horizontal = old_scroll_h
+	map_scroll.scroll_vertical = old_scroll_v

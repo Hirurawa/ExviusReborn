@@ -20,7 +20,7 @@ extends Node
 # Bundled database shipped inside the PCK, and its writable runtime copy.
 const BUNDLED_DB_PATH: String = "res://assets/static_data/ffbe-data.db"
 const USER_DB_PATH: String = "user://ffbe-data.db"
-# Sidecar recording the byte size of the bundled DB the user copy was made from,
+# Sidecar recording the MD5 hash of the bundled DB the user copy was made from,
 # so a re-exported/updated database is detected and re-copied.
 const USER_DB_META_PATH: String = "user://ffbe-data.db.meta"
 
@@ -74,16 +74,18 @@ func _ensure_open() -> bool:
 
 ## Ensures a current, writable copy of the bundled database exists in user:// and
 ## returns its path (or "" if the bundled DB can't be read). The copy is refreshed
-## whenever the bundled DB's change signature (byte size + last-modified time)
+## whenever the bundled DB's change signature (MD5 hash)
 ## differs from the one recorded at copy time, so an edited or re-exported database
 ## is picked up automatically.
 func _ensure_local_db() -> String:
-	var bundled_size: int = _file_size(BUNDLED_DB_PATH)
-	if bundled_size <= 0:
+	if not FileAccess.file_exists(BUNDLED_DB_PATH):
 		# Bundled DB unreadable — fall back to an existing copy if we have one.
 		return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
 
-	var signature: String = _bundled_signature(bundled_size)
+	var signature: String = FileAccess.get_md5(BUNDLED_DB_PATH)
+	if signature == "":
+		return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
+
 	if FileAccess.file_exists(USER_DB_PATH) and _read_text(USER_DB_META_PATH) == signature:
 		return USER_DB_PATH
 
@@ -101,23 +103,6 @@ func _ensure_local_db() -> String:
 	# Record the source signature only after a successful copy (gates against partial copies).
 	_write_text(USER_DB_META_PATH, signature)
 	return USER_DB_PATH
-
-
-## Change signature for the bundled DB: byte size + last-modified time. Both are
-## needed because an in-place edit (e.g. a column rename) can keep the file's byte
-## size identical — SQLite stores the schema in fixed-size pages — so a size-only
-## check would miss it and keep serving a stale user:// copy.
-func _bundled_signature(bundled_size: int) -> String:
-	return "%d:%d" % [bundled_size, FileAccess.get_modified_time(BUNDLED_DB_PATH)]
-
-
-func _file_size(path: String) -> int:
-	var f: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if f == null:
-		return -1
-	var n: int = f.get_length()
-	f.close()
-	return n
 
 
 func _read_text(path: String) -> String:

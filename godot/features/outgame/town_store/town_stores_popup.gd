@@ -6,6 +6,7 @@ signal close_requested
 @onready var back_button: Button = $Panel/VBoxContainer/Header/BackButton
 @onready var close_button: Button = $Panel/VBoxContainer/Header/CloseButton
 @onready var list_container: VBoxContainer = $Panel/VBoxContainer/ScrollContainer/ListContainer
+@onready var feedback_label: Label = $Panel/VBoxContainer/FeedbackLabel
 
 var _current_town_id: String = ""
 var _stores: Array = []
@@ -15,6 +16,9 @@ func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	close_button.pressed.connect(_on_close_pressed)
 	back_button.hide()
+	feedback_label.text = ""
+	InventoryService.purchase_successful.connect(_on_purchase_successful)
+	InventoryService.purchase_failed.connect(_on_purchase_failed)
 
 func populate(town_id: String) -> void:
 	_current_town_id = town_id
@@ -72,10 +76,24 @@ func _on_store_clicked(store_id: String) -> void:
 		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_label.size_flags_horizontal = SIZE_EXPAND_FILL
 
+		var price_label = Label.new()
+		price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		price_label.custom_minimum_size = Vector2(80, 0)
+
+		var buy_button = Button.new()
+		buy_button.text = "Buy"
+		buy_button.custom_minimum_size = Vector2(60, 0)
+		buy_button.disabled = true
+
 		if target_type == 20: # Item
 			var item_data = GameDatabase.get_item(target_id)
 			if typeof(item_data) == TYPE_DICTIONARY and not item_data.is_empty():
 				name_label.text = item_data.get("name", "Unknown Item (" + target_id + ")")
+				var price = int(item_data.get("price_buy", 0))
+				price_label.text = str(price) + " Gil"
+				buy_button.disabled = false
+				buy_button.pressed.connect(_request_buy.bind(target_id, 1))
 				var icon_id = item_data.get("icon", "")
 				if icon_id != "":
 					var icon_path = "res://assets/items/%s.png" % icon_id
@@ -83,10 +101,15 @@ func _on_store_clicked(store_id: String) -> void:
 						icon_rect.texture = load(icon_path)
 			else:
 				name_label.text = "Unknown Item (" + target_id + ")"
+				price_label.text = ""
 		elif target_type == 21: # Equipment
 			var eq_data = GameDatabase.get_equipment(target_id)
 			if typeof(eq_data) == TYPE_DICTIONARY and not eq_data.is_empty():
 				name_label.text = eq_data.get("name", "Unknown Equipment (" + target_id + ")")
+				var price = int(eq_data.get("price_buy", 0))
+				price_label.text = str(price) + " Gil"
+				buy_button.disabled = false
+				buy_button.pressed.connect(_request_buy.bind(target_id, 1))
 				var icon_id = eq_data.get("icon", "")
 				if icon_id != "":
 					var icon_path = "res://assets/items/%s.png" % icon_id
@@ -94,15 +117,21 @@ func _on_store_clicked(store_id: String) -> void:
 						icon_rect.texture = load(icon_path)
 			else:
 				name_label.text = "Unknown Equipment (" + target_id + ")"
+				price_label.text = ""
 		elif target_type == 60: # Recipe
 			name_label.text = "Recipe (" + target_id + ")"
+			price_label.text = ""
 		elif target_type == 22: # Materia
 			name_label.text = "Materia (" + target_id + ")"
+			price_label.text = ""
 		else:
 			name_label.text = "Unknown Type %d (%s)" % [target_type, target_id]
+			price_label.text = ""
 
 		item_container.add_child(icon_rect)
 		item_container.add_child(name_label)
+		item_container.add_child(price_label)
+		item_container.add_child(buy_button)
 
 		list_container.add_child(item_container)
 
@@ -117,3 +146,19 @@ func _on_back_pressed() -> void:
 func _on_close_pressed() -> void:
 	close_requested.emit()
 	queue_free()
+
+
+func _request_buy(item_id: String, quantity: int) -> void:
+	feedback_label.text = ""
+	InventoryService.request_buy_item(item_id, quantity)
+
+func _on_purchase_successful() -> void:
+	feedback_label.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2))
+	feedback_label.text = "Item purchased successfully!"
+
+func _on_purchase_failed(error_message: String) -> void:
+	feedback_label.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))
+	if error_message == "ERR_INSUFFICIENT_RESOURCES":
+		feedback_label.text = "Not enough gil to purchase this item."
+	else:
+		feedback_label.text = "Purchase failed: " + error_message

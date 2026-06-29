@@ -50,5 +50,21 @@ func populate(quests: Array[Dictionary]) -> void:
 				task_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				quest_vbox.add_child(task_label)
 
+		var rewards = quest.get("rewards", [])
+		if not rewards.is_empty():
+			var reward_title_label = Label.new()
+			reward_title_label.text = "    Rewards:"
+			reward_title_label.add_theme_font_size_override("font_size", 12)
+			reward_title_label.modulate = Color(0.8, 0.8, 1.0)
+			quest_vbox.add_child(reward_title_label)
+
+			for reward in rewards:
+				var reward_label = Label.new()
+				reward_label.text = "      + " + str(reward)
+				reward_label.add_theme_font_size_override("font_size", 12)
+				reward_label.modulate = Color(0.8, 0.8, 1.0)
+				reward_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				quest_vbox.add_child(reward_label)
+
 		var separator = HSeparator.new()
 		container.add_child(separator)

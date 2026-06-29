@@ -725,6 +725,7 @@ func _on_town_clicked(town_id: String, town_name: String) -> void:
 		enter_town_dialog.cancel_button_text = "No"
 		enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
 		_town_unlock_button = enter_town_dialog.add_button("Unlock Progression", true, "unlock_progression")
+		enter_town_dialog.add_button("Quests", true, "view_quests")
 		enter_town_dialog.custom_action.connect(_on_enter_town_custom_action)
 		add_child(enter_town_dialog)
 
@@ -744,6 +745,23 @@ func _on_enter_town_custom_action(action: String) -> void:
 		_unlock_town_progression()
 		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
 			enter_town_dialog.hide()
+	elif action == "view_quests":
+		_show_town_quests()
+
+var _quest_list_dialog = null
+
+func _show_town_quests() -> void:
+	if _pending_town_id == "":
+		return
+
+	if _quest_list_dialog == null or not is_instance_valid(_quest_list_dialog):
+		var QuestListDialogScene = preload("res://features/quest/quest_list_dialog.tscn")
+		_quest_list_dialog = QuestListDialogScene.instantiate()
+		add_child(_quest_list_dialog)
+
+	var quests = QuestService.get_quests_for_town(_pending_town_id)
+	_quest_list_dialog.populate(quests)
+	_quest_list_dialog.popup_centered()
 
 func _unlock_town_progression() -> void:
 	if _pending_town_id == "":

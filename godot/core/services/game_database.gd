@@ -257,6 +257,17 @@ func get_town(town_id: String) -> Dictionary:
 	return rows[0] if not rows.is_empty() else {}
 
 
+func get_quests_for_town(town_id: String) -> Array:
+	return query(
+		"SELECT q.questId, q.name AS questName, q.switchInfo, qs.questSubId, qs.task"
+		+ " FROM quest q"
+		+ " LEFT JOIN quest_sub qs ON q.questId = qs.questId"
+		+ " WHERE q.locationType = 2 AND q.locationId = ?"
+		+ " ORDER BY q.questId, qs.dispOrder",
+		[town_id]
+	)
+
+
 # === Mission details (start/finish/battle data) ===
 # Reconstructs the normalized mission dict that MissionService used to read from
 # missions.json, but from the mission + challenge tables. Two indexed point

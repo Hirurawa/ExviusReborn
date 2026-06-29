@@ -64,6 +64,7 @@ var _mission_error_dialog: AcceptDialog = null
 var enter_town_dialog: ConfirmationDialog = null
 var _pending_town_id: String = ""
 var _town_unlock_button: Button = null
+var _town_stores_button: Button = null
 
 func _ready() -> void:
 	map_back_button.pressed.connect(_on_back_pressed)
@@ -726,11 +727,16 @@ func _on_town_clicked(town_id: String, town_name: String) -> void:
 		enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
 		_town_unlock_button = enter_town_dialog.add_button("Unlock Progression", true, "unlock_progression")
 		enter_town_dialog.add_button("Quests", true, "view_quests")
+		_town_stores_button = enter_town_dialog.add_button("Stores", true, "view_stores")
 		enter_town_dialog.custom_action.connect(_on_enter_town_custom_action)
 		add_child(enter_town_dialog)
 
 	var town_data: Dictionary = GameDatabase.get_town(town_id)
 	var open_switch: String = str(town_data.get("openSwitch", ""))
+
+	if _town_stores_button != null and is_instance_valid(_town_stores_button):
+		var stores = GameDatabase.get_town_stores(town_id)
+		_town_stores_button.disabled = stores.is_empty()
 
 	if _town_unlock_button != null and is_instance_valid(_town_unlock_button):
 		_town_unlock_button.visible = (open_switch != "")
@@ -746,9 +752,28 @@ func _on_enter_town_custom_action(action: String) -> void:
 		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
 			enter_town_dialog.hide()
 	elif action == "view_quests":
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
 		_show_town_quests()
+	elif action == "view_stores":
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
+		_show_town_stores()
 
 var _quest_list_dialog = null
+var _stores_popup = null
+
+func _show_town_stores() -> void:
+	if _pending_town_id == "":
+		return
+
+	if _stores_popup == null or not is_instance_valid(_stores_popup):
+		var TownStoresPopupScene = preload("res://features/outgame/town_store/town_stores_popup.tscn")
+		_stores_popup = TownStoresPopupScene.instantiate()
+		_stores_popup.close_requested.connect(func(): _stores_popup = null)
+		add_child(_stores_popup)
+
+	_stores_popup.populate(_pending_town_id)
 
 func _show_town_quests() -> void:
 	if _pending_town_id == "":

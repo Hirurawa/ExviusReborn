@@ -107,6 +107,20 @@ func add_equipment_instances(template_id: String, quantity: int) -> Array:
 
 # === Lookups ===
 
+func get_item_count(item_type: String, item_id: String) -> int:
+	if item_type == "20":
+		if not owned_items.has("stackables"): return 0
+		return int(owned_items["stackables"].get(item_id, 0))
+	elif item_type == "21" or item_type == "22":
+		if not owned_items.has("equipment"): return 0
+		var count: int = 0
+		for item in owned_items["equipment"]:
+			if item is Dictionary and item.get("template_id", "") == item_id:
+				count += 1
+		return count
+	return 0
+
+
 func get_item_cost(item_id: String) -> int:
 	var item_data: Dictionary = GameDatabase.get_item(item_id)
 	if item_data.is_empty():

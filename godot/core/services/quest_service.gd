@@ -63,9 +63,45 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 
 		var raw_task = row.get("task")
 		if raw_task != null:
-			var task = str(raw_task)
-			if task != "":
-				quests_dict[quest_id]["tasks"].append(task)
+			var task_str = str(raw_task)
+			if task_str != "":
+				var task_dict: Dictionary = {
+					"text": task_str,
+					"requirements": []
+				}
+
+				var target_type = str(row.get("targetType", ""))
+				if target_type == "1":
+					var target_param = str(row.get("targetParam", ""))
+					if target_param != "":
+						var item_chunks = target_param.split(",", false)
+						for chunk in item_chunks:
+							var parts = chunk.split(":")
+							if parts.size() >= 3:
+								var type = parts[0]
+								var id = parts[1]
+								var amount = parts[2]
+								var name = ""
+
+								if type == "20":
+									var item_data = GameDatabase.get_item(id)
+									if not item_data.is_empty():
+										name = str(item_data.get("name", ""))
+								elif type == "21":
+									var equip_data = GameDatabase.get_equipment(id)
+									if not equip_data.is_empty():
+										name = str(equip_data.get("name", ""))
+								elif type == "22":
+									if typeof(StaticData.game_data_materia) == TYPE_DICTIONARY and StaticData.game_data_materia.has(str(id)):
+										var materia_data = StaticData.game_data_materia[str(id)]
+										if typeof(materia_data) == TYPE_DICTIONARY:
+											name = str(materia_data.get("name", ""))
+
+								if name != "":
+									var current_count = InventoryService.get_item_count(type, id)
+									task_dict["requirements"].append(name + " " + str(current_count) + "/" + amount)
+
+				quests_dict[quest_id]["tasks"].append(task_dict)
 
 	var result: Array[Dictionary] = []
 	for key in quests_dict:

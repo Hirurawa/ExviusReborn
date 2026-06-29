@@ -40,7 +40,7 @@ func _show_stores_list() -> void:
 			store_name += " (" + owner_name + ")"
 		btn.text = store_name
 		btn.custom_minimum_size = Vector2(0, 50)
-		btn.pressed.connect(func(): _on_store_clicked(str(store.get("storeId"))))
+		btn.pressed.connect(_on_store_clicked.bind(str(store.get("storeId"))))
 		list_container.add_child(btn)
 
 func _on_store_clicked(store_id: String) -> void:

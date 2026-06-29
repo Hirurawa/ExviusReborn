@@ -752,8 +752,12 @@ func _on_enter_town_custom_action(action: String) -> void:
 		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
 			enter_town_dialog.hide()
 	elif action == "view_quests":
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
 		_show_town_quests()
 	elif action == "view_stores":
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
 		_show_town_stores()
 
 var _quest_list_dialog = null

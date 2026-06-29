@@ -45,10 +45,19 @@ func populate(quests: Array[Dictionary]) -> void:
 		else:
 			for task in tasks:
 				var task_label = Label.new()
-				task_label.text = "    - " + str(task)
+				task_label.text = "    - " + str(task.get("text", task)) if typeof(task) == TYPE_DICTIONARY else "    - " + str(task)
 				task_label.add_theme_font_size_override("font_size", 14)
 				task_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				quest_vbox.add_child(task_label)
+
+				if typeof(task) == TYPE_DICTIONARY and task.has("requirements") and not task["requirements"].is_empty():
+					for req in task["requirements"]:
+						var req_label = Label.new()
+						req_label.text = "        * " + str(req)
+						req_label.add_theme_font_size_override("font_size", 12)
+						req_label.modulate = Color(0.8, 1.0, 0.8) # Light green color for requirements
+						req_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+						quest_vbox.add_child(req_label)
 
 		var rewards = quest.get("rewards", [])
 		if not rewards.is_empty():

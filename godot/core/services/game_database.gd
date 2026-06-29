@@ -273,7 +273,7 @@ func get_town(town_id: String) -> Dictionary:
 
 func get_quests_for_town(town_id: String) -> Array:
 	return query(
-		"SELECT q.questId, q.name AS questName, q.switchInfo, q.reward, qs.questSubId, qs.task, qs.targetType, qs.targetParam"
+		"SELECT q.questId, q.name AS questName, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.targetType, qs.targetParam"
 		+ " FROM quest q"
 		+ " LEFT JOIN quest_sub qs ON q.questId = qs.questId"
 		+ " WHERE q.locationType = 2 AND q.locationId = ?"

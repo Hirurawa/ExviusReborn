@@ -58,7 +58,8 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 				"id": quest_id,
 				"name": str(row.get("questName", "")),
 				"tasks": [],
-				"rewards": parsed_rewards
+				"rewards": parsed_rewards,
+				"openSwitch": str(row.get("openSwitch", ""))
 			}
 
 		var raw_task = row.get("task")
@@ -67,7 +68,8 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 			if task_str != "":
 				var task_dict: Dictionary = {
 					"text": task_str,
-					"requirements": []
+					"requirements": [],
+					"target_type": str(row.get("targetType", ""))
 				}
 
 				var target_type = str(row.get("targetType", ""))
@@ -100,6 +102,8 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 								if name != "":
 									var current_count = InventoryService.get_item_count(type, id)
 									task_dict["requirements"].append(name + " " + str(current_count) + "/" + amount)
+									task_dict["raw_requirements"] = task_dict.get("raw_requirements", [])
+									task_dict["raw_requirements"].append({"type": type, "id": id, "amount": int(amount)})
 
 				elif target_type == "2":
 					var target_param = str(row.get("targetParam", ""))

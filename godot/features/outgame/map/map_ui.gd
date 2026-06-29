@@ -782,6 +782,7 @@ func _show_town_quests() -> void:
 	if _quest_list_dialog == null or not is_instance_valid(_quest_list_dialog):
 		var QuestListDialogScene = preload("res://features/quest/quest_list_dialog.tscn")
 		_quest_list_dialog = QuestListDialogScene.instantiate()
+		_quest_list_dialog.quest_progress_updated.connect(self._show_town_quests)
 		add_child(_quest_list_dialog)
 
 	var quests = QuestService.get_quests_for_town(_pending_town_id)

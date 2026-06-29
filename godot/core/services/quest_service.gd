@@ -101,6 +101,22 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 									var current_count = InventoryService.get_item_count(type, id)
 									task_dict["requirements"].append(name + " " + str(current_count) + "/" + amount)
 
+				elif target_type == "2":
+					var target_param = str(row.get("targetParam", ""))
+					if target_param != "":
+						var monster_chunks = target_param.split(",", false)
+						for chunk in monster_chunks:
+							var parts = chunk.split(":")
+							if parts.size() >= 2:
+								var dict_id = parts[0]
+								var amount = parts[1]
+								var name = GameDatabase.get_monster_name(dict_id)
+								if name != "":
+									task_dict["requirements"].append(name + " 0/" + amount)
+								else:
+									task_dict["requirements"].append(chunk)
+							else:
+								task_dict["requirements"].append(chunk)
 				quests_dict[quest_id]["tasks"].append(task_dict)
 
 	var result: Array[Dictionary] = []

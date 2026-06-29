@@ -247,6 +247,20 @@ func get_dungeon_name(dungeon_id: String) -> String:
 ## `townName` is the display name; `iconFile` ("map_icon_<digits>.png", in
 ## assets/map_icons, resolved via town.iconId -> icon.iconFile) also encodes the
 ## on-disk town-data folder id.
+func get_town_stores(town_id: String) -> Array:
+	return query(
+		"SELECT * FROM town_store WHERE townId = ? ORDER BY storeId",
+		[town_id]
+	)
+
+
+func get_store_items(store_id: String) -> Array:
+	return query(
+		"SELECT * FROM store_item WHERE storeId = ? ORDER BY storeItemId",
+		[store_id]
+	)
+
+
 func get_town(town_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile, COALESCE(t.openSwitch, '') AS openSwitch FROM town t"

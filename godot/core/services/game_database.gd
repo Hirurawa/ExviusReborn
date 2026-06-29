@@ -249,7 +249,7 @@ func get_dungeon_name(dungeon_id: String) -> String:
 ## on-disk town-data folder id.
 func get_town_stores(town_id: String) -> Array:
 	return query(
-		"SELECT * FROM town_store WHERE townId = ? AND kaG4xf3I = 1 ORDER BY storeId",
+		"SELECT * FROM town_store WHERE townId = ? AND storeType = 1 ORDER BY storeId",
 		[town_id]
 	)
 

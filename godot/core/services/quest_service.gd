@@ -21,10 +21,44 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 					continue
 
 		if not quests_dict.has(quest_id):
+			var parsed_rewards: Array[String] = []
+			var raw_reward = str(row.get("reward", ""))
+			if raw_reward != "":
+				var reward_chunks = raw_reward.split(",", false)
+				for chunk in reward_chunks:
+					var parts = chunk.split(":")
+					if parts.size() >= 3:
+						var type = parts[0]
+						var id = parts[1]
+						var amount = parts[2]
+						var name = ""
+
+						if type == "20":
+							var item_data = GameDatabase.get_item(id)
+							if not item_data.is_empty():
+								name = str(item_data.get("name", ""))
+						elif type == "21":
+							var equip_data = GameDatabase.get_equipment(id)
+							if not equip_data.is_empty():
+								name = str(equip_data.get("name", ""))
+						elif type == "22":
+							if typeof(StaticData.game_data_materia) == TYPE_DICTIONARY and StaticData.game_data_materia.has(str(id)):
+								var materia_data = StaticData.game_data_materia[str(id)]
+								if typeof(materia_data) == TYPE_DICTIONARY:
+									name = str(materia_data.get("name", ""))
+
+						if name != "":
+							parsed_rewards.append(name + " x" + amount)
+						else:
+							parsed_rewards.append(chunk)
+					else:
+						parsed_rewards.append(chunk)
+
 			quests_dict[quest_id] = {
 				"id": quest_id,
 				"name": str(row.get("questName", "")),
-				"tasks": []
+				"tasks": [],
+				"rewards": parsed_rewards
 			}
 
 		var raw_task = row.get("task")

@@ -203,9 +203,8 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 
 	if is_max_level:
 		var switch_id: String = "82%03d%d10" % [int(summon_id), rank]
-		var did_unlock: bool = SwitchService.unlock_switches(switch_id)
+		var did_unlock: bool = SwitchService.unlock_switches(switch_id, "esper_max_level")
 		if did_unlock:
-			Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "esper_max_level")
 			print("Unlocked esper max level switch: ", switch_id)
 
 	_rehydrate_and_emit_espers("set_esper_progression")

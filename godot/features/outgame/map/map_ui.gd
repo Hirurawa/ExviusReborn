@@ -795,9 +795,7 @@ func _unlock_town_progression() -> void:
 	var town_data: Dictionary = GameDatabase.get_town(_pending_town_id)
 	var open_switch: String = str(town_data.get("openSwitch", ""))
 	if open_switch != "":
-		var unlocked: bool = SwitchService.unlock_switches(open_switch)
-		if unlocked:
-			Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "unlock_town_progression")
+		SwitchService.unlock_switches(open_switch, "unlock_town_progression")
 
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":

@@ -127,8 +127,7 @@ func populate(quests: Array[Dictionary]) -> void:
 
 func _start_quest(start_switch: String) -> void:
 	if start_switch != "":
-		SwitchService.unlock_switches(start_switch)
-		Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "start_quest")
+		SwitchService.unlock_switches(start_switch, "start_quest")
 		quest_progress_updated.emit()
 
 func _check_requirements(quest: Dictionary) -> bool:
@@ -183,10 +182,8 @@ func _finish_quest(end_switch: String, quest: Dictionary) -> void:
 
 	if items_granted:
 		InventoryService.emit_updated()
-		Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "quest_reward")
 
 	if end_switch != "":
-		SwitchService.unlock_switches(end_switch)
-		Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "finish_quest")
+		SwitchService.unlock_switches(end_switch, "finish_quest")
 
 	quest_progress_updated.emit()

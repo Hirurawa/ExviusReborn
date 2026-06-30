@@ -99,17 +99,13 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	if cost_type == "NRG" and cost_amount > 0:
 		if PlayerProfile.current_nrg < cost_amount:
 			return {"success": false, "error": "Not enough NRG to start this mission."}
-		PlayerProfile.current_nrg -= cost_amount
-		PlayerProfile.nrg_updated.emit(
-			PlayerProfile.current_nrg,
-			PlayerProfile.max_nrg,
-			PlayerProfile.seconds_until_next_nrg
-		)
+		PlayerProfile.deduct_nrg(cost_amount)
 
 	last_entered_mission_id = str(mission_id)
 	update_last_played_dungeon_from_mission(mission_id)
 	# Stats snapshot bundles last_entered_mission_id with the profile blob.
-	PlayerProfile.save_snapshot("start_mission")
+	# We will handle it by creating a method in PlayerProfile that does this and saves.
+	PlayerProfile.set_last_entered_mission(mission_id)
 	return {"success": true}
 
 
@@ -132,30 +128,10 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	var mission_data: Dictionary = get_mission_data(mission_id)
 
 	if mission_data.has("exp"):
-		PlayerProfile.current_xp += int(mission_data["exp"])
-		while PlayerProfile.current_xp >= PlayerProfile.next_rank_xp:
-			PlayerProfile.current_xp -= PlayerProfile.next_rank_xp
-			PlayerProfile.current_rank += 1
-			var rank_up_nrg_bonus: int = 0
-			# Update next_rank_xp from CSV data
-			if PlayerProfile.rank_exp_data.has(PlayerProfile.current_rank):
-				PlayerProfile.next_rank_xp = PlayerProfile.rank_exp_data[PlayerProfile.current_rank]["xp_needed"]
-				PlayerProfile.max_nrg = PlayerProfile.rank_exp_data[PlayerProfile.current_rank]["energy"]
-				rank_up_nrg_bonus = PlayerProfile.max_nrg
-			else:
-				# If rank exceeds CSV, use last known value as fallback
-				if PlayerProfile.rank_exp_data.size() > 0:
-					var last_rank = PlayerProfile.rank_exp_data.keys().max()
-					PlayerProfile.next_rank_xp = PlayerProfile.rank_exp_data[last_rank]["xp_needed"]
-					PlayerProfile.max_nrg = PlayerProfile.rank_exp_data[last_rank]["energy"]
-					rank_up_nrg_bonus = PlayerProfile.max_nrg
-
-			# Rank-up bonus: grant NRG equal to the new max NRG and allow overflow.
-			if rank_up_nrg_bonus > 0:
-				PlayerProfile.current_nrg += rank_up_nrg_bonus
+		PlayerProfile.add_xp(int(mission_data["exp"]))
 
 	if mission_data.has("gil"):
-		PlayerProfile.gil += int(mission_data["gil"])
+		PlayerProfile.add_gil(int(mission_data["gil"]))
 
 	var owned_items: Dictionary = InventoryService.owned_items
 	for item_id in used_items:
@@ -183,7 +159,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	var did_unlock_esper: bool = false
 	if mission_data.has("open_switches"):
 		var switches_str: String = str(mission_data["open_switches"])
-		any_switches_unlocked = SwitchService.unlock_switches(switches_str)
+		any_switches_unlocked = SwitchService.unlock_switches(switches_str, "finish_mission")
 
 		# Parse switches for esper unlocks (Format: 82{beastId}100, length 8)
 		# Only check for new unlocks if mission wasn't already cleared.
@@ -248,19 +224,12 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 						elif reward.size() >= 2:
 							lapis_amount = int(reward[1])
 						if lapis_amount > 0:
-							PlayerProfile.lapis += lapis_amount
+							PlayerProfile.add_lapis(lapis_amount)
 							rewards_text += "[First Clear] Lapis +%s\n" % str(lapis_amount)
 					_:
 						push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
 
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "finish_mission")
-	Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "finish_mission")
-	PlayerProfile.save_snapshot("finish_mission")
-	if did_unlock_esper:
-		Persistence.save_snapshot(EsperService.SNAPSHOT_FILE, EsperService.snapshot_payload(), "finish_mission")
-	if any_switches_unlocked:
-		Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "finish_mission")
-
 	PlayerProfile.emit_all()
 	InventoryService.emit_updated()
 	mission_completed.emit(rewards_text)

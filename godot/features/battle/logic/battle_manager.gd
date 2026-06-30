@@ -11,6 +11,7 @@ signal action_queued(unit_index: int, action: CombatAction, action_id: String)
 signal enemy_action_started(enemy_index: int, action: CombatAction)
 signal mission_cleared
 signal mission_failed
+signal monster_defeated(monster_id: int)
 
 signal item_refunded(item_id: String)
 signal wave_changed(current_wave: int, total_waves: int)
@@ -140,6 +141,8 @@ func _process(_delta: float) -> void:
 					# If this hit killed them, roll for drops!
 					if previous_hp > 0 and target["current_hp"] == 0 and target_team == "enemy":
 						_roll_enemy_drops(target, target_index)
+						monster_defeated.emit(target["id"])
+
 
 					if target_team == "enemy":
 						set_enemy_hp(target_index, target["current_hp"])

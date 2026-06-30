@@ -48,7 +48,7 @@ func is_unlocked(switch_info: Variant) -> bool:
 
 	return true
 
-func unlock_switches(switches_str: String) -> bool:
+func unlock_switches(switches_str: String, source_event: String = "unlock_switches") -> bool:
 	if switches_str == "":
 		return false
 
@@ -63,5 +63,6 @@ func unlock_switches(switches_str: String) -> bool:
 
 	if any_unlocked:
 		switches_unlocked.emit()
+		Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), source_event)
 
 	return any_unlocked

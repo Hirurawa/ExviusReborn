@@ -58,6 +58,53 @@ func ensure_rank_exp_loaded() -> void:
 		rank_exp_data = StaticDataLoader.load_rank_exp_data()
 
 
+func set_last_entered_mission(_mission_id: String) -> void:
+	# Note: MissionService handles its own variable last_entered_mission_id,
+	# but PlayerProfile bundles it into its stats snapshot.
+	save_snapshot("start_mission")
+
+func add_xp(amount: int) -> void:
+	current_xp += amount
+	while current_xp >= next_rank_xp:
+		current_xp -= next_rank_xp
+		current_rank += 1
+		var rank_up_nrg_bonus: int = 0
+		if rank_exp_data.has(current_rank):
+			next_rank_xp = rank_exp_data[current_rank]["xp_needed"]
+			max_nrg = rank_exp_data[current_rank]["energy"]
+			rank_up_nrg_bonus = max_nrg
+		else:
+			if rank_exp_data.size() > 0:
+				var last_rank = rank_exp_data.keys().max()
+				next_rank_xp = rank_exp_data[last_rank]["xp_needed"]
+				max_nrg = rank_exp_data[last_rank]["energy"]
+				rank_up_nrg_bonus = max_nrg
+
+		if rank_up_nrg_bonus > 0:
+			current_nrg += rank_up_nrg_bonus
+
+	save_snapshot("add_xp")
+
+func add_gil(amount: int) -> void:
+	gil += amount
+	currency_updated.emit(gil, lapis)
+	save_snapshot("add_gil")
+
+func deduct_gil(amount: int) -> void:
+	gil = maxi(0, gil - amount)
+	currency_updated.emit(gil, lapis)
+	save_snapshot("deduct_gil")
+
+func add_lapis(amount: int) -> void:
+	lapis += amount
+	currency_updated.emit(gil, lapis)
+	save_snapshot("add_lapis")
+
+func deduct_nrg(amount: int) -> void:
+	current_nrg = maxi(0, current_nrg - amount)
+	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
+	save_snapshot("deduct_nrg")
+
 func reset_to_starter() -> void:
 	ensure_rank_exp_loaded()
 	current_rank = 1

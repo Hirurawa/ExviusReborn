@@ -272,17 +272,16 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
 
 	# Consume gil.
-	PlayerProfile.gil -= gil_cost
+	PlayerProfile.deduct_gil(gil_cost)
 
 	# Consume materials.
-	if not InventoryService.owned_items.has("stackables"):
-		InventoryService.owned_items["stackables"] = {}
-	var stackables: Dictionary = InventoryService.owned_items["stackables"]
+	var items_to_consume = []
 	for item_key in materials.keys():
-		var item_id: String = str(item_key)
-		var required: int = int(materials[item_key])
-		var owned: int = int(stackables.get(item_id, 0))
-		stackables[item_id] = max(0, owned - required)
+		items_to_consume.append({
+			"id": str(item_key),
+			"amount": int(materials[item_key])
+		})
+	InventoryService.consume_stackables_and_save(items_to_consume)
 
 	# Bump rarity.
 	var unit: Dictionary = owned_units_ids[unit_index]
@@ -309,11 +308,7 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	emit_updated()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "awaken_unit")
 
-	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
-	PlayerProfile.save_snapshot("awaken_unit")
-
 	InventoryService.emit_updated()
-	Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "awaken_unit")
 
 	return {"success": true}
 
@@ -395,7 +390,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 	var total_cost: int = material_unit_instance_ids.size() * ENHANCE_GIL_COST_PER_MATERIAL
 	if PlayerProfile.gil < total_cost:
 		return {"success": false, "error": "Insufficient gil"}
-	PlayerProfile.gil -= total_cost
+	PlayerProfile.deduct_gil(total_cost)
 
 	var granted_trust_reward: Variant = {}
 	var trust_reward_warning: String = ""
@@ -478,13 +473,10 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 
 	owned_units_ids = _hydrate_owned_units(filtered_units)
 	emit_updated()
-	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "enhance_unit")
-	PlayerProfile.save_snapshot("enhance_unit")
 
 	if granted_trust_reward != null:
 		InventoryService.emit_updated()
-		Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "enhance_unit")
 
 	var updated_base_unit: Dictionary = {}
 	for unit_value in owned_units_ids:
@@ -554,12 +546,10 @@ func sell_units(instance_ids: Array) -> Dictionary:
 	var gil_gained: int = sold_count * SELL_GIL_PER_UNIT
 
 	owned_units_ids = _hydrate_owned_units(filtered_units)
-	PlayerProfile.gil = max(0, PlayerProfile.gil + gil_gained)
+	PlayerProfile.add_gil(gil_gained)
 
 	emit_updated()
-	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "sell_units")
-	PlayerProfile.save_snapshot("sell_units")
 
 	return {
 		"success": true,
@@ -652,6 +642,9 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 	owned_units_ids = _hydrate_owned_units(owned_units_ids)
 	emit_updated()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "equip_item")
+
+	# Important: Because equipment assignment changes 'equipped_to' inside InventoryService's dictionary,
+	# we must also trigger an explicit save for the inventory service since we bypassed its methods.
 	Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "equip_item")
 	InventoryService.emit_updated()
 	equip_successful.emit()

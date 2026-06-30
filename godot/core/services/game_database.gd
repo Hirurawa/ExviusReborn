@@ -210,18 +210,9 @@ func get_dungeons(area_id: String) -> Array:
 ## Missions for a dungeon, in intended progression order (dispOrder is INTEGER).
 func get_missions(dungeon_id: String) -> Array:
 	return query(
-		"SELECT missionId, name, cost, exp, gil, waveCount, switchInfo FROM mission WHERE dungeonId = ? ORDER BY dispOrder",
+		"SELECT missionId, name, cost, exp, gil, waveCount, difficulty FROM MISSION WHERE dungeonId = ? ORDER BY dispOrder",
 		[dungeon_id]
 	)
-
-
-## Difficulty label for one mission row, or "" if unknown.
-func get_mission_difficulty(mission_id: String) -> String:
-	var rows: Array = query(
-		"SELECT difficulty FROM mission WHERE missionId = ? LIMIT 1",
-		[mission_id]
-	)
-	return str(rows[0].get("difficulty", "")) if not rows.is_empty() else ""
 
 
 ## Display name of a dungeon (DUNGEON.name), or "" if the dungeon id is unknown.

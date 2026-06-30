@@ -240,8 +240,10 @@ func _on_confirm_pressed() -> void:
 			var reward_template_id: String = str(trust_reward.get("template_id", ""))
 			if reward_template_id != "":
 				var reward_name: String = "%s %s" % [reward_type, reward_template_id]
-				if reward_type == "EQUIP" and StaticData.game_data_equipment.has(reward_template_id):
-					reward_name = str(StaticData.game_data_equipment[reward_template_id].get("name", reward_name))
+				if reward_type == "EQUIP":
+					var eq_reward: Dictionary = GameDatabase.get_equipment(reward_template_id)
+					if not eq_reward.is_empty():
+						reward_name = str(eq_reward.get("name", reward_name))
 				elif reward_type == "MATERIA" and StaticData.game_data_materia.has(reward_template_id):
 					reward_name = str(StaticData.game_data_materia[reward_template_id].get("name", reward_name))
 				unlocked_reward_name = reward_name
@@ -318,13 +320,12 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	UnitLevel.text = str(int(unit_inst.level))
 	var currentRarity = int(unit_inst.current_rarity)
 	var maxLevel = StatCalculator.RARITY_MAX_LEVELS.get(int(currentRarity), 15)
-	UnitLevel.text += " / " + str(maxLevel)
-	var xp = int(unit_inst.xp)
-	var currentXp = int(unit_inst.xp)
-	var xpForNextLevel = int(unit_inst.next_xp)
+	var xpForNextLevel: int = UnitService.calculate_next_xp_for_unit(unit_inst)
+	UnitLevel.text += " / " + str(maxLevel) + "   next " + str(xpForNextLevel)
 	var lb_id = str(unit_inst.get("limitburst_id", ""))
-	if lb_id != "" and StaticData.game_data_limitbursts.has(lb_id):
-		LBName.text = StaticData.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst")
+	var lb_data: Dictionary = GameDatabase.get_limitburst(lb_id) if lb_id != "" else {}
+	if not lb_data.is_empty():
+		LBName.text = lb_data.get("name", "Unknown Limit Burst")
 	else:
 		LBName.text = "None"
 	
@@ -335,8 +336,8 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 		var tmr_name = "Unknown Reward"
 
 		if tmr_type == "EQUIP":
-			if StaticData.game_data_equipment.has(tmr_id):
-				var eq_data = StaticData.game_data_equipment[tmr_id]
+			var eq_data = GameDatabase.get_equipment(tmr_id)
+			if not eq_data.is_empty():
 				tmr_name = eq_data.get("name", tmr_name)
 		elif tmr_type == "MATERIA":
 			if StaticData.game_data_materia.has(tmr_id):
@@ -376,8 +377,10 @@ func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
 	if tmr_id == "":
 		return ""
 
-	if tmr_type == "EQUIP" and StaticData.game_data_equipment.has(tmr_id):
-		return str(StaticData.game_data_equipment[tmr_id].get("name", ""))
+	if tmr_type == "EQUIP":
+		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
+		if not eq_data.is_empty():
+			return str(eq_data.get("name", ""))
 
 	if tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
 		return str(StaticData.game_data_materia[tmr_id].get("name", ""))

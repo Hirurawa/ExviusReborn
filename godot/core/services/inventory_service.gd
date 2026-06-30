@@ -107,19 +107,33 @@ func add_equipment_instances(template_id: String, quantity: int) -> Array:
 
 # === Lookups ===
 
+func get_item_count(item_type: String, item_id: String) -> int:
+	if item_type == "20":
+		if not owned_items.has("stackables"): return 0
+		return int(owned_items["stackables"].get(item_id, 0))
+	elif item_type == "21" or item_type == "22":
+		if not owned_items.has("equipment"): return 0
+		var count: int = 0
+		for item in owned_items["equipment"]:
+			if item is Dictionary and item.get("template_id", "") == item_id:
+				count += 1
+		return count
+	return 0
+
+
 func get_item_cost(item_id: String) -> int:
-	var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
+	var item_data: Dictionary = GameDatabase.get_item(item_id)
 	if item_data.is_empty():
-		item_data = StaticData.game_data_equipment.get(item_id, {})
+		item_data = GameDatabase.get_equipment(item_id)
 	return int(item_data.get("price_buy", 0))
 
 
 func has_purchasable_template(item_id: String) -> bool:
-	return StaticData.game_data_items.has(item_id) or StaticData.game_data_equipment.has(item_id)
+	return not GameDatabase.get_item(item_id).is_empty() or not GameDatabase.get_equipment(item_id).is_empty()
 
 
 func is_equipment_template(item_id: String) -> bool:
-	return StaticData.game_data_equipment.has(item_id)
+	return not GameDatabase.get_equipment(item_id).is_empty()
 
 
 func equipment_instance_exists(item_id: String) -> bool:
@@ -182,12 +196,11 @@ func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) ->
 				available_items.append(combined)
 			continue
 
-		assert(StaticData.game_data_equipment.has(template_id), "CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
-		if not StaticData.game_data_equipment.has(template_id): push_error("CRITICAL ERROR: game_data_equipment is missing template_id: " + template_id)
-		var item_data: Variant = StaticData.game_data_equipment[template_id] if StaticData.game_data_equipment.has(template_id) else null
-		if not item_data: continue
-
-		var item_data_dict: Dictionary = item_data as Dictionary
+		var item_data_dict: Dictionary = GameDatabase.get_equipment(template_id)
+		assert(not item_data_dict.is_empty(), "CRITICAL ERROR: equipment template not found: " + template_id)
+		if item_data_dict.is_empty():
+			push_error("CRITICAL ERROR: equipment template not found: " + template_id)
+			continue
 
 		assert(item_data_dict.has("type_id"), "CRITICAL ERROR: item_data_dict is missing type_id!")
 		if not item_data_dict.has("type_id"): push_error("CRITICAL ERROR: item_data_dict is missing type_id!")

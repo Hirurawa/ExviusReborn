@@ -17,21 +17,21 @@ func _on_summon_perform_button_pressed() -> void:
 	if StaticData.game_data_units.is_empty():
 		return
 
-	var result: Dictionary = await UnitService.summon_units(11)
+	var result: Dictionary = UnitService.summon_units(11)
 	_show_summon_results(result)
 
 func _on_get_cactuar_button_pressed() -> void:
 	if StaticData.game_data_units.is_empty():
 		return
 
-	var result: Dictionary = await UnitService.summon_exp_boost_units(10)
+	var result: Dictionary = UnitService.summon_exp_boost_units(10)
 	_show_summon_results(result)
 
 func _on_get_moogle_button_pressed() -> void:
 	if StaticData.game_data_units.is_empty():
 		return
 
-	var result: Dictionary = await UnitService.summon_trust_units(10)
+	var result: Dictionary = UnitService.summon_trust_units(10)
 	_show_summon_results(result)
 
 func _show_summon_results(result: Dictionary) -> void:

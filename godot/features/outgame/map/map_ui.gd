@@ -66,11 +66,14 @@ var _mission_error_dialog: AcceptDialog = null
 # town_map_ui, which looks it up in the DB TOWN table (name + icon/folder).
 var enter_town_dialog: ConfirmationDialog = null
 var _pending_town_id: String = ""
+var _town_unlock_button: Button = null
+var _town_stores_button: Button = null
 
 func _ready() -> void:
 	map_back_button.pressed.connect(_on_back_pressed)
 	map_world_option.item_selected.connect(_on_map_world_selected)
 	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
+	SwitchService.switches_unlocked.connect(_on_switches_unlocked)
 
 	_populate_world_options()
 	map_zoom_level = 1.0
@@ -222,6 +225,8 @@ func _populate_world_options() -> void:
 
 	var idx: int = 1
 	for world in GameDatabase.get_worlds():
+		if not SwitchService.is_unlocked(world.get("switchInfo")):
+			continue
 		var world_id: String = str(world.get("worldId", ""))
 		if world_id == "":
 			continue
@@ -271,6 +276,8 @@ func _show_world_view(world_id: String) -> void:
 		_apply_map_canvas_size(DEFAULT_CANVAS_SIZE)
 
 	for land in GameDatabase.get_lands(world_id):
+		if not SwitchService.is_unlocked(land.get("switchInfo")):
+			continue
 		_add_region_marker(
 			_parse_rect(str(land.get("touchRect", ""))),
 			_parse_pos(str(land.get("labelPos", ""))),
@@ -282,6 +289,15 @@ func _show_world_view(world_id: String) -> void:
 	_reset_view_transform()
 
 func _on_land_clicked(world_id: String, land_id: String) -> void:
+	var areas: Array = []
+	for area in GameDatabase.get_areas(world_id, land_id):
+		if SwitchService.is_unlocked(area.get("switchInfo")):
+			areas.append(area)
+
+	if areas.size() == 1:
+		var area_id: String = str(areas[0].get("areaId", ""))
+		_show_dungeon_view(world_id, land_id, area_id)
+		return
 	_show_area_view(world_id, land_id)
 
 
@@ -295,7 +311,10 @@ func _show_area_view(world_id: String, land_id: String) -> void:
 	_clear_overlays()
 	_close_mission_popup()
 
-	var areas: Array = GameDatabase.get_areas(world_id, land_id)
+	var areas: Array = []
+	for area in GameDatabase.get_areas(world_id, land_id):
+		if SwitchService.is_unlocked(area.get("switchInfo")):
+			areas.append(area)
 
 	# Canvas must cover both the land's region-map background (LAND.mapFiles, a
 	# single texture in assets/maps/region) and every area marker, since a few
@@ -433,8 +452,15 @@ func _show_dungeon_view(world_id: String, land_id: String, area_id: String) -> v
 	_clear_overlays()
 	_close_mission_popup()
 
-	var dungeons: Array = GameDatabase.get_dungeons(area_id)
-	var towns: Array = GameDatabase.get_towns(area_id)
+	var dungeons: Array = []
+	for d in GameDatabase.get_dungeons(area_id):
+		if SwitchService.is_unlocked(d.get("switchInfo")):
+			dungeons.append(d)
+
+	var towns: Array = []
+	for t in GameDatabase.get_towns(area_id):
+		if SwitchService.is_unlocked(t.get("switchInfo")):
+			towns.append(t)
 
 	# Background: the area's map is a grid of tile textures (AREA.mapFiles arranged
 	# per AREA.mapDimensions). Falls back to the legacy single map<areaId>.png, then
@@ -564,7 +590,15 @@ func _on_back_pressed() -> void:
 		_close_mission_popup()
 		return
 	if current_view == "dungeon":
-		_show_area_view(current_selected_world, current_selected_land)
+		var areas: Array = []
+		for area in GameDatabase.get_areas(current_selected_world, current_selected_land):
+			if SwitchService.is_unlocked(area.get("switchInfo")):
+				areas.append(area)
+
+		if areas.size() == 1:
+			_show_world_view(current_selected_world)
+		else:
+			_show_area_view(current_selected_world, current_selected_land)
 		return
 	if current_view == "area":
 		_show_world_view(current_selected_world)
@@ -691,13 +725,112 @@ func _on_town_clicked(town_id: String, town_name: String) -> void:
 		enter_town_dialog.ok_button_text = "Yes"
 		enter_town_dialog.cancel_button_text = "No"
 		enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
+		_town_unlock_button = enter_town_dialog.add_button("Unlock Progression", true, "unlock_progression")
+		enter_town_dialog.add_button("Quests", true, "view_quests")
+		_town_stores_button = enter_town_dialog.add_button("Stores", true, "view_stores")
+		enter_town_dialog.custom_action.connect(_on_enter_town_custom_action)
 		add_child(enter_town_dialog)
+
+	var town_data: Dictionary = GameDatabase.get_town(town_id)
+	var open_switch: String = str(town_data.get("openSwitch", ""))
+
+	if _town_stores_button != null and is_instance_valid(_town_stores_button):
+		var stores = GameDatabase.get_town_stores(town_id)
+		_town_stores_button.disabled = stores.is_empty()
+
+	if _town_unlock_button != null and is_instance_valid(_town_unlock_button):
+		_town_unlock_button.visible = (open_switch != "")
+
 	var display_name: String = town_name if town_name != "" else "this town"
 	enter_town_dialog.dialog_text = "Enter %s?" % display_name
 	enter_town_dialog.popup_centered()
 
 
+func _on_enter_town_custom_action(action: String) -> void:
+	if action == "unlock_progression":
+		_unlock_town_progression()
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
+	elif action == "view_quests":
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
+		_show_town_quests()
+	elif action == "view_stores":
+		if enter_town_dialog != null and is_instance_valid(enter_town_dialog):
+			enter_town_dialog.hide()
+		_show_town_stores()
+
+var _quest_list_dialog = null
+var _stores_popup = null
+
+func _show_town_stores() -> void:
+	if _pending_town_id == "":
+		return
+
+	if _stores_popup == null or not is_instance_valid(_stores_popup):
+		var TownStoresPopupScene = preload("res://features/outgame/town_store/town_stores_popup.tscn")
+		_stores_popup = TownStoresPopupScene.instantiate()
+		_stores_popup.close_requested.connect(func(): _stores_popup = null)
+		add_child(_stores_popup)
+
+	_stores_popup.populate(_pending_town_id)
+
+func _show_town_quests() -> void:
+	if _pending_town_id == "":
+		return
+
+	if _quest_list_dialog == null or not is_instance_valid(_quest_list_dialog):
+		var QuestListDialogScene = preload("res://features/quest/quest_list_dialog.tscn")
+		_quest_list_dialog = QuestListDialogScene.instantiate()
+		add_child(_quest_list_dialog)
+
+	var quests = QuestService.get_quests_for_town(_pending_town_id)
+	_quest_list_dialog.populate(quests)
+	_quest_list_dialog.popup_centered()
+
+func _unlock_town_progression() -> void:
+	if _pending_town_id == "":
+		return
+	var town_data: Dictionary = GameDatabase.get_town(_pending_town_id)
+	var open_switch: String = str(town_data.get("openSwitch", ""))
+	if open_switch != "":
+		var unlocked: bool = SwitchService.unlock_switches(open_switch)
+		if unlocked:
+			Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "unlock_town_progression")
+
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return
+	_unlock_town_progression()
 	UIManager.push("town_map_ui", {"town_id": _pending_town_id})
+
+
+# === Map Refresh ===
+
+func _on_switches_unlocked() -> void:
+	var old_zoom: float = map_zoom_level
+	var old_scroll_h: int = map_scroll.scroll_horizontal
+	var old_scroll_v: int = map_scroll.scroll_vertical
+
+	if current_view == "world":
+		_populate_world_options()
+		if current_selected_world != "":
+			_show_world_view(current_selected_world)
+	elif current_view == "area":
+		_populate_world_options()
+		_select_world_option(current_selected_world)
+		_show_area_view(current_selected_world, current_selected_land)
+	elif current_view == "dungeon":
+		_populate_world_options()
+		_select_world_option(current_selected_world)
+		_show_dungeon_view(current_selected_world, current_selected_land, current_selected_area)
+
+	map_zoom_level = old_zoom
+	map_content.scale = Vector2(map_zoom_level, map_zoom_level)
+	map_sizer.custom_minimum_size = _map_canvas_base_size * map_zoom_level
+
+	await get_tree().process_frame
+	if not is_instance_valid(self):
+		return
+	map_scroll.scroll_horizontal = old_scroll_h
+	map_scroll.scroll_vertical = old_scroll_v

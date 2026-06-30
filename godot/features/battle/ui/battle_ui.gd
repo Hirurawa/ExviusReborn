@@ -245,8 +245,8 @@ func _open_skill_menu(unit_index: int) -> void:
 			var rarity = int(unit_inst.get("current_rarity", 1))
 			var limitburst_id: String = str(unit_inst.get("limitburst_id", ""))
 
-			if limitburst_id != "" and StaticData.game_data_limitbursts.has(limitburst_id):
-				var limitburst_data: Dictionary = StaticData.game_data_limitbursts[limitburst_id]
+			var limitburst_data: Dictionary = GameDatabase.get_limitburst(limitburst_id) if limitburst_id != "" else {}
+			if not limitburst_data.is_empty():
 				options.append({
 					"id": limitburst_id,
 					"name": limitburst_data.get("name", "Unknown Limit Burst"),
@@ -278,8 +278,8 @@ func _open_skill_menu(unit_index: int) -> void:
 
 			for sk in magic_entries:
 				var sk_id: String = str(int(sk.get("id", 0)))
-				if StaticData.game_data_skills_magic.has(sk_id):
-					var magic_data = StaticData.game_data_skills_magic[sk_id]
+				var magic_data = GameDatabase.get_magic(sk_id)
+				if not magic_data.is_empty():
 					options.append({
 						"id": sk_id,
 						"name": magic_data.get("name", "Unknown Magic"),
@@ -291,8 +291,8 @@ func _open_skill_menu(unit_index: int) -> void:
 
 			for sk in ability_entries:
 				var sk_id: String = str(int(sk.get("id", 0)))
-				if StaticData.game_data_skills_ability.has(sk_id):
-					var ability_data = StaticData.game_data_skills_ability[sk_id]
+				var ability_data = GameDatabase.get_ability(sk_id)
+				if not ability_data.is_empty():
 					options.append({
 						"id": sk_id,
 						"name": ability_data.get("name", "Unknown Ability"),
@@ -324,14 +324,15 @@ func _open_item_menu(unit_index: int) -> void:
 
 	for item_id in combat_inventory.entries().keys():
 		var quantity: int = combat_inventory.quantity(item_id)
-		if quantity > 0 and StaticData.game_data_items.has(item_id):
-			var item_data: Dictionary = StaticData.game_data_items[item_id]
-			var item_name: String = item_data.get("name", "Unknown Item")
-			options.append({
-				"id": item_id,
-				"name": item_name + " (x" + str(quantity) + ")",
-				"item_data": item_data
-			})
+		if quantity > 0:
+			var item_data: Dictionary = GameDatabase.get_item(item_id)
+			if not item_data.is_empty():
+				var item_name: String = item_data.get("name", "Unknown Item")
+				options.append({
+					"id": item_id,
+					"name": item_name + " (x" + str(quantity) + ")",
+					"item_data": item_data
+				})
 
 	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM, false)
 
@@ -1119,8 +1120,8 @@ func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 
 	var drop_icon = TextureRect.new()
 	var tex_path = "res://icon.svg"
-	if StaticData.game_data_items.has(item_id):
-		var item_data = StaticData.game_data_items[item_id]
+	var item_data = GameDatabase.get_item(item_id)
+	if not item_data.is_empty():
 		if item_data.has("icon"):
 			tex_path = "res://assets/items/" + str(item_data["icon"])
 

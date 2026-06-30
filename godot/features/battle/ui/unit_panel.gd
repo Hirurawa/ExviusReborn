@@ -165,9 +165,9 @@ func _update_visual_state() -> void:
 func _resolve_skill_command_icon() -> String:
 	if _current_queued_action_id == "":
 		return "magic"
-	if GameDatabase.has_magic(_current_queued_action_id):
+	if StaticData.game_data_skills_magic.has(_current_queued_action_id):
 		return "magic"
-	if GameDatabase.has_ability(_current_queued_action_id):
+	if StaticData.game_data_skills_ability.has(_current_queued_action_id):
 		return "special"
 	return "magic"
 

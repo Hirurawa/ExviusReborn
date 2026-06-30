@@ -67,7 +67,7 @@ func is_slot_locked_by_two_handed(unit_inst: Dictionary, slot_id: String) -> boo
 	if other_item_id == "":
 		return false
 	var other_template_id: String = InventoryService.get_equipment_template_id(other_item_id)
-	var other_template: Dictionary = GameDatabase.get_equipment(other_template_id)
+	var other_template: Dictionary = StaticData.game_data_equipment.get(other_template_id, {})
 	return bool(other_template.get("is_twohanded", false))
 
 
@@ -119,7 +119,7 @@ func _get_one_handed_weapon_in_slot(unit_inst: Dictionary, slot_id: String) -> D
 	if item_id == "":
 		return {}
 	var template_id: String = InventoryService.get_equipment_template_id(item_id)
-	var template: Dictionary = GameDatabase.get_equipment(template_id)
+	var template: Dictionary = StaticData.game_data_equipment.get(template_id, {})
 	if template.is_empty():
 		return {}
 	if not _is_one_handed_weapon(template):
@@ -182,7 +182,7 @@ func _gather_passive_effects_raw(unit_inst: Dictionary) -> Array:
 		if item_id == "":
 			continue
 		var template_id: String = InventoryService.get_equipment_template_id(item_id)
-		var item_data: Dictionary = GameDatabase.get_equipment(template_id)
+		var item_data: Dictionary = StaticData.game_data_equipment.get(template_id, {})
 		if item_data.is_empty():
 			item_data = StaticData.game_data_materia.get(template_id, {})
 		if item_data.is_empty():
@@ -201,7 +201,7 @@ func _gather_passive_effects_raw(unit_inst: Dictionary) -> Array:
 func _collect_passive_skill_effects(skill_id: String, collected: Array) -> void:
 	if skill_id == "":
 		return
-	var skill_data: Dictionary = GameDatabase.get_passive(skill_id)
+	var skill_data: Dictionary = StaticData.game_data_skills_passive.get(skill_id, {})
 	if skill_data.is_empty():
 		return
 	var raw: Variant = skill_data.get("effects_raw", [])

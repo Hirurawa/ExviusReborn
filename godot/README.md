@@ -3,7 +3,7 @@
 This folder contains the Godot 4.6 client. The client follows a strict composition model:
 
 - UI scenes are dumb and event-driven.
-- Global state lives in domain-specific service autoloads.
+- Global state and backend calls live in managers.
 - Navigation is centralized in `UIManager`.
 
 ## Core Principles
@@ -13,11 +13,11 @@ This folder contains the Godot 4.6 client. The client follows a strict compositi
 - UI should not perform backend calls directly.
 - UI should not own global state.
 
-2. Signal up, service down
-- UI emits intent (or calls service request methods).
-- Domain services (e.g. `UnitService`, `InventoryService`) perform async work and write local state.
-- Services emit update signals.
-- UI redraws from service state.
+2. Signal up, manager down
+- UI emits intent (or calls manager request methods).
+- `DataManager` performs async/backend work.
+- `DataManager` emits update signals.
+- UI redraws from manager state.
 
 3. No fragile node path coupling
 - Avoid deep relative node path usage for cross-feature communication.
@@ -31,27 +31,11 @@ This folder contains the Godot 4.6 client. The client follows a strict compositi
 
 Configured in [project.godot](project.godot):
 
-- `Log`: Structured logging service.
-- `AudioService`: Music and SFX playback.
-- `StaticDataLoader`: Manages the baked JSON cache lifecycle (cold rebuild, warm load, signature validation).
-- `Persistence`: Local file-based shadow save system (`user://` snapshots).
-- `StaticData`: Lazy per-dataset accessor for JSON-sourced static data.
-- `GameDatabase`: Read-only SQLite connection to `ffbe-data.db` (world map, missions, combat, towns, dungeons).
-- `SkillResolver`: Resolves ability and passive skill data.
-- `FriendsService`: Friend list state.
-- `CombatItemsService`: Combat item slot management.
-- `InventoryService`: Stackable items and equipment inventory.
-- `PlayerProfile`: Player stats, rank, and profile data.
-- `AccountService`: Account/session state.
-- `MissionService`: Mission progress, start, and finish flow.
-- `EsperService`: Esper ownership, board, and training.
-- `PartyService`: Party composition and selection.
-- `UnitService`: Unit roster, enhancement, and awakening.
-- `EquipmentValidator`: Equipment legality checks (dual wield, category rules).
-- `UIManager`: Menu stack, scene push/pop, persistent overlays.
-- `StatCalculator`: Pure stat computations.
-- `TouchScrollInstaller`: Installs touch-scroll behaviour on ScrollContainers.
-- `ButtonSoundInstaller`: Attaches click sounds to buttons globally.
+- `Nakama`: plugin singleton.
+- `StaticDataLoader`: Loads static game data from bundled/cached JSON files into memory.
+- `DataManager`: player/account/inventory/party/combat-items state plus backend orchestration.
+- `UIManager`: menu stack, scene push/pop, persistent overlays.
+- `StatCalculator`: pure stat computations.
 
 ## Startup Flow
 

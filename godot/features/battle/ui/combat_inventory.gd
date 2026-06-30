@@ -24,9 +24,10 @@ func reload_from_services() -> void:
 		var quantity: int = int(stackables.get(item_id, 0))
 		if quantity <= 0:
 			continue
-		var item_data: Dictionary = GameDatabase.get_item(item_id)
-		if item_data.is_empty():
+		if not StaticData.game_data_items.has(item_id):
 			continue
+
+		var item_data: Dictionary = StaticData.game_data_items[item_id]
 		if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
 			_quantities[item_id] = quantity
 

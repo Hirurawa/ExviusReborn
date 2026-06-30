@@ -25,7 +25,6 @@ StaticDataLoader="*res://core/static_data_loader.gd"
 Persistence="*res://core/services/persistence.gd"
 StaticData="*res://core/services/static_data.gd"
 GameDatabase="*res://core/services/game_database.gd"
-QuestService="*res://core/services/quest_service.gd"
 SkillResolver="*res://core/services/skill_resolver.gd"
 FriendsService="*res://core/services/friends_service.gd"
 CombatItemsService="*res://core/services/combat_items_service.gd"
@@ -41,7 +40,6 @@ UIManager="*res://core/ui_manager.gd"
 StatCalculator="*res://core/stat_calculator.gd"
 TouchScrollInstaller="*res://core/services/touch_scroll_installer.gd"
 ButtonSoundInstaller="*res://core/services/button_sound_installer.gd"
-SwitchService="*res://core/services/switch_service.gd"
 
 [debug]
 

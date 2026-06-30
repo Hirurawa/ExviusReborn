@@ -281,7 +281,7 @@ func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> A
 		# skills that are represented in the shared magic/ability datasets.
 		# `dataset_has()` consults the lightweight keys index instead of forcing
 		# a 30+ MB Variant decode of skills_ability for a simple presence check.
-		if GameDatabase.has_magic(normalized_skill_id) or GameDatabase.has_ability(normalized_skill_id):
+		if StaticData.dataset_has("skills_magic", normalized_skill_id) or StaticData.dataset_has("skills_ability", normalized_skill_id):
 			unlocked_skill_ids.append(int(normalized_skill_id))
 
 	return unlocked_skill_ids
@@ -419,10 +419,14 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		if item_id != null and item_id != "":
 			var template_id = InventoryService.get_equipment_template_id(item_id)
 			var item_data: Dictionary = {}
-			item_data = GameDatabase.get_equipment(template_id)
-			if item_data.is_empty() and StaticData.dataset_has("materia", str(template_id)):
+			# Consult the keys index before forcing a full equipment/materia decode
+			# (saves ~140 MB of transient RAM per unit on combat init when slots
+			# are empty or only one of equipment/materia is present).
+			if StaticData.dataset_has("equipment", str(template_id)):
+				item_data = StaticData.game_data_equipment[template_id]
+			elif StaticData.dataset_has("materia", str(template_id)):
 				item_data = StaticData.game_data_materia[template_id]
-			if item_data.is_empty():
+			else:
 				push_error("CRITICAL ERROR: template_id not found in equipment or materia data: " + str(template_id))
 				continue
 
@@ -469,7 +473,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			final_profile["skills"]["passive"].append(skill_entry)
 			# Passive parsing genuinely needs the record body, so this is the
 			# one site that intentionally pulls skills_passive into memory.
-			var skill_data = GameDatabase.get_passive(skill_id_str)
+			var skill_data = StaticData.game_data_skills_passive.get(skill_id_str)
 			var parsed_passive = SkillResolver.parse_passive_effects(skill_data)
 			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
 			_apply_parsed_passive_effects(parsed_passive.get("effects", []), pct_mods, element_resists, status_resists)

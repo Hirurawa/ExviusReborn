@@ -107,9 +107,10 @@ func _refresh_slot_icons(slots: Array = []) -> void:
 			continue
 		if int(stackables.get(item_id, 0)) <= 0:
 			continue
-		var item_data: Dictionary = GameDatabase.get_item(item_id)
-		if item_data.is_empty():
+		if not StaticData.game_data_items.has(item_id):
 			continue
+
+		var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
 		var icon_name: String = str(item_data.get("icon", ""))
 		if icon_name == "":
 			continue

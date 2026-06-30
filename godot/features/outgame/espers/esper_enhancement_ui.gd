@@ -10,7 +10,7 @@ extends Control
 
 var _summon_id: String = ""
 var _summon_name: String = ""
-const SUMMON_MIX_EXP_GAIN: int = 1000
+const SUMMON_MIX_EXP_GAIN: int = 10
 const SUMMON_MIX_HOLD_INITIAL_DELAY: float = 0.35
 const SUMMON_MIX_HOLD_REPEAT_INTERVAL: float = 0.08
 

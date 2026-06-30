@@ -250,21 +250,21 @@ func _format_reward(node_data: Dictionary) -> String:
 			# Look up skill names for ABILITY and MAGIC rewards
 			if reward_type == "ABILITY":
 				# Check active abilities first
-				var skill_data: Dictionary = GameDatabase.get_ability(str(reward_id))
+				var skill_data: Dictionary = StaticData.game_data_skills_ability.get(str(reward_id), {})
 				if not skill_data.is_empty():
 					var skill_name: String = str(skill_data.get("name", str(reward_id)))
 					if sp_cost > 0:
 						return "%s\n%d SP" % [skill_name, sp_cost]
 					return skill_name
 				# Then check passive abilities
-				skill_data = GameDatabase.get_passive(str(reward_id))
+				skill_data = StaticData.game_data_skills_passive.get(str(reward_id), {})
 				if not skill_data.is_empty():
 					var skill_name: String = str(skill_data.get("name", str(reward_id)))
 					if sp_cost > 0:
 						return "%s\n%d SP" % [skill_name, sp_cost]
 					return skill_name
 			elif reward_type == "MAGIC":
-				var skill_data: Dictionary = GameDatabase.get_magic(str(reward_id))
+				var skill_data: Dictionary = StaticData.game_data_skills_magic.get(str(reward_id), {})
 				if not skill_data.is_empty():
 					var skill_name: String = str(skill_data.get("name", str(reward_id)))
 					if sp_cost > 0:

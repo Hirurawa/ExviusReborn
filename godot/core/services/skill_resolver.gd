@@ -100,7 +100,7 @@ func resolve_combat_skill(skill_id: String) -> Dictionary:
 
 
 func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
-	var resolved_limitburst: Dictionary = GameDatabase.get_limitburst(limitburst_id)
+	var resolved_limitburst: Dictionary = StaticData.game_data_limitbursts.get(limitburst_id, {})
 	if resolved_limitburst.is_empty():
 		push_error("SkillResolver: Combat limit burst not found: %s" % limitburst_id)
 		return {}
@@ -118,7 +118,7 @@ func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
 
 
 func resolve_combat_item(item_id: String) -> Dictionary:
-	var item_data: Dictionary = GameDatabase.get_item(item_id)
+	var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
 	if item_data.is_empty():
 		push_error("SkillResolver: Combat item not found: %s" % item_id)
 		return {}
@@ -128,7 +128,7 @@ func resolve_combat_item(item_id: String) -> Dictionary:
 		push_error("SkillResolver: Combat item missing opcode 71 ability reference: %s" % item_id)
 		return {}
 
-	var resolved_action_data: Dictionary = GameDatabase.get_ability(resolved_ability_id)
+	var resolved_action_data: Dictionary = StaticData.game_data_skills_ability.get(resolved_ability_id, {})
 	if resolved_action_data.is_empty():
 		push_error("SkillResolver: Combat item ability not found: %s -> %s" % [item_id, resolved_ability_id])
 		return {}
@@ -152,7 +152,7 @@ func get_limitburst_max_gauge(limitburst_id: String) -> int:
 	if limitburst_id == "":
 		return default_max_gauge
 
-	var limitburst_data: Dictionary = GameDatabase.get_limitburst(limitburst_id)
+	var limitburst_data: Dictionary = StaticData.game_data_limitbursts.get(limitburst_id, {})
 	if limitburst_data.is_empty():
 		push_error("SkillResolver: Limit burst data not found: %s" % limitburst_id)
 		return default_max_gauge
@@ -178,11 +178,11 @@ func get_limitburst_max_gauge(limitburst_id: String) -> int:
 # === Helpers ===
 
 func _get_active_skill_record(skill_id: String) -> Dictionary:
-	var skill_data: Dictionary = GameDatabase.get_magic(skill_id)
+	var skill_data: Dictionary = StaticData.game_data_skills_magic.get(skill_id, {})
 	if not skill_data.is_empty():
 		return skill_data
 
-	return GameDatabase.get_ability(skill_id)
+	return StaticData.game_data_skills_ability.get(skill_id, {})
 
 
 func _find_item_ability_id(effects_raw: Array) -> String:

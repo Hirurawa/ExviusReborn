@@ -177,21 +177,6 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 	if old_level > 0 and level > old_level:
 		sp_reward = _calculate_sp_reward(summon_template, rank, old_level, level)
 
-	# Check for max level to unlock the next rank
-	var is_max_level: bool = false
-	if entries_value is Array:
-		var entries: Array = entries_value
-		var rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
-		if rank_index >= 0 and rank_index < entries.size():
-			var entry_value: Variant = entries[rank_index]
-			if entry_value is Dictionary:
-				var entry: Dictionary = entry_value
-				var cp_pattern_value: Variant = entry.get("cp_pattern", [])
-				if cp_pattern_value is Array:
-					var max_level: int = maxi(1, (cp_pattern_value as Array).size())
-					if level >= max_level:
-						is_max_level = true
-
 	record["is_unlocked"] = true
 	record["rank"] = clampi(rank, 1, max_rank)
 	record["level"] = maxi(1, level)
@@ -200,14 +185,6 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 		var current_sp: int = int(record.get("current_sp", 0))
 		record["current_sp"] = current_sp + sp_reward
 	_upsert_esper_record(record)
-
-	if is_max_level:
-		var switch_id: String = "82%03d%d10" % [int(summon_id), rank]
-		var did_unlock: bool = SwitchService.unlock_switches(switch_id)
-		if did_unlock:
-			Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "esper_max_level")
-			print("Unlocked esper max level switch: ", switch_id)
-
 	_rehydrate_and_emit_espers("set_esper_progression")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 

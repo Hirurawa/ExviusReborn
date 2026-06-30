@@ -166,7 +166,6 @@ func save_all_snapshots(source_event: String) -> void:
 	Persistence.save_snapshot(EsperService.SNAPSHOT_FILE, EsperService.snapshot_payload(), source_event)
 	Persistence.save_snapshot(PartyService.SNAPSHOT_FILE, PartyService.snapshot_payload(), source_event)
 	Persistence.save_snapshot(MissionService.SNAPSHOT_FILE, MissionService.snapshot_payload(), source_event)
-	Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), source_event)
 
 
 func load_initial_data(email: String) -> void:
@@ -206,7 +205,6 @@ func load_initial_data(email: String) -> void:
 		MissionService.last_played_dungeon_name = ""
 
 	await MissionService.load_progress()
-	SwitchService.load_progress()
 	PlayerProfile.emit_all()
 
 	InventoryService.load_from_local()

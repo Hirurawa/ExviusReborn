@@ -6,7 +6,7 @@ extends Node
 ##   - SLOT_COUNT, SNAPSHOT_FILE, combat_items array
 ##   - combat_items_updated / combat_items_loaded / combat_items_saved signals
 ##
-## Validates picks against GameDatabase.get_item and InventoryService.owned_items
+## Validates picks against StaticData.game_data_items and InventoryService.owned_items
 ## (inventory still owned by DataManager until InventoryService lands).
 
 signal combat_items_updated(slots: Array)
@@ -27,7 +27,7 @@ func set_combat_item(slot_index: int, item_id: String) -> void:
 
 	var normalized_item_id: String = item_id.strip_edges()
 	if normalized_item_id != "":
-		if GameDatabase.get_item(normalized_item_id).is_empty():
+		if not StaticData.game_data_items.has(normalized_item_id):
 			normalized_item_id = ""
 		else:
 			var stackables: Dictionary = InventoryService.owned_items.get("stackables", {})

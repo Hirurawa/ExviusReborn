@@ -85,7 +85,7 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 	var exp_pattern: int = _get_raw_unit_exp_pattern(unit_id, unit_data, initial_rarity)
 	if exp_pattern <= 0:
 		exp_pattern = 5
-	var next_xp_required: int = _calculate_total_xp_for_level_local(2, exp_pattern)
+	var next_xp_required: int = _calculate_xp_for_level_local(1, exp_pattern)
 	if next_xp_required <= 0:
 		next_xp_required = 1000
 
@@ -149,7 +149,6 @@ func summon_exp_boost_units(amount: int = 3) -> Dictionary:
 func summon_trust_units(amount: int = 3) -> Dictionary:
 	return _summon_fixed_units_local("904000105", amount, "summon_trust_units")
 
-## CAN BE REMOVED ???
 func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 	var unit_found: bool = false
 	for unit in owned_units_ids:
@@ -165,15 +164,6 @@ func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
 		return {"success": true}
 	else:
 		return {"error": "ERR_UNIT_NOT_FOUND"}
-
-func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
-	if unit_inst.is_empty():
-		return 0
-
-	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit_inst.get("unit_id", "")), {})
-	var runtime_unit: Dictionary = unit_inst.duplicate(true)
-	_update_unit_next_xp_local(runtime_unit, unit_data)
-	return int(runtime_unit.get("next_xp", 0))
 
 func _find_awakening_entry(unit: Dictionary) -> Dictionary:
 	# Returns the static-data entry matching the unit's current_rarity, or {} if not found.
@@ -286,22 +276,7 @@ func awaken_unit(instance_id: String) -> Dictionary:
 
 	# Bump rarity.
 	var unit: Dictionary = owned_units_ids[unit_index]
-	var new_rarity: int = int(unit.get("current_rarity", 1)) + 1
-	unit["current_rarity"] = new_rarity
-
-	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit.get("unit_id", "")), {})
-	var exp_pattern: int = _get_raw_unit_exp_pattern(str(unit.get("unit_id", "")), unit_data, new_rarity)
-	if exp_pattern <= 0:
-		exp_pattern = 5
-
-	if new_rarity == 7:
-		unit["xp"] = _calculate_total_xp_for_level_local(101, exp_pattern)
-		unit["level"] = 101
-	else:
-		unit["xp"] = 0
-		unit["level"] = 1
-
-	_update_unit_next_xp_local(unit, unit_data)
+	unit["current_rarity"] = int(unit.get("current_rarity", 1)) + 1
 	owned_units_ids[unit_index] = unit
 
 	# Persist + signal (mirrors enhance_unit flow).
@@ -573,6 +548,7 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 		equip_failed.emit("ERR_EQUIPMENT_NOT_FOUND")
 		return
 
+	var game_data_equipment: Dictionary = StaticData.game_data_equipment
 	var target_unit_inst: Dictionary = {}
 	for unit in owned_units_ids:
 		if unit is Dictionary and str(unit.get("instance_id", "")) == instance_id:
@@ -586,7 +562,7 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 	if item_id != "":
 		var requested_item: Dictionary = InventoryService.get_equipment_instance(item_id)
 		var template_id: String = str(requested_item.get("template_id", ""))
-		item_template = GameDatabase.get_equipment(template_id)
+		item_template = game_data_equipment.get(template_id, {})
 		if item_template.is_empty():
 			# Materia instances live in the same equipment collection but resolve
 			# their template via game_data_materia. The validator only needs the
@@ -778,6 +754,8 @@ func _name_is_latin(name: String) -> bool:
 func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 	return {
 		"xp": int(hydrated_unit.get("xp", 0)),
+		"level": int(hydrated_unit.get("level", 1)),
+		"next_xp": int(hydrated_unit.get("next_xp", 0)),
 		"unit_id": str(hydrated_unit.get("unit_id", "")),
 		"instance_id": str(hydrated_unit.get("instance_id", "")),
 		"equipment": _normalize_unit_equipment(hydrated_unit.get("equipment", {})),
@@ -933,6 +911,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 	if unit_data.is_empty():
 		return {"error": "Missing unit static data for trust reward"}
 
+	var game_data_equipment: Dictionary = StaticData.game_data_equipment
 	var game_data_materia: Dictionary = StaticData.game_data_materia
 
 	var tmr_value: Variant = unit_data.get("TMR", null)
@@ -940,7 +919,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 		var reward_type: String = str(tmr_value[0])
 		var reward_id: String = str(tmr_value[1])
 		if reward_type == "EQUIP":
-			if GameDatabase.get_equipment(reward_id).is_empty():
+			if not game_data_equipment.has(reward_id):
 				return {"error": "Trust reward equipment template not found"}
 			return {"reward_type": "EQUIP", "template_id": reward_id}
 		elif reward_type == "MATERIA":
@@ -952,7 +931,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 
 	var trust_mastery_id: String = str(unit_data.get("trust_mastery_id", ""))
 	if trust_mastery_id != "":
-		if not GameDatabase.get_equipment(trust_mastery_id).is_empty():
+		if game_data_equipment.has(trust_mastery_id):
 			return {"reward_type": "EQUIP", "template_id": trust_mastery_id}
 		if game_data_materia.has(trust_mastery_id):
 			return {"reward_type": "MATERIA", "template_id": trust_mastery_id}
@@ -979,65 +958,85 @@ func _get_unit_max_level_local(unit: Dictionary) -> int:
 	var rarity: int = int(unit.get("current_rarity", 1))
 	return int(StatCalculator.RARITY_MAX_LEVELS.get(rarity, 15))
 
-# Total-XP table for all exp patterns, lazily fetched from the DB
-# (unit_exp_pattern table) and cached. The DB stores needExp[L] as
-# the cumulative XP required to REACH level L (with an L=1=0 row).
-# The cache stores them in a PackedInt32Array where index == level.
-var _exp_patterns_loaded: bool = false
-
-func _ensure_exp_patterns_loaded() -> void:
-	if _exp_patterns_loaded:
+func _ensure_unit_exp_patterns_loaded() -> void:
+	if not _unit_exp_patterns_cache.is_empty():
 		return
 
-	if not GameDatabase:
-		push_error("Unit exp patterns unavailable: GameDatabase autoload is missing")
+	if not StaticData:
+		push_error("Unit exp patterns unavailable: StaticData autoload is missing")
 		return
 
-	_exp_patterns_loaded = true
-	var temp_dict: Dictionary = {}
-	for row in GameDatabase.get_all_unit_exp_patterns():
-		var pattern_id: int = int(row.get("expPatternId", 0))
-		var level: int = int(row.get("level", 0))
-		var need_exp: int = int(row.get("needExp", 0))
+	var source_patterns: Dictionary = StaticData.game_data_unit_exp_patterns
+	if source_patterns.is_empty():
+		push_error("unit_exp_patterns.json is empty or not loaded in StaticData")
+		return
 
-		if not temp_dict.has(pattern_id):
-			temp_dict[pattern_id] = {}
-		temp_dict[pattern_id][level] = need_exp
+	for raw_pattern_key in source_patterns.keys():
+		var normalized_pattern_text: String = str(raw_pattern_key).strip_edges()
+		if normalized_pattern_text.begins_with("Gr "):
+			normalized_pattern_text = normalized_pattern_text.trim_prefix("Gr ").strip_edges()
+		if not normalized_pattern_text.is_valid_int():
+			continue
 
-	for pattern_id in temp_dict.keys():
-		var max_lvl: int = 0
-		for l in temp_dict[pattern_id].keys():
-			max_lvl = maxi(max_lvl, l)
+		var pattern_id: int = int(normalized_pattern_text)
+		if pattern_id <= 0:
+			continue
 
-		var arr: PackedInt32Array = PackedInt32Array()
-		arr.resize(max_lvl + 1)
-		arr.fill(-1) # Default to -1 so bsearch isn't confused by trailing zeroes
-		for l in temp_dict[pattern_id].keys():
-			arr[l] = temp_dict[pattern_id][l]
+		var pattern_rows_value: Variant = source_patterns.get(raw_pattern_key, {})
+		if not (pattern_rows_value is Dictionary):
+			continue
 
-		_unit_exp_patterns_cache[pattern_id] = arr
+		var pattern_rows: Dictionary = pattern_rows_value
+		if not _unit_exp_patterns_cache.has(pattern_id):
+			_unit_exp_patterns_cache[pattern_id] = {}
+
+		for raw_level_key in pattern_rows.keys():
+			var normalized_level_text: String = str(raw_level_key).strip_edges()
+			if not normalized_level_text.is_valid_int():
+				continue
+
+			var level: int = int(normalized_level_text)
+			if level <= 0:
+				continue
+
+			var xp_raw: Variant = pattern_rows.get(raw_level_key, 0)
+			var xp_value: int = 0
+			if xp_raw is String:
+				var xp_text: String = str(xp_raw).strip_edges()
+				if xp_text != "" and xp_text != "-" and xp_text.is_valid_int():
+					xp_value = int(xp_text)
+			else:
+				xp_value = int(xp_raw)
+
+			var runtime_rows: Dictionary = _unit_exp_patterns_cache[pattern_id]
+			runtime_rows[level] = xp_value
+
+	if _unit_exp_patterns_cache.is_empty():
+		push_error("unit_exp_patterns.json loaded but no valid pattern rows were parsed")
+
+func _calculate_xp_for_level_local(level: int, exp_pattern: int) -> int:
+	_ensure_unit_exp_patterns_loaded()
+	if not _unit_exp_patterns_cache.has(exp_pattern):
+		return 0
+	var table: Dictionary = _unit_exp_patterns_cache[exp_pattern]
+	return int(table.get(level, 0))
 
 func _calculate_total_xp_for_level_local(level: int, exp_pattern: int) -> int:
-	_ensure_exp_patterns_loaded()
-	var arr: PackedInt32Array = _unit_exp_patterns_cache.get(exp_pattern, PackedInt32Array())
-	if arr.is_empty():
-		return 0
-
-	if level < 1:
-		return 0
-	elif level < arr.size():
-		return arr[level]
-	else:
-		return arr[arr.size() - 1]
+	var total: int = 0
+	for l in range(1, level):
+		total += _calculate_xp_for_level_local(l, exp_pattern)
+	return total
 
 func _calculate_level_from_xp_local(total_xp: int, exp_pattern: int, max_level: int) -> int:
-	_ensure_exp_patterns_loaded()
-	var arr: PackedInt32Array = _unit_exp_patterns_cache.get(exp_pattern, PackedInt32Array())
-	if arr.is_empty():
-		return 1
-
-	var calculated_level: int = arr.bsearch(total_xp, false) - 1
-	return clampi(calculated_level, 1, max_level)
+	var level: int = 1
+	var remaining: int = maxi(0, total_xp)
+	while level < max_level:
+		var required: int = _calculate_xp_for_level_local(level, exp_pattern)
+		if required <= 0 or remaining < required:
+			break
+		remaining -= required
+		level += 1
+	return level
 
 func _update_unit_next_xp_local(unit: Dictionary, unit_data: Dictionary) -> void:
 	var exp_pattern: int = _get_raw_unit_exp_pattern(str(unit.get("unit_id", "")), unit_data, int(unit.get("current_rarity", 1)))
@@ -1047,8 +1046,10 @@ func _update_unit_next_xp_local(unit: Dictionary, unit_data: Dictionary) -> void
 	var max_level: int = _get_unit_max_level_local(unit)
 	var level: int = int(unit.get("level", 1))
 	if level < max_level:
-		var next_level_xp: int = _calculate_total_xp_for_level_local(level + 1, exp_pattern)
-		unit["next_xp"] = maxi(0, next_level_xp - int(unit.get("xp", 0)))
+		var base_xp: int = _calculate_total_xp_for_level_local(level, exp_pattern)
+		var xp_into_level: int = int(unit.get("xp", 0)) - base_xp
+		var required_marginal_xp: int = _calculate_xp_for_level_local(level, exp_pattern)
+		unit["next_xp"] = maxi(0, required_marginal_xp - xp_into_level)
 	else:
 		unit["next_xp"] = 0
 
@@ -1107,21 +1108,6 @@ func _hydrate_owned_units(units: Array) -> Array:
 		hydrated_unit.merge(unit_instance, true)
 		hydrated_unit["equipment"] = _normalize_unit_equipment(unit_instance.get("equipment", {}))
 		hydrated_unit["entry_id"] = rarity_entry_key
-
-		# Recalculate level and next_xp from current xp
-		var xp_val: int = int(hydrated_unit.get("xp", 0))
-		var exp_pattern: int = _get_raw_unit_exp_pattern(str(hydrated_unit.get("unit_id", "")), template_data, int(hydrated_unit.get("current_rarity", 1)))
-		if exp_pattern <= 0:
-			exp_pattern = 5
-		var max_level: int = _get_unit_max_level_local(hydrated_unit)
-		var calc_level: int = _calculate_level_from_xp_local(xp_val, exp_pattern, max_level)
-		hydrated_unit["level"] = calc_level
-
-		if calc_level < max_level:
-			var next_level_xp: int = _calculate_total_xp_for_level_local(calc_level + 1, exp_pattern)
-			hydrated_unit["next_xp"] = maxi(0, next_level_xp - xp_val)
-		else:
-			hydrated_unit["next_xp"] = 0
 
 		# 4. Calculate Final Stats
 		hydrated_unit["final_stats"] = StatCalculator.calculate_final_stats(hydrated_unit)

@@ -105,7 +105,7 @@ func _passes_dual_wield_filter(item_dict: Dictionary) -> bool:
 	if other_item_id == "":
 		return true
 	var other_template_id: String = InventoryService.get_equipment_template_id(other_item_id)
-	var other_template: Dictionary = GameDatabase.get_equipment(other_template_id)
+	var other_template: Dictionary = StaticData.game_data_equipment.get(other_template_id, {})
 	if other_template.is_empty():
 		return true
 	if str(other_template.get("slot", "")) != "Weapon" or bool(other_template.get("is_twohanded", false)):

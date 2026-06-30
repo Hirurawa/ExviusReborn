@@ -118,12 +118,19 @@ func _on_store_clicked(store_id: String) -> void:
 			else:
 				name_label.text = "Unknown Equipment (" + target_id + ")"
 				price_label.text = ""
-		elif target_type == 60: # Recipe
-			name_label.text = "Recipe (" + target_id + ")"
-			price_label.text = ""
 		elif target_type == 22: # Materia
 			name_label.text = "Materia (" + target_id + ")"
 			price_label.text = ""
+		elif target_type == 40: # Star quartz - medal exchange
+			name_label.text = "Star Quartz (" + target_id + ")"
+			price_label.text = ""
+		elif target_type == 41: # Vault item - store box
+			name_label.text = "Vault Item (" + target_id + ")"
+			price_label.text = ""
+		elif target_type == 60: # Recipe
+			name_label.text = "Recipe (" + target_id + ")"
+			price_label.text = ""
+
 		else:
 			name_label.text = "Unknown Type %d (%s)" % [target_type, target_id]
 			price_label.text = ""

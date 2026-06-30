@@ -179,6 +179,12 @@ func load_initial_data(email: String) -> void:
 	PlayerProfile.gil = int(stats.get("gil", 0))
 	PlayerProfile.lapis = int(stats.get("lapis", 0))
 
+	var m_progress = stats.get("monster_kill_progress", {})
+	if typeof(m_progress) == TYPE_DICTIONARY:
+		PlayerProfile.monster_kill_progress = m_progress
+	else:
+		PlayerProfile.monster_kill_progress = {}
+
 	# Normalize progression values only when save data is missing/invalid.
 	if PlayerProfile.next_rank_xp <= 0 or PlayerProfile.max_nrg <= 0:
 		if not PlayerProfile.rank_exp_data.is_empty():

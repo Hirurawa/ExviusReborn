@@ -133,23 +133,40 @@ func _start_quest(start_switch: String) -> void:
 
 func _check_requirements(quest: Dictionary) -> bool:
 	for task in quest.get("tasks", []):
-		if typeof(task) == TYPE_DICTIONARY and task.get("target_type", "") == "1":
-			for req in task.get("raw_requirements", []):
-				var type = req.get("type")
-				var id = req.get("id")
-				var amount = req.get("amount", 0)
-				if InventoryService.get_item_count(type, id) < amount:
-					return false
+		if typeof(task) == TYPE_DICTIONARY:
+			var t_type = task.get("target_type", "")
+			if t_type == "1":
+				for req in task.get("raw_requirements", []):
+					var type = req.get("type")
+					var id = req.get("id")
+					var amount = req.get("amount", 0)
+					if InventoryService.get_item_count(type, id) < amount:
+						return false
+			elif t_type == "2":
+				for req in task.get("raw_requirements", []):
+					var id = req.get("id")
+					var amount = req.get("amount", 0)
+					var current_kills = PlayerProfile.monster_kill_progress.get(str(id), 0)
+					if current_kills < amount:
+						return false
 	return true
 
 func _finish_quest(end_switch: String, quest: Dictionary) -> void:
 	for task in quest.get("tasks", []):
-		if typeof(task) == TYPE_DICTIONARY and task.get("target_type", "") == "1":
-			var items_to_consume = []
-			for req in task.get("raw_requirements", []):
-				items_to_consume.append({"id": req.get("id"), "amount": req.get("amount")})
-			if not items_to_consume.is_empty():
-				InventoryService.consume_stackables_and_save(items_to_consume)
+		if typeof(task) == TYPE_DICTIONARY:
+			var t_type = task.get("target_type", "")
+			if t_type == "1":
+				var items_to_consume = []
+				for req in task.get("raw_requirements", []):
+					items_to_consume.append({"id": req.get("id"), "amount": req.get("amount")})
+				if not items_to_consume.is_empty():
+					InventoryService.consume_stackables_and_save(items_to_consume)
+			elif t_type == "2":
+				var monsters_to_clear = []
+				for req in task.get("raw_requirements", []):
+					monsters_to_clear.append(req.get("id"))
+				if not monsters_to_clear.is_empty():
+					PlayerProfile.clear_monster_kill_progress(monsters_to_clear)
 
 	var items_granted: bool = false
 	for reward in quest.get("raw_rewards", []):

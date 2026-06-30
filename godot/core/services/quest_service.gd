@@ -120,7 +120,10 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 								var amount = parts[1]
 								var name = GameDatabase.get_monster_name(dict_id)
 								if name != "":
-									task_dict["requirements"].append(name + " 0/" + amount)
+									var current_count = PlayerProfile.monster_kill_progress.get(str(dict_id), 0)
+									task_dict["requirements"].append(name + " " + str(current_count) + "/" + amount)
+									task_dict["raw_requirements"] = task_dict.get("raw_requirements", [])
+									task_dict["raw_requirements"].append({"id": dict_id, "amount": int(amount)})
 								else:
 									task_dict["requirements"].append(chunk)
 							else:

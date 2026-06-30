@@ -36,6 +36,8 @@ var seconds_until_next_nrg: float = 0.0
 var gil: int = 0
 var lapis: int = 0
 
+var monster_kill_progress: Dictionary = {}
+
 # Loaded from rank_exp.json: {rank: {"xp_needed": int, "energy": int}}
 var rank_exp_data: Dictionary = {}
 
@@ -69,6 +71,7 @@ func reset_to_starter() -> void:
 	seconds_until_next_nrg = 0.0
 	gil = 0
 	lapis = 0
+	monster_kill_progress.clear()
 
 
 func emit_all() -> void:
@@ -100,7 +103,8 @@ func snapshot_payload() -> Dictionary:
 		"last_entered_mission_id": MissionService.last_entered_mission_id,
 		"gil": gil,
 		"lapis": lapis,
-		"username": AccountService.current_username
+		"username": AccountService.current_username,
+		"monster_kill_progress": monster_kill_progress
 	}
 
 
@@ -117,10 +121,15 @@ func normalize_stats_payload(raw_payload: Variant) -> Dictionary:
 			"last_entered_mission_id": "",
 			"gil": 0,
 			"lapis": 0,
-			"username": ""
+			"username": "",
+			"monster_kill_progress": {}
 		}
 
 	var payload: Dictionary = raw_payload
+	var m_progress = payload.get("monster_kill_progress", {})
+	if typeof(m_progress) != TYPE_DICTIONARY:
+		m_progress = {}
+
 	return {
 		"rank": int(payload.get("rank", 1)),
 		"xp": int(payload.get("xp", 0)),
@@ -132,8 +141,25 @@ func normalize_stats_payload(raw_payload: Variant) -> Dictionary:
 		"last_entered_mission_id": str(payload.get("last_entered_mission_id", "")),
 		"gil": int(payload.get("gil", 0)),
 		"lapis": int(payload.get("lapis", 0)),
-		"username": str(payload.get("username", ""))
+		"username": str(payload.get("username", "")),
+		"monster_kill_progress": m_progress
 	}
+
+func record_monster_kill(monster_id: String) -> void:
+	if not monster_kill_progress.has(monster_id):
+		monster_kill_progress[monster_id] = 0
+	monster_kill_progress[monster_id] += 1
+	save_snapshot("monster_kill")
+
+func clear_monster_kill_progress(monster_ids: Array) -> void:
+	var changed = false
+	for m_id in monster_ids:
+		var s_id = str(m_id)
+		if monster_kill_progress.has(s_id):
+			monster_kill_progress.erase(s_id)
+			changed = true
+	if changed:
+		save_snapshot("clear_monster_kill")
 
 
 func load_stats_from_local() -> Dictionary:

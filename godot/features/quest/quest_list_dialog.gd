@@ -161,12 +161,12 @@ func _finish_quest(end_switch: String, quest: Dictionary) -> void:
 					items_to_consume.append({"id": req.get("id"), "amount": req.get("amount")})
 				if not items_to_consume.is_empty():
 					InventoryService.consume_stackables_and_save(items_to_consume)
-			elif t_type == "2":
-				var monsters_to_clear = []
-				for req in task.get("raw_requirements", []):
-					monsters_to_clear.append(req.get("id"))
-				if not monsters_to_clear.is_empty():
-					PlayerProfile.clear_monster_kill_progress(monsters_to_clear)
+			# elif t_type == "2":
+			# 	var monsters_to_clear = []
+			# 	for req in task.get("raw_requirements", []):
+			# 		monsters_to_clear.append(req.get("id"))
+			# 	if not monsters_to_clear.is_empty():
+			# 		PlayerProfile.clear_monster_kill_progress(monsters_to_clear)
 
 	var items_granted: bool = false
 	for reward in quest.get("raw_rewards", []):

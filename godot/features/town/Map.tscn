@@ -21,6 +21,22 @@
 [ext_resource type="Texture2D" uid="uid://cjubxtijjly3e" path="res://assets/ui/quest/minimap_icon2.tres" id="19_yfh2o"]
 [ext_resource type="Texture2D" uid="uid://bd7ebxxwdo5" path="res://assets/ui/quest/menu_icon1.tres" id="20_vupn6"]
 [ext_resource type="Texture2D" uid="uid://bj80hasgt2mcs" path="res://assets/ui/quest/menu_icon2.tres" id="21_wt665"]
+[ext_resource type="Texture2D" uid="uid://df6i60l0gt16c" path="res://assets/ui/virtualpad/direction_l_1.tres" id="22_oaiiy"]
+[ext_resource type="Texture2D" uid="uid://cqclgq46hlp81" path="res://assets/ui/virtualpad/direction_l_2.tres" id="23_d4tey"]
+[ext_resource type="Texture2D" uid="uid://baaowck7hu108" path="res://assets/ui/virtualpad/direction_dl_1.tres" id="24_fm250"]
+[ext_resource type="Texture2D" uid="uid://dn21rxjkyc4u" path="res://assets/ui/virtualpad/direction_dl_2.tres" id="25_mtt05"]
+[ext_resource type="Texture2D" uid="uid://b085kkda8ctiv" path="res://assets/ui/virtualpad/direction_r_1.tres" id="26_3qhfv"]
+[ext_resource type="Texture2D" uid="uid://bwnfajwy7vvly" path="res://assets/ui/virtualpad/direction_r_2.tres" id="27_r3aqk"]
+[ext_resource type="Texture2D" uid="uid://bhldm1smhkvk6" path="res://assets/ui/virtualpad/direction_u_1.tres" id="28_f80yi"]
+[ext_resource type="Texture2D" uid="uid://di1babprkno1c" path="res://assets/ui/virtualpad/direction_u_2.tres" id="29_5423p"]
+[ext_resource type="Texture2D" uid="uid://cg4hygxjotaav" path="res://assets/ui/virtualpad/direction_d_1.tres" id="30_g44pf"]
+[ext_resource type="Texture2D" uid="uid://h00uyos41kr0" path="res://assets/ui/virtualpad/direction_d_2.tres" id="31_27ted"]
+[ext_resource type="Texture2D" uid="uid://bwkcievqk4ixi" path="res://assets/ui/virtualpad/direction_dr_1.tres" id="32_hc5un"]
+[ext_resource type="Texture2D" uid="uid://cs2k7t0ililfb" path="res://assets/ui/virtualpad/direction_dr_2.tres" id="33_m8nyb"]
+[ext_resource type="Texture2D" uid="uid://da1gkie21yojl" path="res://assets/ui/virtualpad/direction_ul_1.tres" id="34_ostip"]
+[ext_resource type="Texture2D" uid="uid://jor2o53blqy4" path="res://assets/ui/virtualpad/direction_ul_2.tres" id="35_2qhks"]
+[ext_resource type="Texture2D" uid="uid://dtpwan0etie00" path="res://assets/ui/virtualpad/direction_ur_1.tres" id="36_6qell"]
+[ext_resource type="Texture2D" uid="uid://bpvtlfmxysw6d" path="res://assets/ui/virtualpad/direction_ur_2.tres" id="37_45ryl"]
 [ext_resource type="Script" uid="uid://cv84dfudg2ihb" path="res://features/town/town_map.gd" id="town_map_script"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8dv2y"]
@@ -3597,10 +3613,11 @@ visible_layers = 4079
 enabled = false
 script = ExtResource("14_tpiga")
 
-[node name="HUDLayer" type="CanvasLayer" parent="."]
+[node name="HUDLayer" type="CanvasLayer" parent="." unique_id=1249418981]
 layer = 50
 
-[node name="HUD" type="Control" parent="HUDLayer"]
+[node name="HUD" type="Control" parent="HUDLayer" unique_id=832276842]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -3609,7 +3626,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="TownMenu" type="TextureButton" parent="HUDLayer/HUD" unique_id=1754105984]
-anchors_preset = 2
+layout_mode = 0
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
@@ -3621,7 +3638,7 @@ texture_normal = ExtResource("16_fqohr")
 texture_pressed = ExtResource("17_djl8x")
 
 [node name="ToggleMinimap" type="TextureButton" parent="HUDLayer/HUD" unique_id=1319891023]
-anchors_preset = 3
+layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -3636,7 +3653,7 @@ texture_normal = ExtResource("18_8ptfr")
 texture_pressed = ExtResource("19_yfh2o")
 
 [node name="Menu" type="TextureButton" parent="HUDLayer/HUD" unique_id=238393942]
-anchors_preset = 3
+layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -3649,6 +3666,81 @@ grow_horizontal = 0
 grow_vertical = 0
 texture_normal = ExtResource("20_vupn6")
 texture_pressed = ExtResource("21_wt665")
+
+[node name="VirtualDPad" type="Control" parent="HUDLayer/HUD" unique_id=1920200032]
+anchors_preset = 0
+offset_top = 624.0
+offset_right = 40.0
+offset_bottom = 664.0
+
+[node name="left" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=182786288]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture_normal = ExtResource("22_oaiiy")
+texture_pressed = ExtResource("23_d4tey")
+
+[node name="down_left" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=1262932587]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 90.0
+offset_right = 138.0
+offset_bottom = 186.0
+texture_normal = ExtResource("24_fm250")
+texture_pressed = ExtResource("25_mtt05")
+
+[node name="right" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=50021967]
+layout_mode = 0
+offset_left = 239.0
+offset_right = 311.0
+offset_bottom = 112.0
+texture_normal = ExtResource("26_3qhfv")
+texture_pressed = ExtResource("27_r3aqk")
+
+[node name="up" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=442037578]
+layout_mode = 0
+offset_left = 99.0
+offset_top = -98.0
+offset_right = 211.0
+offset_bottom = -26.0
+texture_normal = ExtResource("28_f80yi")
+texture_pressed = ExtResource("29_5423p")
+
+[node name="down" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=1499839628]
+layout_mode = 0
+offset_left = 101.0
+offset_top = 139.0
+offset_right = 213.0
+offset_bottom = 211.0
+texture_normal = ExtResource("30_g44pf")
+texture_pressed = ExtResource("31_27ted")
+
+[node name="down_right" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=452466943]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 90.0
+offset_right = 303.0
+offset_bottom = 186.0
+texture_normal = ExtResource("32_hc5un")
+texture_pressed = ExtResource("33_m8nyb")
+
+[node name="up_left" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=898897069]
+layout_mode = 0
+offset_left = 25.0
+offset_top = -73.0
+offset_right = 137.0
+offset_bottom = 23.0
+texture_normal = ExtResource("34_ostip")
+texture_pressed = ExtResource("35_2qhks")
+
+[node name="up_right" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=2076205494]
+layout_mode = 0
+offset_left = 189.0
+offset_top = -74.0
+offset_right = 301.0
+offset_bottom = 22.0
+texture_normal = ExtResource("36_6qell")
+texture_pressed = ExtResource("37_45ryl")
 
 [node name="Player" parent="." unique_id=1439593909 instance=ExtResource("15_oa7bu")]
 position = Vector2(2898, 3948)

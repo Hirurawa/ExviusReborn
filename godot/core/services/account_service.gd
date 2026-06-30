@@ -1,14 +1,14 @@
 extends Node
 ## AccountService — owns the local "account" identity (username, account_info
-## placeholder) and the session-control flow (authenticate / register / logout
+## placeholder) and the session-control flow (authenticate / logout
 ## / update_account). Also re-emits the data_loaded signal that downstream UI
 ## listens for once the orchestrator finishes hydrating all domains.
 ##
 ## State previously held by DataManager that now lives here:
 ##   - current_username, account_info
 ##   - account_updated / login_success / login_failed
-##     register_success / register_failed / data_loaded signals
-##   - authenticate, register, logout, update_account, _derive_username_from_email
+##     data_loaded signals
+##   - authenticate, logout, update_account, _derive_username_from_email
 ##
 ## The orchestrators `start_new_local_game` and `load_local_game` (with helper
 ## `load_initial_data` + `save_all_snapshots`) also live here since they touch
@@ -17,30 +17,20 @@ extends Node
 signal data_loaded
 signal login_success
 signal login_failed(error_code: int)
-signal register_success
-signal register_failed(error_code: int)
 signal account_updated(username: String)
 
 var current_username: String = ""
 var account_info = null
 
-
 func authenticate(email: String, _password: String) -> void:
 	await load_initial_data(email)
 	login_success.emit()
-
-
-func register(email: String, _password: String, _username: String) -> void:
-	await load_initial_data(email)
-	register_success.emit()
-
 
 func logout() -> void:
 	account_info = null
 	MissionService.last_entered_mission_id = ""
 	MissionService.last_played_dungeon_name = ""
 	PartyService.selected_party_index = 0
-
 
 func update_account(new_username: String) -> bool:
 	current_username = new_username

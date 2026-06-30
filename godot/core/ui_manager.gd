@@ -10,7 +10,6 @@ var home_buttons: Node = null
 # Add standard menu mappings for easier instancing
 var _scenes_map: Dictionary = {
 	"login_ui": "res://features/auth/LoginUI.tscn",
-	"register_ui": "res://features/auth/RegisterUI.tscn",
 	"game_ui": "res://features/shared/GameUI.tscn",
 	"edit_profile_ui": "res://features/outgame/profile/EditProfileUI.tscn",
 	"shop_ui": "res://features/outgame/shop/ShopUI.tscn",
@@ -50,7 +49,6 @@ const BGM_NONE: String = ""
 
 var _bgm_for_scene: Dictionary = {
 	"login_ui": BGM_LOGIN,
-	"register_ui": BGM_LOGIN,
 	"combat_ui": BGM_BATTLE,
 	"map_ui": BGM_MAP,
 	"settings_ui": BGM_NONE,
@@ -108,7 +106,7 @@ func _update_overlays() -> void:
 	var current_scene_name: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom: Array[String] = ["login_ui", "register_ui", "loginui", "registerui", "combat_ui", "combatui", "town_map_ui", "townmapui", "settings_ui", "settingsui"]
+	var hide_top_and_bottom: Array[String] = ["login_ui", "loginui", "combat_ui", "combatui", "town_map_ui", "townmapui", "settings_ui", "settingsui"]
 	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "esper_detail_ui", "mapui", "editprofileui", "esperdetailui"]
 
 	if top_header:

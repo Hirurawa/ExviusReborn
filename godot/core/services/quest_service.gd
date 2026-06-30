@@ -22,6 +22,7 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 
 		if not quests_dict.has(quest_id):
 			var parsed_rewards: Array[String] = []
+			var raw_rewards_array: Array[Dictionary] = []
 			var raw_reward = str(row.get("reward", ""))
 			if raw_reward != "":
 				var reward_chunks = raw_reward.split(",", false)
@@ -32,6 +33,8 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 						var id = parts[1]
 						var amount = parts[2]
 						var name = ""
+
+						raw_rewards_array.append({"type": type, "id": id, "amount": int(amount)})
 
 						if type == "20":
 							var item_data = GameDatabase.get_item(id)
@@ -59,6 +62,7 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 				"name": str(row.get("questName", "")),
 				"tasks": [],
 				"rewards": parsed_rewards,
+				"raw_rewards": raw_rewards_array,
 				"openSwitch": str(row.get("openSwitch", ""))
 			}
 

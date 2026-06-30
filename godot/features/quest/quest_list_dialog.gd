@@ -151,6 +151,23 @@ func _finish_quest(end_switch: String, quest: Dictionary) -> void:
 			if not items_to_consume.is_empty():
 				InventoryService.consume_stackables_and_save(items_to_consume)
 
+	var items_granted: bool = false
+	for reward in quest.get("raw_rewards", []):
+		var type = reward.get("type")
+		var id = reward.get("id")
+		var amount = reward.get("amount", 0)
+
+		if type == "20":
+			InventoryService.add_stackable(id, amount)
+			items_granted = true
+		elif type == "21":
+			InventoryService.add_equipment_instances(id, amount)
+			items_granted = true
+
+	if items_granted:
+		InventoryService.emit_updated()
+		Persistence.save_snapshot(InventoryService.SNAPSHOT_FILE, InventoryService.snapshot_payload(), "quest_reward")
+
 	if end_switch != "":
 		SwitchService.unlock_switches(end_switch)
 		Persistence.save_snapshot(SwitchService.SNAPSHOT_FILE, SwitchService.snapshot_payload(), "finish_quest")

@@ -103,6 +103,21 @@ func add_equipment_instances(template_id: String, quantity: int) -> Array:
 		(owned_items["equipment"] as Array).append(new_instance)
 		added.append(new_instance)
 	return added
+func consume_stackables_and_save(items: Array) -> void:
+	for item in items:
+		remove_stackable(item["id"], item["amount"])
+	emit_updated()
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "consume_quest_items")
+
+func remove_stackable(item_id: String, quantity: int) -> void:
+	if not owned_items.has("stackables"):
+		return
+	var current_qty: int = int(owned_items["stackables"].get(item_id, 0))
+	if current_qty >= quantity:
+		owned_items["stackables"][item_id] = current_qty - quantity
+	else:
+		owned_items["stackables"][item_id] = 0
+
 
 
 # === Lookups ===

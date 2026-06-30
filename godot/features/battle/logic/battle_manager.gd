@@ -214,7 +214,7 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 func initialize_battle(mission_id: String) -> void:
 	
 	current_mission_id = mission_id
-	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
+	var mission_data = MissionService.get_mission_data(str(current_mission_id))
 
 	# Resolve the data-driven wave plan (MISSION_PHASE / scenario battles). When a
 	# mission has no mapped plan, fall back to the legacy wave_count + random spawn.
@@ -698,7 +698,7 @@ func _trigger_defeat() -> void:
 	if OS.is_debug_build():
 		print("BattleManager: Defeat! All allies have fallen.")
 	if MissionService.has_method("request_finish_mission"):
-		await MissionService.request_finish_mission(false, current_mission_id, used_items)
+		MissionService.request_finish_mission(false, current_mission_id, used_items)
 	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
@@ -725,7 +725,7 @@ func _trigger_mission_complete() -> void:
 		print("Mission Drops: ", mission_drops)
 
 	if MissionService.has_method("request_finish_mission"):
-		await MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
+		MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
 
 	mission_cleared.emit()
 
@@ -734,7 +734,7 @@ func _spawn_next_wave() -> void:
 	if OS.is_debug_build():
 		print("BattleManager: Spawning Wave %d..." % current_wave)
 
-	var mission_data = MissionService.get_mission_data_local(str(current_mission_id))
+	var mission_data = MissionService.get_mission_data(str(current_mission_id))
 
 	_spawn_wave(current_wave, mission_data)
 

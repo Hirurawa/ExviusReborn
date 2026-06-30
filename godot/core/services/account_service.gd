@@ -191,7 +191,7 @@ func load_initial_data(email: String) -> void:
 				PlayerProfile.max_nrg = int(PlayerProfile.rank_exp_data[fallback_rank].get("energy", PlayerProfile.max_nrg))
 	current_username = str(stats.get("username", ""))
 	if MissionService.last_entered_mission_id != "":
-		await MissionService.update_last_played_dungeon_from_mission(MissionService.last_entered_mission_id)
+		MissionService.update_last_played_dungeon_from_mission(MissionService.last_entered_mission_id)
 	else:
 		MissionService.last_played_dungeon_name = ""
 

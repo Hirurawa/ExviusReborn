@@ -26,14 +26,13 @@ var last_entered_mission_id: String = ""
 var last_played_dungeon_name: String = ""
 
 # Per-session cache of reconstructed mission dicts (keyed by mission id), so the
-# repeated get_mission_data_local calls during a battle don't re-query the DB.
+# repeated get_mission_data calls during a battle don't re-query the DB.
 var _mission_cache: Dictionary = {}
 
 
 # === Public lookups ===
 
-func get_mission_data_local(mission_id: String) -> Dictionary:
-	return _get_or_load_mission_data_local(mission_id)
+
 
 
 # === State management ===
@@ -58,7 +57,7 @@ func load_progress() -> void:
 	latest_cleared_mission_id = str(local_payload.get("latest_cleared_mission_id", ""))
 
 	if latest_cleared_mission_id != "":
-		await update_last_played_dungeon_from_mission(latest_cleared_mission_id)
+		update_last_played_dungeon_from_mission(latest_cleared_mission_id)
 
 	mission_progress_loaded.emit(latest_cleared_mission_id)
 
@@ -68,7 +67,7 @@ func update_last_played_dungeon_from_mission(mission_id: String) -> void:
 		last_played_dungeon_name = ""
 		return
 
-	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
+	var mission_data: Dictionary = get_mission_data(mission_id)
 	if mission_data.is_empty():
 		return
 
@@ -84,7 +83,7 @@ func update_last_played_dungeon_from_mission(mission_id: String) -> void:
 # === Mission flow ===
 
 func request_start_mission(mission_id: String) -> Dictionary:
-	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
+	var mission_data: Dictionary = get_mission_data(mission_id)
 	if mission_data.is_empty():
 		return {"success": false, "error": "Mission not found"}
 
@@ -108,7 +107,7 @@ func request_start_mission(mission_id: String) -> Dictionary:
 		)
 
 	last_entered_mission_id = str(mission_id)
-	await update_last_played_dungeon_from_mission(mission_id)
+	update_last_played_dungeon_from_mission(mission_id)
 	# Stats snapshot bundles last_entered_mission_id with the profile blob.
 	PlayerProfile.save_snapshot("start_mission")
 	return {"success": true}
@@ -130,7 +129,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	cleared_missions[mission_key] = progress_entry
 	latest_cleared_mission_id = _get_latest_cleared_mission_id_from_progress(cleared_missions)
 
-	var mission_data: Dictionary = await _get_or_load_mission_data(mission_id)
+	var mission_data: Dictionary = get_mission_data(mission_id)
 
 	if mission_data.has("exp"):
 		PlayerProfile.current_xp += int(mission_data["exp"])
@@ -172,7 +171,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		owned_items["stackables"][drop_id] = current_qty + 1
 
 	last_entered_mission_id = str(mission_id)
-	await update_last_played_dungeon_from_mission(last_entered_mission_id)
+	update_last_played_dungeon_from_mission(last_entered_mission_id)
 
 	var rewards_text: String = ""
 	if mission_data.has("gil"):
@@ -275,11 +274,7 @@ func request_dungeon_missions(mission_ids: Array) -> void:
 
 # === Helpers ===
 
-func _get_or_load_mission_data(mission_id: String) -> Dictionary:
-	return _get_or_load_mission_data_local(str(mission_id))
-
-
-func _get_or_load_mission_data_local(mission_id: String) -> Dictionary:
+func get_mission_data(mission_id: String) -> Dictionary:
 	var mission_key: String = str(mission_id)
 	if _mission_cache.has(mission_key):
 		return _mission_cache[mission_key]

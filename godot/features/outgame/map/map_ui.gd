@@ -699,7 +699,7 @@ func _on_mission_row_pressed(mission_id: String) -> void:
 	_close_mission_popup()
 	# Start flow goes through MissionService (mission data from the DB). Missions
 	# with no encounter data return success=false and surface a friendly error.
-	var result: Dictionary = await MissionService.request_start_mission(mission_id)
+	var result: Dictionary = MissionService.request_start_mission(mission_id)
 	if result.get("success", false) == true:
 		UIManager.push("combat_ui", {"mission_id": mission_id})
 	else:

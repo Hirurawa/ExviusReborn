@@ -6,6 +6,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/quest/home_icon2.tres" id="5_home_btn_pressed"]
 [ext_resource type="Texture2D" path="res://assets/ui/unit/unit_minibutton1.tres" id="6_back_btn"]
 [ext_resource type="Texture2D" path="res://assets/ui/unit/unit_minibutton2.tres" id="7_back_btn_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/quest_tab_wave_challenge_on.tres" id="8_green_header"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/quest_challenge_section_bar.tres" id="9_section_plate"]
 
 [node name="DungeonMissionListPopup" type="Control"]
 layout_mode = 3
@@ -38,9 +40,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -320.0
-offset_top = -240.0
+offset_top = -300.0
 offset_right = 320.0
-offset_bottom = 320.0
+offset_bottom = 420.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
@@ -53,20 +55,25 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="MissionListPanel" type="VBoxContainer" parent="ContentRoot/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="ScrollContainer" type="ScrollContainer" parent="ContentRoot/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentRoot/VBoxContainer/MissionListPanel"]
 custom_minimum_size = Vector2(640, 440)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="ListHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/ScrollContainer"]
+[node name="ListHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/MissionListPanel/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="EmptyLabel" type="Label" parent="ContentRoot/VBoxContainer"]
+[node name="EmptyLabel" type="Label" parent="ContentRoot/VBoxContainer/MissionListPanel"]
 visible = false
 layout_mode = 2
 mouse_filter = 2
@@ -76,6 +83,170 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 18
 text = "No missions available"
 horizontal_alignment = 1
+
+[node name="MissionChallengesPanel" type="VBoxContainer" parent="ContentRoot/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="GreenHeader" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel"]
+custom_minimum_size = Vector2(640, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="Plate" type="TextureRect" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/GreenHeader"]
+layout_mode = 0
+offset_top = 2.0
+offset_right = 316.0
+offset_bottom = 50.0
+mouse_filter = 2
+texture = ExtResource("8_green_header")
+stretch_mode = 0
+
+[node name="TextCover" type="ColorRect" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/GreenHeader"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 14.0
+offset_right = 300.0
+offset_bottom = 38.0
+mouse_filter = 2
+color = Color(0.08, 0.32, 0.12, 1)
+
+[node name="TitleLabel" type="Label" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/GreenHeader"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 8.0
+offset_right = 308.0
+offset_bottom = 44.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 17
+text = "Mission Challenges"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ChallengesArea" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ChallengesHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea"]
+layout_mode = 0
+offset_right = 640.0
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="InitialHeader" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost"]
+custom_minimum_size = Vector2(640, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Plate" type="TextureRect" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/InitialHeader"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("9_section_plate")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/InitialHeader"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 13
+text = "Initial Completion Reward"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InitialRowsHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="AchievementHeader" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost"]
+custom_minimum_size = Vector2(640, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Plate" type="TextureRect" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/AchievementHeader"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("9_section_plate")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/AchievementHeader"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 13
+text = "Achievement Reward"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AchievementRowsHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="NextSpacer" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NextButton" type="TextureButton" parent="ContentRoot/VBoxContainer/MissionChallengesPanel"]
+custom_minimum_size = Vector2(248, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 0
+texture_normal = ExtResource("6_back_btn")
+texture_pressed = ExtResource("7_back_btn_pressed")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="NextLabel" type="Label" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/NextButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 16
+text = "Next"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="HeaderLayer" type="CanvasLayer" parent="."]
 layer = 100

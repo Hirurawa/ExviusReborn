@@ -609,6 +609,10 @@ func _build_mission_popup_entries(missions: Array) -> Array[Dictionary]:
 		if mission_id == "":
 			continue
 		mission["row_state"] = _resolve_mission_row_state(mission_id)
+		mission["challenges"] = GameDatabase.get_mission_challenges(mission_id)
+		var progress: Variant = MissionService.cleared_missions.get(mission_id, {})
+		if progress is Dictionary and (progress as Dictionary).has("objectives"):
+			mission["objectives"] = (progress as Dictionary).get("objectives", [])
 		entries.append(mission)
 	return entries
 

@@ -1,0 +1,107 @@
+[gd_scene format=3 uid="uid://bqm8ch4llenge"]
+
+[ext_resource type="Script" path="res://features/outgame/map/dungeon_mission_list_challenge_row.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/quest_mission_conti_plate1.tres" id="2_conti_left"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/quest_mission_conti_plate2.tres" id="3_conti_right"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/quest_mission_conti_center.tres" id="4_conti_center"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/quest_missionstar_silver.tres" id="6_star"]
+[ext_resource type="Texture2D" path="res://assets/ui/quest/lapis_icon1.tres" id="7_lapis"]
+
+[node name="DungeonMissionChallengeRow" type="Control"]
+custom_minimum_size = Vector2(640, 128)
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+script = ExtResource("1_script")
+
+[node name="RowBackground" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 128.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="LeftCap" type="TextureRect" parent="RowBackground"]
+custom_minimum_size = Vector2(112, 128)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_conti_left")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CenterFill" type="TextureRect" parent="RowBackground"]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+texture = ExtResource("4_conti_center")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="RightCap" type="TextureRect" parent="RowBackground"]
+custom_minimum_size = Vector2(112, 128)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_conti_right")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 128.0
+mouse_filter = 2
+
+[node name="StarIcon" type="TextureRect" parent="Overlay"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 28.0
+offset_right = 80.0
+offset_bottom = 100.0
+mouse_filter = 2
+texture = ExtResource("6_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TaskLabel" type="Label" parent="Overlay"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 24.0
+offset_right = 520.0
+offset_bottom = 56.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 15
+text = "Complete the quest"
+horizontal_alignment = 0
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="LapisIcon" type="TextureRect" parent="Overlay"]
+layout_mode = 0
+offset_left = 572.0
+offset_top = 68.0
+offset_right = 624.0
+offset_bottom = 120.0
+mouse_filter = 2
+texture = ExtResource("7_lapis")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RewardLabel" type="Label" parent="Overlay"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 72.0
+offset_right = 564.0
+offset_bottom = 104.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "Lapis x 20"
+horizontal_alignment = 2
+vertical_alignment = 1

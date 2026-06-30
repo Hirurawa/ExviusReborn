@@ -141,6 +141,7 @@ func _process(_delta: float) -> void:
 					# If this hit killed them, roll for drops!
 					if previous_hp > 0 and target["current_hp"] == 0 and target_team == "enemy":
 						_roll_enemy_drops(target, target_index)
+						PlayerProfile.record_monster_kill(str(target["id"]))
 						monster_defeated.emit(target["id"])
 
 

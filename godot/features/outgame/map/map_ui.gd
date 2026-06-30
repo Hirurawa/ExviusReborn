@@ -575,7 +575,11 @@ func _on_back_pressed() -> void:
 # === Dungeon mission-list popup ===
 
 func _on_dungeon_clicked(dungeon_id: String, dungeon_name: String) -> void:
-	var missions: Array[Dictionary] = _build_mission_popup_entries(GameDatabase.get_missions(dungeon_id))
+	var raw_missions: Array = []
+	for mission in GameDatabase.get_missions(dungeon_id):
+		if _is_mission_popup_available(mission):
+			raw_missions.append(mission)
+	var missions: Array[Dictionary] = _build_mission_popup_entries(raw_missions)
 	_open_mission_popup(dungeon_name, missions)
 
 
@@ -608,6 +612,7 @@ func _build_mission_popup_entries(missions: Array) -> Array[Dictionary]:
 		var mission_id: String = str(mission.get("missionId", ""))
 		if mission_id == "":
 			continue
+		mission["difficulty"] = GameDatabase.get_mission_difficulty(mission_id)
 		mission["row_state"] = _resolve_mission_row_state(mission_id)
 		mission["challenges"] = GameDatabase.get_mission_challenges(mission_id)
 		var progress: Variant = MissionService.cleared_missions.get(mission_id, {})
@@ -624,6 +629,13 @@ func _resolve_mission_row_state(mission_id: String) -> String:
 	if mission_id == MissionService.last_entered_mission_id:
 		return "achieving"
 	return "default"
+
+
+func _is_mission_popup_available(mission: Dictionary) -> bool:
+	var switch_service: Node = get_node_or_null("/root/SwitchService")
+	if switch_service != null and switch_service.has_method("is_unlocked"):
+		return bool(switch_service.call("is_unlocked", mission.get("switchInfo")))
+	return true
 
 
 func _close_mission_popup() -> void:

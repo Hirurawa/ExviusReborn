@@ -82,12 +82,21 @@ func _ensure_local_db() -> String:
 		# Bundled DB unreadable — fall back to an existing copy if we have one.
 		return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
 
-	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(BUNDLED_DB_PATH)
-	if bytes.is_empty():
-		return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
-
+	var bytes: PackedByteArray = PackedByteArray()
 	var signature: String = FileAccess.get_md5(BUNDLED_DB_PATH)
+
 	if signature == "":
+		var src: FileAccess = FileAccess.open(BUNDLED_DB_PATH, FileAccess.READ)
+		if src == null:
+			return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
+
+		while not src.eof_reached():
+			bytes.append_array(src.get_buffer(4096))
+		src.close()
+
+		if bytes.is_empty():
+			return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
+
 		var ctx := HashingContext.new()
 		ctx.start(HashingContext.HASH_MD5)
 		ctx.update(bytes)
@@ -96,8 +105,17 @@ func _ensure_local_db() -> String:
 	if FileAccess.file_exists(USER_DB_PATH) and _read_text(USER_DB_META_PATH) == signature:
 		return USER_DB_PATH
 
-	# (Re)copy the bundled DB out to user://. FileAccess reads res:// straight from
-	# the PCK fine (it's only the SQLite VFS that can't), so a byte copy works.
+	if bytes.is_empty():
+		var src: FileAccess = FileAccess.open(BUNDLED_DB_PATH, FileAccess.READ)
+		if src == null:
+			return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
+
+		while not src.eof_reached():
+			bytes.append_array(src.get_buffer(4096))
+		src.close()
+
+		if bytes.is_empty():
+			return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
 	var out: FileAccess = FileAccess.open(USER_DB_PATH, FileAccess.WRITE)
 	if out == null:
 		push_error("GameDatabase: could not write DB copy to %s (%s)" % [USER_DB_PATH, error_string(FileAccess.get_open_error())])

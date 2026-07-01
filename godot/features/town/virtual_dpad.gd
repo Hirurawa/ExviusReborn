@@ -70,7 +70,7 @@ func _gui_input(event: InputEvent) -> void:
 	var found_btn_name = ""
 	for btn_name in _buttons.keys():
 		var btn: TextureButton = _buttons[btn_name]
-		var rect = Rect2(btn.global_position, btn.size)
+		var rect = btn.get_rect()
 		if rect.has_point(pos):
 			found_btn_name = btn_name
 			break
@@ -95,10 +95,7 @@ func _press_button(btn_name: String) -> void:
 
 	# Trigger actions
 	for action in BUTTON_MAPPING[btn_name]:
-		var ev = InputEventAction.new()
-		ev.action = action
-		ev.pressed = true
-		Input.parse_input_event(ev)
+		Input.action_press(action)
 
 func _release_current() -> void:
 	if _current_active_button == "":
@@ -112,7 +109,4 @@ func _release_current() -> void:
 		btn.button_pressed = false
 
 	for action in BUTTON_MAPPING[btn_name]:
-		var ev = InputEventAction.new()
-		ev.action = action
-		ev.pressed = false
-		Input.parse_input_event(ev)
+		Input.action_release(action)

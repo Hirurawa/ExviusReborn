@@ -24,7 +24,7 @@ func _ready() -> void:
 			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			_buttons[btn_name] = btn
 
-func _gui_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return
 
@@ -70,7 +70,7 @@ func _gui_input(event: InputEvent) -> void:
 	var found_btn_name = ""
 	for btn_name in _buttons.keys():
 		var btn: TextureButton = _buttons[btn_name]
-		var rect = btn.get_rect()
+		var rect = btn.get_global_rect()
 		if rect.has_point(pos):
 			found_btn_name = btn_name
 			break

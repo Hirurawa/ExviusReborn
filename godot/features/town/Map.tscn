@@ -37,8 +37,8 @@
 [ext_resource type="Texture2D" uid="uid://jor2o53blqy4" path="res://assets/ui/virtualpad/direction_ul_2.tres" id="35_2qhks"]
 [ext_resource type="Texture2D" uid="uid://dtpwan0etie00" path="res://assets/ui/virtualpad/direction_ur_1.tres" id="36_6qell"]
 [ext_resource type="Texture2D" uid="uid://bpvtlfmxysw6d" path="res://assets/ui/virtualpad/direction_ur_2.tres" id="37_45ryl"]
+[ext_resource type="Script" uid="uid://cx6oddyouvrwx" path="res://features/town/virtual_dpad.gd" id="100_vdpad"]
 [ext_resource type="Script" uid="uid://cv84dfudg2ihb" path="res://features/town/town_map.gd" id="town_map_script"]
-[ext_resource type="Script" path="res://features/town/virtual_dpad.gd" id="100_vdpad"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8dv2y"]
 texture = ExtResource("2_hb638")
@@ -3669,87 +3669,88 @@ texture_normal = ExtResource("20_vupn6")
 texture_pressed = ExtResource("21_wt665")
 
 [node name="VirtualDPad" type="Control" parent="HUDLayer/HUD" unique_id=1920200032]
-script = ExtResource("100_vdpad")
 anchors_preset = 0
-mouse_filter = 0
-offset_top = 624.0
-offset_right = 40.0
-offset_bottom = 664.0
+offset_top = 523.0
+offset_right = 307.0
+offset_bottom = 819.0
+script = ExtResource("100_vdpad")
 
 [node name="left" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=182786288]
-toggle_mode = true
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_top = 89.0
+offset_right = 72.0
+offset_bottom = 201.0
+toggle_mode = true
 texture_normal = ExtResource("22_oaiiy")
 texture_pressed = ExtResource("23_d4tey")
 
 [node name="down_left" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=1262932587]
-toggle_mode = true
 layout_mode = 0
 offset_left = 26.0
-offset_top = 90.0
+offset_top = 179.0
 offset_right = 138.0
-offset_bottom = 186.0
+offset_bottom = 275.0
+toggle_mode = true
 texture_normal = ExtResource("24_fm250")
 texture_pressed = ExtResource("25_mtt05")
 
 [node name="right" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=50021967]
-toggle_mode = true
 layout_mode = 0
 offset_left = 239.0
+offset_top = 89.0
 offset_right = 311.0
-offset_bottom = 112.0
+offset_bottom = 201.0
+toggle_mode = true
 texture_normal = ExtResource("26_3qhfv")
 texture_pressed = ExtResource("27_r3aqk")
 
 [node name="up" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=442037578]
-toggle_mode = true
 layout_mode = 0
 offset_left = 99.0
-offset_top = -98.0
+offset_top = -9.0
 offset_right = 211.0
-offset_bottom = -26.0
+offset_bottom = 63.0
+toggle_mode = true
 texture_normal = ExtResource("28_f80yi")
 texture_pressed = ExtResource("29_5423p")
 
 [node name="down" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=1499839628]
-toggle_mode = true
 layout_mode = 0
 offset_left = 101.0
-offset_top = 139.0
+offset_top = 228.0
 offset_right = 213.0
-offset_bottom = 211.0
+offset_bottom = 300.0
+toggle_mode = true
 texture_normal = ExtResource("30_g44pf")
 texture_pressed = ExtResource("31_27ted")
 
 [node name="down_right" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=452466943]
-toggle_mode = true
 layout_mode = 0
 offset_left = 191.0
-offset_top = 90.0
+offset_top = 179.0
 offset_right = 303.0
-offset_bottom = 186.0
+offset_bottom = 275.0
+toggle_mode = true
 texture_normal = ExtResource("32_hc5un")
 texture_pressed = ExtResource("33_m8nyb")
 
 [node name="up_left" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=898897069]
-toggle_mode = true
 layout_mode = 0
 offset_left = 25.0
-offset_top = -73.0
+offset_top = 16.0
 offset_right = 137.0
-offset_bottom = 23.0
+offset_bottom = 112.0
+toggle_mode = true
 texture_normal = ExtResource("34_ostip")
 texture_pressed = ExtResource("35_2qhks")
 
 [node name="up_right" type="TextureButton" parent="HUDLayer/HUD/VirtualDPad" unique_id=2076205494]
-toggle_mode = true
 layout_mode = 0
 offset_left = 189.0
-offset_top = -74.0
+offset_top = 15.0
 offset_right = 301.0
-offset_bottom = 22.0
+offset_bottom = 111.0
+toggle_mode = true
 texture_normal = ExtResource("36_6qell")
 texture_pressed = ExtResource("37_45ryl")
 

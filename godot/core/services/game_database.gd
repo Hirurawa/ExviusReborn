@@ -46,6 +46,9 @@ var _equipment_cache: Dictionary = {}
 
 # === Connection ===
 
+func preload_database() -> void:
+	_ensure_local_db()
+
 func _ensure_open() -> bool:
 	if _db != null:
 		return true

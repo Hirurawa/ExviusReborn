@@ -78,10 +78,6 @@ func _ensure_open() -> bool:
 ## differs from the one recorded at copy time, so an edited or re-exported database
 ## is picked up automatically.
 func _ensure_local_db() -> String:
-	if not FileAccess.file_exists(BUNDLED_DB_PATH):
-		# Bundled DB unreadable — fall back to an existing copy if we have one.
-		return USER_DB_PATH if FileAccess.file_exists(USER_DB_PATH) else ""
-
 	var bytes: PackedByteArray = PackedByteArray()
 	var signature: String = FileAccess.get_md5(BUNDLED_DB_PATH)
 

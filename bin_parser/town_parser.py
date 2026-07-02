@@ -164,8 +164,6 @@ def _decode_scripted_entities(blueprint):
                     # Raw u32 carried by the shop tail marker in map.bin.
                     # Frontend can interpret/join it against external masters.
                     ent["shop_id_raw"] = block["u32_int"]
-                    # Keep the legacy field name for backward compatibility.
-                    ent["shop_dialogue_line_id"] = block["u32_int"]
                     break
             # interaction_height_px (and sibling extra8 geometry) is
             # now decoded uniformly for every entity at the record
@@ -303,6 +301,22 @@ def _extract_inline_switch_refs(ent):
     _scan_hex(ent.get("body_hex"), "body_hex")
     _scan_hex(ent.get("header_hex"), "header_hex")
     return refs
+
+
+def _cleanup_raw_data(blueprint):
+    """Removes raw analysis data blocks from dynamic entities before saving.
+
+    These keys are useful during the decoding pipeline (e.g. for extracting
+    switches or quest chains) but do not need to be written to the final
+    blueprint JSON, reducing noise.
+    """
+    for layer in blueprint.get("layers", []):
+        for ent in layer.get("objects", {}).get("dynamic_entities", []):
+            ent.pop("tail_blocks", None)
+            ent.pop("marker_blocks", None)
+            ent.pop("header_hex", None)
+            ent.pop("body_hex", None)
+            ent.pop("payload_hex", None)
 
 
 def _annotate_inline_switches(blueprint):
@@ -1714,6 +1728,8 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
     # Surface switch ids on each dynamic entity directly from bin bytes
     # (open/condition heuristics + event_flag namespaces).
     _annotate_inline_switches(blueprint)
+    # Remove raw analysis blocks that are no longer needed
+    _cleanup_raw_data(blueprint)
 
     with open(output_path, "w") as out_file:
         json.dump(blueprint, out_file, indent=4)

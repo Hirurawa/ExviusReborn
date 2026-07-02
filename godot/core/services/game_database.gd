@@ -520,6 +520,35 @@ func get_all_unit_exp_patterns() -> Array:
 	return query("SELECT expPatternId, level, needExp FROM unit_exp_pattern ORDER BY expPatternId, level")
 
 
+
+
+# === Units ===
+
+## Fetches a specific unit's data from the unit table
+func get_unit(unit_id: String) -> Dictionary:
+	var rows: Array = query("SELECT * FROM unit WHERE unitId = ? LIMIT 1", [unit_id])
+	return rows[0] if not rows.is_empty() else {}
+
+## Fetches min_rarity and max_rarity for a unit series
+func get_unit_series_limits(unit_series: int) -> Dictionary:
+	var rows: Array = query("SELECT MIN(rare) AS min_rarity, MAX(rare) AS max_rarity FROM unit WHERE unitSeries = ?", [unit_series])
+	if not rows.is_empty() and rows[0].get("min_rarity") != null:
+		return rows[0]
+	return {"min_rarity": 1, "max_rarity": 1}
+
+## Fetches all units in a series, ordered by rarity
+func get_unit_series_units(unit_series: int) -> Array:
+	return query("SELECT * FROM unit WHERE unitSeries = ? ORDER BY rare", [unit_series])
+
+## Fetches all unit skills (magic and abilities) for a specific series and rarity
+func get_unit_skills(unit_series: int, rarity: int) -> Array:
+	return query("SELECT level, magicId, abilityId FROM unit_series_lv_acquire WHERE unitSeriesId = ? AND rarity = ?", [unit_series, rarity])
+
+## Fetches class up (awakening) material info for a specific unitId
+func get_unit_class_up(unit_id: String) -> Dictionary:
+	var rows: Array = query("SELECT gil, materialInfo FROM unit_class_up WHERE unitId = ? LIMIT 1", [unit_id])
+	return rows[0] if not rows.is_empty() else {}
+
 # === Skills: magic ===
 
 const _MAGIC_TYPE_NAMES: Dictionary = {"1": "White", "2": "Black", "3": "Green", "4": "Blue"}

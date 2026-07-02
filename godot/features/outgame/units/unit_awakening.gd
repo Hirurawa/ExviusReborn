@@ -114,14 +114,10 @@ func _get_entry_for_rarity(rarity: int) -> Dictionary:
 	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return {}
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var entries: Variant = unit_data.get("entries", {})
-	if not (entries is Dictionary):
-		return {}
-	for key in (entries as Dictionary).keys():
-		var entry: Variant = (entries as Dictionary)[key]
-		if entry is Dictionary and int((entry as Dictionary).get("rarity", -1)) == rarity:
-			return entry as Dictionary
+	var class_up = GameDatabase.get_unit_class_up(unit_id)
+	var next_id = str(class_up.get("classUpUnitID", ""))
+	if next_id != "":
+		return GameDatabase.get_unit(next_id)
 	return {}
 
 func _populate_after_stats() -> void:
@@ -236,15 +232,17 @@ func _get_unit_texture_for_rarity(unit_inst: Dictionary, rarity: int) -> Texture
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return null
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var entries: Variant = unit_data.get("entries", {})
-	if entries is Dictionary:
-		for key in (entries as Dictionary).keys():
-			var entry: Variant = (entries as Dictionary)[key]
-			if entry is Dictionary and int((entry as Dictionary).get("rarity", -1)) == rarity:
-				var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % str(key)
-				return _load_cached_texture(img_path)
-	return null
+
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
+	var series = int(unit_data.get("unitSeries", 0))
+	var target_unit_id = unit_id
+	if series > 0:
+		var rows = GameDatabase.query("SELECT unitId FROM unit WHERE unitSeries = ? AND rare = ? LIMIT 1", [series, rarity])
+		if not rows.is_empty():
+			target_unit_id = str(rows[0].get("unitId", unit_id))
+
+	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % target_unit_id
+	return _load_cached_texture(img_path)
 
 func _get_pedestal_texture(rarity: int) -> Texture2D:
 	var candidate_paths: Array[String] = [

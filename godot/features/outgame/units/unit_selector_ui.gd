@@ -287,7 +287,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 			continue
 
 		var unit_id: String = unit_inst.get("unit_id", "")
-		var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+		var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
 		var is_disabled_max_trust_material: bool = _is_max_trust_playable_material(unit_inst)
 		var is_disabled_max_rarity_awaken: bool = mode == "awaken_base_selection" and _is_at_max_rarity(unit_inst)
 		var is_disabled_sell_blocked: bool = _is_unit_sell_blocked(unit_inst)
@@ -330,7 +330,7 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 						float(visual_area_h),
 						float(UNIT_SIDE_PADDING),
 						float(PEDESTAL_BOTTOM_MARGIN),
-						str(unit_data.get("name", "Unknown"))
+						str(unit_data.get("unitName", "Unknown"))
 					)
 				else:
 					unit_visual.call_deferred("setup", sprite_texture, pedestal_texture)
@@ -688,8 +688,8 @@ func _get_unit_display_name(unit_inst: Dictionary) -> String:
 	if unit_id == "":
 		return ""
 
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	return str(unit_data.get("name", "Unknown")).to_lower()
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
+	return str(unit_data.get("unitName", "Unknown")).to_lower()
 
 func _should_display_unit(unit_instance_id: String) -> bool:
 	if unit_instance_id == "":
@@ -702,20 +702,9 @@ func _get_unit_max_rarity(unit_inst: Dictionary) -> int:
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return 7
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var entries: Variant = unit_data.get("entries", {})
-	if not (entries is Dictionary):
-		return 7
-	var max_rarity: int = 0
-	for key in (entries as Dictionary).keys():
-		var entry: Variant = (entries as Dictionary)[key]
-		if entry is Dictionary:
-			var r: int = int((entry as Dictionary).get("rarity", 0))
-			if r > max_rarity:
-				max_rarity = r
-	if max_rarity <= 0:
-		return 7
-	return max_rarity
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
+	var limits = GameDatabase.get_unit_series_limits(int(unit_data.get("unitSeries", 0)))
+	return int(limits.get("max_rarity", 7))
 
 func _is_at_max_rarity(unit_inst: Dictionary) -> bool:
 	var current_rarity: int = int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1)))
@@ -731,8 +720,8 @@ func _is_playable_unit(unit_inst: Dictionary) -> bool:
 	if unit_id == "":
 		return false
 
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var job_id: int = int(unit_data.get("job_id", 0))
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
+	var job_id: int = int(unit_data.get("jobId", 0))
 	return job_id != EXP_UNIT_JOB_ID and job_id != TRUST_MATERIAL_JOB_ID
 
 func _is_max_trust_playable_material(unit_inst: Dictionary) -> bool:

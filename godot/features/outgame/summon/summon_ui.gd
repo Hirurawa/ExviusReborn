@@ -14,22 +14,16 @@ func _ready() -> void:
 	summon_close_overlay_button.pressed.connect(func(): summon_overlay.hide())
 
 func _on_summon_perform_button_pressed() -> void:
-	if StaticData.game_data_units.is_empty():
-		return
 
 	var result: Dictionary = UnitService.summon_units(11)
 	_show_summon_results(result)
 
 func _on_get_cactuar_button_pressed() -> void:
-	if StaticData.game_data_units.is_empty():
-		return
 
 	var result: Dictionary = UnitService.summon_exp_boost_units(10)
 	_show_summon_results(result)
 
 func _on_get_moogle_button_pressed() -> void:
-	if StaticData.game_data_units.is_empty():
-		return
 
 	var result: Dictionary = UnitService.summon_trust_units(10)
 	_show_summon_results(result)
@@ -52,7 +46,7 @@ func _show_summon_results(result: Dictionary) -> void:
 
 	for unit_inst in summoned_units:
 		var unit_id: String = unit_inst.get("unit_id", "")
-		var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+		var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
 		var unit_rarity: int = int(unit_inst.get("current_rarity", int(unit_data.get("rarity_min", 1))))
 		var vbox := VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL

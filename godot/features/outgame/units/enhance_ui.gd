@@ -80,8 +80,9 @@ func _refresh_classup_button_state() -> void:
 		return
 	var current_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
 	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var max_rarity: int = int(unit_data.get("rarity_max", 5))
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
+	var limits = GameDatabase.get_unit_series_limits(int(unit_data.get("unitSeries", 0)))
+	var max_rarity: int = int(limits.get("max_rarity", 5))
 	classup_button.disabled = current_rarity >= max_rarity
 
 func _redraw_material_slots() -> void:
@@ -111,7 +112,7 @@ func _update_get_exp_display() -> void:
 		return
 
 	var base_unit_id: String = str(base_unit_inst.get("unit_id", ""))
-	var base_unit_data: Dictionary = StaticData.game_data_units.get(base_unit_id, {})
+	var base_unit_data: Dictionary = GameDatabase.get_unit(base_unit_id)
 	if base_unit_data.is_empty():
 		get_exp_number_label.text = "0"
 		return
@@ -131,7 +132,7 @@ func _update_get_exp_display() -> void:
 		if material_unit_id == "":
 			continue
 
-		var material_unit_data: Dictionary = StaticData.game_data_units.get(material_unit_id, {})
+		var material_unit_data: Dictionary = GameDatabase.get_unit(material_unit_id)
 		if material_unit_data.is_empty():
 			continue
 

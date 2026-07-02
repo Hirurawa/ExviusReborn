@@ -113,10 +113,10 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_stop_idle_animation()
 
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_id)
 	var entry_id: String = UnitService.get_entry_id(unit_inst)
 
-	unit_detail_name_label.text = str(unit_data.get("name", "Unknown"))
+	unit_detail_name_label.text = str(unit_data.get("unitName", "Unknown"))
 
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	var tex: Texture2D = load(img_path) as Texture2D
@@ -299,16 +299,26 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	else:
 		lb_name_label.text = "Limit Burst: None"
 
-	var tmr_data: Variant = unit_data.get("TMR")
-	if tmr_data == null or typeof(tmr_data) != TYPE_ARRAY or tmr_data.size() < 2:
+	var tmr_str = str(unit_data.get("trustMasterReward", ""))
+	if tmr_str == "":
 		tm_name_label.text = "Trust Master: None"
 		tm_icon_rect.texture = null
 		return
 	
-	tm_percent_value.text = str(unit_inst.get("trust_value"))
+	tm_percent_value.text = str(unit_inst.get("trust_value", 0))
 	
-	var tmr_type: String = str(tmr_data[0])
-	var tmr_id: String = str(int(tmr_data[1]))
+	var tmr_parts = tmr_str.split(":")
+	if tmr_parts.size() < 2:
+		return
+
+	var tmr_type: String = str(tmr_parts[0])
+	var tmr_id: String = str(tmr_parts[1])
+	if tmr_type == "21":
+		tmr_type = "EQUIP"
+	elif tmr_type == "22":
+		tmr_type = "MATERIA"
+	elif tmr_type == "20":
+		tmr_type = "ITEM"
 	var tmr_name: String = "Unknown Reward"
 	var icon_path: String = ""
 
@@ -581,7 +591,8 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 	for child in unit_detail_equip_icons_grid.get_children():
 		child.queue_free()
 
-	var allowed_equip: Array = unit_data.get("equip", [])
+	var allowed_equip_str: String = str(unit_data.get("equipCategories", ""))
+	var allowed_equip = allowed_equip_str.split(",", false)
 	var equip_icons_data: Dictionary = StaticData.game_data_equipment_icons
 	var valid_keys: Array = []
 
@@ -607,7 +618,7 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 		if ResourceLoader.exists(tex_path):
 			tex_rect.texture = _get_dynamic_texture(tex_path)
 
-		if not (type_id in allowed_equip or float(type_id) in allowed_equip):
+		if not (str(type_id) in allowed_equip):
 			tex_rect.modulate = Color(0.3, 0.3, 0.3, 1.0)
 
 		unit_detail_equip_icons_grid.add_child(tex_rect)

@@ -350,9 +350,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	if not unit_instance.has("level"): push_error("CRITICAL ERROR: unit_instance is missing level!")
 	var level = int(unit_instance["level"])
 
-	assert(RARITY_MAX_LEVELS.has(rarity), "CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
-	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
-	var max_level = RARITY_MAX_LEVELS[rarity]
+	var max_level = int(unit_instance.get("maxLv", RARITY_MAX_LEVELS.get(rarity, 15)))
 	
 	# Seed innate resistances into pools
 	var innate_elements = unit_instance.get("element_resist", [])
@@ -381,26 +379,45 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	
 	if not base_stats.is_empty():
 		for stat_name in final_profile["stats"].keys():
-			assert(base_stats.has(stat_name), "CRITICAL ERROR: base_stats is missing " + stat_name + "!")
-			if not base_stats.has(stat_name): push_error("CRITICAL ERROR: base_stats is missing " + stat_name + "!")
-			var stat_arr = base_stats[stat_name]
+			var stat_arr = base_stats.get(stat_name, [])
 			if stat_arr.size() >= 2:
-				var min_stat = stat_arr[0]
-				var max_stat = stat_arr[1]
+				var min_stat = float(stat_arr[0])
+				var max_stat = float(stat_arr[1])
 				var current_stat = min_stat
 				if max_level > 1:
-					current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
+					current_stat = min_stat + (level - 1) * (max_stat - min_stat) / (max_level - 1)
 				base_calculated[stat_name] = round(current_stat)
+			elif stat_arr.size() == 1:
+				base_calculated[stat_name] = float(stat_arr[0])
 
 	var raw_skills = []
 	
 	# Harvest innate skills
-	var innate_skills = unit_instance.get("skills", [])
-	for skill in innate_skills:
-		if typeof(skill.get("rarity", 999)) != TYPE_STRING:
-			var req_rarity = skill.get("rarity", 999)
-			if rarity > int(req_rarity) or (rarity == req_rarity and level >= skill.get("level", 999)):
-				raw_skills.append({"id": skill.get("id"), "source": "Trait"})
+	var unit_series = int(unit_instance.get("unitSeries", 0))
+	if unit_series > 0:
+		var limit_rows = GameDatabase.get_unit_series_limits(unit_series)
+		var min_rarity = int(limit_rows.get("min_rarity", 1))
+		var skill_rows = GameDatabase.query("SELECT level, rarity, magicId, abilityId FROM unit_series_lv_acquire WHERE unitSeriesId = ? AND (rarity <= ? OR rarity = 0)", [unit_series, rarity])
+
+		for row in skill_rows:
+			var req_level = int(row.get("level", 0))
+			var row_rarity = int(row.get("rarity", 0))
+			if row_rarity == 0:
+				row_rarity = min_rarity
+			if rarity > row_rarity or (rarity == row_rarity and level >= req_level):
+				var magic_raw = row.get("magicId")
+				if magic_raw != null:
+					var magic_ids = str(magic_raw).split(",", false)
+					for m_id in magic_ids:
+						if m_id.strip_edges() != "" and m_id != "<null>":
+							raw_skills.append({"id": m_id.strip_edges(), "source": "Trait"})
+
+				var ability_raw = row.get("abilityId")
+				if ability_raw != null:
+					var ability_ids = str(ability_raw).split(",", false)
+					for a_id in ability_ids:
+						if a_id.strip_edges() != "" and a_id != "<null>":
+							raw_skills.append({"id": a_id.strip_edges(), "source": "Trait"})
 
 	var flat_mods = {
 		"HP": 0,

@@ -126,7 +126,5 @@ func _on_debug_add_gil_pressed() -> void:
 	var amount: int = int(text)
 	if amount == 0:
 		return
-	PlayerProfile.gil = max(0, PlayerProfile.gil + amount)
-	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
-	PlayerProfile.save_snapshot("debug_add_gil")
+	PlayerProfile.add_gil(amount)
 	debug_gil_amount.text = ""

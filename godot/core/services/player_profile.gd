@@ -36,6 +36,8 @@ var seconds_until_next_nrg: float = 0.0
 var gil: int = 0
 var lapis: int = 0
 
+var monster_kill_progress: Dictionary = {}
+
 # Loaded from rank_exp.json: {rank: {"xp_needed": int, "energy": int}}
 var rank_exp_data: Dictionary = {}
 
@@ -58,6 +60,53 @@ func ensure_rank_exp_loaded() -> void:
 		rank_exp_data = StaticDataLoader.load_rank_exp_data()
 
 
+func set_last_entered_mission(_mission_id: String) -> void:
+	# Note: MissionService handles its own variable last_entered_mission_id,
+	# but PlayerProfile bundles it into its stats snapshot.
+	save_snapshot("start_mission")
+
+func add_xp(amount: int) -> void:
+	current_xp += amount
+	while current_xp >= next_rank_xp:
+		current_xp -= next_rank_xp
+		current_rank += 1
+		var rank_up_nrg_bonus: int = 0
+		if rank_exp_data.has(current_rank):
+			next_rank_xp = rank_exp_data[current_rank]["xp_needed"]
+			max_nrg = rank_exp_data[current_rank]["energy"]
+			rank_up_nrg_bonus = max_nrg
+		else:
+			if rank_exp_data.size() > 0:
+				var last_rank = rank_exp_data.keys().max()
+				next_rank_xp = rank_exp_data[last_rank]["xp_needed"]
+				max_nrg = rank_exp_data[last_rank]["energy"]
+				rank_up_nrg_bonus = max_nrg
+
+		if rank_up_nrg_bonus > 0:
+			current_nrg += rank_up_nrg_bonus
+
+	save_snapshot("add_xp")
+
+func add_gil(amount: int) -> void:
+	gil += amount
+	currency_updated.emit(gil, lapis)
+	save_snapshot("add_gil")
+
+func deduct_gil(amount: int) -> void:
+	gil = maxi(0, gil - amount)
+	currency_updated.emit(gil, lapis)
+	save_snapshot("deduct_gil")
+
+func add_lapis(amount: int) -> void:
+	lapis += amount
+	currency_updated.emit(gil, lapis)
+	save_snapshot("add_lapis")
+
+func deduct_nrg(amount: int) -> void:
+	current_nrg = maxi(0, current_nrg - amount)
+	nrg_updated.emit(current_nrg, max_nrg, seconds_until_next_nrg)
+	save_snapshot("deduct_nrg")
+
 func reset_to_starter() -> void:
 	ensure_rank_exp_loaded()
 	current_rank = 1
@@ -69,6 +118,7 @@ func reset_to_starter() -> void:
 	seconds_until_next_nrg = 0.0
 	gil = 0
 	lapis = 0
+	monster_kill_progress.clear()
 
 
 func emit_all() -> void:
@@ -100,7 +150,8 @@ func snapshot_payload() -> Dictionary:
 		"last_entered_mission_id": MissionService.last_entered_mission_id,
 		"gil": gil,
 		"lapis": lapis,
-		"username": AccountService.current_username
+		"username": AccountService.current_username,
+		"monster_kill_progress": monster_kill_progress
 	}
 
 
@@ -117,10 +168,15 @@ func normalize_stats_payload(raw_payload: Variant) -> Dictionary:
 			"last_entered_mission_id": "",
 			"gil": 0,
 			"lapis": 0,
-			"username": ""
+			"username": "",
+			"monster_kill_progress": {}
 		}
 
 	var payload: Dictionary = raw_payload
+	var m_progress = payload.get("monster_kill_progress", {})
+	if typeof(m_progress) != TYPE_DICTIONARY:
+		m_progress = {}
+
 	return {
 		"rank": int(payload.get("rank", 1)),
 		"xp": int(payload.get("xp", 0)),
@@ -132,8 +188,25 @@ func normalize_stats_payload(raw_payload: Variant) -> Dictionary:
 		"last_entered_mission_id": str(payload.get("last_entered_mission_id", "")),
 		"gil": int(payload.get("gil", 0)),
 		"lapis": int(payload.get("lapis", 0)),
-		"username": str(payload.get("username", ""))
+		"username": str(payload.get("username", "")),
+		"monster_kill_progress": m_progress
 	}
+
+func record_monster_kill(monster_id: String) -> void:
+	if not monster_kill_progress.has(monster_id):
+		monster_kill_progress[monster_id] = 0
+	monster_kill_progress[monster_id] += 1
+	save_snapshot("monster_kill")
+
+func clear_monster_kill_progress(monster_ids: Array) -> void:
+	var changed = false
+	for m_id in monster_ids:
+		var s_id = str(m_id)
+		if monster_kill_progress.has(s_id):
+			monster_kill_progress.erase(s_id)
+			changed = true
+	if changed:
+		save_snapshot("clear_monster_kill")
 
 
 func load_stats_from_local() -> Dictionary:

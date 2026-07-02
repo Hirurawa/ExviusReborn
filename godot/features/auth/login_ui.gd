@@ -79,6 +79,10 @@ func _try_mount_android_pck() -> bool:
 		Log.warn("Android PCK missing at %s" % ANDROID_PCK_PATH, "LoginUI")
 		return false
 
+	# The bundled database must be copied from the APK to user:// *before* the PCK
+	# is mounted, otherwise Godot's FileAccess fails to read the overridden res:// file.
+	GameDatabase.preload_database()
+
 	var success: bool = ProjectSettings.load_resource_pack(ANDROID_PCK_PATH, true)
 	if not success:
 		feedback_label.text = "Found assets.pck but failed to mount it."
@@ -167,7 +171,7 @@ func _on_new_game_created(username: String) -> void:
 	await get_tree().process_frame
 	_log_mem("after push game_ui")
 
-	var mission_result: Dictionary = await MissionService.request_start_mission(INTRO_MISSION_ID)
+	var mission_result: Dictionary = MissionService.request_start_mission(INTRO_MISSION_ID)
 	_log_mem("after request_start_mission")
 	if mission_result.get("success", false) == true:
 		_log_mem("before push combat_ui")

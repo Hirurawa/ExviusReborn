@@ -16,7 +16,7 @@ func _on_update_button_pressed() -> void:
 		return
 
 	feedback_label.text = "Updating profile..."
-	var success: bool = await AccountService.update_account(new_username)
+	var success: bool = AccountService.update_account(new_username)
 	if success:
 		feedback_label.text = "Update successful!"
 		UIManager.pop()

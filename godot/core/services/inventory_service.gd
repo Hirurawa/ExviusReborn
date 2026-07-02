@@ -78,6 +78,8 @@ func grant_instanced_items(item_type: String, template_id: String, amount: int) 
 		granted_items.append(item_instance)
 		(owned_items["equipment"] as Array).append(item_instance)
 
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "grant_instanced_items")
+
 	return {
 		"success": true,
 		"granted_items": granted_items
@@ -89,6 +91,7 @@ func add_stackable(item_id: String, quantity: int) -> void:
 		owned_items["stackables"] = {}
 	var current_qty: int = int(owned_items["stackables"].get(item_id, 0))
 	owned_items["stackables"][item_id] = current_qty + quantity
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "add_stackable")
 
 
 func add_equipment_instances(template_id: String, quantity: int) -> Array:
@@ -102,7 +105,26 @@ func add_equipment_instances(template_id: String, quantity: int) -> Array:
 		}
 		(owned_items["equipment"] as Array).append(new_instance)
 		added.append(new_instance)
+
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "add_equipment_instances")
 	return added
+
+func consume_stackables_and_save(items: Array) -> void:
+	for item in items:
+		remove_stackable(item["id"], item["amount"])
+	emit_updated()
+
+func remove_stackable(item_id: String, quantity: int) -> void:
+	if not owned_items.has("stackables"):
+		return
+	var current_qty: int = int(owned_items["stackables"].get(item_id, 0))
+	if current_qty >= quantity:
+		owned_items["stackables"][item_id] = current_qty - quantity
+	else:
+		owned_items["stackables"][item_id] = 0
+
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "remove_stackable")
+
 
 
 # === Lookups ===
@@ -257,14 +279,12 @@ func request_buy_item(item_id: String, quantity: int) -> void:
 		purchase_failed.emit("ERR_INSUFFICIENT_RESOURCES")
 		return
 
-	PlayerProfile.gil -= total_cost
+	PlayerProfile.deduct_gil(total_cost)
+
 	if is_equipment_template(item_id):
 		add_equipment_instances(item_id, quantity)
 	else:
 		add_stackable(item_id, quantity)
 
 	emit_updated()
-	PlayerProfile.currency_updated.emit(PlayerProfile.gil, PlayerProfile.lapis)
-	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "buy_item")
-	PlayerProfile.save_snapshot("buy_item_currency")
 	purchase_successful.emit()

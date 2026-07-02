@@ -2,6 +2,7 @@ import struct
 import json
 import os
 import math
+import re
 import sys
 
 import bin_common
@@ -9,53 +10,64 @@ from bin_common import TOWN_DATA_ROOT
 
 
 def _split_scripted_payload(payload):
-    """Decompose a scripted_entity payload into named unknown_N fields.
+    """Decompose a scripted_entity payload into bundled hex regions.
 
-    The first 24 bytes have a stable layout across all observed
-    visible-NPC records; bytes 6-9 are the sprite_id (handled by the
-    caller). After offset 24, the record consists of chained TLV-style
-    sub-blocks whose total size is `tag_byte + 1`. Each tail block
-    typically has the shape `[tag][08 00 04][u32 value][trailer...]`.
+    The payload's fixed prefix splits naturally around the already-
+    decoded identity slot at bytes [6:10] (sprite_id XOR
+    npc_instance_id, handled by the caller). Everything in
+    payload[0:6] is one contiguous header region; everything from
+    payload[10] up to the first tail-block marker is one contiguous
+    body region. Previously these were exposed as ten separate
+    `unknown_1`..`unknown_11` hex fields, but every adjacent pair was
+    byte-aligned in the bin, so the split was cosmetic clutter. We
+    now emit just two hex blobs and let downstream tooling slice them
+    further once we actually decode the inner fields.
 
-    Returns a dict of hex-string fields. Trigger records (no valid
-    sprite) get the raw u32 at offset 6-9 as `unknown_id_hex` so the
-    bytes are still visible for pattern-hunting.
+    Internal byte layout (relative to payload start):
+      header_hex  [0:6]    bytes 0-1  class tag (00BA / 00C8)
+                            bytes 2-3  always 0101 in this corpus
+                            bytes 4-5  varies (0101 / 0201 / 0010)
+      [6:10]               sprite_id  XOR  npc_instance_id  (caller)
+      body_hex    [10:T]   bytes 10-13 usually zeros
+                            bytes 14-15 0104 / 0004
+                            byte  16    usually 0x14
+                            byte  17    flag
+                            byte  18    flag
+                            bytes 19-22 4-byte flag block
+                            byte  23    flag
+                            bytes 24..T scratch / per-instance event id
+                            (T = first tail-block marker offset)
+
+    After the body region, the payload contains chained TLV-style
+    tail blocks `[tag][family 2B][04][u32 value][trailer...]` where
+    the family byte classifies the reference. Recognised families:
+      0x08 -> generic dialogue line  (`08 00 04`)
+      0x44 -> shop / vendor dialogue (`44 00 04`)
     """
+    _MARKER_FAMILIES = (b"\x08\x00\x04", b"\x44\x00\x04")
     out = {}
     n = len(payload)
 
-    def _hex(a, b):
-        if a >= n:
-            return None
-        return payload[a:min(b, n)].hex().upper()
-
-    out["unknown_1"]  = _hex(0,  2)   # class tag (00BA / 00C8)
-    out["unknown_2"]  = _hex(2,  4)   # always 0101 so far
-    out["unknown_3"]  = _hex(4,  6)   # varies (0101 / 0201 / 0010)
-    # bytes 6-9 = sprite_or_event_id, handled by caller
-    out["unknown_4"]  = _hex(10, 14)  # usually zeros
-    out["unknown_5"]  = _hex(14, 16)  # 0104 / 0004
-    out["unknown_6"]  = _hex(16, 17)  # usually 14
-    out["unknown_7"]  = _hex(17, 18)  # flag
-    out["unknown_8"]  = _hex(18, 19)  # flag
-    out["unknown_9"]  = _hex(19, 23)  # 4 bytes flag block
-    out["unknown_10"] = _hex(23, 24)  # 1 byte
-    # The tail begins at a `[tag][08 00 04][u32]` marker. Bytes
-    # between the fixed prefix and that marker form a variable
-    # scratch/event-id region (often `01 01 31 58 XX 01 00 00 00`
-    # on records that carry a per-instance event id). Locate the
-    # first valid marker and split there.
+    # Locate the first tail-block marker. Everything before it (minus
+    # the identity slot at [6:10]) is the bundled header+body region.
     tail_start = None
     for off in range(24, n - 7):
         tag = payload[off]
         size = tag + 1
         if (size >= 8 and off + size <= n
-                and payload[off + 1:off + 4] == b"\x08\x00\x04"):
+                and payload[off + 1:off + 4] in _MARKER_FAMILIES):
             tail_start = off
             break
     if tail_start is None:
         tail_start = n  # no tail markers found
-    out["unknown_11"] = payload[24:tail_start].hex().upper() or None
+
+    # Bundle the two contiguous hex regions around the identity slot.
+    if n >= 1:
+        out["header_hex"] = payload[0:min(6, n)].hex().upper() or None
+    if n > 10:
+        body_end = min(tail_start, n)
+        body_bytes = payload[10:body_end]
+        out["body_hex"] = body_bytes.hex().upper() or None
 
     # Parse chained tail blocks starting from the first marker. Each
     # block's total size equals tag_byte + 1; subsequent blocks may
@@ -73,10 +85,11 @@ def _split_scripted_payload(payload):
             "tag_hex": f"{tag:02X}",
             "size": size,
         }
-        # Recognized shape: [tag][08 00 04][u32][trailer...]
-        if size >= 8 and block_bytes[1:4] == b"\x08\x00\x04":
+        # Recognized shape: [tag][family 2B][04][u32][trailer...]
+        marker_bytes = block_bytes[1:4]
+        if size >= 8 and marker_bytes in _MARKER_FAMILIES:
             val = struct.unpack(">I", block_bytes[4:8])[0]
-            block["marker"] = "08 00 04"
+            block["marker"] = " ".join(f"{b:02X}" for b in marker_bytes)
             block["u32_hex"] = f"{val:08X}"
             block["u32_int"] = val
             if size > 8:
@@ -116,14 +129,19 @@ def _decode_scripted_entities(blueprint):
             # Sprite/NPC ID is a u32 BE at payload offset 6. Values
             # in the ~100000000 - 900300000 range correspond to
             # `npc<id>.png` filenames. Outside that range the bytes
-            # encode some other id (script/event) which we expose
-            # verbatim as `unknown_id_hex`.
+            # encode an `npc_instance_id` -- the per-area NPC
+            # handle that the dialogue table references via the
+            # `<name_npc=N>` tag inside `map_text.txt`. Verified by
+            # cross-checking against datamined per-town reference
+            # files (e.g. quest-giver 0x0010D0EC == 1102060 == the
+            # Hill Gigas mission giver in town 111020200).
             if len(payload) >= 10:
                 sprite_id = struct.unpack(">I", payload[6:10])[0]
                 if 100_000_000 <= sprite_id <= 900_300_000:
                     ent["sprite_id"] = sprite_id
                 else:
-                    ent["unknown_id_hex"] = payload[6:10].hex().upper()
+                    ent["npc_instance_id"] = sprite_id
+                    ent["npc_instance_id_hex"] = payload[6:10].hex().upper()
             # Split the rest of the payload into atomic named fields
             # so unknown bytes can be pattern-hunted by the frontend.
             ent.update(_split_scripted_payload(payload))
@@ -135,8 +153,375 @@ def _decode_scripted_entities(blueprint):
                 if block.get("marker") == "08 00 04":
                     ent["dialogue_line_id"] = block["u32_int"]
                     break
+            # Shop / vendor classification: a `44 00 04` marker on
+            # any tail block flags this NPC as a shopkeeper and its
+            # u32 value is the vendor-greeting dialogue line id.
+            # The actual inventory list lives outside map.bin in an
+            # external shop-definition table; the frontend joins it.
+            for block in ent.get("tail_blocks", []):
+                if block.get("marker") == "44 00 04":
+                    ent["kind"] = "shop_npc"
+                    # Raw u32 carried by the shop tail marker in map.bin.
+                    # Frontend can interpret/join it against external masters.
+                    ent["shop_id_raw"] = block["u32_int"]
+                    # Keep the legacy field name for backward compatibility.
+                    ent["shop_dialogue_line_id"] = block["u32_int"]
+                    break
+            # interaction_height_px (and sibling extra8 geometry) is
+            # now decoded uniformly for every entity at the record
+            # header level -- see the dynamic-entity walker. No
+            # per-kind extraction needed here.
             # Drop the now-redundant raw payload dump.
             ent.pop("payload_hex", None)
+
+
+def _is_event_flag_value(v):
+    """Heuristic: u32 BE values in the 0x01100000 - 0x01FFFFFF range
+    are observed to be FFBE event/quest flag ids (e.g. 0x013157F9 for
+    quest 1, 0x0133771E for quest 2). The lower bound is chosen to
+    exclude false-positive byte-aligned reads of `01 00 XX XX` and
+    `01 01 XX XX` patterns that occur naturally in the scratch region
+    of scripted_entity records (where `01` is a TLV tag byte
+    immediately followed by the genuine flag). Dialogue line ids by
+    contrast sit in the 0x0001AE.. range and never collide.
+    """
+    return isinstance(v, int) and 0x01100000 <= v < 0x02000000
+
+
+def _extract_event_flag_ids(ent):
+    """Collect event_flag ids referenced by a single decoded entity.
+
+    Scans every hex-string field on the entity (the post-header
+    `payload_hex` left on interactive_object / unknown records, the
+    `unknown_N` scratch fields of scripted_entity, and the u32 / trailer
+    bytes inside `tail_blocks` / `marker_blocks`) for byte-aligned
+    `01 XX YY ZZ` u32 BE values passing `_is_event_flag_value`.
+
+    Returns a deduplicated, order-preserving list of `0xXXXXXXXX`
+    hex strings.
+    """
+    flags = []
+    seen = set()
+
+    def _push(v):
+        if not _is_event_flag_value(v):
+            return
+        if v in seen:
+            return
+        seen.add(v)
+        flags.append(f"0x{v:08X}")
+
+    def _scan_hex(h):
+        if not isinstance(h, str) or not h:
+            return
+        try:
+            buf = bytes.fromhex(h)
+        except ValueError:
+            return
+        for i in range(len(buf) - 3):
+            if buf[i] == 0x01:
+                v = struct.unpack(">I", buf[i:i + 4])[0]
+                _push(v)
+
+    # Direct u32 values from any decoded marker block.
+    for block in (ent.get("tail_blocks") or []) + (ent.get("marker_blocks") or []):
+        _push(block.get("u32_int"))
+        _scan_hex(block.get("trailer_hex"))
+        _scan_hex(block.get("body_hex"))
+        _scan_hex(block.get("unparsed_hex"))
+
+    # Raw payload bytes left on interactive_object / unknown records.
+    _scan_hex(ent.get("payload_hex"))
+
+    # scripted_entity scratch region (the bundled `body_hex` covers
+    # the post-identity bytes [10:tail_start] where per-instance event
+    # flag references land for NPC-bound quests; the strict
+    # `_is_event_flag_value` range filter rejects the mostly-zero
+    # header bytes earlier in the body).
+    _scan_hex(ent.get("body_hex"))
+    _scan_hex(ent.get("header_hex"))
+
+    return flags
+
+
+def _extract_inline_switch_refs(ent):
+    """Extract switch references directly from entity bytes (bin-only).
+
+    This does not consult any external master data. It only pattern-matches
+    known switch-carrying byte shapes in decoded hex fields.
+
+    Heuristic roles:
+    - `0A 00 05 <u32> 01` -> `open_switch` (byte before u32 is 0x05)
+    - `08 00 01 <u32> 01 03` -> `condition_switch` (byte before u32 is 0x01)
+    - `0D 01 02 <u32> 01 <u32> 01 00 01 00` -> condition-like pair
+    """
+    refs = []
+    seen = set()
+
+    def _push(sid, role, source, offset, pattern, trigger_byte):
+        if not isinstance(sid, int):
+            return
+        if sid <= 0:
+            return
+        key = (sid, role, source, offset, pattern)
+        if key in seen:
+            return
+        seen.add(key)
+        rec = {
+            "switch_id": sid,
+            "role": role,
+            "source": source,
+            "offset": offset,
+            "pattern": pattern,
+        }
+        if trigger_byte is not None:
+            rec["trigger_byte_hex"] = f"{trigger_byte:02X}"
+        refs.append(rec)
+
+    def _scan_hex(h, source):
+        if not isinstance(h, str) or not h:
+            return
+        for m in re.finditer(r"0A0005([0-9A-F]{8})01", h):
+            sid = int(m.group(1), 16)
+            _push(sid, "open_switch", source, (m.start() // 2) + 3, "0A0005", 0x05)
+        for m in re.finditer(r"080001([0-9A-F]{8})0103", h):
+            sid = int(m.group(1), 16)
+            _push(sid, "condition_switch", source, (m.start() // 2) + 3, "080001", 0x01)
+        for m in re.finditer(r"0D0102([0-9A-F]{8})01([0-9A-F]{8})01000100", h):
+            sid1 = int(m.group(1), 16)
+            sid2 = int(m.group(2), 16)
+            base = m.start() // 2
+            _push(sid1, "condition_switch", source, base + 3, "0D0102_pair", 0x02)
+            _push(sid2, "condition_switch", source, base + 8, "0D0102_pair", 0x01)
+
+    for block in (ent.get("tail_blocks") or []) + (ent.get("marker_blocks") or []):
+        _scan_hex(block.get("trailer_hex"), "trailer_hex")
+        _scan_hex(block.get("body_hex"), "block.body_hex")
+        _scan_hex(block.get("unparsed_hex"), "block.unparsed_hex")
+
+    _scan_hex(ent.get("payload_hex"), "payload_hex")
+    _scan_hex(ent.get("body_hex"), "body_hex")
+    _scan_hex(ent.get("header_hex"), "header_hex")
+    return refs
+
+
+def _annotate_inline_switches(blueprint):
+    """Attach switch ids directly on each dynamic_entity.
+
+    Output is bin-only and frontend-friendly:
+    - `switch_refs` with role/source/pattern metadata
+    - `switch_ids` (all unique ids)
+    - `open_switch_ids`
+    - `condition_switch_ids`
+    - `quest_chain_prefixes` from `event_flag_ids` namespaces
+    """
+    for layer in blueprint.get("layers", []):
+        for ent in layer.get("objects", {}).get("dynamic_entities", []):
+            refs = _extract_inline_switch_refs(ent)
+
+            # Include event-flag-derived switch ids as condition-like references.
+            for flag_hex in ent.get("event_flag_ids") or []:
+                try:
+                    sid = int(flag_hex, 16)
+                except (TypeError, ValueError):
+                    continue
+                refs.append({
+                    "switch_id": sid,
+                    "role": "condition_switch",
+                    "source": "event_flag_ids",
+                    "pattern": "01xxxxxx",
+                    "event_flag_hex": flag_hex,
+                    "trigger_byte_hex": "01",
+                })
+
+            if refs:
+                uniq_refs = []
+                seen_ref = set()
+                switch_ids = []
+                seen_ids = set()
+                open_ids = []
+                seen_open = set()
+                cond_ids = []
+                seen_cond = set()
+
+                for r in refs:
+                    sid = r.get("switch_id")
+                    role = r.get("role", "")
+                    sig = (sid, role, r.get("source", ""), r.get("pattern", ""), r.get("offset", -1))
+                    if sig not in seen_ref:
+                        seen_ref.add(sig)
+                        uniq_refs.append(r)
+
+                    if isinstance(sid, int) and sid not in seen_ids:
+                        seen_ids.add(sid)
+                        switch_ids.append(sid)
+                    if role == "open_switch" and isinstance(sid, int) and sid not in seen_open:
+                        seen_open.add(sid)
+                        open_ids.append(sid)
+                    if role == "condition_switch" and isinstance(sid, int) and sid not in seen_cond:
+                        seen_cond.add(sid)
+                        cond_ids.append(sid)
+
+                ent["switch_refs"] = uniq_refs
+                ent["switch_ids"] = switch_ids
+                if open_ids:
+                    ent["open_switch_ids"] = open_ids
+                if cond_ids:
+                    ent["condition_switch_ids"] = cond_ids
+
+            # Inline quest-chain namespaces to avoid relying only on root-level
+            # quest_chains aggregation.
+            flags = ent.get("event_flag_ids") or []
+            if flags:
+                prefixes = []
+                seen = set()
+                for flag_hex in flags:
+                    try:
+                        ns = int(flag_hex, 16) >> 8
+                    except (TypeError, ValueError):
+                        continue
+                    if ns in seen:
+                        continue
+                    seen.add(ns)
+                    prefixes.append(f"0x{ns:06X}")
+                if prefixes:
+                    ent["quest_chain_prefixes"] = prefixes
+
+
+def _decode_interactive_objects(blueprint):
+    """Decode type=0x02 non-chest records (`interactive_object`) into
+    a parsed shape similar to scripted_entity: extract every
+    `[tag][08 00 04][u32]` marker block in the payload, classify each
+    u32 as dialogue/flag/other by value range, and surface a top-level
+    `event_flag_ids` list for quest-chain indexing.
+    """
+    for layer in blueprint.get("layers", []):
+        for ent in layer.get("objects", {}).get("dynamic_entities", []):
+            if ent.get("kind") != "interactive_object":
+                continue
+            payload_hex = ent.get("payload_hex", "")
+            if not payload_hex:
+                continue
+            try:
+                payload = bytes.fromhex(payload_hex)
+            except ValueError:
+                continue
+            n = len(payload)
+            marker_blocks = []
+            flag_ids = []
+            dialogue_ids = []
+            seen_flags = set()
+            off = 0
+            while off < n - 7:
+                if payload[off + 1:off + 4] == b"\x08\x00\x04":
+                    tag = payload[off]
+                    size = tag + 1
+                    if size >= 8 and off + size <= n:
+                        v = struct.unpack(">I", payload[off + 4:off + 8])[0]
+                        block = {
+                            "tag_hex": f"{tag:02X}",
+                            "size": size,
+                            "u32_hex": f"{v:08X}",
+                            "u32_int": v,
+                        }
+                        if size > 8:
+                            block["trailer_hex"] = payload[off + 8:off + size].hex().upper()
+                        marker_blocks.append(block)
+                        if _is_event_flag_value(v):
+                            if v not in seen_flags:
+                                seen_flags.add(v)
+                                flag_ids.append(f"0x{v:08X}")
+                        elif 0x00010000 <= v < 0x00100000:
+                            # Dialogue-line-id range (~110000s observed).
+                            dialogue_ids.append(v)
+                        off += size
+                        continue
+                off += 1
+            if marker_blocks:
+                ent["marker_blocks"] = marker_blocks
+            if flag_ids:
+                ent["event_flag_ids"] = flag_ids
+            if dialogue_ids:
+                # Preserve order, dedup.
+                seen_d = set()
+                uniq = []
+                for d in dialogue_ids:
+                    if d not in seen_d:
+                        seen_d.add(d)
+                        uniq.append(d)
+                ent["dialogue_line_ids"] = uniq
+
+
+def _build_quest_chains(blueprint):
+    """Group records that share an event-flag namespace into quest chains.
+
+    Two records belong to the same quest if they reference flag ids
+    that share the upper 3 bytes (e.g. `0x013157F9`, `0x013157FA`,
+    `0x013157FB` all live in namespace `0x013157`). The resulting
+    `quest_chains` array is attached at the blueprint root; each entry
+    lists the participating records with their layer, record_id, kind,
+    and the flags they reference.
+
+    NOTE: this catches **object-interaction quests only** (where the
+    map.bin physically carries the flag ids). Talk-to-N-NPCs quests
+    are tracked outside the bin via dialogue_line_id matching and
+    will produce no chain here, which is the truthful reflection of
+    the bin's contents.
+    """
+    # First pass: ensure every entity carrying any hex payload has
+    # an `event_flag_ids` field populated. We scan all kinds because
+    # quest-related flags appear on scripted_entity (NPC scripts),
+    # interactive_object (type=0x02 sparkles), and several `unknown`
+    # record types (0x00 area triggers, 0x1B scripted events, etc.)
+    # whose internal layouts are not yet decoded.
+    for layer in blueprint.get("layers", []):
+        for ent in layer.get("objects", {}).get("dynamic_entities", []):
+            if "event_flag_ids" in ent:
+                continue
+            flags = _extract_event_flag_ids(ent)
+            if flags:
+                ent["event_flag_ids"] = flags
+
+    # Second pass: group by namespace (flag >> 8).
+    chains = {}
+    for layer in blueprint.get("layers", []):
+        lid = layer.get("layer_id")
+        for ent in layer.get("objects", {}).get("dynamic_entities", []):
+            flags = ent.get("event_flag_ids")
+            if not flags:
+                continue
+            namespaces = set()
+            for f in flags:
+                try:
+                    v = int(f, 16)
+                except (TypeError, ValueError):
+                    continue
+                namespaces.add(v >> 8)
+            for ns in namespaces:
+                chain = chains.setdefault(ns, {
+                    "flag_prefix": f"0x{ns:06X}",
+                    "members": [],
+                })
+                chain["members"].append({
+                    "layer_id": lid,
+                    "record_id": ent.get("record_id"),
+                    "kind": ent.get("kind"),
+                    "sprite_id": ent.get("sprite_id"),
+                    "dialogue_line_id": ent.get("dialogue_line_id"),
+                    "event_flag_ids": [
+                        f for f in flags
+                        if int(f, 16) >> 8 == ns
+                    ],
+                })
+
+    # Only keep namespaces with at least 2 members (a single record
+    # with a stray flag isn't a quest chain).
+    quest_chains = [
+        c for c in chains.values() if len(c["members"]) >= 2
+    ]
+    quest_chains.sort(key=lambda c: c["flag_prefix"])
+    if quest_chains:
+        blueprint["quest_chains"] = quest_chains
 
 
 def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
@@ -534,7 +919,25 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 src_y_px  = struct.unpack(">I", rec_bytes[9:13])[0]
                 width_px  = struct.unpack(">H", rec_bytes[13:15])[0]
                 height_px = struct.unpack(">H", rec_bytes[15:17])[0]
-                extra8    = rec_bytes[17:25].hex().upper()
+                extra8_bytes = rec_bytes[17:25]
+                # The 8 extra bytes after the standard header encode
+                # rendering / interaction geometry as four BE values:
+                #   bytes 0-1  i16  collision_offset_y  (signed; rare
+                #                   negative values place the collision
+                #                   box above the source pixel row)
+                #   bytes 2-4  u16  interaction_height_px (talk-box
+                #                   height; 0x34=52 default, 0x6E=110
+                #                   for shopkeepers' tall counter boxes)
+                #   bytes 4-6  u16  sprite_height_px (rendered NPC tile)
+                #   bytes 6-8  u16  sprite_width_px
+                # Verified consistent across all entity kinds in the
+                # corpus (9 distinct shapes; minimal entities use the
+                # all-zeros form). Computed up-front so every entity
+                # exposes geometry, not just scripted_entity / shop_npc.
+                collision_off_y = struct.unpack(">h", extra8_bytes[0:2])[0]
+                interaction_h   = struct.unpack(">H", extra8_bytes[2:4])[0]
+                sprite_h        = struct.unpack(">H", extra8_bytes[4:6])[0]
+                sprite_w        = struct.unpack(">H", extra8_bytes[6:8])[0]
                 return {
                     "record_id": rec_id,
                     "record_type": f"0x{rec_type:02X}",
@@ -542,7 +945,10 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     "source_y_px": src_y_px,
                     "width_px": width_px,
                     "height_px": height_px,
-                    "extra8_hex": extra8,
+                    "collision_offset_y": collision_off_y,
+                    "interaction_height_px": interaction_h,
+                    "sprite_height_px": sprite_h,
+                    "sprite_width_px": sprite_w,
                 }
 
             # --- DE record length table ---
@@ -829,9 +1235,29 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                         )
                     else:
                         if len(boundaries) < de_count:
-                            de_partial_status = (
-                                f"de walk partial (decoded {len(boundaries)} of {de_count})"
-                            )
+                            # Determine whether the shortfall is genuine
+                            # data loss (walker bailed mid-payload) or
+                            # just a rid-numbering discrepancy (walker
+                            # reached the chunk's end, but the bin's
+                            # de_count > distinct rids because the
+                            # source rid sequence has gaps -- e.g. the
+                            # original map editor deleted records
+                            # without renumbering). The latter is NOT
+                            # data loss: every byte of the section is
+                            # accounted for.
+                            last_e = boundaries[-1][1]
+                            if last_e >= len(de_payload):
+                                de_partial_status = (
+                                    f"de walk complete (decoded {len(boundaries)} of "
+                                    f"{de_count}; bin de_count exceeds distinct rids -- "
+                                    f"source rid numbering has gaps, all bytes consumed)"
+                                )
+                            else:
+                                unwalked = len(de_payload) - last_e
+                                de_partial_status = (
+                                    f"de walk partial (decoded {len(boundaries)} of "
+                                    f"{de_count}; {unwalked} bytes unwalked at chunk tail)"
+                                )
                         for k, (s, e, _walk_rid, _walk_rt) in enumerate(boundaries):
                             rec_bytes = de_payload[s:e]
                             rec_len = len(rec_bytes)
@@ -1023,7 +1449,17 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                                     dynamic_entities.append(sub_entity)
                                     scan_from = mt + 8
                             else:
-                                entity["kind"] = "unknown"
+                                # Type 0x02 without a chest signature is an
+                                # interactive map object (sparkle, examinable,
+                                # quest-target spot). Its payload carries
+                                # event_flag refs (u32 BE values >= 0x01000000)
+                                # and dialogue refs via the same `08 00 04`
+                                # markers used by scripted_entity records.
+                                # Other unhandled types remain `unknown`.
+                                if rec_type == 0x02:
+                                    entity["kind"] = "interactive_object"
+                                else:
+                                    entity["kind"] = "unknown"
                                 entity["payload_hex"] = rec_bytes[25:].hex().upper()
                                 entity["note"] = (
                                     "boundary recovered via record_id scan; "
@@ -1128,8 +1564,84 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 # variable-length trailing bytes are part of it).
                 _record_range("dynamic_entities_section", de_section_start, chunk_end_offset)
 
+                # Surface any byte ranges INSIDE the record-payload area
+                # [de_payload_start, chunk_end_offset) that no entity
+                # (walked record or chest tail recovery) claims. These
+                # are bytes the parser could not assign to a record;
+                # they may indicate a multi-length record_type variant
+                # the structural walker didn't cover or padding the
+                # original editor left behind. The u16 de_count header
+                # is structural metadata, not a "record", so it is not
+                # counted as a gap. Each entry includes a hex preview
+                # (capped) so the raw bytes can be eyeballed without
+                # bloating the blueprint.
+                if "dynamic_entities_section" in section_ranges:
+                    PREVIEW_BYTES = 32
+                    intervals = []
+                    for ent in dynamic_entities:
+                        sh = ent.get("start_hex")
+                        eh = ent.get("end_hex_inclusive")
+                        if not (isinstance(sh, str) and isinstance(eh, str)):
+                            continue
+                        try:
+                            s_abs = int(sh, 16)
+                            e_abs_incl = int(eh, 16)
+                        except ValueError:
+                            continue
+                        if e_abs_incl < s_abs:
+                            continue
+                        intervals.append((s_abs, e_abs_incl + 1))
+                    intervals.sort()
+                    merged = []
+                    for s, e in intervals:
+                        if merged and s <= merged[-1][1]:
+                            merged[-1] = (merged[-1][0],
+                                           max(merged[-1][1], e))
+                        else:
+                            merged.append((s, e))
+                    unwalked = []
+                    cursor = de_payload_start
+                    for s, e in merged:
+                        if s > cursor:
+                            gap_end_excl = min(s, chunk_end_offset)
+                            if gap_end_excl > cursor:
+                                unwalked.append((cursor, gap_end_excl))
+                        cursor = max(cursor, e)
+                    if cursor < chunk_end_offset:
+                        unwalked.append((cursor, chunk_end_offset))
+                    if unwalked:
+                        unwalked_ranges = []
+                        for s, e_excl in unwalked:
+                            size = e_excl - s
+                            rel_s = s - de_payload_start
+                            rel_e = e_excl - de_payload_start
+                            slice_bytes = de_payload[rel_s:rel_e]
+                            preview = slice_bytes[:PREVIEW_BYTES].hex().upper()
+                            if size > PREVIEW_BYTES:
+                                preview += "..."
+                            unwalked_ranges.append({
+                                "start_hex": hex(s),
+                                "end_hex_inclusive": hex(e_excl - 1),
+                                "size_bytes": size,
+                                "preview_hex": preview,
+                            })
+                        section_ranges["dynamic_entities_section"]["unwalked_ranges"] = unwalked_ranges
+
                 if de_partial_status:
-                    objects_parse_status = f"partial: {de_partial_status}"
+                    # Distinguish a true partial parse (some bytes
+                    # unwalked, or the walker bailed before consuming
+                    # the payload) from a clean parse whose rid count
+                    # merely disagrees with the bin's de_count. The
+                    # latter happens when the source map editor
+                    # deleted records without renumbering and is NOT
+                    # data loss: every byte is accounted for.
+                    starts_with_complete = de_partial_status.startswith(
+                        "de walk complete"
+                    )
+                    if starts_with_complete:
+                        objects_parse_status = f"ok: {de_partial_status}"
+                    else:
+                        objects_parse_status = f"partial: {de_partial_status}"
 
             except (ValueError, struct.error) as e:
                 objects_parse_status = f"fallback: {e}"
@@ -1194,6 +1706,14 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
     # Decode scripted_entity payloads into named fields (sprite_id,
     # dialogue_line_id, unknown_N, tail_blocks) using bin data only.
     _decode_scripted_entities(blueprint)
+    # Decode type=0x02 non-chest records as interactive_object with
+    # parsed marker_blocks + event_flag_ids + dialogue_line_ids.
+    _decode_interactive_objects(blueprint)
+    # Group records that share an event-flag namespace into quest chains.
+    _build_quest_chains(blueprint)
+    # Surface switch ids on each dynamic entity directly from bin bytes
+    # (open/condition heuristics + event_flag namespaces).
+    _annotate_inline_switches(blueprint)
 
     with open(output_path, "w") as out_file:
         json.dump(blueprint, out_file, indent=4)
@@ -1202,8 +1722,45 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
     return True
 
 
+def resolve_town_folder_id(town_id):
+    """Resolve a short town id (like '1103') to its full folder id (like
+    '111020300') by consulting `assets/town_data/towns.json`. The full
+    folder id is derived from the icon filename: `map_icon_<7digits>.png`
+    -> folder id is `<7digits>` + '00'.
+
+    If the input is already a long folder id, an exact-match folder, or
+    can't be resolved, it is returned unchanged.
+    """
+    town_id = str(town_id)
+    # Already a real folder? Use as-is.
+    if os.path.isdir(os.path.join(TOWN_DATA_ROOT, town_id)):
+        return town_id
+    towns_json = os.path.join(TOWN_DATA_ROOT, "towns.json")
+    if not os.path.isfile(towns_json):
+        return town_id
+    try:
+        with open(towns_json, "r", encoding="utf-8") as fh:
+            towns = json.load(fh)
+    except Exception as exc:
+        print(f"Warning: could not read towns.json ({exc})")
+        return town_id
+    entry = towns.get(town_id)
+    if not entry:
+        return town_id
+    icon = entry.get("icon", "")
+    # icon convention: 'map_icon_<7digits>.png' -> folder = '<7digits>00'
+    base = os.path.splitext(os.path.basename(icon))[0]
+    if base.startswith("map_icon_"):
+        short = base[len("map_icon_"):]
+        candidate = short + "00"
+        if os.path.isdir(os.path.join(TOWN_DATA_ROOT, candidate)):
+            print(f"Resolved short id {town_id} ('{entry['names'][0]}') -> {candidate}")
+            return candidate
+    return town_id
+
+
 def parse_town(town_id):
-    """Resolve `<town_data_root>/<town_id>/map.bin` and parse it. The
+    """Resolve `assets/town_data/<town_id>/map.bin` and parse it. The
     resulting blueprint is written to `map_blueprint.json` in the same
     folder.
 

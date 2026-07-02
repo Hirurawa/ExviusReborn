@@ -14,10 +14,6 @@ const ESPER_STAT_KEYS: Array[String] = ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]
 var owned_summons: Array = []
 
 
-func _switch_service():
-	return get_node("/root/SwitchService")
-
-
 # === State management ===
 
 func reset_to_empty() -> void:
@@ -181,15 +177,7 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 	if old_level > 0 and level > old_level:
 		sp_reward = _calculate_sp_reward(summon_template, rank, old_level, level)
 
-	record["is_unlocked"] = true
-	record["rank"] = clampi(rank, 1, max_rank)
-	record["level"] = maxi(1, level)
-	record["xp"] = maxi(0, xp)
-	if sp_reward > 0:
-		var current_sp: int = int(record.get("current_sp", 0))
-		record["current_sp"] = current_sp + sp_reward
-
-	# Unlock the next rank switch when the esper reaches its current rank cap.
+	# Check for max level to unlock the next rank
 	var is_max_level: bool = false
 	if entries_value is Array:
 		var entries: Array = entries_value
@@ -204,14 +192,21 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 					if level >= max_level:
 						is_max_level = true
 
+	record["is_unlocked"] = true
+	record["rank"] = clampi(rank, 1, max_rank)
+	record["level"] = maxi(1, level)
+	record["xp"] = maxi(0, xp)
+	if sp_reward > 0:
+		var current_sp: int = int(record.get("current_sp", 0))
+		record["current_sp"] = current_sp + sp_reward
 	_upsert_esper_record(record)
 
 	if is_max_level:
 		var switch_id: String = "82%03d%d10" % [int(summon_id), rank]
-		var switch_service = _switch_service()
-		var did_unlock: bool = switch_service != null and switch_service.unlock_switches(switch_id, "esper_max_level")
+		var did_unlock: bool = SwitchService.unlock_switches(switch_id, "esper_max_level")
 		if did_unlock:
 			print("Unlocked esper max level switch: ", switch_id)
+
 	_rehydrate_and_emit_espers("set_esper_progression")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://cx4vj1o20v2p6"]
 
 [ext_resource type="Script" path="res://features/outgame/town_store/town_stores_popup.gd" id="1_popup"]
 

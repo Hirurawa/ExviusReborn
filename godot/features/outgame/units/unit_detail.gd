@@ -134,7 +134,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 
 	var level: int = int(unit_inst.get("level", 1))
 	var max_level: int = int(StatCalculator.RARITY_MAX_LEVELS.get(rarity, 15))
-	var next_xp: int = int(unit_inst.get("next_xp", 0))
+	var next_xp: int = UnitService.calculate_next_xp_for_unit(unit_inst)
 	unit_detail_level_label.text = "Lvl %d/%d  next %d" % [level, max_level, next_xp]
 
 	# Recalculate stats fresh to reflect current equipment/esper assignments,
@@ -292,8 +292,9 @@ func _populate_resistances(final_stats: Dictionary) -> void:
 
 func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	var lb_id: String = str(unit_inst.get("limitburst_id", ""))
-	if lb_id != "" and lb_id != "<null>" and StaticData.game_data_limitbursts.has(lb_id):
-		var lb_name: String = str(StaticData.game_data_limitbursts[lb_id].get("name", "Unknown Limit Burst"))
+	var lb_data: Dictionary = GameDatabase.get_limitburst(lb_id) if (lb_id != "" and lb_id != "<null>") else {}
+	if not lb_data.is_empty():
+		var lb_name: String = str(lb_data.get("name", "Unknown Limit Burst"))
 		lb_name_label.text = "Limit Burst: %s" % lb_name
 	else:
 		lb_name_label.text = "Limit Burst: None"
@@ -311,10 +312,11 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	var tmr_name: String = "Unknown Reward"
 	var icon_path: String = ""
 
-	if tmr_type == "EQUIP" and StaticData.game_data_equipment.has(tmr_id):
-		var eq_data: Dictionary = StaticData.game_data_equipment[tmr_id]
-		tmr_name = str(eq_data.get("name", tmr_name))
-		icon_path = "res://assets/equip/" + str(eq_data.get("icon", "0.png"))
+	if tmr_type == "EQUIP":
+		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
+		if not eq_data.is_empty():
+			tmr_name = str(eq_data.get("name", tmr_name))
+			icon_path = "res://assets/equip/" + str(eq_data.get("icon", "0.png"))
 	elif tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
 		var mat_data: Dictionary = StaticData.game_data_materia[tmr_id]
 		tmr_name = str(mat_data.get("name", tmr_name))
@@ -340,25 +342,28 @@ func _populate_skills(final_stats_profile: Dictionary) -> void:
 	var magic_list: Array = all_skills.get("magic", [])
 	for sk in magic_list:
 		var sk_id: String = str(sk.get("id", ""))
-		if StaticData.game_data_skills_magic.has(sk_id):
+		var magic_data: Dictionary = GameDatabase.get_magic(sk_id)
+		if not magic_data.is_empty():
 			var panel: Control = MagicScene.instantiate()
-			panel.setup_from_skill_data(StaticData.game_data_skills_magic[sk_id], str(sk.get("source", "Trait")), false)
+			panel.setup_from_skill_data(magic_data, str(sk.get("source", "Trait")), false)
 			unit_detail_magic_grid.add_child(panel)
 
 	var ability_list: Array = all_skills.get("ability", [])
 	for sk in ability_list:
 		var sk_id: String = str(sk.get("id", ""))
-		if StaticData.game_data_skills_ability.has(sk_id):
+		var ability_data: Dictionary = GameDatabase.get_ability(sk_id)
+		if not ability_data.is_empty():
 			var panel: Control = MagicScene.instantiate()
-			panel.setup_from_skill_data(StaticData.game_data_skills_ability[sk_id], str(sk.get("source", "Trait")), false)
+			panel.setup_from_skill_data(ability_data, str(sk.get("source", "Trait")), false)
 			unit_detail_special_grid.add_child(panel)
 
 	var passive_list: Array = all_skills.get("passive", [])
 	for sk in passive_list:
 		var sk_id: String = str(sk.get("id", ""))
-		if StaticData.game_data_skills_passive.has(sk_id):
+		var passive_data: Dictionary = GameDatabase.get_passive(sk_id)
+		if not passive_data.is_empty():
 			var panel: Control = MagicScene.instantiate()
-			panel.setup_from_skill_data(StaticData.game_data_skills_passive[sk_id], str(sk.get("source", "Trait")), false)
+			panel.setup_from_skill_data(passive_data, str(sk.get("source", "Trait")), false)
 			unit_detail_special_grid.add_child(panel)
 
 func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> void:
@@ -397,7 +402,7 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		else:
 			if item_id != "":
 				var template_id: String = InventoryService.get_equipment_template_id(item_id)
-				item_data = StaticData.game_data_equipment.get(template_id, {}).duplicate()
+				item_data = GameDatabase.get_equipment(template_id).duplicate()
 			else:
 				item_data = {"name": "", "slot": "", "type": "", "stats": {}}
 				display_options["detail_text"] = "Empty"
@@ -429,14 +434,14 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		var _is_materia_slot_item: bool = false
 		if item_id != "":
 			var template_id: String = InventoryService.get_equipment_template_id(item_id)
-			if StaticData.game_data_equipment.has(template_id):
-				item_data = StaticData.game_data_equipment.get(template_id, {}).duplicate()
-			elif StaticData.game_data_materia.has(template_id):
+			item_data = GameDatabase.get_equipment(template_id).duplicate()
+			if item_data.is_empty() and StaticData.game_data_materia.has(template_id):
 				item_data = StaticData.game_data_materia.get(template_id, {}).duplicate()
 				_is_materia_slot_item = true
 			else:
-				item_data = {"name": "", "slot": "", "type": "", "stats": {}}
-				display_options["detail_text"] = "Empty"
+				if item_data.is_empty():
+					item_data = {"name": "", "slot": "", "type": "", "stats": {}}
+					display_options["detail_text"] = "Empty"
 		else:
 			item_data = {"name": "", "slot": "", "type": "", "stats": {}}
 			display_options["detail_text"] = "Empty"

@@ -5,10 +5,6 @@ signal quest_progress_updated
 
 @onready var container: VBoxContainer = $ScrollContainer/VBoxContainer
 
-
-func _switch_service():
-	return get_node("/root/SwitchService")
-
 func _ready() -> void:
 	self.title = "Town Quests"
 	self.ok_button_text = "Close"
@@ -55,9 +51,9 @@ func populate(quests: Array[Dictionary]) -> void:
 			if parts.size() >= 2:
 				start_switch = parts[0].strip_edges()
 				end_switch = parts[parts.size() - 1].strip_edges()
-				if _switch_service().is_unlocked(end_switch):
+				if SwitchService.is_unlocked(end_switch):
 					is_done = true
-				elif not _switch_service().is_unlocked(start_switch):
+				elif not SwitchService.is_unlocked(start_switch):
 					is_new = true
 
 		var status_label = Label.new()
@@ -131,7 +127,7 @@ func populate(quests: Array[Dictionary]) -> void:
 
 func _start_quest(start_switch: String) -> void:
 	if start_switch != "":
-		_switch_service().unlock_switches(start_switch, "start_quest")
+		SwitchService.unlock_switches(start_switch, "start_quest")
 		quest_progress_updated.emit()
 
 func _check_requirements(quest: Dictionary) -> bool:
@@ -188,6 +184,6 @@ func _finish_quest(end_switch: String, quest: Dictionary) -> void:
 		InventoryService.emit_updated()
 
 	if end_switch != "":
-		_switch_service().unlock_switches(end_switch, "finish_quest")
+		SwitchService.unlock_switches(end_switch, "finish_quest")
 
 	quest_progress_updated.emit()

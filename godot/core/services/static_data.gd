@@ -35,8 +35,7 @@ const BAKED_SANITIZED_DIR: String = "res://baked_static_cache"
 # `keys_index.bin` caches just the key sets so those checks don't force-decode
 # the full dataset. Lazy-decoded once and reused across launches.
 const KEY_INDEXED_DATASETS: Array[String] = [
-	"skills_magic", "skills_ability", "skills_passive",
-	"equipment", "materia", "limitbursts", "summons",
+	"materia", "summons",
 ]
 
 # Legacy paths cleaned up on first launch after upgrading to per-dataset cache.
@@ -47,28 +46,20 @@ const LEGACY_MONOLITHIC_SIG: String = "user://data/sanitized_cache_sig.txt"
 # `game_data_*` fields so existing call sites keep working.
 const _PROP_TO_KEY: Dictionary = {
 	"game_data_units": "units",
-	"game_data_items": "items",
-	"game_data_equipment": "equipment",
-	"game_data_skills_magic": "skills_magic",
-	"game_data_skills_ability": "skills_ability",
-	"game_data_skills_passive": "skills_passive",
-	"game_data_limitbursts": "limitbursts",
 	"game_data_materia": "materia",
 	"game_data_equipment_icons": "equipment-icons",
 	"game_data_summons": "summons",
 	"game_data_summons_boards": "summons_boards",
 	"game_data_summons_exp_patterns": "summons_exp_patterns",
 	"game_data_summons_stat_patterns": "summons_stat_patterns",
-	"game_data_unit_exp_patterns": "unit_exp_patterns",
 }
 
 # Dataset key -> default empty value.
 const _DEFAULTS: Dictionary = {
-	"units": {}, "items": {}, "equipment": {},
-	"skills_magic": {}, "skills_ability": {},
-	"skills_passive": {}, "limitbursts": {}, "materia": {}, "equipment-icons": {},
+	"units": {},
+	"materia": {}, "equipment-icons": {},
 	"summons": {}, "summons_boards": {},
-	"summons_exp_patterns": {}, "summons_stat_patterns": {}, "unit_exp_patterns": {},
+	"summons_exp_patterns": {}, "summons_stat_patterns": {},
 }
 
 var is_ready: bool = false
@@ -209,7 +200,7 @@ func evict_all() -> void:
 # touches them again.
 func evict_outgame_only_datasets() -> void:
 	for k in ["summons_boards", "summons_exp_patterns", "summons_stat_patterns",
-			"equipment-icons", "unit_exp_patterns"]:
+			"equipment-icons"]:
 		_loaded.erase(k)
 
 
@@ -242,14 +233,11 @@ func classify_skill_id(id: String) -> String:
 	# to force-decode a 30+ MB skill dataset.
 	if id == "":
 		return ""
-	_ensure_keys_index_loaded()
-	if _keys_index.get("skills_magic", {}).has(id):
+	# Magic + ability + passive now all live in the DB (their JSONs removed);
+	# magic is its own table, ability/passive are abilityType 2/1 in `ability`.
+	if GameDatabase.has_magic(id):
 		return "magic"
-	if _keys_index.get("skills_ability", {}).has(id):
-		return "ability"
-	if _keys_index.get("skills_passive", {}).has(id):
-		return "passive"
-	return ""
+	return GameDatabase.ability_kind(id)
 
 
 func _ensure_keys_index_loaded() -> void:
@@ -324,8 +312,6 @@ func _ensure_dataset(key: String) -> Variant:
 		return _default_for(key)
 
 	_loaded[key] = decoded
-	if key == "limitbursts":
-		_normalize_limitburst_effects_raw()
 	return _loaded[key]
 
 
@@ -385,9 +371,6 @@ func _run_patch_cycle() -> bool:
 		# Yield one frame so the engine can run GC, paint the progress UI, and
 		# avoid Android Watchdog ANR on the biggest files.
 		await get_tree().process_frame
-
-	if _loaded.has("limitbursts"):
-		_normalize_limitburst_effects_raw()
 
 	# Build the lightweight keys index from the now-resident dictionaries
 	# before we drop them; persists to disk so subsequent launches don't have
@@ -620,40 +603,6 @@ func _seed_user_cache_from_baked() -> void:
 
 
 # === Misc ===
-
-func _normalize_limitburst_effects_raw() -> void:
-	var limitbursts: Variant = _loaded.get("limitbursts", null)
-	if not (limitbursts is Dictionary):
-		return
-	for limitburst_id in limitbursts.keys():
-		var limitburst_data: Variant = limitbursts.get(limitburst_id, {})
-		if not (limitburst_data is Dictionary):
-			continue
-
-		var limitburst_dict: Dictionary = limitburst_data
-		var levels_value: Variant = limitburst_dict.get("levels", [])
-		if not (levels_value is Array):
-			continue
-
-		var levels: Array = levels_value
-		if levels.is_empty():
-			continue
-
-		var first_level_value: Variant = levels[0]
-		if not (first_level_value is Array):
-			continue
-
-		var first_level: Array = first_level_value
-		if first_level.size() < 2:
-			continue
-
-		var effects_raw_value: Variant = first_level[1]
-		if not (effects_raw_value is Array):
-			continue
-
-		limitburst_dict["effects_raw"] = effects_raw_value
-		limitbursts[limitburst_id] = limitburst_dict
-
 
 func _notify_skill_resolver() -> void:
 	# SkillResolver loads opcode schemas after data is in place. Resolved by

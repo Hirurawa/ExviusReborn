@@ -272,7 +272,7 @@ func _on_unit_action_started(unit_index: int, action: int) -> void:
 			return
 
 		var action_id = battle_manager.party_data[party_index].get("queued_action_id", "")
-		if StaticData.game_data_skills_magic.has(action_id):
+		if GameDatabase.has_magic(action_id):
 			max_attack_loops = 3
 			_play_magic_atk()
 		else:
@@ -290,7 +290,7 @@ func _on_action_queued(unit_index: int, action: int, action_id: String) -> void:
 		return
 
 	if action == battle_manager.CombatAction.SKILL or action == battle_manager.CombatAction.ITEM:
-		if StaticData.game_data_skills_magic.has(action_id):
+		if GameDatabase.has_magic(action_id):
 			_play_magic_standby()
 		else:
 			_play_idle()

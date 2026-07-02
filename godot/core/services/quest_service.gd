@@ -1,10 +1,6 @@
 extends Node
 ## QuestService handles fetching and processing quest data from GameDatabase.
 
-
-func _switch_service():
-	return get_node("/root/SwitchService")
-
 func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 	var raw_quests: Array = GameDatabase.get_quests_for_town(town_id)
 
@@ -21,7 +17,7 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 		if switch_info != null and typeof(switch_info) in [TYPE_INT, TYPE_FLOAT, TYPE_STRING]:
 			var switch_str = str(switch_info)
 			if switch_str != "0" and switch_str != "":
-				if not _switch_service().is_unlocked(switch_str):
+				if not SwitchService.is_unlocked(switch_str):
 					continue
 
 		if not quests_dict.has(quest_id):

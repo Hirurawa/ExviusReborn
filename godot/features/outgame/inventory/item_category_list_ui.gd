@@ -81,10 +81,12 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 
 			var equipment_dict: Dictionary = equipment_entry as Dictionary
 			var template_id: String = str(equipment_dict.get("template_id", ""))
-			if template_id == "" or not StaticData.game_data_equipment.has(template_id):
+			if template_id == "":
 				continue
 
-			var equipment_data: Dictionary = StaticData.game_data_equipment.get(template_id, {})
+			var equipment_data: Dictionary = GameDatabase.get_equipment(template_id)
+			if equipment_data.is_empty():
+				continue
 			entries.append({
 				"kind": "equipment",
 				"data": equipment_data,
@@ -99,10 +101,9 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 			var quantity: int = int(stackables[item_id_variant])
 			if quantity <= 0:
 				continue
-			if not StaticData.game_data_items.has(item_id):
+			var item_data: Dictionary = GameDatabase.get_item(item_id)
+			if item_data.is_empty():
 				continue
-
-			var item_data: Dictionary = StaticData.game_data_items.get(item_id, {})
 			var item_type: String = str(item_data.get("type", ""))
 			var is_consumable: bool = item_type == "Consumable"
 			if _is_combat_selection_mode and (item_data.get("usable_in_combat", false) != true or not item_data.has("effects_raw")):

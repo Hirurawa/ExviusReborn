@@ -143,19 +143,16 @@ func query(sql: String, params: Array = []) -> Array:
 
 # === World map ===
 
-## All worlds for the map dropdown. The returned `dispOrder` key carries the
-## background image filename (world.imageInfo; NULL for the handful of worlds
-## with no map art -> "" so they render blank). The result keys (worldName,
-## dispOrder) are aliases kept stable for the map UI consumer.
+## All worlds for the map dropdown. `dispOrder` carries the background image.
 func get_worlds() -> Array:
-	return query("SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder, switchInfo FROM world ORDER BY rowid")
+	return query("SELECT worldId, worldName, COALESCE(dispOrder, '') AS dispOrder, switchInfo FROM world ORDER BY rowid")
 
 
 ## A single world row (worldId, worldName, dispOrder), or {} if not found.
-## `dispOrder` is the background image filename (world.imageInfo), aliased.
+## `dispOrder` is the background image filename.
 func get_world(world_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder, switchInfo FROM world WHERE worldId = ? LIMIT 1",
+		"SELECT worldId, worldName, COALESCE(dispOrder, '') AS dispOrder, switchInfo FROM world WHERE worldId = ? LIMIT 1",
 		[world_id]
 	)
 	return rows[0] if not rows.is_empty() else {}
@@ -164,17 +161,15 @@ func get_world(world_id: String) -> Dictionary:
 ## Lands belonging to a world (clickable regions on the world view).
 func get_lands(world_id: String) -> Array:
 	return query(
-		"SELECT landId, name AS landName, touchRect, labelPos, switchInfo FROM land WHERE worldId = ? ORDER BY rowid",
+		"SELECT landId, landName, touchRect, labelPos, switchInfo FROM land WHERE worldId = ? ORDER BY rowid",
 		[world_id]
 	)
 
 
-## Background-map filename (land.imageInfo) for a land's area view, or "" if none.
-## Always a single texture, located in assets/maps/region/. The returned key is
-## aliased to `mapFiles` for the map UI consumer.
+## Background-map filename for a land's area view, or "" if none.
 func get_land_map(world_id: String, land_id: String) -> String:
 	var rows: Array = query(
-		"SELECT imageInfo AS mapFiles FROM land WHERE worldId = ? AND landId = ? LIMIT 1",
+		"SELECT COALESCE(mapFiles, '') AS mapFiles FROM land WHERE worldId = ? AND landId = ? LIMIT 1",
 		[world_id, land_id]
 	)
 	return str(rows[0].get("mapFiles", "")).strip_edges() if not rows.is_empty() else ""
@@ -183,31 +178,26 @@ func get_land_map(world_id: String, land_id: String) -> String:
 ## Areas within a land (clickable regions on the area view).
 func get_areas(world_id: String, land_id: String) -> Array:
 	return query(
-		"SELECT areaId, name AS areaName, touchRect, labelPos, switchInfo FROM area WHERE worldId = ? AND landId = ? ORDER BY rowid",
+		"SELECT areaId, areaName, touchRect, labelPos, switchInfo FROM area WHERE worldId = ? AND landId = ? ORDER BY rowid",
 		[world_id, land_id]
 	)
 
 
 ## Background-map tiles for an area: { mapFiles, mapDimensions }, or {} if unknown.
-## `mapFiles` (area.imageInfo) is a comma-separated list of texture filenames (in
-## assets/maps), `mapDimensions` (area.mapDimension) is "cols:rows"; the files
-## tile a grid in row-major order. Both result keys are aliases kept stable for
-## the map UI consumer.
+## `mapFiles` is a comma-separated list of texture filenames; `mapDimensions` is
+## "cols:rows"; the files tile a grid in row-major order.
 func get_area_map(area_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT imageInfo AS mapFiles, mapDimension AS mapDimensions FROM area WHERE areaId = ? LIMIT 1",
+		"SELECT COALESCE(mapFiles, '') AS mapFiles, COALESCE(mapDimensions, '') AS mapDimensions FROM area WHERE areaId = ? LIMIT 1",
 		[area_id]
 	)
 	return rows[0] if not rows.is_empty() else {}
 
 
 ## Town pins for an area. Every town in the area is returned (no filtering).
-## `iconFile` is resolved through the icon master (town.iconId -> icon.iconFile)
-## and aliased so the map UI consumer keeps reading the same key.
 func get_towns(area_id: String) -> Array:
 	return query(
-		"SELECT t.townId, t.name AS townName, t.position, COALESCE(i.iconFile, '') AS iconFile, t.switchInfo FROM town t"
-		+ " LEFT JOIN icon i ON i.iconId = t.iconId"
+		"SELECT t.townId, t.townName, t.position, COALESCE(t.iconFile, '') AS iconFile, t.switchInfo FROM town t"
 		+ " WHERE t.areaId = ?"
 		+ " ORDER BY t.rowid",
 		[area_id]
@@ -215,12 +205,10 @@ func get_towns(area_id: String) -> Array:
 
 
 ## Dungeon pins for an area. Excludes dungeon rows that are really towns: those
-## reuse a town's `fileInfo` and would draw on top of the town pin. `iconFile` is
-## resolved through the icon master (dungeon.iconId -> icon.iconFile) and aliased.
+## reuse a town's `fileInfo` and would draw on top of the town pin.
 func get_dungeons(area_id: String) -> Array:
 	return query(
-		"SELECT d.dungeonId, d.name, d.position, COALESCE(i.iconFile, '') AS iconFile, d.switchInfo FROM dungeon d"
-		+ " LEFT JOIN icon i ON i.iconId = d.iconId"
+		"SELECT d.dungeonId, d.name, d.position, COALESCE(d.iconFile, '') AS iconFile, d.switchInfo FROM dungeon d"
 		+ " WHERE d.areaId = ?"
 		+ " AND (COALESCE(d.fileInfo, '') = '' OR d.fileInfo NOT IN (SELECT fileInfo FROM town WHERE COALESCE(fileInfo, '') != ''))"
 		+ " ORDER BY d.rowid",
@@ -247,9 +235,7 @@ func get_dungeon_name(dungeon_id: String) -> String:
 
 
 ## A single town row (townName, iconFile) for the town scene, or {} if unknown.
-## `townName` is the display name; `iconFile` ("map_icon_<digits>.png", in
-## assets/map_icons, resolved via town.iconId -> icon.iconFile) also encodes the
-## on-disk town-data folder id.
+## `townName` is the display name; `iconFile` also encodes the town-data folder id.
 func get_town_stores(town_id: String) -> Array:
 	return query(
 		"SELECT * FROM town_store WHERE townId = ? AND storeType = 1 ORDER BY storeId",
@@ -266,8 +252,7 @@ func get_store_items(store_id: String) -> Array:
 
 func get_town(town_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile, COALESCE(t.openSwitch, '') AS openSwitch FROM town t"
-		+ " LEFT JOIN icon i ON i.iconId = t.iconId"
+		"SELECT townName, COALESCE(iconFile, '') AS iconFile, COALESCE(switchId, '') AS openSwitch FROM town t"
 		+ " WHERE t.townId = ? LIMIT 1",
 		[town_id]
 	)

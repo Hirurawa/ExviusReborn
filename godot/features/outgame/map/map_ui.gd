@@ -77,6 +77,18 @@ func _quest_service():
 func _switch_service():
 	return get_node("/root/SwitchService")
 
+
+func _is_visible_by_switch(switch_info: Variant) -> bool:
+	if switch_info == null:
+		return true
+
+	var switch_str: String = str(switch_info).strip_edges()
+	if switch_str == "" or switch_str == "null" or switch_str == "0":
+		return true
+
+	return _switch_service().is_unlocked(switch_str)
+
+
 func _ready() -> void:
 	map_back_button.pressed.connect(_on_back_pressed)
 	map_world_option.item_selected.connect(_on_map_world_selected)
@@ -292,6 +304,12 @@ func _show_world_view(world_id: String) -> void:
 	_reset_view_transform()
 
 func _on_land_clicked(world_id: String, land_id: String) -> void:
+	var areas: Array = GameDatabase.get_areas(world_id, land_id)
+
+	if areas.size() == 1:
+		var area_id: String = str(areas[0].get("areaId", ""))
+		_show_dungeon_view(world_id, land_id, area_id)
+		return
 	_show_area_view(world_id, land_id)
 
 
@@ -574,7 +592,12 @@ func _on_back_pressed() -> void:
 		_close_mission_popup()
 		return
 	if current_view == "dungeon":
-		_show_area_view(current_selected_world, current_selected_land)
+		var areas: Array = GameDatabase.get_areas(current_selected_world, current_selected_land)
+
+		if areas.size() == 1:
+			_show_world_view(current_selected_world)
+		else:
+			_show_area_view(current_selected_world, current_selected_land)
 		return
 	if current_view == "area":
 		_show_world_view(current_selected_world)
@@ -617,6 +640,8 @@ func _build_mission_popup_entries(missions: Array) -> Array[Dictionary]:
 		var mission: Dictionary = (mission_value as Dictionary).duplicate(true)
 		var mission_id: String = str(mission.get("missionId", ""))
 		if mission_id == "":
+			continue
+		if not _is_visible_by_switch(mission.get("switchInfo")):
 			continue
 		mission["row_state"] = _resolve_mission_row_state(mission_id)
 		mission["challenges"] = GameDatabase.get_mission_challenges(mission_id)
@@ -690,6 +715,7 @@ func _on_town_clicked(town_id: String, town_name: String) -> void:
 		enter_town_dialog.cancel_button_text = "No"
 		enter_town_dialog.confirmed.connect(_on_enter_town_confirmed)
 		_town_unlock_button = enter_town_dialog.add_button("Unlock Progression", true, "unlock_progression")
+		enter_town_dialog.add_button("Quests", true, "view_quests")
 		_town_stores_button = enter_town_dialog.add_button("Stores", true, "view_stores")
 		enter_town_dialog.custom_action.connect(_on_enter_town_custom_action)
 		add_child(enter_town_dialog)
@@ -762,4 +788,5 @@ func _unlock_town_progression() -> void:
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return
+	_unlock_town_progression()
 	UIManager.push("town_map_ui", {"town_id": _pending_town_id})

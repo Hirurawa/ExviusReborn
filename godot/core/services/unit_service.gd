@@ -1106,6 +1106,10 @@ func _hydrate_owned_units(units: Array) -> Array:
 
 		# 3. Instance Data
 		hydrated_unit.merge(unit_instance, true)
+		hydrated_unit["current_rarity"] = maxi(1, int(hydrated_unit.get("current_rarity", 1)))
+		hydrated_unit["level"] = maxi(1, int(hydrated_unit.get("level", 1)))
+		hydrated_unit["xp"] = maxi(0, int(hydrated_unit.get("xp", 0)))
+		hydrated_unit["next_xp"] = maxi(0, int(hydrated_unit.get("next_xp", 0)))
 		hydrated_unit["equipment"] = _normalize_unit_equipment(unit_instance.get("equipment", {}))
 		hydrated_unit["entry_id"] = rarity_entry_key
 

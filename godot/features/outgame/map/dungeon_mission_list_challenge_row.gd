@@ -5,7 +5,7 @@ class_name DungeonMissionChallengeRow
 
 const STAR_SILVER: Texture2D = preload("res://assets/ui/quest/quest_missionstar_silver.tres")
 const STAR_GOLD: Texture2D = preload("res://assets/ui/quest/quest_missionstar.tres")
-const LAPIS_ICON: Texture2D = preload("res://assets/ui/quest/lapis_icon1.tres")
+const LAPIS_ICON: Texture2D = preload("res://assets/ui/icon/icon_lapis.png")
 
 const ROW_WIDTH: float = 640.0
 const ROW_HEIGHT: float = 128.0

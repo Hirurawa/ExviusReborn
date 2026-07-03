@@ -58,8 +58,7 @@ func _populate_list() -> void:
 	remove_cell.set_clickable(true)
 	remove_cell.pressed.connect(_on_equip_item_selected.bind(""))
 
-	var unit_data: Dictionary = StaticData.game_data_units.get(current_unit_inst.get("unit_id", ""), {})
-	var allowed_equips: Array = unit_data.get("equip", [])
+	var allowed_equips = Array(current_unit_inst.get("equipCategories").split(',')).map(func(x): return int(x))
 
 	var available_items: Array = InventoryService.get_available_equipment_for_slot(current_slot_id, allowed_equips)
 
@@ -164,9 +163,8 @@ func _unit_display_name(unit_instance_id: String) -> String:
 			continue
 		if str(unit.get("instance_id", "")) != unit_instance_id:
 			continue
-		var name_value: String = str(unit.get("name", ""))
+		var name_value: String = str(unit.get("unitName", ""))
 		if name_value != "":
 			return name_value
-		var unit_data: Dictionary = StaticData.game_data_units.get(str(unit.get("unit_id", "")), {})
-		return str(unit_data.get("name", "another unit"))
+		return str(unit.get("unitName", "another unit"))
 	return "another unit"

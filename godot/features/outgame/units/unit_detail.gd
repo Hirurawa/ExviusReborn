@@ -113,10 +113,10 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_stop_idle_animation()
 
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var unit_data: Dictionary = unit_inst
+	var entry_id: String = str(unit_inst.get("unitId"))
 
-	unit_detail_name_label.text = str(unit_data.get("name", "Unknown"))
+	unit_detail_name_label.text = str(unit_data.get("unitName", "Unknown"))
 
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	var tex: Texture2D = load(img_path) as Texture2D
@@ -616,5 +616,5 @@ func _on_illustration_pressed() -> void:
 	if current_unit_inst.is_empty():
 		return
 
-	var entry_id: String = UnitService.get_entry_id(current_unit_inst)
+	var entry_id: String = str(current_unit_inst.get("unitId"))
 	_play_attack_then_resume_idle(entry_id)

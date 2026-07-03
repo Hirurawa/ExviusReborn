@@ -243,7 +243,7 @@ func _open_skill_menu(unit_index: int) -> void:
 		var unit_inst: Dictionary = battle_manager.party_data[unit_index]
 		if not unit_inst.is_empty():
 			var rarity = int(unit_inst.get("current_rarity", 1))
-			var limitburst_id: String = str(unit_inst.get("limitburst_id", ""))
+			var limitburst_id: String = str(unit_inst.get("limitBurstId", ""))
 
 			var limitburst_data: Dictionary = GameDatabase.get_limitburst(limitburst_id) if limitburst_id != "" else {}
 			if not limitburst_data.is_empty():
@@ -762,7 +762,7 @@ func _on_battle_state_ready() -> void:
 			_active_panels.append(panel)
 
 			# Add Combat Sprite to the corresponding UnitDot
-			var template_id: String = UnitService.get_entry_id(unit_data)
+			var template_id: String = str(unit_data.get("unitId"))
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED

@@ -86,14 +86,14 @@ offset_bottom = 80.0
 focus_mode = 0
 text = "Sell"
 
-[node name="SearchBar" type="Control" parent="VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 0)
+[node name="SearchBar" type="Control" parent="VBoxContainer" unique_id=1391618216]
 clip_contents = true
+layout_mode = 2
 mouse_filter = 1
 
-[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchBar"]
+[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchBar" unique_id=2059551021]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_left = 16.0
 offset_top = 8.0
@@ -102,8 +102,9 @@ offset_bottom = 48.0
 placeholder_text = "Filter by name"
 caret_blink = true
 
-[node name="ClearButton" type="Button" parent="VBoxContainer/SearchBar"]
+[node name="ClearButton" type="Button" parent="VBoxContainer/SearchBar" unique_id=453394535]
 layout_mode = 1
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -112.0

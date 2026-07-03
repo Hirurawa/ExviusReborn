@@ -105,7 +105,7 @@ func _populate_before_stats() -> void:
 		before_spr_label.text = str(int(stats.get("SPR", 0)))
 
 func _get_current_entry() -> Dictionary:
-	var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	var rarity: int = int(base_unit_inst.get("current_rarity"))
 	return _get_entry_for_rarity(rarity)
 
 func _get_entry_for_rarity(rarity: int) -> Dictionary:
@@ -114,7 +114,7 @@ func _get_entry_for_rarity(rarity: int) -> Dictionary:
 	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return {}
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = base_unit_inst
 	var entries: Variant = unit_data.get("entries", {})
 	if not (entries is Dictionary):
 		return {}
@@ -127,7 +127,7 @@ func _get_entry_for_rarity(rarity: int) -> Dictionary:
 func _populate_after_stats() -> void:
 	if base_unit_inst.is_empty():
 		return
-	var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	var rarity: int = int(base_unit_inst.get("current_rarity"))
 	var next_rarity: int = rarity + 1
 	if not StatCalculator.RARITY_MAX_LEVELS.has(next_rarity):
 		if after_status_offset != null:
@@ -136,7 +136,7 @@ func _populate_after_stats() -> void:
 	if after_status_offset != null:
 		after_status_offset.visible = true
 
-	var next_entry: Dictionary = _get_entry_for_rarity(next_rarity)
+	var next_entry: Dictionary = GameDatabase.get_unit_next_rarity(base_unit_inst.get("unitId"))
 	if next_entry.is_empty():
 		if after_status_offset != null:
 			after_status_offset.visible = false
@@ -169,15 +169,17 @@ func _populate_after_stats() -> void:
 		after_spr_label.text = str(int(stats.get("SPR", 0)))
 
 func _populate_awakening_requirements() -> void:
-	var entry: Dictionary = _get_current_entry()
-	var awakening_data: Variant = entry.get("awakening", null)
-	var awakening: Dictionary = awakening_data as Dictionary if awakening_data is Dictionary else {}
-
+	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(base_unit_inst.get("unitId"))
+	var awakening: Dictionary = awakening_var as Dictionary
+	
 	if gil_label != null:
 		gil_label.text = str(int(awakening.get("gil", 0)))
 
-	var materials_var: Variant = awakening.get("materials", {})
+	var materials_var: Variant = awakening.get("materialInfo", "").split(',')
 	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
+	for item in materials_var:
+		var parts = item.split(":")
+		materials[parts[1]] = parts[2].to_int()
 	var material_ids: Array = materials.keys()
 
 	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
@@ -224,7 +226,7 @@ func _populate_awakening_requirements() -> void:
 func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():
 		return null
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var entry_id: String = str(unit_inst.get("unitId"))
 	if entry_id == "":
 		return null
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
@@ -236,7 +238,7 @@ func _get_unit_texture_for_rarity(unit_inst: Dictionary, rarity: int) -> Texture
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return null
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = unit_inst
 	var entries: Variant = unit_data.get("entries", {})
 	if entries is Dictionary:
 		for key in (entries as Dictionary).keys():

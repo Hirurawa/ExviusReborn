@@ -520,6 +520,37 @@ func get_all_unit_exp_patterns() -> Array:
 	return query("SELECT expPatternId, level, needExp FROM unit_exp_pattern ORDER BY expPatternId, level")
 
 
+func get_summonable_units() -> Array:
+	var val = query("select unitId, unitName, min(rare) as minRare from unit where isSummonable is 1 and rare is not 7 and unitName  NOT GLOB '*[ぁ-んァ-ヶ一-龠々]*' GROUP by unitSeries")
+	return val
+
+func get_all_units() -> Array:
+	var val: Array = query("SELECT * FROM unit")
+	return val
+
+func get_unit(unit_id: int) -> Dictionary:
+	var rows: Array = query("SELECT * FROM unit WHERE unitId = ? LIMIT 1", [unit_id])
+	return rows[0] if not rows.is_empty() else {}
+
+func get_unit_class_up_info(unit_id: int) -> Dictionary:
+	var rows: Array = query("select classUpUnitID, gil, materialInfo from unit_class_up where unitId = ? LIMIT 1", [unit_id])
+	return rows[0] if not rows.is_empty() else {}
+
+func get_unit_class_up(unit_id: int) -> Array:
+	var rows: Array = query("select * from unit where unitId = (select classUpUnitID from unit_class_up where unitId = ?) limit 1", [unit_id])
+	return rows[0] if not rows.is_empty() else {}
+
+func get_unit_skills(unit_series_id: int, rarity: int, level: int) -> Array:
+	return query("SELECT * from unit_series_lv_acquire where unitSeriesId = ? AND (rarity < ? OR (rarity = ? AND level <= ?)) order by rarity, level", [unit_series_id, rarity, rarity, level])
+
+func get_unit_max_rarity(unit_series_id: int) -> int:
+	var rows: Array = query("select max(rare) from unit where unitSeries = ? limit 1", [unit_series_id])
+	return rows[0].get("max(rare)", 0)
+
+func get_unit_next_rarity(unit_id: int) -> Dictionary:
+	var rows: Array = query("select u.* from unit u where u.unitId = (select classUpUnitID  from unit_class_up ucu where ucu.unitId = ?)", [unit_id])
+	return rows[0] if not rows.is_empty() else {}
+
 # === Skills: magic ===
 
 const _MAGIC_TYPE_NAMES: Dictionary = {"1": "White", "2": "Black", "3": "Green", "4": "Blue"}
@@ -901,6 +932,12 @@ func _build_item_record(row: Dictionary) -> Dictionary:
 	return record
 
 
+func get_all_prism() -> Array[String]:
+	var rows = query("select itemId from item where name like \"%'s prism\"")
+	var values: Array[String] = []
+	values.assign(rows.map(func(dict): return str(dict["itemId"])))
+	return values
+
 # === Equipment ===
 
 ## Full equipment record reconstructed from equip_item (+ icon + explain) tables,
@@ -956,7 +993,7 @@ func _build_equipment_record(row: Dictionary) -> Dictionary:
 		"dmg_variance": null,
 		"price_buy": int(row.get("priceBuy", 0)),
 		"price_sell": int(row.get("priceSell", 0)),
-		"skills": _decode_equipment_skill_ids(_str_col(row, "skillId"), _str_col(row, "t42Xb3jV")),
+		"skills": _decode_equipment_skill_ids(_str_col(row, "magicId"), _str_col(row, "abilityId")),
 		"requirements": _decode_equipment_requirements(_str_col(row, "equipCondition")),
 		"effects": [],
 		"stats": stats,
@@ -968,7 +1005,7 @@ func _build_equipment_record(row: Dictionary) -> Dictionary:
 	}
 
 
-## equipment.skillId and equipment.t42Xb3jV both carry passive ids in CSV form.
+## equipment.magicId and equipment.abilityId both carry passive ids in CSV form.
 ## Keep the original order, preserve 0 when present, and drop duplicates.
 func _decode_equipment_skill_ids(skill_id_raw: String, bonus_raw: String) -> Array:
 	var out: Array = []

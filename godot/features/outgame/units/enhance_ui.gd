@@ -80,7 +80,7 @@ func _refresh_classup_button_state() -> void:
 		return
 	var current_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
 	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = base_unit_inst
 	var max_rarity: int = int(unit_data.get("rarity_max", 5))
 	classup_button.disabled = current_rarity >= max_rarity
 
@@ -110,8 +110,7 @@ func _update_get_exp_display() -> void:
 		get_exp_number_label.text = "0"
 		return
 
-	var base_unit_id: String = str(base_unit_inst.get("unit_id", ""))
-	var base_unit_data: Dictionary = StaticData.game_data_units.get(base_unit_id, {})
+	var base_unit_data: Dictionary = base_unit_inst
 	if base_unit_data.is_empty():
 		get_exp_number_label.text = "0"
 		return
@@ -127,11 +126,7 @@ func _update_get_exp_display() -> void:
 			continue
 
 		var material_unit: Dictionary = material_unit_value
-		var material_unit_id: String = str(material_unit.get("unit_id", ""))
-		if material_unit_id == "":
-			continue
-
-		var material_unit_data: Dictionary = StaticData.game_data_units.get(material_unit_id, {})
+		var material_unit_data: Dictionary = GameDatabase.get_unit(material_unit.get("unitId"))
 		if material_unit_data.is_empty():
 			continue
 
@@ -298,7 +293,7 @@ func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():
 		return null
 
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var entry_id: String = str(unit_inst.get("unitId"))
 	if entry_id == "":
 		return null
 

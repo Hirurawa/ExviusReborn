@@ -269,7 +269,7 @@ func _apply_equipped_to(item_data: Dictionary, display_options: Dictionary) -> v
 	if unit_inst.is_empty():
 		return
 	
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var entry_id: String = str(unit_inst.get("unitId"))
 	if entry_id == "":
 		return
 	

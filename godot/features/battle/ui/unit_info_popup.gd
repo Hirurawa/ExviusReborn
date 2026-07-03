@@ -17,7 +17,7 @@ func setup(unit_data: Dictionary) -> void:
 	var text_content = ""
 
 	# Header
-	var unit_name = unit_data.get("name", "Unknown")
+	var unit_name = unit_data.get("unitName", "Unknown")
 	var current_hp = unit_data.get("current_hp", unit_data.get("hp", 0))
 	var current_mp = unit_data.get("current_mp", unit_data.get("mp", 0))
 

@@ -655,7 +655,7 @@ func request_unit_stats(index: int) -> void:
 	if unit_data.is_empty():
 		return
 
-	var unit_name: String = unit_data.get("name", "ERR_MISSING_NAME")
+	var unit_name: String = unit_data.get("unitName", "ERR_MISSING_NAME")
 	var cur_hp: int = unit_data.get("current_hp", 0)
 	var max_hp: int = unit_data.get("max_hp", 1)
 	var cur_mp: int = unit_data.get("current_mp", 0)

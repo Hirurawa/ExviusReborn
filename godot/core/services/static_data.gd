@@ -1,7 +1,7 @@
 extends Node
 ## StaticData — owns access to the `game_data_*` datasets via lazy per-dataset
 ## binary caches. Public state remains accessible by name
-## (`StaticData.game_data_units`, etc.) so the ~170 reader sites are unchanged,
+## so the ~170 reader sites are unchanged,
 ## but the underlying dictionaries are no longer all resident at once.
 ##
 ## Memory model:
@@ -45,7 +45,6 @@ const LEGACY_MONOLITHIC_SIG: String = "user://data/sanitized_cache_sig.txt"
 # Property name -> on-disk dataset key. Property names match the historical
 # `game_data_*` fields so existing call sites keep working.
 const _PROP_TO_KEY: Dictionary = {
-	"game_data_units": "units",
 	"game_data_materia": "materia",
 	"game_data_equipment_icons": "equipment-icons",
 	"game_data_summons": "summons",
@@ -56,7 +55,6 @@ const _PROP_TO_KEY: Dictionary = {
 
 # Dataset key -> default empty value.
 const _DEFAULTS: Dictionary = {
-	"units": {},
 	"materia": {}, "equipment-icons": {},
 	"summons": {}, "summons_boards": {},
 	"summons_exp_patterns": {}, "summons_stat_patterns": {},

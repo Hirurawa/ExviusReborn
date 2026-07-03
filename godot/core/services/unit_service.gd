@@ -77,17 +77,11 @@ func reset_to_starter() -> bool:
 	return true
 
 func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = GameDatabase.get_unit(int(unit_id))
 	if unit_data.is_empty():
 		return {}
 
-	var initial_rarity: int = _get_unit_initial_rarity(unit_id)
-	var exp_pattern: int = _get_raw_unit_exp_pattern(unit_id, unit_data, initial_rarity)
-	if exp_pattern <= 0:
-		exp_pattern = 5
-	var next_xp_required: int = _calculate_total_xp_for_level_local(2, exp_pattern)
-	if next_xp_required <= 0:
-		next_xp_required = 1000
+	var initial_rarity: int = unit_data.get("rare", 2)
 
 	return {
 		"instance_id": instance_id,
@@ -95,45 +89,35 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 		"level": 1,
 		"xp": 0,
 		"current_rarity": initial_rarity,
-		"next_xp": next_xp_required,
 		"equipment": {},
 		"trust_value": 0,
 		"limitburst_level": 1,
 		"limitburst_xp": 0,
 		"is_locked": false,
-		"trust_reward_claimed": false,
-		"current_accumulated_exp": 0
+		"trust_reward_claimed": false
 	}
 
 func summon_units(amount: int) -> Dictionary:
 	var summoned_units: Array = []
-	var unit_ids: Array = []
-	var game_data_units: Dictionary = StaticData.game_data_units
-	for unit_id in game_data_units.keys():
-		var unit_data: Variant = game_data_units.get(str(unit_id), {})
-		if _is_standard_summonable_unit(unit_data):
-			unit_ids.append(str(unit_id))
+	var summonable_units: Array = GameDatabase.get_summonable_units()
 
-	if unit_ids.is_empty():
+	if summonable_units.is_empty():
 		return {"error": "ERR_NO_UNITS_AVAILABLE"}
 
 	for _i in range(amount):
-		var random_unit_id: String = unit_ids[randi() % unit_ids.size()]
-		var initial_rarity: int = _get_unit_initial_rarity(random_unit_id)
+		var random_unit: Dictionary = summonable_units[randi() % summonable_units.size()]
 		var new_instance: Dictionary = {
-			"unit_id": random_unit_id,
+			"unit_id": random_unit.get("unitId"),
 			"instance_id": InventoryService.generate_instance_id(),
 			"xp": 0,
 			"level": 1,
-			"next_xp": 1000,
 			"equipment": {},
 			"is_locked": false,
 			"trust_value": 0,
 			"trust_reward_claimed": false,
 			"limitburst_xp": 0,
 			"limitburst_level": 1,
-			"current_rarity": initial_rarity,
-			"current_accumulated_exp": 0
+			"current_rarity": random_unit.get("minRare")
 		}
 		summoned_units.append(new_instance)
 
@@ -149,47 +133,14 @@ func summon_exp_boost_units(amount: int = 3) -> Dictionary:
 func summon_trust_units(amount: int = 3) -> Dictionary:
 	return _summon_fixed_units_local("904000105", amount, "summon_trust_units")
 
-## CAN BE REMOVED ???
-func add_unit_xp(instance_id: String, xp_amount: int) -> Dictionary:
-	var unit_found: bool = false
-	for unit in owned_units_ids:
-		if unit is Dictionary and unit.get("instance_id", "") == instance_id:
-			unit["xp"] = int(unit.get("xp", 0)) + xp_amount
-			unit_found = true
-			break
-
-	if unit_found:
-		owned_units_ids = _hydrate_owned_units(owned_units_ids)
-		emit_updated()
-		Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "add_unit_xp")
-		return {"success": true}
-	else:
-		return {"error": "ERR_UNIT_NOT_FOUND"}
-
 func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
 	if unit_inst.is_empty():
 		return 0
 
-	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit_inst.get("unit_id", "")), {})
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_inst.get("unitId", ""))
 	var runtime_unit: Dictionary = unit_inst.duplicate(true)
 	_update_unit_next_xp_local(runtime_unit, unit_data)
 	return int(runtime_unit.get("next_xp", 0))
-
-func _find_awakening_entry(unit: Dictionary) -> Dictionary:
-	# Returns the static-data entry matching the unit's current_rarity, or {} if not found.
-	var unit_id: String = str(unit.get("unit_id", ""))
-	if unit_id == "":
-		return {}
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var entries_var: Variant = unit_data.get("entries", {})
-	if not (entries_var is Dictionary):
-		return {}
-	var current_rarity: int = int(unit.get("current_rarity", unit.get("rarity", 1)))
-	for key in (entries_var as Dictionary).keys():
-		var entry: Variant = (entries_var as Dictionary)[key]
-		if entry is Dictionary and int((entry as Dictionary).get("rarity", -1)) == current_rarity:
-			return entry as Dictionary
-	return {}
 
 func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 	# Shared validation used by both can_awaken_unit() and awaken_unit().
@@ -201,7 +152,7 @@ func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 		"gil_cost": 0,
 		"materials": {},
 	}
-
+	
 	var unit_index: int = -1
 	for i in range(owned_units_ids.size()):
 		var candidate: Variant = owned_units_ids[i]
@@ -214,14 +165,13 @@ func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 	result["unit_index"] = unit_index
 
 	var unit: Dictionary = owned_units_ids[unit_index]
-	var current_rarity: int = int(unit.get("current_rarity", unit.get("rarity", 1)))
+	var current_rarity: int = int(unit.get("current_rarity", 1))
 	if current_rarity >= 7:
 		result["reason"] = "Unit is at maximum rarity"
 		return result
 
-	var entry: Dictionary = _find_awakening_entry(unit)
-	var awakening_var: Variant = entry.get("awakening", null) if not entry.is_empty() else null
-	if not (awakening_var is Dictionary):
+	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(unit.get("unitId"))
+	if awakening_var.is_empty():
 		result["reason"] = "Unit is at maximum rarity"
 		return result
 	var awakening: Dictionary = awakening_var as Dictionary
@@ -237,8 +187,11 @@ func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 		result["reason"] = "Insufficient gil"
 		return result
 
-	var materials_var: Variant = awakening.get("materials", {})
-	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
+	var materials_var: Variant = awakening.get("materialInfo", "").split(',')
+	var materials: Dictionary = {}
+	for item in materials_var:
+		var parts = item.split(":")
+		materials[parts[1]] = parts[2].to_int()
 	result["materials"] = materials
 
 	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
@@ -287,11 +240,13 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var unit: Dictionary = owned_units_ids[unit_index]
 	var new_rarity: int = int(unit.get("current_rarity", 1)) + 1
 	unit["current_rarity"] = new_rarity
-
-	var unit_data: Dictionary = StaticData.game_data_units.get(str(unit.get("unit_id", "")), {})
-	var exp_pattern: int = _get_raw_unit_exp_pattern(str(unit.get("unit_id", "")), unit_data, new_rarity)
-	if exp_pattern <= 0:
-		exp_pattern = 5
+	
+	var awakening_data: Dictionary = GameDatabase.get_unit_class_up_info(unit.get("unitId"))
+	var new_unit_id = awakening_data.get("classUpUnitID")
+	unit["unit_id"] = new_unit_id
+	
+	var unit_data: Dictionary = GameDatabase.get_unit(unit.get("unitId", ""))
+	var exp_pattern: int = unit_data.get("expPatternId")
 
 	if new_rarity == 7:
 		unit["xp"] = _calculate_total_xp_for_level_local(101, exp_pattern)
@@ -299,12 +254,13 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	else:
 		unit["xp"] = 0
 		unit["level"] = 1
-
-	_update_unit_next_xp_local(unit, unit_data)
+	
 	owned_units_ids[unit_index] = unit
 
-	# Persist + signal (mirrors enhance_unit flow).
+	# Persist + signal
+	# TODO: why do we hydrate all units when we awaken only one?
 	owned_units_ids = _hydrate_owned_units(owned_units_ids)
+	
 	emit_updated()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "awaken_unit")
 
@@ -329,7 +285,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		if material_id == base_unit_instance_id:
 			return {"success": false, "error": "Base unit cannot be used as enhancement material"}
 
-	var game_data_units: Dictionary = StaticData.game_data_units
+	var game_data_units: Array = GameDatabase.get_all_units()
 
 	var base_unit: Dictionary = {}
 	var base_index: int = -1
@@ -342,7 +298,8 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 	if base_index < 0:
 		return {"success": false, "error": "Ownership check failed for base unit"}
 
-	var base_unit_data: Dictionary = game_data_units.get(str(base_unit.get("unit_id", "")), {})
+	var base_unit_data = game_data_units.filter(func(x): return x.unitId == int(base_unit.get("unit_id")))
+	base_unit_data = base_unit_data[0] if not base_unit_data.is_empty() else null
 	if base_unit_data.is_empty():
 		return {"success": false, "error": "Base unit data not found"}
 
@@ -371,7 +328,8 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		if PartyService.is_unit_assigned_to_any_party(material_id):
 			return {"success": false, "error": "One or more material units are assigned to a party"}
 
-		var material_unit_data: Dictionary = game_data_units.get(str(material_unit.get("unit_id", "")), {})
+		var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
+		material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
 		if material_unit_data.is_empty():
 			return {"success": false, "error": "Material unit data not found"}
 
@@ -399,7 +357,8 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		var total_exp_to_add: int = 0
 		for material_unit_value in material_units:
 			var material_unit: Dictionary = material_unit_value
-			var material_unit_data: Dictionary = game_data_units.get(str(material_unit.get("unit_id", "")), {})
+			var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
+			material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
 			var gains: Dictionary = _calculate_material_enhance_gains(material_unit, material_unit_data)
 			total_exp_to_add += int(gains.get("xp_gain", 0))
 
@@ -409,7 +368,8 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		var total_trust_to_add: float = 0.0
 		for material_unit_value in material_units:
 			var material_unit: Dictionary = material_unit_value
-			var material_unit_data: Dictionary = game_data_units.get(str(material_unit.get("unit_id", "")), {})
+			var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
+			material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
 			var gains: Dictionary = _calculate_material_enhance_gains(material_unit, material_unit_data)
 			total_trust_to_add += float(gains.get("trust_gain", 0.0))
 
@@ -421,7 +381,8 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 
 		for material_unit_value in material_units:
 			var material_unit: Dictionary = material_unit_value
-			var material_unit_data: Dictionary = game_data_units.get(str(material_unit.get("unit_id", "")), {})
+			var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
+			material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
 			var gains: Dictionary = _calculate_material_enhance_gains(material_unit, material_unit_data)
 			total_xp_gain += int(gains.get("xp_gain", 0))
 			total_trust_gain += float(gains.get("trust_gain", 0.0))
@@ -649,7 +610,6 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 	InventoryService.emit_updated()
 	equip_successful.emit()
 
-
 func _clear_item_from_unit(unit_instance_id: String, item_id: String) -> void:
 	if unit_instance_id == "" or item_id == "":
 		return
@@ -665,38 +625,13 @@ func _clear_item_from_unit(unit_instance_id: String, item_id: String) -> void:
 		if changed:
 			unit["equipment"] = equipment
 		return
-	
-func get_entry_id(unit_inst: Dictionary) -> String:
-	"""Return the rarity-specific entry id for asset resolution (illustrations, icons, spritesheets).
-	Falls back to the template unit_id when the hydrated entry_id is missing."""
-	if unit_inst.is_empty():
-		return ""
-	var entry_id: String = str(unit_inst.get("entry_id", ""))
-	if entry_id != "":
-		return entry_id
-	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	if unit_id == "":
-		return ""
-	var rarity: int = int(unit_inst.get("current_rarity", 1))
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var entries: Variant = unit_data.get("entries", {})
-	if entries is Dictionary:
-		for key in (entries as Dictionary).keys():
-			var entry: Variant = (entries as Dictionary)[key]
-			if entry is Dictionary and int((entry as Dictionary).get("rarity", -1)) == rarity:
-				return str(key)
-	return unit_id
 
 func is_material_unit(unit_inst: Dictionary) -> bool:
 	"""Check if a unit is a material unit (non-playable) based on job_id."""
 	if unit_inst.is_empty():
 		return false
-	
-	var unit_id: String = str(unit_inst.get("unit_id", ""))
-	if unit_id == "":
-		return false
-	
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+		
+	var unit_data: Dictionary = GameDatabase.get_unit(unit_inst.get("unitId"))
 	if unit_data.is_empty():
 		return false
 	
@@ -706,13 +641,13 @@ func is_material_unit(unit_inst: Dictionary) -> bool:
 # === Internal helpers ===
 
 func _summon_fixed_units_local(unit_id: String, amount: int, source_event: String) -> Dictionary:
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = GameDatabase.get_unit(int(unit_id))
 	if unit_data.is_empty():
 		return {"error": "Unit data not found for unit_id %s" % unit_id}
 
 	var summon_amount: int = maxi(1, amount)
 	var summoned_units: Array = []
-	var initial_rarity: int = _get_unit_initial_rarity(unit_id)
+	var initial_rarity: int = unit_data.get("rare")
 
 	for _i in range(summon_amount):
 		var new_instance: Dictionary = {
@@ -720,7 +655,6 @@ func _summon_fixed_units_local(unit_id: String, amount: int, source_event: Strin
 			"instance_id": InventoryService.generate_instance_id(),
 			"xp": 0,
 			"level": 1,
-			"next_xp": 1000,
 			"equipment": {},
 			"is_locked": false,
 			"trust_value": 0,
@@ -728,7 +662,6 @@ func _summon_fixed_units_local(unit_id: String, amount: int, source_event: Strin
 			"limitburst_xp": 0,
 			"limitburst_level": 1,
 			"current_rarity": initial_rarity,
-			"current_accumulated_exp": 0
 		}
 		summoned_units.append(new_instance)
 
@@ -737,26 +670,6 @@ func _summon_fixed_units_local(unit_id: String, amount: int, source_event: Strin
 	emit_updated()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), source_event)
 	return {"summoned": summoned_units}
-
-func _is_standard_summonable_unit(unit_data: Variant) -> bool:
-	if not (unit_data is Dictionary):
-		return false
-
-	var data: Dictionary = unit_data
-	if data.get("is_summonable", false) != true:
-		return false
-
-	var rarity_min: int = int(data.get("rarity_min", 0))
-	if rarity_min >= 7:
-		return false
-
-	# Exclude untranslated units whose display name contains non-Latin
-	# characters. Allows basic ASCII plus Latin-1 / Latin Extended (for
-	# accented names like "Délita").
-	if not _name_is_latin(str(data.get("name", ""))):
-		return false
-
-	return true
 
 func _name_is_latin(name: String) -> bool:
 	if name == "":
@@ -783,24 +696,6 @@ func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 		"current_accumulated_exp": int(hydrated_unit.get("current_accumulated_exp", 0))
 	}
 
-func _normalize_units_payload(raw_payload: Variant) -> Array:
-	if not (raw_payload is Dictionary):
-		return []
-
-	var payload: Dictionary = raw_payload
-	var units_list: Variant = payload.get("owned_units", [])
-	if not (units_list is Array):
-		return []
-
-	var lean_units: Array = []
-	for unit in units_list:
-		if unit is Dictionary:
-			lean_units.append(unit.duplicate(true))
-		else:
-			lean_units.append(unit)
-
-	return lean_units
-
 func _load_units_from_local() -> Array:
 	var envelope: Dictionary = Persistence.load_snapshot(SNAPSHOT_FILE)
 	if envelope.is_empty():
@@ -810,38 +705,16 @@ func _load_units_from_local() -> Array:
 	if not (data is Dictionary):
 		return []
 
-	var lean_units: Array = _normalize_units_payload(data)
-	if lean_units.is_empty():
-		return []
-
-	return _hydrate_owned_units(lean_units)
-
-func _get_unit_initial_rarity(unit_id: String) -> int:
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
-	var rarity_min: int = int(unit_data.get("rarity_min", 0))
-	if rarity_min > 0:
-		return rarity_min
-
-	var entries: Variant = unit_data.get("entries", {})
-	if entries is Dictionary:
-		var min_rarity: int = 99
-		for key in entries.keys():
-			var entry: Variant = entries[key]
-			if entry is Dictionary and entry.has("rarity"):
-				var r: int = int(entry.get("rarity", 0))
-				if r > 0 and r < min_rarity:
-					min_rarity = r
-		if min_rarity != 99:
-			return min_rarity
-
-	return 1
+	var payload: Array = data.get("owned_units", [])
+	
+	return _hydrate_owned_units(payload)
 
 func _get_unit_type(unit_data: Dictionary) -> String:
 	if unit_data.is_empty():
 		return UNIT_TYPE_PLAYABLE
-	if int(unit_data.get("job_id", 0)) == EXP_UNIT_JOB_ID:
+	if int(unit_data.get("jobId", 0)) == EXP_UNIT_JOB_ID:
 		return UNIT_TYPE_EXP_MATERIAL
-	if int(unit_data.get("job_id", 0)) == TRUST_MATERIAL_JOB_ID:
+	if int(unit_data.get("jobId", 0)) == TRUST_MATERIAL_JOB_ID:
 		return UNIT_TYPE_TRUST_MATERIAL
 	return UNIT_TYPE_PLAYABLE
 
@@ -868,9 +741,9 @@ func _get_raw_unit_exp_pattern(unit_id: String, unit_data: Dictionary, rarity: i
 	return 0
 
 func _get_exp_unit_yield(unit_id: String, unit_data: Dictionary) -> int:
-	if int(unit_data.get("job_id", 0)) != EXP_UNIT_JOB_ID:
+	if int(unit_data.get("jobId", 0)) != EXP_UNIT_JOB_ID:
 		return 0
-	var exp_pattern: int = _get_raw_unit_exp_pattern(unit_id, unit_data, int(unit_data.get("rarity_min", 1)))
+	var exp_pattern: int = int(unit_data.get("expPatternId"))
 	return int(EXP_UNIT_YIELD_BY_PATTERN.get(exp_pattern, 0))
 
 func _get_base_exp_yield(unit: Dictionary, unit_data: Dictionary) -> int:
@@ -1062,51 +935,29 @@ func _normalize_unit_equipment(raw_equipment: Variant) -> Dictionary:
 
 func _hydrate_owned_units(units: Array) -> Array:
 	var hydrated_units: Array = []
-	var game_data_units: Dictionary = StaticData.game_data_units
+	var game_data_units: Array = GameDatabase.get_all_units()
 	for unit_instance in units:
 		if typeof(unit_instance) != TYPE_DICTIONARY:
 			hydrated_units.append(unit_instance)
 			continue
-
+		
 		var hydrated_unit: Dictionary = {}
 
-		# 1. Base Template Data
+		# Base Template Data
 		var unit_id = str(unit_instance.get("unit_id", ""))
-		var template_data = game_data_units.get(unit_id, {})
+		var template_data = game_data_units.filter(func(x): return x.unitId == int(unit_id))
+		template_data = template_data[0] if not template_data.is_empty() else null
 		hydrated_unit.merge(template_data)
 
-		# 2. Rarity Entry Data
-		var rarity = int(unit_instance.get("current_rarity", 1))
-		var entries = template_data.get("entries", {})
-		var rarity_entry = {}
-		var rarity_entry_key: String = unit_id
-
-		if entries.has(str(unit_id)):
-			rarity_entry = entries[str(unit_id)]
-			rarity_entry_key = str(unit_id)
-		elif entries.has(str(rarity)):
-			rarity_entry = entries[str(rarity)]
-			rarity_entry_key = str(rarity)
-
-		for key in entries.keys():
-			if entries[key].has("rarity") and int(entries[key]["rarity"]) == rarity:
-				rarity_entry = entries[key]
-				rarity_entry_key = str(key)
-				break
-
-		hydrated_unit.merge(rarity_entry, true)
-
-		# 3. Instance Data
+		# Instance Data
 		hydrated_unit.merge(unit_instance, true)
 		hydrated_unit["equipment"] = _normalize_unit_equipment(unit_instance.get("equipment", {}))
-		hydrated_unit["entry_id"] = rarity_entry_key
 
 		# Recalculate level and next_xp from current xp
 		var xp_val: int = int(hydrated_unit.get("xp", 0))
-		var exp_pattern: int = _get_raw_unit_exp_pattern(str(hydrated_unit.get("unit_id", "")), template_data, int(hydrated_unit.get("current_rarity", 1)))
-		if exp_pattern <= 0:
-			exp_pattern = 5
-		var max_level: int = _get_unit_max_level_local(hydrated_unit)
+		var exp_pattern: int = template_data.get("expPatternId")
+
+		var max_level: int = template_data.get("maxLv")
 		var calc_level: int = _calculate_level_from_xp_local(xp_val, exp_pattern, max_level)
 		hydrated_unit["level"] = calc_level
 

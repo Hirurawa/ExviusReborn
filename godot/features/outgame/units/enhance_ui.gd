@@ -324,17 +324,18 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	else:
 		LBName.text = "None"
 	
-	var tmr_data = unit_inst.get("TMR")
-	if tmr_data != null and typeof(tmr_data) == TYPE_ARRAY and tmr_data.size() >= 2:
+	var tmr_data = unit_inst.get("trustMasterReward")
+	tmr_data = tmr_data.split(":")
+	if tmr_data != null and tmr_data.size() >= 2:
 		var tmr_type = tmr_data[0]
 		var tmr_id = str(int(tmr_data[1]))
 		var tmr_name = "Unknown Reward"
 
-		if tmr_type == "EQUIP":
+		if tmr_type == "21":
 			var eq_data = GameDatabase.get_equipment(tmr_id)
 			if not eq_data.is_empty():
 				tmr_name = eq_data.get("name", tmr_name)
-		elif tmr_type == "MATERIA":
+		elif tmr_type == "22":
 			if StaticData.game_data_materia.has(tmr_id):
 				var mat_data = StaticData.game_data_materia[tmr_id]
 				tmr_name = mat_data.get("name", tmr_name)

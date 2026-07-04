@@ -299,8 +299,9 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	else:
 		lb_name_label.text = "Limit Burst: None"
 
-	var tmr_data: Variant = unit_data.get("TMR")
-	if tmr_data == null or typeof(tmr_data) != TYPE_ARRAY or tmr_data.size() < 2:
+	var tmr_data: Variant = unit_data.get("trustMasterReward")
+	tmr_data = tmr_data.split(":")
+	if tmr_data == null or tmr_data.size() < 2:
 		tm_name_label.text = "Trust Master: None"
 		tm_icon_rect.texture = null
 		return
@@ -312,12 +313,12 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	var tmr_name: String = "Unknown Reward"
 	var icon_path: String = ""
 
-	if tmr_type == "EQUIP":
+	if tmr_type == "21":
 		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
 		if not eq_data.is_empty():
 			tmr_name = str(eq_data.get("name", tmr_name))
 			icon_path = "res://assets/equip/" + str(eq_data.get("icon", "0.png"))
-	elif tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
+	elif tmr_type == "22" and StaticData.game_data_materia.has(tmr_id):
 		var mat_data: Dictionary = StaticData.game_data_materia[tmr_id]
 		tmr_name = str(mat_data.get("name", tmr_name))
 		icon_path = "res://assets/materia/" + str(mat_data.get("icon", "0.png"))

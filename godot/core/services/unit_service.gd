@@ -801,15 +801,16 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 
 	var game_data_materia: Dictionary = StaticData.game_data_materia
 
-	var tmr_value: Variant = unit_data.get("TMR", null)
-	if tmr_value is Array and tmr_value.size() >= 2 and tmr_value[1] != null:
+	var tmr_value: Variant = unit_data.get("trustMasterReward", null)
+	tmr_value = tmr_value.split(":")
+	if tmr_value.size() >= 2 and tmr_value[1] != null:
 		var reward_type: String = str(tmr_value[0])
 		var reward_id: String = str(tmr_value[1])
-		if reward_type == "EQUIP":
+		if reward_type == "21":
 			if GameDatabase.get_equipment(reward_id).is_empty():
 				return {"error": "Trust reward equipment template not found"}
 			return {"reward_type": "EQUIP", "template_id": reward_id}
-		elif reward_type == "MATERIA":
+		elif reward_type == "22":
 			if not game_data_materia.has(reward_id):
 				return {"error": "Trust reward materia template not found"}
 			return {"reward_type": "MATERIA", "template_id": reward_id}

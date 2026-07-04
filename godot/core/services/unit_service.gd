@@ -245,9 +245,9 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var new_unit_id = awakening_data.get("classUpUnitID")
 	unit["unit_id"] = new_unit_id
 	
-	var unit_data: Dictionary = GameDatabase.get_unit(unit.get("unitId", ""))
+	var unit_data: Dictionary = GameDatabase.get_unit(unit.get("unit_id", ""))
 	var exp_pattern: int = unit_data.get("expPatternId")
-
+	unit.merge(unit_data, true)
 	if new_rarity == 7:
 		unit["xp"] = _calculate_total_xp_for_level_local(101, exp_pattern)
 		unit["level"] = 101
@@ -258,7 +258,6 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	owned_units_ids[unit_index] = unit
 
 	# Persist + signal
-	# TODO: why do we hydrate all units when we awaken only one?
 	owned_units_ids = _hydrate_owned_units(owned_units_ids)
 	
 	emit_updated()
@@ -775,20 +774,8 @@ func _get_trust_yield(unit_id: String, unit_data: Dictionary) -> float:
 		return max(0.0, float(unit_data.get("trust_yield", 0.0)))
 	return float(TRUST_YIELD_BY_UNIT_ID.get(int(unit_id), 0.0))
 
-func _get_trust_mastery_id(unit_data: Dictionary) -> String:
-	if unit_data.has("trust_mastery_id") and str(unit_data.get("trust_mastery_id", "")) != "":
-		return str(unit_data.get("trust_mastery_id", ""))
-	var tmr_value: Variant = unit_data.get("TMR", null)
-	if tmr_value is Array and tmr_value.size() >= 2 and tmr_value[1] != null:
-		return str(tmr_value[1])
-	return ""
-
 func _is_duplicate_unit(base_unit: Dictionary, base_unit_data: Dictionary, material_unit: Dictionary, material_unit_data: Dictionary) -> bool:
-	if str(base_unit.get("unit_id", "")) == str(material_unit.get("unit_id", "")):
-		return true
-	var base_mastery: String = _get_trust_mastery_id(base_unit_data)
-	var material_mastery: String = _get_trust_mastery_id(material_unit_data)
-	return base_mastery != "" and material_mastery != "" and base_mastery == material_mastery
+	return str(base_unit.get("unitSeries")) == str(material_unit.get("unitSeries"))
 
 func _get_max_accumulated_exp(unit_data: Dictionary) -> int:
 	if unit_data.has("max_accumulated_exp"):

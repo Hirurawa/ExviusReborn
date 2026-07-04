@@ -360,8 +360,9 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	SPR.text = str(stats.get("SPR"))
 
 func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
-	var tmr_data: Variant = unit_inst.get("TMR", null)
-	if tmr_data == null or typeof(tmr_data) != TYPE_ARRAY:
+	var tmr_data: Variant = unit_inst.get("trustMasterReward", null)
+	tmr_data.split(":")
+	if tmr_data == null:
 		return ""
 
 	var tmr_array: Array = tmr_data
@@ -373,12 +374,12 @@ func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
 	if tmr_id == "":
 		return ""
 
-	if tmr_type == "EQUIP":
+	if tmr_type == "21":
 		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
 		if not eq_data.is_empty():
 			return str(eq_data.get("name", ""))
 
-	if tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
+	if tmr_type == "22" and StaticData.game_data_materia.has(tmr_id):
 		return str(StaticData.game_data_materia[tmr_id].get("name", ""))
 
 	return ""

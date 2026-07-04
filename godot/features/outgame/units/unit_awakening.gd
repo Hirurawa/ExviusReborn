@@ -293,9 +293,11 @@ func _on_awaken_pressed() -> void:
 		return
 	var response: Dictionary = UnitService.awaken_unit(base_unit_instance_id)
 	if bool(response.get("success", false)):
-		var new_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1))) + 1
-		base_unit_inst["current_rarity"] = new_rarity
-		_refresh_before_visual()
+		base_unit_inst = UnitService.owned_units_ids.filter(func(x): return x.instance_id == base_unit_inst.get("instance_id"))[0]
+		_populate_awakening_requirements()
+		_populate_before_stats()
+		_populate_after_stats()
+		_refresh_button_state()
 		_show_result_popup("Awakening successful!")
 	else:
 		_show_result_popup(str(response.get("error", "Awakening failed")))

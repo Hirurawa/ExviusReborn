@@ -346,6 +346,7 @@ text = "before_spr"
 vertical_alignment = 1
 
 [node name="unit_classup_before_stand" type="TextureRect" parent="Status" unique_id=2140475664]
+visible = false
 layout_mode = 0
 offset_left = 143.0
 offset_top = 335.0
@@ -364,6 +365,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="unit_classup_after_stand" type="TextureRect" parent="Status" unique_id=50986025]
+visible = false
 layout_mode = 0
 offset_left = 336.0
 offset_top = 335.0

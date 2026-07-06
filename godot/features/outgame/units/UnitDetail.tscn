@@ -312,6 +312,7 @@ offset_left = 40.0
 offset_top = 48.0
 offset_right = 122.0
 offset_bottom = 128.0
+pivot_offset_ratio = Vector2(0.5, 1)
 
 [node name="AnimSprite" type="Sprite2D" parent="IllustrationButton" unique_id=307711002]
 visible = false

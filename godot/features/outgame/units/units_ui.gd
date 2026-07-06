@@ -60,7 +60,7 @@ func _get_or_create_slot_visual(slot_btn: Button) -> Control:
 		var unit_visual: Control = UNIT_SCENE.instantiate() as Control
 		if unit_visual != null:
 			unit_visual.name = "UnitVisual"
-			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			unit_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			visual_container.add_child(unit_visual)
 
@@ -155,7 +155,7 @@ func _refresh_ui() -> void:
 	_update_pagination()
 	_update_slots(party.get("units", []))
 	_update_esper_icons(party.get("espers", []))
-# Updates the esper icons in each unit slot's beast_icon node.
+
 func _update_esper_icons(esper_ids: Array) -> void:
 	for i in range(5):
 		var slot_btn: Button = slots_container.get_child(i) as Button
@@ -203,7 +203,7 @@ func _update_slots(unit_uuids: Array) -> void:
 				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 				if ResourceLoader.exists(path):
 					slot_tex = _get_dynamic_texture(path)
-				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1))))
+				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("current_rarity")))
 
 		# Render slot with the shared unit visual so pedestal style matches rarity.
 		var shared_visual: Control = _get_or_create_slot_visual(slot_btn)
@@ -216,24 +216,9 @@ func _update_slots(unit_uuids: Array) -> void:
 			slot_btn.move_child(shared_visual, 0)
 		shared_visual.visible = can_render_shared
 		_set_legacy_pedestal_visible(slot_btn, not can_render_shared)
-		if can_render_shared and unit_visual.has_method("setup_in_cell"):
-			var slot_w: float = display_rect.size.x
-			var slot_h: float = display_rect.size.y
-			if slot_w <= 0.0:
-				slot_w = SLOT_FALLBACK_W
-			if slot_h <= 0.0:
-				slot_h = SLOT_FALLBACK_H
-			unit_visual.call(
-				"setup_in_cell",
-				slot_tex,
-				pedestal_tex,
-				slot_w,
-				slot_h,
-				SLOT_SIDE_PADDING,
-				SLOT_PEDESTAL_BOTTOM_MARGIN,
-				""
-			)
-
+		if unit_inst != {}:
+			unit_visual.setup(unit_inst)
+		
 		_slot_unit_instances[i] = unit_inst
 
 func _get_summon_display_name(summon_id: String) -> String:
@@ -419,8 +404,7 @@ func _open_enhance_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 		"base_unit_instance_id": base_instance_id,
 		"base_unit_inst": unit_inst
 	})
-	
-	
+
 func _open_awaken_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 	UIManager.push("awaken_ui", {
 		"base_unit_instance_id": base_instance_id,

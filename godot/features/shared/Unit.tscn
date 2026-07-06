@@ -1,15 +1,48 @@
 [gd_scene format=3 uid="uid://baq2silquhrr6"]
 
 [ext_resource type="Script" uid="uid://co5sj8n3mpx6n" path="res://features/shared/unit.gd" id="1_g0uxp"]
+[ext_resource type="Texture2D" uid="uid://wl6qnu5dgybw" path="res://assets/ui/unit/unit_charastand_common_large.tres" id="2_tnw5b"]
 
 [node name="Node2D" type="Control" unique_id=425515258]
 layout_mode = 3
 anchors_preset = 0
+offset_left = 224.0
+offset_top = 280.0
+offset_right = 224.0
+offset_bottom = 280.0
+pivot_offset_ratio = Vector2(0.5, 0.5)
 script = ExtResource("1_g0uxp")
 
-[node name="Pedestal" type="Sprite2D" parent="." unique_id=610055935]
+[node name="Pedestal" type="TextureRect" parent="." unique_id=370602736]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -168.0
+offset_right = 80.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset_ratio = Vector2(0.5, 0.5)
+texture = ExtResource("2_tnw5b")
 
-[node name="Unit" type="Sprite2D" parent="Pedestal" unique_id=945323975]
+[node name="Unit" type="TextureRect" parent="Pedestal" unique_id=742627106]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -32.0
+offset_top = -70.0
+offset_right = 32.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(1.5, 1.5)
+pivot_offset_ratio = Vector2(0.5, 1)
+stretch_mode = 4
 
 [node name="UnitName" type="Label" parent="." unique_id=786113244]
 z_index = 10

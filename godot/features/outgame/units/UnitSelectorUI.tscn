@@ -99,6 +99,7 @@ offset_left = 16.0
 offset_top = 8.0
 offset_right = -120.0
 offset_bottom = 48.0
+grow_horizontal = 2
 placeholder_text = "Filter by name"
 caret_blink = true
 
@@ -111,6 +112,7 @@ offset_left = -112.0
 offset_top = 8.0
 offset_right = -16.0
 offset_bottom = 48.0
+grow_horizontal = 0
 focus_mode = 0
 text = "Clear"
 

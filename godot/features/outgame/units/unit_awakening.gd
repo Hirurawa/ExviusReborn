@@ -1,9 +1,9 @@
 extends Control
 
+const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
+
 @onready var back_button: Button = $UnitNamebgChara/UnitMinibutton1
-@onready var before_stand: TextureRect = $Status/unit_classup_before_stand
 @onready var before_unit: TextureRect = $Status/unit_classup_before_unit
-@onready var after_stand: TextureRect = $Status/unit_classup_after_stand
 @onready var after_unit: TextureRect = $Status/unit_classup_after_unit
 @onready var gil_label: Label = $Button/unit_classup_need_money_number
 @onready var awaken_button: TextureButton = $Button/unit_classup_button_evo
@@ -52,26 +52,41 @@ func _ready() -> void:
 		enhance_button.pressed.connect(_on_enhance_pressed)
 
 func _refresh_before_visual() -> void:
-	var unit_tex: Texture2D = _get_unit_texture(base_unit_inst)
-	var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
-	var next_rarity: int = min(rarity + 1, 7)
-	var next_unit_tex: Texture2D = _get_unit_texture_for_rarity(base_unit_inst, next_rarity)
-	if next_unit_tex == null:
-		next_unit_tex = unit_tex
+	#var unit_tex: Texture2D = _get_unit_texture(base_unit_inst)
+	#var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	#var next_rarity: int = min(rarity + 1, 7)
+	#var next_unit_tex: Texture2D = _get_unit_texture_for_rarity(base_unit_inst, next_rarity)
+	#if next_unit_tex == null:
+		#next_unit_tex = unit_tex
 
-	if before_unit != null:
-		before_unit.texture = unit_tex
-	if before_stand != null:
-		var ped: Texture2D = _get_pedestal_texture(rarity)
-		if ped != null:
-			before_stand.texture = ped
+	var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+	if unit_visual:
+		unit_visual.scene_size = "large"
+		unit_visual.unit_data_to_load = base_unit_inst
+		unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		before_unit.add_child(unit_visual)
 
-	if after_unit != null:
-		after_unit.texture = next_unit_tex
-	if after_stand != null:
-		var next_ped: Texture2D = _get_pedestal_texture(next_rarity)
-		if next_ped != null:
-			after_stand.texture = next_ped
+	#if before_unit != null:
+		#before_unit.texture = unit_tex
+	#if before_stand != null:
+		#var ped: Texture2D = _get_pedestal_texture(rarity)
+		#if ped != null:
+			#before_stand.texture = ped
+			
+	var unit_visual_after: Control = UNIT_SCENE.instantiate() as Control
+	if unit_visual_after:
+		var next_rarity_unit_inst = GameDatabase.get_unit_class_up(base_unit_inst.get("unitId"))
+		unit_visual_after.scene_size = "large"
+		unit_visual_after.unit_data_to_load = next_rarity_unit_inst
+		unit_visual_after.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		after_unit.add_child(unit_visual_after)
+		
+	#if after_unit != null:
+		#after_unit.texture = next_unit_tex
+	#if after_stand != null:
+		#var next_ped: Texture2D = _get_pedestal_texture(next_rarity)
+		#if next_ped != null:
+			#after_stand.texture = next_ped
 
 	_populate_awakening_requirements()
 	_populate_before_stats()

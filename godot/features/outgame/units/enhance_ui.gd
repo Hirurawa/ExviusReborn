@@ -1,7 +1,9 @@
 extends Control
 
+const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
+
 @onready var base_unit_id_label: Label = $EnhanceFlowRoot/BaseUnitIdLabel
-@onready var base_unit_sprite: TextureRect = $EnhanceFlowRoot/BaseUnitDisplay/BaseUnitSprite
+@onready var base_unit_sprite: Control = $EnhanceFlowRoot/BaseUnitDisplay
 @onready var materials_container: HBoxContainer = $EnhanceFlowRoot/MaterialPedestalsContainer
 @onready var cancel_button: Button = $EnhanceFlowRoot/UnitNamebgChara/UnitMinibutton1
 @onready var clear_button: Button = $unit_mix_ui_bg/unit_mix_button_clear
@@ -71,7 +73,13 @@ func _connect_buttons() -> void:
 
 func _refresh_base_unit_ui() -> void:
 	base_unit_id_label.text = "Base Instance ID: %s" % base_unit_instance_id
-	base_unit_sprite.texture = _get_unit_texture(base_unit_inst)
+	#base_unit_sprite.texture = _get_unit_texture(base_unit_inst)
+	var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+	if unit_visual:
+		unit_visual.scene_size = "large"
+		unit_visual.unit_data_to_load = base_unit_inst
+		unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		base_unit_sprite.add_child(unit_visual)
 	_display_unit_stats(base_unit_inst)
 	_refresh_classup_button_state()
 
@@ -325,7 +333,7 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 		LBName.text = "None"
 	
 	var tmr_data = unit_inst.get("trustMasterReward")
-	tmr_data = tmr_data.split(":")
+	tmr_data = tmr_data.split(":") if not tmr_data == null else null
 	if tmr_data != null and tmr_data.size() >= 2:
 		var tmr_type = tmr_data[0]
 		var tmr_id = str(int(tmr_data[1]))

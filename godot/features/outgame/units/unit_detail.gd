@@ -243,7 +243,8 @@ func _fit_anim_sprite(frame_width: int, frame_height: int) -> void:
 	if scale_factor <= 0.0:
 		scale_factor = min(fit_w / float(frame_width), fit_h / float(frame_height))
 	anim_sprite.scale = Vector2(scale_factor, scale_factor)
-	anim_sprite.position = Vector2(fit_w * 0.5, fit_h * 0.5)
+	var x_offset = int(current_unit_inst.get("spriteOffset").split(":")[0])
+	anim_sprite.position = Vector2(fit_w * 0.5 + x_offset, fit_h * 0.8)
 
 func _run_idle_loop(token: int, frames: Array[Texture2D], frame_delays: Array) -> void:
 	while is_instance_valid(self) and is_inside_tree() and token == _idle_anim_token:
@@ -300,7 +301,7 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		lb_name_label.text = "Limit Burst: None"
 
 	var tmr_data: Variant = unit_data.get("trustMasterReward")
-	tmr_data = tmr_data.split(":")
+	tmr_data = tmr_data.split(":") if not tmr_data == null else null
 	if tmr_data == null or tmr_data.size() < 2:
 		tm_name_label.text = "Trust Master: None"
 		tm_icon_rect.texture = null

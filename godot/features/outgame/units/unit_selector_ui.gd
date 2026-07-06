@@ -286,7 +286,6 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		if not _should_display_unit(unit_instance_id):
 			continue
 
-		var unit_data: Dictionary = GameDatabase.get_unit(unit_inst.get("unitId"))
 		var is_disabled_max_trust_material: bool = _is_max_trust_playable_material(unit_inst)
 		var is_disabled_max_rarity_awaken: bool = mode == "awaken_base_selection" and _is_at_max_rarity(unit_inst)
 		var is_disabled_sell_blocked: bool = _is_unit_sell_blocked(unit_inst)
@@ -298,49 +297,22 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		container.custom_minimum_size = Vector2(cell_width, UNIT_CELL_H)
 		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		container.size_flags_vertical = Control.SIZE_FILL
-		container.clip_contents = true
-
-		# Load textures for the Unit scene and let it fit itself inside this cell.
-		var sprite_texture: Texture2D = null
-		var entry_id: String = str(unit_inst.get("unitId"))
-		var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
-		if _resource_exists(img_path):
-			sprite_texture = _get_dynamic_texture(img_path)
-
-		var pedestal_texture: Texture2D = _get_pedestal_texture(int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1))))
-
-		var visual_area_h: int = UNIT_CELL_H
 
 		var visual_container: Control = Control.new()
 		visual_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		visual_container.clip_contents = true
 
-		if sprite_texture and pedestal_texture:
-			var unit_visual: Control = UNIT_SCENE.instantiate() as Control
-			if unit_visual:
-				unit_visual.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-				visual_container.add_child(unit_visual)
-				if unit_visual.has_method("setup_in_cell"):
-					unit_visual.call(
-						"setup_in_cell",
-						sprite_texture,
-						pedestal_texture,
-						float(cell_width),
-						float(visual_area_h),
-						float(UNIT_SIDE_PADDING),
-						float(PEDESTAL_BOTTOM_MARGIN),
-						str(unit_data.get("unitName", "Unknown"))
-					)
-				else:
-					unit_visual.call_deferred("setup", sprite_texture, pedestal_texture)
-
+		var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+		if unit_visual:
+			unit_visual.unit_data_to_load = unit_inst
+			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			visual_container.add_child(unit_visual)
+		
 		container.add_child(visual_container)
 
 		var click_btn: Button = Button.new()
 		click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		click_btn.flat = true
 		click_btn.focus_mode = Control.FOCUS_NONE
-		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		click_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))
 		click_btn.z_index = 18
 		if is_disabled_max_rarity_awaken:

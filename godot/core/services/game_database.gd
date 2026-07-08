@@ -230,7 +230,7 @@ func get_dungeons(area_id: String) -> Array:
 ## Missions for a dungeon, in intended progression order (dispOrder is INTEGER).
 func get_missions(dungeon_id: String) -> Array:
 	return query(
-		"SELECT missionId, name, cost, exp, gil, waveCount, switchInfo FROM mission WHERE dungeonId = ? ORDER BY dispOrder",
+		"SELECT missionId, name, difficulty, cost, exp, gil, waveCount, switchInfo FROM mission WHERE dungeonId = ? ORDER BY dispOrder",
 		[dungeon_id]
 	)
 
@@ -323,6 +323,7 @@ func get_mission(mission_id: String) -> Dictionary:
 	return {
 		"dungeon_id": int(r.get("dungeonId", 0)),
 		"name": str(r.get("name", "")),
+		"difficulty": int(r.get("difficulty", 0)),
 		"type": _MISSION_TYPE_NAMES.get(str(r.get("type", "1")), "BATTLE"),
 		"wave_count": int(r.get("waveCount", 1)),
 		"cost_type": "NRG",

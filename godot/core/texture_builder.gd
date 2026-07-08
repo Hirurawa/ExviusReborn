@@ -38,6 +38,7 @@ static func _load_animation_data_internal(png_path: String, json_path: String) -
 	if err != OK:
 		return {}
 
+	@warning_ignore("integer_division")
 	var num_frames: int = image_width / frame_width
 	var frames: Array[Texture2D] = []
 

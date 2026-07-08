@@ -1,80 +1,57 @@
 extends Control
 
-@onready var unit: Sprite2D = $Pedestal/Unit
-@onready var pedestal: Sprite2D = $Pedestal
+@onready var unit: TextureRect = $Pedestal/Unit
+@onready var pedestal: TextureRect = $Pedestal
 @onready var unit_name: Label = $UnitName
 
-# Adjust this value to your liking (e.g., 10 pixels up from the bottom)
-const OFFSET_FROM_BOTTOM: float = 25.0
-const UNIT_TEXTURE_SCALE: float = 1.7
-const UNIT_NAME_H: float = 22.0
-const UNIT_NAME_SIDE_INSET: float = 2.0
-const UNIT_NAME_BOTTOM_OFFSET: float = 0.0
+var unit_data_to_load = null
+var scene_size = "small"
 
-func setup(char_tex: Texture2D, ped_tex: Texture2D) -> void:
-	if not is_node_ready():
-		await ready
-	if char_tex == null or ped_tex == null:
-		return
+func _ready() -> void:
+	if unit_data_to_load:
+		setup(unit_data_to_load, scene_size)
+	#var unit_data: Dictionary
+	#unit_data = {"unitId": "100002204", "spriteOffset": "-11:21:150", "rare": "3"} # anzelm
+	#unit_data = {"unitId": "100006805", "spriteOffset": "-5:15:150", "rare": "6"} # fohlen
+	#unit_data = {"unitId": "201000203", "spriteOffset": "5:12:150", "rare": "6"} # garland
+	#unit_data = {"unitId": "302000706", "spriteOffset": "-6:84:150", "rare": "6"} # w k noel
+	#unit_data = {"unitId": "401006006", "spriteOffset": "0:52:150", "rare": "6"} # lucius
+	#unit_data = {"unitId": "206000113", "spriteOffset": "-3:21:125", "rare": "3"} # magitek armor terra
+	#unit_data = {"unitId": "206000504", "spriteOffset": "-4:18:150", "rare": "4"} # shadow
+	#unit_data = {"unitId": "212000204", "spriteOffset": "-15:18:150", "rare": "4"} # ashe
+	#setup(unit_data, "large")
 
-	_apply_unit_textures(char_tex, ped_tex)
-	scale = Vector2.ONE
-	position = Vector2.ZERO
-
-func setup_in_cell(char_tex: Texture2D, ped_tex: Texture2D, cell_width: float, cell_height: float, side_padding: float, bottom_margin: float, unit_display_name: String = "") -> void:
-	if not is_node_ready():
-		await ready
-	if char_tex == null or ped_tex == null:
-		return
-
-	_apply_unit_textures(char_tex, ped_tex)
-
-	# Keep pedestal pinned at native pixel size. Only the character scales to fit.
-	pedestal.scale = Vector2.ONE
-	scale = Vector2.ONE
-
-	var pedestal_half_height: float = ped_tex.get_size().y * 0.5
-	position = Vector2(
-		cell_width * 0.5,
-		cell_height - bottom_margin - pedestal_half_height
-	)
-
-	#var available_w: float = maxf(1.0, cell_width - (side_padding * 2.0))
-	#var max_scale_by_width: float = available_w / maxf(1.0, char_tex.get_size().x)
-	#var max_scale_by_height: float = maxf(0.05, (cell_height - bottom_margin - OFFSET_FROM_BOTTOM) / maxf(1.0, char_tex.get_size().y))
-	#var temp = minf(max_scale_by_width, max_scale_by_height)
-	#var final_unit_scale: float = maxf(0.05, minf(UNIT_TEXTURE_SCALE, temp))
-	unit.scale = Vector2.ONE# * final_unit_scale
-	unit_name.text = unit_display_name
-	_position_unit_name_label(cell_width, ped_tex)
-
-func _position_unit_name_label(cell_width: float, ped_tex: Texture2D) -> void:
-	var pedestal_half_height: float = ped_tex.get_size().y * 0.5 * pedestal.scale.y
-	var label_bottom_y: float = pedestal_half_height + UNIT_NAME_BOTTOM_OFFSET
-
-	unit_name.anchor_left = 0.0
-	unit_name.anchor_top = 0.0
-	unit_name.anchor_right = 0.0
-	unit_name.anchor_bottom = 0.0
-	unit_name.offset_left = (-cell_width * 0.5) + UNIT_NAME_SIDE_INSET
-	unit_name.offset_right = (cell_width * 0.5) - UNIT_NAME_SIDE_INSET
-	unit_name.offset_top = label_bottom_y - UNIT_NAME_H
-	unit_name.offset_bottom = label_bottom_y
-
-func _apply_unit_textures(char_tex: Texture2D, ped_tex: Texture2D) -> void:
-
-	pedestal.texture = ped_tex
-	unit.texture = char_tex
-	unit.scale = Vector2.ONE * UNIT_TEXTURE_SCALE
+func setup(unit_data: Dictionary, size: String = "small") -> void:
+	var offset_data = unit_data.get("spriteOffset").split(':')
+	var x_offset: float = float(offset_data[0])
+	var y_offset: float = float(offset_data[1])
+	var sprite_scale: float = int(offset_data[2]) / 100.0
 	
-	# 1. Find the bottom-middle of the pedestal relative to its center
-	var pedestal_bottom_y = ped_tex.get_size().y / 2.0
+	var pedestal_texture_path = "res://assets/ui/unit/unit_charastand_rare%s_%s.tres" % [unit_data.get("rare"), size]
+	var pedestal_texture = ResourceLoader.load(pedestal_texture_path) as Texture2D
+	pedestal.texture = pedestal_texture
 	
-	# 2. Position the unit's feet (its origin) 
-	# relative to that bottom point
-	unit.position.x = 0 # Stay centered horizontally
-	unit.position.y = pedestal_bottom_y - OFFSET_FROM_BOTTOM
+	var unit_texture_path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_data.get("unitId")
+	var unit_texture = ResourceLoader.load(unit_texture_path) as Texture2D
+	unit.texture = unit_texture
+	unit.size = unit.texture.get_size()
+	if size == "small":
+		unit.scale.x = sprite_scale
+		unit.scale.y = sprite_scale
+	else:
+		unit.scale.x = 2.0
+		unit.scale.y = 2.0
+	
+	# 1. Calculate the exact center of the Pedestal (The Target Destination)
+	# For a 160x168 pedestal, this will be (80, 84)
+	var pedestal_center = pedestal.size / 2.0
 
-	# 3. Handle unit offset (to keep origin at feet)
-	# This ensures even tall/short sprites stand on the same line
-	unit.offset.y = -char_tex.get_size().y / 2.0
+	# 2. Calculate the Unit's anchor point (The point we want to put on the destination)
+	var unit_bottom_center = Vector2(unit.size.x / 2.0, unit.size.y)
+	var final_offset = Vector2(-x_offset, -y_offset-40)
+	var local_anchor_point = unit_bottom_center + final_offset
+
+	# 3. Move the Unit
+	# We subtract the anchor point from the center so that the anchor point 
+	# lands exactly on the pedestal's center coordinate.
+	unit.position = pedestal_center - local_anchor_point

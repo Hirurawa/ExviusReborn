@@ -1,0 +1,167 @@
+[gd_scene format=3 uid="uid://sodkclkanomb"]
+
+[ext_resource type="Script" uid="uid://boajtpng6ikry" path="res://features/outgame/map/dungeon_mission_list_row.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dq7kxx5d30fvn" path="res://assets/ui/quest/quest_new.tres" id="2_dana8"]
+[ext_resource type="Texture2D" uid="uid://cepudwqnvmcuw" path="res://assets/ui/quest/quest_plate1.tres" id="3_ivm58"]
+[ext_resource type="Texture2D" uid="uid://duwd34i2b357y" path="res://assets/ui/quest/quest_plate2.tres" id="4_3uv0e"]
+[ext_resource type="Texture2D" uid="uid://b6tpy5585uqn0" path="res://assets/ui/quest/quest_stamina.tres" id="5_2dy7y"]
+[ext_resource type="Texture2D" uid="uid://d3e76xxose5km" path="res://assets/ui/quest/quest_level.tres" id="6_8123v"]
+[ext_resource type="Texture2D" uid="uid://bxcvvopj2v73w" path="res://assets/ui/quest/quest_wave.tres" id="7_6jj6o"]
+[ext_resource type="Texture2D" uid="uid://donoucmhreefu" path="res://assets/ui/quest/quest_missionstar_mini_frame.tres" id="8_6jj6o"]
+[ext_resource type="Texture2D" uid="uid://ebcmopnsfino" path="res://assets/ui/quest/quest_missionstar_mini.tres" id="9_ts51h"]
+
+[node name="DungeonMissionListRow" type="Control" unique_id=590781259]
+custom_minimum_size = Vector2(640, 188)
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+script = ExtResource("1_script")
+
+[node name="StatusBadge" type="TextureRect" parent="." unique_id=98232356]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 4.0
+offset_right = 118.0
+offset_bottom = 36.0
+mouse_filter = 2
+texture = ExtResource("2_dana8")
+stretch_mode = 5
+
+[node name="PlateButton" type="TextureButton" parent="." unique_id=1686740979]
+layout_mode = 0
+offset_top = 20.0
+offset_right = 640.0
+offset_bottom = 188.0
+texture_normal = ExtResource("3_ivm58")
+texture_pressed = ExtResource("4_3uv0e")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Overlay" type="Control" parent="PlateButton" unique_id=214340309]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="PlateButton/Overlay" unique_id=506313518]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 58.0
+offset_right = 430.0
+offset_bottom = 109.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
+text = "Mission Name"
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="StatsColumn" type="VBoxContainer" parent="PlateButton/Overlay" unique_id=1201384621]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -225.0
+offset_top = -33.0
+offset_right = -49.0
+offset_bottom = 23.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 2
+
+[node name="QuestStamina" type="Sprite2D" parent="PlateButton/Overlay/StatsColumn" unique_id=1324903506]
+position = Vector2(78, 21)
+texture = ExtResource("5_2dy7y")
+
+[node name="EnergyLabel" type="Label" parent="PlateButton/Overlay/StatsColumn/QuestStamina" unique_id=259630172]
+offset_left = 38.0
+offset_top = -9.0
+offset_right = 96.0
+offset_bottom = 11.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "0"
+vertical_alignment = 1
+
+[node name="QuestWave" type="Sprite2D" parent="PlateButton/Overlay/StatsColumn" unique_id=795615488]
+position = Vector2(75, 47)
+texture = ExtResource("7_6jj6o")
+
+[node name="BattlesLabel" type="Label" parent="PlateButton/Overlay/StatsColumn/QuestWave" unique_id=361968343]
+offset_left = 41.0
+offset_top = -9.0
+offset_right = 100.0
+offset_bottom = 11.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "0"
+vertical_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="QuestLevel" type="Sprite2D" parent="PlateButton/Overlay/StatsColumn" unique_id=2033146813]
+position = Vector2(-315, 75)
+texture = ExtResource("6_8123v")
+
+[node name="DifficultyLabel" type="Label" parent="PlateButton/Overlay/StatsColumn/QuestLevel" unique_id=1310724279]
+offset_left = 38.0
+offset_top = -13.0
+offset_right = 81.0
+offset_bottom = 15.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 18
+text = "1"
+vertical_alignment = 1
+
+[node name="QuestMissionstarMiniFrame" type="TextureRect" parent="PlateButton" unique_id=119971967]
+layout_mode = 0
+offset_left = 483.0
+offset_top = 22.0
+offset_right = 515.0
+offset_bottom = 54.0
+texture = ExtResource("8_6jj6o")
+
+[node name="QuestMissionstarMini" type="Sprite2D" parent="PlateButton/QuestMissionstarMiniFrame" unique_id=2002964726]
+visible = false
+position = Vector2(0, 1)
+texture = ExtResource("9_ts51h")
+
+[node name="QuestMissionstarMiniFrame2" type="TextureRect" parent="PlateButton" unique_id=434186972]
+layout_mode = 0
+offset_left = 524.0
+offset_top = 23.0
+offset_right = 556.0
+offset_bottom = 55.0
+texture = ExtResource("8_6jj6o")
+
+[node name="QuestMissionstarMini" type="Sprite2D" parent="PlateButton/QuestMissionstarMiniFrame2" unique_id=2070548850]
+visible = false
+position = Vector2(0, 1)
+texture = ExtResource("9_ts51h")
+
+[node name="QuestMissionstarMiniFrame3" type="TextureRect" parent="PlateButton" unique_id=1034765873]
+layout_mode = 0
+offset_left = 564.0
+offset_top = 24.0
+offset_right = 596.0
+offset_bottom = 56.0
+texture = ExtResource("8_6jj6o")
+
+[node name="QuestMissionstarMini" type="Sprite2D" parent="PlateButton/QuestMissionstarMiniFrame3" unique_id=1579608793]
+visible = false
+position = Vector2(0, 1)
+texture = ExtResource("9_ts51h")

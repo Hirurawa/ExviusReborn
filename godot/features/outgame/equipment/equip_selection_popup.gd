@@ -58,8 +58,7 @@ func _populate_list() -> void:
 	remove_cell.set_clickable(true)
 	remove_cell.pressed.connect(_on_equip_item_selected.bind(""))
 
-	var unit_data: Dictionary = StaticData.game_data_units.get(current_unit_inst.get("unit_id", ""), {})
-	var allowed_equips: Array = unit_data.get("equip", [])
+	var allowed_equips = Array(current_unit_inst.get("equipCategories").split(',')).map(func(x): return int(x))
 
 	var available_items: Array = InventoryService.get_available_equipment_for_slot(current_slot_id, allowed_equips)
 
@@ -72,10 +71,9 @@ func _populate_list() -> void:
 		item_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		equip_selection_list.add_child(item_cell)
 		if str(item_dict.get("item_type", "")) == "MATERIA":
-			var icon_name: String = str(item_dict.get("icon", ""))
+			var icon_name: String = str(item_dict.get("iconFile", ""))
 			var icon_path: String = "res://assets/abilities/" + icon_name if icon_name != "" else ""
-			var effects: Array = item_dict.get("effects", [])
-			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
+			var detail_text: String = item_dict.get("explainShort", "No description")
 			item_cell.setup_placeholder(str(item_dict.get("name", "Unknown Materia")), detail_text, {
 				"icon_path": icon_path,
 				"equipped_to_unit_id": str(item_dict.get("equipped_to", ""))
@@ -164,9 +162,8 @@ func _unit_display_name(unit_instance_id: String) -> String:
 			continue
 		if str(unit.get("instance_id", "")) != unit_instance_id:
 			continue
-		var name_value: String = str(unit.get("name", ""))
+		var name_value: String = str(unit.get("unitName", ""))
 		if name_value != "":
 			return name_value
-		var unit_data: Dictionary = StaticData.game_data_units.get(str(unit.get("unit_id", "")), {})
-		return str(unit_data.get("name", "another unit"))
+		return str(unit.get("unitName", "another unit"))
 	return "another unit"

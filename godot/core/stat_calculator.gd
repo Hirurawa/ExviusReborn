@@ -247,14 +247,14 @@ func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
 	if skill_name != "":
 		normalized_skill_data["name"] = skill_name
 	if skill_description != "":
-		normalized_skill_data["description"] = skill_description
+		normalized_skill_data["explainShort"] = skill_description
 
 	return {
 		"summon_id": summon_id,
 		"rank": rank,
 		"skill_id": skill_id,
 		"name": skill_name,
-		"description": skill_description,
+		"explainShort": skill_description,
 		"skill_data": normalized_skill_data
 	}
 
@@ -342,31 +342,26 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	for st in STATUSES:
 		status_resists[st] = 0
 
-	assert(unit_instance.has("current_rarity"), "CRITICAL ERROR: unit_instance is missing current_rarity!")
 	if not unit_instance.has("current_rarity"): push_error("CRITICAL ERROR: unit_instance is missing current_rarity!")
 	var rarity = int(unit_instance["current_rarity"])
 
-	assert(unit_instance.has("level"), "CRITICAL ERROR: unit_instance is missing level!")
 	if not unit_instance.has("level"): push_error("CRITICAL ERROR: unit_instance is missing level!")
 	var level = int(unit_instance["level"])
 
-	assert(RARITY_MAX_LEVELS.has(rarity), "CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	var max_level = RARITY_MAX_LEVELS[rarity]
 	
 	# Seed innate resistances into pools
-	var innate_elements = unit_instance.get("element_resist", [])
-	if typeof(innate_elements) == TYPE_ARRAY:
-		# Use min() to prevent out-of-bounds crashes if the datamine array is too long/short
-		for i in range(min(innate_elements.size(), ELEMENTS.size())):
-			var element_name = ELEMENTS[i]
-			element_resists[element_name] += innate_elements[i]
+	var innate_elements = unit_instance.get("elemResistValue", []).split(',')
+	# Use min() to prevent out-of-bounds crashes if the datamine array is too long/short
+	for i in range(min(innate_elements.size(), ELEMENTS.size())):
+		var element_name = ELEMENTS[i]
+		element_resists[element_name] += int(innate_elements[i])
 
-	var innate_statuses = unit_instance.get("status_resist", [])
-	if typeof(innate_statuses) == TYPE_ARRAY:
-		for i in range(min(innate_statuses.size(), STATUSES.size())):
-			var status_name = STATUSES[i]
-			status_resists[status_name] += innate_statuses[i]
+	var innate_statuses = unit_instance.get("ailmentResistValue", []).split(',')
+	for i in range(min(innate_statuses.size(), STATUSES.size())):
+		var status_name = STATUSES[i]
+		status_resists[status_name] += int(innate_statuses[i])
 	
 	var base_calculated = {
 		"HP": 0.0,
@@ -377,30 +372,29 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"SPR": 0.0
 	}
 	
-	var base_stats = unit_instance.get("stats", {})
-	
-	if not base_stats.is_empty():
-		for stat_name in final_profile["stats"].keys():
-			assert(base_stats.has(stat_name), "CRITICAL ERROR: base_stats is missing " + stat_name + "!")
-			if not base_stats.has(stat_name): push_error("CRITICAL ERROR: base_stats is missing " + stat_name + "!")
-			var stat_arr = base_stats[stat_name]
-			if stat_arr.size() >= 2:
-				var min_stat = stat_arr[0]
-				var max_stat = stat_arr[1]
-				var current_stat = min_stat
-				if max_level > 1:
-					current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
-				base_calculated[stat_name] = round(current_stat)
+	for stat_name in final_profile["stats"].keys():
+		if not unit_instance.has(stat_name.to_lower()): push_error("CRITICAL ERROR: unit_unstance is missing stat " + stat_name + "!")
+		var stat_arr = unit_instance[stat_name.to_lower()].split(',')
+		if stat_arr.size() >= 2:
+			var min_stat = int(stat_arr[0])
+			var max_stat = int(stat_arr[1])
+			var current_stat = min_stat
+			if max_level > 1:
+				current_stat = min_stat + (level - 1) * float(max_stat - min_stat) / (max_level - 1)
+			base_calculated[stat_name] = round(current_stat)
 
 	var raw_skills = []
 	
 	# Harvest innate skills
-	var innate_skills = unit_instance.get("skills", [])
+	var innate_skills = GameDatabase.get_unit_skills(unit_instance.get("unitSeries"), unit_instance.get("rare"), unit_instance.get("level"))
 	for skill in innate_skills:
-		if typeof(skill.get("rarity", 999)) != TYPE_STRING:
-			var req_rarity = skill.get("rarity", 999)
-			if rarity > int(req_rarity) or (rarity == req_rarity and level >= skill.get("level", 999)):
-				raw_skills.append({"id": skill.get("id"), "source": "Trait"})
+		var magic_id = skill.get("magicId")
+		var ability_id = skill.get("abilityId")
+		var magic_array: Array = magic_id.split(',') if not magic_id == null else []
+		var ability_array: Array = ability_id.split(',') if not ability_id == null else []
+		var combined = magic_array + ability_array
+		for id in combined:
+			raw_skills.append({"id": id, "source": "Trait"})
 
 	var flat_mods = {
 		"HP": 0,
@@ -411,7 +405,6 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		"SPR": 0
 	}
 	
-	assert(unit_instance.has("equipment"), "CRITICAL ERROR: unit_instance is missing equipment!")
 	if not unit_instance.has("equipment"): push_error("CRITICAL ERROR: unit_instance is missing equipment!")
 	var equipment = unit_instance["equipment"]
 	for slot_id in equipment:
@@ -420,8 +413,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			var template_id = InventoryService.get_equipment_template_id(item_id)
 			var item_data: Dictionary = {}
 			item_data = GameDatabase.get_equipment(template_id)
-			if item_data.is_empty() and StaticData.dataset_has("materia", str(template_id)):
-				item_data = StaticData.game_data_materia[template_id]
+			if item_data.is_empty():
+				item_data = GameDatabase.get_materia(int(template_id))
 			if item_data.is_empty():
 				push_error("CRITICAL ERROR: template_id not found in equipment or materia data: " + str(template_id))
 				continue
@@ -434,16 +427,31 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			_accumulate_named_resists(item_stats.get("element_resist", null), element_resists, ELEMENTS)
 			_accumulate_named_resists(item_stats.get("status_resist", null), status_resists, STATUSES)
 
-			# Equipment may also encode passive-style effects (stat %, element/status resist, etc.)
-			# inside effects_raw. Parse them through the passive opcode schema and apply.
-			if item_data.has("effects_raw"):
-				var parsed_equip_passive: Dictionary = SkillResolver.parse_passive_effects(item_data)
-				_apply_parsed_passive_effects(parsed_equip_passive.get("effects", []), pct_mods, element_resists, status_resists)
+			var ability_id = str(item_data.get("abilityId"))
+			var ability_array: Array
+			if ability_id != null:
+				if ability_id.contains(','):
+					ability_array = ability_id.split(',')
+				else:
+					ability_array = [ability_id]
+			for skill_id in ability_array:
+				raw_skills.append({"id": skill_id, "source": "Equip"})
 
-			var equip_skills = item_data.get("skills", [])
-			if equip_skills != null:
-				for skill_id in equip_skills:
-					raw_skills.append({"id": skill_id, "source": "Equip"})
+			var magic_id = str(item_data.get("magicId"))
+			var magic_array: Array
+			if magic_id != null:
+				if magic_id.contains(','):
+					magic_array = magic_id.split(',')
+				else:
+					magic_array = [magic_id]
+			for skill_id in magic_array:
+				raw_skills.append({"id": skill_id, "source": "Equip"})
+
+
+			#var equip_skills = item_data.get("skills", [])
+			#if equip_skills != null:
+				#for skill_id in equip_skills:
+					#raw_skills.append({"id": skill_id, "source": "Equip"})
 
 	var esper_flat_bonus: Dictionary = _compute_active_party_esper_flat_bonus(unit_instance)
 	for stat_name in CORE_STATS:

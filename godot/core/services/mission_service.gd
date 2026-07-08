@@ -156,7 +156,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
 
 	var any_switches_unlocked: bool = false
-	var did_unlock_esper: bool = false
 	if mission_data.has("open_switches"):
 		var switches_str: String = str(mission_data["open_switches"])
 		any_switches_unlocked = SwitchService.unlock_switches(switches_str, "finish_mission")
@@ -174,7 +173,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 					if switch_id.ends_with("100"):
 						var unlock_result: Dictionary = EsperService.unlock_esper(summon_id)
 						if bool(unlock_result.get("success", false)):
-							did_unlock_esper = true
 							var esper_name: String = summon_id
 							var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
 							if not summon_template.is_empty():
@@ -191,7 +189,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 							if current_rank < new_rank:
 								var rank_up_result: Dictionary = EsperService.set_esper_progression(summon_id, new_rank, 1, 0, -1)
 								if bool(rank_up_result.get("success", false)):
-									did_unlock_esper = true
 									var esper_name: String = summon_id
 									var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
 									if not summon_template.is_empty():

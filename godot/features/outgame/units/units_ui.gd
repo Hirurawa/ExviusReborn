@@ -60,7 +60,7 @@ func _get_or_create_slot_visual(slot_btn: Button) -> Control:
 		var unit_visual: Control = UNIT_SCENE.instantiate() as Control
 		if unit_visual != null:
 			unit_visual.name = "UnitVisual"
-			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			unit_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			visual_container.add_child(unit_visual)
 
@@ -88,10 +88,10 @@ func _get_slot_display_rect(slot_btn: Button) -> Rect2:
 		fallback_h = SLOT_FALLBACK_H
 	return Rect2(0.0, 0.0, fallback_w, fallback_h)
 
-func _set_legacy_pedestal_visible(slot_btn: Button, visible: bool) -> void:
+func _set_legacy_pedestal_visible(slot_btn: Button, visibility: bool) -> void:
 	for child in slot_btn.get_children():
 		if child is TextureRect and String(child.name).begins_with("unit_pedestal"):
-			(child as TextureRect).visible = visible
+			(child as TextureRect).visible = visibility
 			return
 
 func _ready() -> void:
@@ -130,10 +130,10 @@ func _wire_slot_input_handlers() -> void:
 func _exit_tree() -> void:
 	_commit_selected_party_on_exit()
 
-func _on_parties_updated(parties: Array) -> void:
+func _on_parties_updated() -> void:
 	_refresh_ui()
 
-func _on_units_updated(units: Array) -> void:
+func _on_units_updated(_units: Array) -> void:
 	_refresh_ui()
 
 func _on_back_pressed() -> void:
@@ -155,7 +155,7 @@ func _refresh_ui() -> void:
 	_update_pagination()
 	_update_slots(party.get("units", []))
 	_update_esper_icons(party.get("espers", []))
-# Updates the esper icons in each unit slot's beast_icon node.
+
 func _update_esper_icons(esper_ids: Array) -> void:
 	for i in range(5):
 		var slot_btn: Button = slots_container.get_child(i) as Button
@@ -197,13 +197,13 @@ func _update_slots(unit_uuids: Array) -> void:
 		var unit_inst: Dictionary = {}
 
 		if uuid != null and typeof(uuid) == TYPE_STRING and uuid != "":
-			unit_inst = _find_unit_inst(uuid)
+			unit_inst = UnitService.owned_units_ids.filter(func(x): return x.instance_id == uuid)[0]
 			if not unit_inst.is_empty():
-				var entry_id: String = UnitService.get_entry_id(unit_inst)
+				var entry_id: String = str(unit_inst.get("unitId"))
 				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 				if ResourceLoader.exists(path):
 					slot_tex = _get_dynamic_texture(path)
-				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("current_rarity", unit_inst.get("rarity", 1))))
+				pedestal_tex = _get_pedestal_texture(int(unit_inst.get("current_rarity")))
 
 		# Render slot with the shared unit visual so pedestal style matches rarity.
 		var shared_visual: Control = _get_or_create_slot_visual(slot_btn)
@@ -216,24 +216,9 @@ func _update_slots(unit_uuids: Array) -> void:
 			slot_btn.move_child(shared_visual, 0)
 		shared_visual.visible = can_render_shared
 		_set_legacy_pedestal_visible(slot_btn, not can_render_shared)
-		if can_render_shared and unit_visual.has_method("setup_in_cell"):
-			var slot_w: float = display_rect.size.x
-			var slot_h: float = display_rect.size.y
-			if slot_w <= 0.0:
-				slot_w = SLOT_FALLBACK_W
-			if slot_h <= 0.0:
-				slot_h = SLOT_FALLBACK_H
-			unit_visual.call(
-				"setup_in_cell",
-				slot_tex,
-				pedestal_tex,
-				slot_w,
-				slot_h,
-				SLOT_SIDE_PADDING,
-				SLOT_PEDESTAL_BOTTOM_MARGIN,
-				""
-			)
-
+		if unit_inst != {}:
+			unit_visual.setup(unit_inst)
+		
 		_slot_unit_instances[i] = unit_inst
 
 func _get_summon_display_name(summon_id: String) -> String:
@@ -419,8 +404,7 @@ func _open_enhance_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 		"base_unit_instance_id": base_instance_id,
 		"base_unit_inst": unit_inst
 	})
-	
-	
+
 func _open_awaken_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 	UIManager.push("awaken_ui", {
 		"base_unit_instance_id": base_instance_id,

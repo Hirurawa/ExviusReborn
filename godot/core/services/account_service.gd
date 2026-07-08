@@ -6,7 +6,7 @@ extends Node
 ##
 ## State previously held by DataManager that now lives here:
 ##   - current_username, account_info
-##   - account_updated / login_success / login_failed
+##   - account_updated / login_success
 ##     data_loaded signals
 ##   - authenticate, logout, update_account, _derive_username_from_email
 ##
@@ -16,7 +16,6 @@ extends Node
 
 signal data_loaded
 signal login_success
-signal login_failed(error_code: int)
 signal account_updated(username: String)
 
 var current_username: String = ""
@@ -201,7 +200,7 @@ func load_initial_data(email: String) -> void:
 	else:
 		MissionService.last_played_dungeon_name = ""
 
-	await MissionService.load_progress()
+	MissionService.load_progress()
 	SwitchService.load_progress()
 	PlayerProfile.emit_all()
 

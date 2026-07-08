@@ -32,26 +32,25 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 						var type = parts[0]
 						var id = parts[1]
 						var amount = parts[2]
-						var name = ""
+						var quest_name = ""
 
 						raw_rewards_array.append({"type": type, "id": id, "amount": int(amount)})
 
 						if type == "20":
 							var item_data = GameDatabase.get_item(id)
 							if not item_data.is_empty():
-								name = str(item_data.get("name", ""))
+								quest_name = str(item_data.get("quest_name", ""))
 						elif type == "21":
 							var equip_data = GameDatabase.get_equipment(id)
 							if not equip_data.is_empty():
-								name = str(equip_data.get("name", ""))
+								quest_name = str(equip_data.get("quest_name", ""))
 						elif type == "22":
-							if typeof(StaticData.game_data_materia) == TYPE_DICTIONARY and StaticData.game_data_materia.has(str(id)):
-								var materia_data = StaticData.game_data_materia[str(id)]
-								if typeof(materia_data) == TYPE_DICTIONARY:
-									name = str(materia_data.get("name", ""))
+							var materia_data = GameDatabase.get_materia(int(id))
+							if not materia_data.is_empty():
+								quest_name = str(materia_data.get("quest_name", ""))
 
-						if name != "":
-							parsed_rewards.append(name + " x" + amount)
+						if quest_name != "":
+							parsed_rewards.append(quest_name + " x" + amount)
 						else:
 							parsed_rewards.append(chunk)
 					else:
@@ -87,25 +86,24 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 								var type = parts[0]
 								var id = parts[1]
 								var amount = parts[2]
-								var name = ""
+								var task_name = ""
 
 								if type == "20":
 									var item_data = GameDatabase.get_item(id)
 									if not item_data.is_empty():
-										name = str(item_data.get("name", ""))
+										task_name = str(item_data.get("task_name", ""))
 								elif type == "21":
 									var equip_data = GameDatabase.get_equipment(id)
 									if not equip_data.is_empty():
-										name = str(equip_data.get("name", ""))
+										task_name = str(equip_data.get("task_name", ""))
 								elif type == "22":
-									if typeof(StaticData.game_data_materia) == TYPE_DICTIONARY and StaticData.game_data_materia.has(str(id)):
-										var materia_data = StaticData.game_data_materia[str(id)]
-										if typeof(materia_data) == TYPE_DICTIONARY:
-											name = str(materia_data.get("name", ""))
+									var materia_data = GameDatabase.get_materia(int(id))
+									if not materia_data.is_empty():
+										task_name = str(materia_data.get("task_name", ""))
 
-								if name != "":
+								if task_name != "":
 									var current_count = InventoryService.get_item_count(type, id)
-									task_dict["requirements"].append(name + " " + str(current_count) + "/" + amount)
+									task_dict["requirements"].append(task_name + " " + str(current_count) + "/" + amount)
 									task_dict["raw_requirements"] = task_dict.get("raw_requirements", [])
 									task_dict["raw_requirements"].append({"type": type, "id": id, "amount": int(amount)})
 
@@ -118,10 +116,10 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 							if parts.size() >= 2:
 								var dict_id = parts[0]
 								var amount = parts[1]
-								var name = GameDatabase.get_monster_name(dict_id)
-								if name != "":
+								var monster_name = GameDatabase.get_monster_name(dict_id)
+								if monster_name != "":
 									var current_count = PlayerProfile.monster_kill_progress.get(str(dict_id), 0)
-									task_dict["requirements"].append(name + " " + str(current_count) + "/" + amount)
+									task_dict["requirements"].append(monster_name + " " + str(current_count) + "/" + amount)
 									task_dict["raw_requirements"] = task_dict.get("raw_requirements", [])
 									task_dict["raw_requirements"].append({"id": dict_id, "amount": int(amount)})
 								else:

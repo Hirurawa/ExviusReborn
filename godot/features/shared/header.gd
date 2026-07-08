@@ -38,6 +38,7 @@ func _on_nrg_updated(current_nrg: int, max_nrg: int, time_until_next: float) -> 
 	if current_nrg >= max_nrg:
 		energy_time_label.text = "Fully Charged"
 	else:
+		@warning_ignore("integer_division")
 		var minutes: int = int(time_until_next) / 60
 		var seconds: int = int(time_until_next) % 60
 		energy_time_label.text = "%02d:%02d" % [minutes, seconds]

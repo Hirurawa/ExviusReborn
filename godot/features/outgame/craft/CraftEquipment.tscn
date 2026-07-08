@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://d1omj526abfwg"]
 
-[ext_resource type="Script" path="res://features/outgame/craft/craft_equipment.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://br6dtn1d0kyly" path="res://assets/ui/create/cre_btn3_1.tres" id="1_o7nyp"]
+[ext_resource type="Script" uid="uid://c3aecqsjl8d6c" path="res://features/outgame/craft/craft_equipment.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://b8f4dsewc3kbk" path="res://assets/ui/create/cre_label_weapon_1.tres" id="2_owvhk"]
+[ext_resource type="Texture2D" uid="uid://dhjh1s0dabqya" path="res://assets/ui/create/cre_btn3_2.tres" id="3_jjilq"]
 [ext_resource type="Texture2D" uid="uid://dqha8ud08r48d" path="res://assets/ui/create/cre_label_armor_1.tres" id="3_qh3nu"]
 [ext_resource type="Texture2D" uid="uid://da4g28orpghaq" path="res://assets/ui/create/cre_label_accessory_1.tres" id="4_mvifr"]
 [ext_resource type="Texture2D" uid="uid://ccla5tucap3kg" path="res://assets/ui/create/cre_blacksmith_title.tres" id="5_xvwja"]
@@ -19,42 +20,57 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="craft_recipe_type_weapon" type="TextureRect" parent="." unique_id=1563202021]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=833019428]
 layout_mode = 0
-offset_left = 11.0
-offset_top = 101.0
-offset_right = 209.0
-offset_bottom = 177.0
-texture = ExtResource("1_o7nyp")
-expand_mode = 1
+offset_top = 176.0
+offset_right = 642.0
+offset_bottom = 749.0
 
-[node name="CreLabelWeapon1" type="Sprite2D" parent="craft_recipe_type_weapon" unique_id=194794712]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1254577620]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=1352239490]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1312293752]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TabBar" type="HBoxContainer" parent="." unique_id=1185390149]
+layout_mode = 0
+offset_top = 104.0
+offset_right = 602.0
+offset_bottom = 180.0
+alignment = 1
+
+[node name="craft_recipe_type_weapon" type="TextureButton" parent="TabBar" unique_id=2125542608]
+layout_mode = 2
+texture_normal = ExtResource("1_o7nyp")
+texture_pressed = ExtResource("3_jjilq")
+
+[node name="CreLabelWeapon1" type="Sprite2D" parent="TabBar/craft_recipe_type_weapon" unique_id=194794712]
 position = Vector2(100, 36)
 texture = ExtResource("2_owvhk")
 
-[node name="craft_recipe_type_protect" type="TextureRect" parent="." unique_id=1660458490]
-layout_mode = 0
-offset_left = 221.0
-offset_top = 101.0
-offset_right = 419.0
-offset_bottom = 177.0
-texture = ExtResource("1_o7nyp")
-expand_mode = 1
+[node name="craft_recipe_type_protect" type="TextureButton" parent="TabBar" unique_id=1196413395]
+layout_mode = 2
+texture_normal = ExtResource("1_o7nyp")
+texture_pressed = ExtResource("3_jjilq")
 
-[node name="CreLabelArmor1" type="Sprite2D" parent="craft_recipe_type_protect" unique_id=187866232]
+[node name="CreLabelArmor1" type="Sprite2D" parent="TabBar/craft_recipe_type_protect" unique_id=187866232]
 position = Vector2(96, 38)
 texture = ExtResource("3_qh3nu")
 
-[node name="craft_recipe_type_accessories" type="TextureRect" parent="." unique_id=2002323599]
-layout_mode = 0
-offset_left = 431.0
-offset_top = 101.0
-offset_right = 629.0
-offset_bottom = 177.0
-texture = ExtResource("1_o7nyp")
-expand_mode = 1
+[node name="craft_recipe_type_accessories" type="TextureButton" parent="TabBar" unique_id=1239875482]
+layout_mode = 2
+texture_normal = ExtResource("1_o7nyp")
+texture_pressed = ExtResource("3_jjilq")
 
-[node name="CreLabelAccessory1" type="Sprite2D" parent="craft_recipe_type_accessories" unique_id=513517587]
+[node name="CreLabelAccessory1" type="Sprite2D" parent="TabBar/craft_recipe_type_accessories" unique_id=513517587]
 position = Vector2(99, 33)
 texture = ExtResource("4_mvifr")
 

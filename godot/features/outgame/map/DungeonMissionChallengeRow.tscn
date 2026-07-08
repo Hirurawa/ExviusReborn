@@ -1,0 +1,177 @@
+[gd_scene format=3 uid="uid://bqm8ch4llenge"]
+
+[ext_resource type="Script" uid="uid://cvtc0hoywpo3y" path="res://features/outgame/map/dungeon_mission_list_challenge_row.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://5lpc6wxl7ab5" path="res://assets/ui/quest/quest_mission_conti_plate1.tres" id="2_conti_left"]
+[ext_resource type="Texture2D" uid="uid://5lpc6wxl7ab6" path="res://assets/ui/quest/quest_mission_conti_plate2.tres" id="3_conti_right"]
+[ext_resource type="Texture2D" uid="uid://5lpc6wxl7ab7" path="res://assets/ui/quest/quest_mission_conti_center.tres" id="4_conti_center"]
+[ext_resource type="Texture2D" uid="uid://dptj25tw0pub6" path="res://assets/ui/icon/icon_lapis.png" id="6_kvllk"]
+[ext_resource type="Texture2D" uid="uid://ksaltaqi3ji3" path="res://assets/ui/quest/quest_missionstar_silver.tres" id="6_star"]
+[ext_resource type="Texture2D" uid="uid://v0avlbur1rpa" path="res://assets/ui/quest/quest_missionplate_clear.tres" id="10_matnt"]
+[ext_resource type="Texture2D" uid="uid://gi7edut3vcxa" path="res://assets/ui/quest/quest_missionstar_frame.tres" id="11_ek5jc"]
+[ext_resource type="Texture2D" uid="uid://did0xl4u63yby" path="res://assets/ui/quest/quest_missionstar.tres" id="12_t8h14"]
+[ext_resource type="Texture2D" uid="uid://c3h7hyhi06y5" path="res://assets/ui/quest/quest_missionplate.tres" id="13_0x788"]
+
+[node name="DungeonMissionChallengeRow" type="Control" unique_id=770613797]
+custom_minimum_size = Vector2(640, 128)
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+script = ExtResource("1_script")
+
+[node name="RowBackground" type="HBoxContainer" parent="." unique_id=1444396993]
+visible = false
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 128.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="LeftCap" type="TextureRect" parent="RowBackground" unique_id=1067387333]
+custom_minimum_size = Vector2(112, 128)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_conti_left")
+expand_mode = 1
+
+[node name="CenterFill" type="TextureRect" parent="RowBackground" unique_id=1318832253]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+texture = ExtResource("4_conti_center")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="RightCap" type="TextureRect" parent="RowBackground" unique_id=763246067]
+custom_minimum_size = Vector2(112, 128)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_conti_right")
+expand_mode = 1
+
+[node name="Overlay" type="Control" parent="." unique_id=1975931764]
+visible = false
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 128.0
+mouse_filter = 2
+
+[node name="StarIcon" type="TextureRect" parent="Overlay" unique_id=1578826931]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 28.0
+offset_right = 80.0
+offset_bottom = 100.0
+mouse_filter = 2
+texture = ExtResource("6_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TaskLabel" type="Label" parent="Overlay" unique_id=631827935]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 24.0
+offset_right = 520.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 15
+text = "Complete the quest"
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="LapisIcon" type="TextureRect" parent="Overlay" unique_id=1947669997]
+layout_mode = 0
+offset_left = 572.0
+offset_top = 68.0
+offset_right = 624.0
+offset_bottom = 120.0
+mouse_filter = 2
+texture = ExtResource("6_kvllk")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RewardLabel" type="Label" parent="Overlay" unique_id=1751168267]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 72.0
+offset_right = 564.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "Lapis x 20"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1190462040]
+layout_mode = 0
+offset_right = 638.0
+offset_bottom = 666.0
+
+[node name="QuestMissionplate" type="TextureRect" parent="VBoxContainer" unique_id=303101294]
+layout_mode = 2
+texture = ExtResource("13_0x788")
+
+[node name="QuestMissionstarFrame" type="TextureRect" parent="VBoxContainer/QuestMissionplate" unique_id=331271257]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 118.0
+offset_bottom = 110.0
+texture = ExtResource("11_ek5jc")
+
+[node name="QuestMissionstar" type="TextureRect" parent="VBoxContainer/QuestMissionplate/QuestMissionstarFrame" unique_id=1580466463]
+visible = false
+layout_mode = 0
+offset_right = 96.0
+offset_bottom = 96.0
+texture = ExtResource("12_t8h14")
+
+[node name="LapisIcon" type="TextureRect" parent="VBoxContainer/QuestMissionplate" unique_id=1627747725]
+layout_mode = 0
+offset_left = 572.0
+offset_top = 70.0
+offset_right = 624.0
+offset_bottom = 122.0
+mouse_filter = 2
+texture = ExtResource("6_kvllk")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RewardLabel" type="Label" parent="VBoxContainer/QuestMissionplate" unique_id=1251120613]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 74.0
+offset_right = 564.0
+offset_bottom = 106.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "Lapis x 20"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TaskLabel" type="Label" parent="VBoxContainer/QuestMissionplate" unique_id=1121006789]
+layout_mode = 0
+offset_left = 119.0
+offset_top = 26.0
+offset_right = 543.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 15
+text = "Complete the quest"
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="QuestMissionplateClear" type="TextureRect" parent="VBoxContainer" unique_id=1751474574]
+visible = false
+layout_mode = 2
+texture = ExtResource("10_matnt")

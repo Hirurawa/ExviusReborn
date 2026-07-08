@@ -389,6 +389,7 @@ theme_override_font_sizes/font_size = 14
 text = "unit_status_ext_mnd_max_number"
 
 [node name="unit_charastand_large" type="TextureRect" parent="." unique_id=1486071134]
+visible = false
 layout_mode = 0
 offset_left = 22.0
 offset_top = -396.0

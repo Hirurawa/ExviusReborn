@@ -1,9 +1,9 @@
 extends Control
 
+const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
+
 @onready var back_button: Button = $UnitNamebgChara/UnitMinibutton1
-@onready var before_stand: TextureRect = $Status/unit_classup_before_stand
 @onready var before_unit: TextureRect = $Status/unit_classup_before_unit
-@onready var after_stand: TextureRect = $Status/unit_classup_after_stand
 @onready var after_unit: TextureRect = $Status/unit_classup_after_unit
 @onready var gil_label: Label = $Button/unit_classup_need_money_number
 @onready var awaken_button: TextureButton = $Button/unit_classup_button_evo
@@ -52,26 +52,41 @@ func _ready() -> void:
 		enhance_button.pressed.connect(_on_enhance_pressed)
 
 func _refresh_before_visual() -> void:
-	var unit_tex: Texture2D = _get_unit_texture(base_unit_inst)
-	var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
-	var next_rarity: int = min(rarity + 1, 7)
-	var next_unit_tex: Texture2D = _get_unit_texture_for_rarity(base_unit_inst, next_rarity)
-	if next_unit_tex == null:
-		next_unit_tex = unit_tex
+	#var unit_tex: Texture2D = _get_unit_texture(base_unit_inst)
+	#var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	#var next_rarity: int = min(rarity + 1, 7)
+	#var next_unit_tex: Texture2D = _get_unit_texture_for_rarity(base_unit_inst, next_rarity)
+	#if next_unit_tex == null:
+		#next_unit_tex = unit_tex
 
-	if before_unit != null:
-		before_unit.texture = unit_tex
-	if before_stand != null:
-		var ped: Texture2D = _get_pedestal_texture(rarity)
-		if ped != null:
-			before_stand.texture = ped
+	var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+	if unit_visual:
+		unit_visual.scene_size = "large"
+		unit_visual.unit_data_to_load = base_unit_inst
+		unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		before_unit.add_child(unit_visual)
 
-	if after_unit != null:
-		after_unit.texture = next_unit_tex
-	if after_stand != null:
-		var next_ped: Texture2D = _get_pedestal_texture(next_rarity)
-		if next_ped != null:
-			after_stand.texture = next_ped
+	#if before_unit != null:
+		#before_unit.texture = unit_tex
+	#if before_stand != null:
+		#var ped: Texture2D = _get_pedestal_texture(rarity)
+		#if ped != null:
+			#before_stand.texture = ped
+			
+	var unit_visual_after: Control = UNIT_SCENE.instantiate() as Control
+	if unit_visual_after:
+		var next_rarity_unit_inst = GameDatabase.get_unit_class_up(base_unit_inst.get("unitId"))
+		unit_visual_after.scene_size = "large"
+		unit_visual_after.unit_data_to_load = next_rarity_unit_inst
+		unit_visual_after.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		after_unit.add_child(unit_visual_after)
+		
+	#if after_unit != null:
+		#after_unit.texture = next_unit_tex
+	#if after_stand != null:
+		#var next_ped: Texture2D = _get_pedestal_texture(next_rarity)
+		#if next_ped != null:
+			#after_stand.texture = next_ped
 
 	_populate_awakening_requirements()
 	_populate_before_stats()
@@ -105,7 +120,7 @@ func _populate_before_stats() -> void:
 		before_spr_label.text = str(int(stats.get("SPR", 0)))
 
 func _get_current_entry() -> Dictionary:
-	var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	var rarity: int = int(base_unit_inst.get("current_rarity"))
 	return _get_entry_for_rarity(rarity)
 
 func _get_entry_for_rarity(rarity: int) -> Dictionary:
@@ -114,7 +129,7 @@ func _get_entry_for_rarity(rarity: int) -> Dictionary:
 	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return {}
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = base_unit_inst
 	var entries: Variant = unit_data.get("entries", {})
 	if not (entries is Dictionary):
 		return {}
@@ -127,7 +142,7 @@ func _get_entry_for_rarity(rarity: int) -> Dictionary:
 func _populate_after_stats() -> void:
 	if base_unit_inst.is_empty():
 		return
-	var rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
+	var rarity: int = int(base_unit_inst.get("current_rarity"))
 	var next_rarity: int = rarity + 1
 	if not StatCalculator.RARITY_MAX_LEVELS.has(next_rarity):
 		if after_status_offset != null:
@@ -136,7 +151,7 @@ func _populate_after_stats() -> void:
 	if after_status_offset != null:
 		after_status_offset.visible = true
 
-	var next_entry: Dictionary = _get_entry_for_rarity(next_rarity)
+	var next_entry: Dictionary = GameDatabase.get_unit_next_rarity(base_unit_inst.get("unitId"))
 	if next_entry.is_empty():
 		if after_status_offset != null:
 			after_status_offset.visible = false
@@ -169,15 +184,17 @@ func _populate_after_stats() -> void:
 		after_spr_label.text = str(int(stats.get("SPR", 0)))
 
 func _populate_awakening_requirements() -> void:
-	var entry: Dictionary = _get_current_entry()
-	var awakening_data: Variant = entry.get("awakening", null)
-	var awakening: Dictionary = awakening_data as Dictionary if awakening_data is Dictionary else {}
-
+	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(base_unit_inst.get("unitId"))
+	var awakening: Dictionary = awakening_var as Dictionary
+	
 	if gil_label != null:
 		gil_label.text = str(int(awakening.get("gil", 0)))
 
-	var materials_var: Variant = awakening.get("materials", {})
+	var materials_var: Variant = awakening.get("materialInfo", "").split(',')
 	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
+	for item in materials_var:
+		var parts = item.split(":")
+		materials[parts[1]] = parts[2].to_int()
 	var material_ids: Array = materials.keys()
 
 	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
@@ -190,13 +207,13 @@ func _populate_awakening_requirements() -> void:
 		if i >= material_ids.size():
 			slot.visible = false
 			continue
-		var item_id: String = str(material_ids[i])
+		var item_id: int = int(material_ids[i])
 		var count: int = int(materials[material_ids[i]])
 		var item_data: Dictionary = GameDatabase.get_item(item_id)
 
 		var icon_node: TextureRect = slot.get_node_or_null("unit_classup_item_icon") as TextureRect
 		if icon_node != null:
-			var icon_name: String = str(item_data.get("icon", ""))
+			var icon_name: String = str(item_data.get("iconFile", ""))
 			var tex: Texture2D = null
 			if icon_name != "":
 				tex = _load_cached_texture("res://assets/items/" + icon_name)
@@ -224,7 +241,7 @@ func _populate_awakening_requirements() -> void:
 func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():
 		return null
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var entry_id: String = str(unit_inst.get("unitId"))
 	if entry_id == "":
 		return null
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
@@ -236,7 +253,7 @@ func _get_unit_texture_for_rarity(unit_inst: Dictionary, rarity: int) -> Texture
 	var unit_id: String = str(unit_inst.get("unit_id", ""))
 	if unit_id == "":
 		return null
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = unit_inst
 	var entries: Variant = unit_data.get("entries", {})
 	if entries is Dictionary:
 		for key in (entries as Dictionary).keys():
@@ -291,9 +308,11 @@ func _on_awaken_pressed() -> void:
 		return
 	var response: Dictionary = UnitService.awaken_unit(base_unit_instance_id)
 	if bool(response.get("success", false)):
-		var new_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1))) + 1
-		base_unit_inst["current_rarity"] = new_rarity
-		_refresh_before_visual()
+		base_unit_inst = UnitService.owned_units_ids.filter(func(x): return x.instance_id == base_unit_inst.get("instance_id"))[0]
+		_populate_awakening_requirements()
+		_populate_before_stats()
+		_populate_after_stats()
+		_refresh_button_state()
 		_show_result_popup("Awakening successful!")
 	else:
 		_show_result_popup(str(response.get("error", "Awakening failed")))

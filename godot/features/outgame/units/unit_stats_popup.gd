@@ -38,10 +38,9 @@ func _populate_data() -> void:
 	if current_unit_inst.is_empty():
 		return
 
-	var unit_id: String = current_unit_inst.get("unit_id", "")
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var unit_data: Dictionary = current_unit_inst
 
-	name_label.text = unit_data.get("name", "Unknown")
+	name_label.text = unit_data.get("unitName", "Unknown")
 	level_label.text = "Level: %s" % str(int(current_unit_inst.get("level", 1)))
 
 	# Recalculate stats fresh to reflect current equipment/esper assignments,

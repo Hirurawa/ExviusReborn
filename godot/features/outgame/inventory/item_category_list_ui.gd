@@ -101,13 +101,13 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 			var quantity: int = int(stackables[item_id_variant])
 			if quantity <= 0:
 				continue
-			var item_data: Dictionary = GameDatabase.get_item(item_id)
+			var item_data: Dictionary = GameDatabase.get_item(int(item_id))
 			if item_data.is_empty():
 				continue
-			var item_type: String = str(item_data.get("type", ""))
-			var is_consumable: bool = item_type == "Consumable"
-			if _is_combat_selection_mode and (item_data.get("usable_in_combat", false) != true or not item_data.has("effects_raw")):
-				continue
+			var item_type: String = str(item_data.get("category", ""))
+			var is_consumable: bool = item_type == "1" # Consumable
+			#if not _is_combat_selection_mode and item_data.get("useType", 0) != 0:
+				#continue
 			if _is_combat_selection_mode and _is_item_already_selected_in_combat(item_id):
 				continue
 			if category_key == "items" and not is_consumable:
@@ -135,9 +135,9 @@ func _build_entries_for_category(owned_items: Dictionary, category_key: String) 
 				if str(eq_dict.get("item_type", "")) != "MATERIA":
 					continue
 				var template_id: String = str(eq_dict.get("template_id", ""))
-				if template_id == "" or not StaticData.game_data_materia.has(template_id):
+				if template_id == "":
 					continue
-				var materia_data: Dictionary = StaticData.game_data_materia.get(template_id, {})
+				var materia_data: Dictionary = GameDatabase.get_materia(int(template_id))
 				entries.append({
 					"kind": "materia",
 					"data": materia_data,
@@ -166,25 +166,20 @@ func _add_entry_cell(entry: Dictionary) -> void:
 	if kind == "equipment":
 		item_cell.setup_from_item_data(item_data, {"show_quantity": false, "show_slot_badge": false})
 	elif kind == "materia":
-		var icon_name: String = str(item_data.get("icon", ""))
+		var icon_name: String = str(item_data.get("iconFile", ""))
 		var icon_path: String = ""
 		if icon_name != "":
 			icon_path = MATERIA_ICON_BASE_PATH + icon_name
 		if not ResourceLoader.exists(icon_path):
 			icon_path = ""
-		var detail_text: String = ""
-		var effects: Array = item_data.get("effects", [])
-		if not effects.is_empty():
-			detail_text = str(effects[0])
-		else:
-			detail_text = _resolve_item_detail_text(item_data)
+		var detail_text: String = item_data.get("explainShort", "No description")
 		item_cell.setup_placeholder(
 			str(item_data.get("name", "Unknown Materia")),
 			detail_text,
 			{"icon_path": icon_path, "quantity": 1}
 		)
 	else:
-		var icon_name: String = str(item_data.get("icon", ""))
+		var icon_name: String = str(item_data.get("iconFile", ""))
 		var icon_path: String = ""
 		if icon_name != "":
 			icon_path = ITEMS_ICON_BASE_PATH + icon_name
@@ -193,7 +188,7 @@ func _add_entry_cell(entry: Dictionary) -> void:
 
 		item_cell.setup_placeholder(
 			str(item_data.get("name", "Unknown Item")),
-			_resolve_item_detail_text(item_data),
+			item_data.get("explainShort", "No description"),
 			{
 				"icon_path": icon_path,
 				"quantity": int(entry.get("quantity", 0))
@@ -213,22 +208,6 @@ func _add_empty_category_cell(category_key: String) -> void:
 	item_grid.add_child(item_cell)
 	item_cell.setup_placeholder(_get_category_title(category_key), _get_empty_message(category_key))
 	item_cell.set_clickable(false)
-
-func _resolve_item_detail_text(item_data: Dictionary) -> String:
-	var strings_value: Variant = item_data.get("strings", {})
-	if strings_value is Dictionary:
-		var strings: Dictionary = strings_value as Dictionary
-		var short_desc_value: Variant = strings.get("desc_short", [])
-		if short_desc_value is Array:
-			var short_desc: Array = short_desc_value as Array
-			if not short_desc.is_empty():
-				return str(short_desc[0])
-
-	var type_text: String = str(item_data.get("type", ""))
-	if type_text != "":
-		return type_text
-
-	return "No description."
 
 func _apply_category_title() -> void:
 	if _is_combat_selection_mode:

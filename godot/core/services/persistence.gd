@@ -75,32 +75,32 @@ func get_scoped_snapshot_file_name(file_name: String) -> String:
 
 
 func normalize_local_save_id(raw_name: String) -> String:
-	var name: String = raw_name.strip_edges().to_lower()
-	if name == "":
+	var save_name: String = raw_name.strip_edges().to_lower()
+	if save_name == "":
 		return ""
 
-	name = name.replace("/", "_")
-	name = name.replace("\\", "_")
-	name = name.replace(":", "_")
-	name = name.replace("*", "_")
-	name = name.replace("?", "_")
-	name = name.replace('"', "_")
-	name = name.replace("<", "_")
-	name = name.replace(">", "_")
-	name = name.replace("|", "_")
-	name = name.replace(" ", "_")
-	while name.find("__") != -1:
-		name = name.replace("__", "_")
+	save_name = save_name.replace("/", "_")
+	save_name = save_name.replace("\\", "_")
+	save_name = save_name.replace(":", "_")
+	save_name = save_name.replace("*", "_")
+	save_name = save_name.replace("?", "_")
+	save_name = save_name.replace('"', "_")
+	save_name = save_name.replace("<", "_")
+	save_name = save_name.replace(">", "_")
+	save_name = save_name.replace("|", "_")
+	save_name = save_name.replace(" ", "_")
+	while save_name.find("__") != -1:
+		save_name = save_name.replace("__", "_")
 
-	if name.begins_with("."):
-		name = name.substr(1)
-	if name == "":
-		name = "default"
+	if save_name.begins_with("."):
+		save_name = save_name.substr(1)
+	if save_name == "":
+		save_name = "default"
 
-	if name.length() > 48:
-		name = name.substr(0, 48)
+	if save_name.length() > 48:
+		save_name = save_name.substr(0, 48)
 
-	return name
+	return save_name
 
 
 func set_active_save(username: String) -> String:

@@ -49,7 +49,7 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 
 	name_label.text = str(skill_data.get("name", "Unknown Magic"))
 	
-	var icon_path = "res://assets/abilities/" + skill_data.get("icon", "ability_1.png")
+	var icon_path = "res://assets/abilities/" + skill_data.get("iconFile", "ability_1.png")
 	var icon_tex = load(icon_path)
 	if icon_tex:
 		icon.texture = icon_tex
@@ -94,7 +94,7 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 		level_banner.hide()
 		level_label.hide()
 		
-	detail_label.text = _build_description_text(skill_data)
+	detail_label.text = skill_data.get("explainShort", "No description")
 	
 	action_button.visible = is_button
 	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if is_button else Control.MOUSE_FILTER_IGNORE
@@ -155,17 +155,3 @@ func _build_mp_text(skill_data: Dictionary) -> String:
 	if cost is Dictionary and cost.has("MP"):
 		return str(int(cost["MP"]))
 	return "--"
-
-func _build_description_text(skill_data: Dictionary) -> String:
-	var description_text: String = str(skill_data.get("description", "")).strip_edges()
-	if description_text != "":
-		return description_text
-
-	var effects: Variant = skill_data.get("effects", [])
-	if effects is Array and not effects.is_empty():
-		var first_effect: Variant = effects[0]
-		if first_effect is Array and not first_effect.is_empty():
-			return str(first_effect[0])
-		if first_effect is String:
-			return str(first_effect)
-	return "No description."

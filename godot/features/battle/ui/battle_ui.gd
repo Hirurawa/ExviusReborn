@@ -243,7 +243,7 @@ func _open_skill_menu(unit_index: int) -> void:
 		var unit_inst: Dictionary = battle_manager.party_data[unit_index]
 		if not unit_inst.is_empty():
 			var rarity = int(unit_inst.get("current_rarity", 1))
-			var limitburst_id: String = str(unit_inst.get("limitburst_id", ""))
+			var limitburst_id: String = str(unit_inst.get("limitBurstId", ""))
 
 			var limitburst_data: Dictionary = GameDatabase.get_limitburst(limitburst_id) if limitburst_id != "" else {}
 			if not limitburst_data.is_empty():
@@ -302,7 +302,7 @@ func _open_skill_menu(unit_index: int) -> void:
 						"source": str(sk.get("source", ""))
 					})
 
-	_populate_action_menu("Skill", options, battle_manager.CombatAction.SKILL, true)
+	_populate_action_menu(options, battle_manager.CombatAction.SKILL, true)
 
 	_current_open_menu = "SKILL"
 	var target_center_x = 0.0
@@ -334,7 +334,7 @@ func _open_item_menu(unit_index: int) -> void:
 					"item_data": item_data
 				})
 
-	_populate_action_menu("Item", options, battle_manager.CombatAction.ITEM, false)
+	_populate_action_menu(options, battle_manager.CombatAction.ITEM, false)
 
 	_current_open_menu = "ITEM"
 	var target_center_x = 0.0
@@ -408,7 +408,7 @@ func _create_action_button(action_name: String, sub_text: String) -> Button:
 
 	return btn
 
-func _populate_action_menu(menu_title: String, options: Array, action_type: int, is_skill: bool) -> void:
+func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> void:
 	for child in _action_menu_vbox.get_children():
 		child.queue_free()
 
@@ -436,7 +436,7 @@ func _populate_action_menu(menu_title: String, options: Array, action_type: int,
 			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var skill_data: Dictionary = opt.get("skill_data", {})
-			var skill_level: int = int(opt.get("level", -1))
+			#var skill_level: int = int(opt.get("level", -1))
 			var source_type: String = str(opt.get("source_type", "skill"))
 			var source_name: String = str(opt.get("source", ""))
 			var role_style: String = SKILL_ROLE_STANDARD
@@ -762,7 +762,7 @@ func _on_battle_state_ready() -> void:
 			_active_panels.append(panel)
 
 			# Add Combat Sprite to the corresponding UnitDot
-			var template_id: String = UnitService.get_entry_id(unit_data)
+			var template_id: String = str(unit_data.get("unitId"))
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
@@ -1006,7 +1006,7 @@ func _shake_enemy(enemy_node: Node) -> void:
 	tween.tween_property(enemy_node, "position:x", orig_x + offset, 0.05)
 	tween.tween_property(enemy_node, "position:x", orig_x, 0.05)
 
-func _on_attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int, receipt_type: String) -> void:
+func _on_attack_landed(target_team: String, target_index: int, damage: int, chain_count: int, receipt_type: String) -> void:
 	chain_count_label.text = "Chain: %d" % chain_count
 	if target_team == "enemy":
 		if target_index >= 0 and target_index < enemies_container.get_child_count():
@@ -1055,7 +1055,6 @@ func _find_player_damage_container(party_index: int) -> Control:
 			damage_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			slot.add_child(damage_container)
 		return damage_container
-		break
 	return null
 
 func _on_turn_changed(new_turn: int) -> void:
@@ -1067,7 +1066,7 @@ func _on_turn_changed(new_turn: int) -> void:
 		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		p.update_action_visuals()
 
-func _on_wave_changed(current_wave: int, total_waves: int) -> void:
+func _on_wave_changed() -> void:
 	chain_count_label.text = "Chain: 0"
 	# Reset panels visually
 	for p in _active_panels:
@@ -1120,10 +1119,10 @@ func _on_item_dropped(enemy_index: int, item_id: String) -> void:
 
 	var drop_icon = TextureRect.new()
 	var tex_path = "res://icon.svg"
-	var item_data = GameDatabase.get_item(item_id)
+	var item_data = GameDatabase.get_item(int(item_id))
 	if not item_data.is_empty():
-		if item_data.has("icon"):
-			tex_path = "res://assets/items/" + str(item_data["icon"])
+		if item_data.has("iconFile"):
+			tex_path = "res://assets/items/" + str(item_data["iconFile"])
 
 	if ResourceLoader.exists(tex_path):
 		drop_icon.texture = _get_dynamic_texture(tex_path)
@@ -1276,9 +1275,9 @@ func _on_enemy_action_started_feedback(enemy_index: int, _action: int) -> void:
 	var text: String = "Enemy attacks"
 	if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
 		var enemy: Dictionary = battle_manager.enemy_units[enemy_index]
-		var name: String = str(enemy.get("name", ""))
-		if name != "":
-			text = "%s attacks" % name
+		var enemy_name: String = str(enemy.get("enemy_name", ""))
+		if enemy_name != "":
+			text = "%s attacks" % enemy_name
 	_show_action_feedback(text)
 
 func _show_action_feedback(text: String) -> void:

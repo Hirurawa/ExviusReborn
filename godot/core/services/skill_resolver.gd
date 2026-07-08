@@ -118,12 +118,13 @@ func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
 
 
 func resolve_combat_item(item_id: String) -> Dictionary:
-	var item_data: Dictionary = GameDatabase.get_item(item_id)
+	var item_data: Dictionary = GameDatabase.get_item(int(item_id))
 	if item_data.is_empty():
 		push_error("SkillResolver: Combat item not found: %s" % item_id)
 		return {}
 
 	var resolved_ability_id: String = _find_item_ability_id(item_data.get("effects_raw", []))
+	resolved_ability_id = item_data.get("processParam").split(',')[0] if (not item_data.get("processParam") == null and item_data.get("processId") == 71 ) else ""
 	if resolved_ability_id == "":
 		push_error("SkillResolver: Combat item missing opcode 71 ability reference: %s" % item_id)
 		return {}

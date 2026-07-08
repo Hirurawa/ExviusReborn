@@ -200,7 +200,7 @@ func _reset_visual_state() -> void:
 		click_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _apply_item_icon(item_data: Dictionary) -> void:
-	var icon_name: String = str(item_data.get("icon", ""))
+	var icon_name: String = str(item_data.get("iconFile", ""))
 	if icon_name == "":
 		return
 
@@ -269,7 +269,7 @@ func _apply_equipped_to(item_data: Dictionary, display_options: Dictionary) -> v
 	if unit_inst.is_empty():
 		return
 	
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var entry_id: String = str(unit_inst.get("unitId"))
 	if entry_id == "":
 		return
 	

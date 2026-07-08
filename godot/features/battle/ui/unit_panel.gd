@@ -205,7 +205,7 @@ func _update_stats_display(unit_name_str: String, cur_hp: int, max_hp: int, cur_
 	# Load and display unit thumbnail
 	if _battle_manager and _my_index >= 0 and _my_index < _battle_manager.party_data.size():
 		var unit_data: Dictionary = _battle_manager.party_data[_my_index]
-		var unit_static_id: String = UnitService.get_entry_id(unit_data)
+		var unit_static_id: String = str(unit_data.get("unitId"))
 		if unit_static_id != "":
 			var texture_path: String = "res://assets/unit_icons/unit_icon_%s.png" % unit_static_id
 			if ResourceLoader.exists(texture_path):

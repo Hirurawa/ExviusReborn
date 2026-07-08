@@ -1,7 +1,9 @@
 extends Control
 
+const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
+
 @onready var base_unit_id_label: Label = $EnhanceFlowRoot/BaseUnitIdLabel
-@onready var base_unit_sprite: TextureRect = $EnhanceFlowRoot/BaseUnitDisplay/BaseUnitSprite
+@onready var base_unit_sprite: Control = $EnhanceFlowRoot/BaseUnitDisplay
 @onready var materials_container: HBoxContainer = $EnhanceFlowRoot/MaterialPedestalsContainer
 @onready var cancel_button: Button = $EnhanceFlowRoot/UnitNamebgChara/UnitMinibutton1
 @onready var clear_button: Button = $unit_mix_ui_bg/unit_mix_button_clear
@@ -71,16 +73,21 @@ func _connect_buttons() -> void:
 
 func _refresh_base_unit_ui() -> void:
 	base_unit_id_label.text = "Base Instance ID: %s" % base_unit_instance_id
-	base_unit_sprite.texture = _get_unit_texture(base_unit_inst)
+	#base_unit_sprite.texture = _get_unit_texture(base_unit_inst)
+	var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+	if unit_visual:
+		unit_visual.scene_size = "large"
+		unit_visual.unit_data_to_load = base_unit_inst
+		unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		base_unit_sprite.add_child(unit_visual)
 	_display_unit_stats(base_unit_inst)
 	_refresh_classup_button_state()
 
 func _refresh_classup_button_state() -> void:
 	if classup_button == null:
 		return
-	var current_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
-	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
-	var unit_data: Dictionary = StaticData.game_data_units.get(unit_id, {})
+	var current_rarity: int = int(base_unit_inst.get("current_rarity"))
+	var unit_data: Dictionary = base_unit_inst
 	var max_rarity: int = int(unit_data.get("rarity_max", 5))
 	classup_button.disabled = current_rarity >= max_rarity
 
@@ -110,8 +117,7 @@ func _update_get_exp_display() -> void:
 		get_exp_number_label.text = "0"
 		return
 
-	var base_unit_id: String = str(base_unit_inst.get("unit_id", ""))
-	var base_unit_data: Dictionary = StaticData.game_data_units.get(base_unit_id, {})
+	var base_unit_data: Dictionary = base_unit_inst
 	if base_unit_data.is_empty():
 		get_exp_number_label.text = "0"
 		return
@@ -127,11 +133,7 @@ func _update_get_exp_display() -> void:
 			continue
 
 		var material_unit: Dictionary = material_unit_value
-		var material_unit_id: String = str(material_unit.get("unit_id", ""))
-		if material_unit_id == "":
-			continue
-
-		var material_unit_data: Dictionary = StaticData.game_data_units.get(material_unit_id, {})
+		var material_unit_data: Dictionary = GameDatabase.get_unit(material_unit.get("unitId"))
 		if material_unit_data.is_empty():
 			continue
 
@@ -207,7 +209,7 @@ func _on_confirm_pressed() -> void:
 
 	confirm_button.disabled = true
 
-	var result: Dictionary = await UnitService.enhance_unit(base_unit_instance_id, material_ids)
+	var result: Dictionary = UnitService.enhance_unit(base_unit_instance_id, material_ids)
 
 	confirm_button.disabled = false
 
@@ -244,8 +246,10 @@ func _on_confirm_pressed() -> void:
 					var eq_reward: Dictionary = GameDatabase.get_equipment(reward_template_id)
 					if not eq_reward.is_empty():
 						reward_name = str(eq_reward.get("name", reward_name))
-				elif reward_type == "MATERIA" and StaticData.game_data_materia.has(reward_template_id):
-					reward_name = str(StaticData.game_data_materia[reward_template_id].get("name", reward_name))
+				elif reward_type == "MATERIA":
+					var materia_data = GameDatabase.get_materia(int(reward_template_id))
+					if not materia_data.is_empty():
+						reward_name = str(materia_data.get("name", reward_name))
 				unlocked_reward_name = reward_name
 				msg += "\nTrust Master Reward acquired: %s" % reward_name
 
@@ -298,7 +302,7 @@ func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():
 		return null
 
-	var entry_id: String = UnitService.get_entry_id(unit_inst)
+	var entry_id: String = str(unit_inst.get("unitId"))
 	if entry_id == "":
 		return null
 
@@ -329,21 +333,22 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	else:
 		LBName.text = "None"
 	
-	var tmr_data = unit_inst.get("TMR")
-	if tmr_data != null and typeof(tmr_data) == TYPE_ARRAY and tmr_data.size() >= 2:
+	var tmr_data = unit_inst.get("trustMasterReward")
+	tmr_data = tmr_data.split(":") if not tmr_data == null else null
+	if tmr_data != null and tmr_data.size() >= 2:
 		var tmr_type = tmr_data[0]
 		var tmr_id = str(int(tmr_data[1]))
 		var tmr_name = "Unknown Reward"
 
-		if tmr_type == "EQUIP":
+		if tmr_type == "21":
 			var eq_data = GameDatabase.get_equipment(tmr_id)
 			if not eq_data.is_empty():
 				tmr_name = eq_data.get("name", tmr_name)
-		elif tmr_type == "MATERIA":
-			if StaticData.game_data_materia.has(tmr_id):
-				var mat_data = StaticData.game_data_materia[tmr_id]
+		elif tmr_type == "22":
+			var mat_data = GameDatabase.get_materia(int(tmr_id))
+			if not mat_data.is_empty():
 				tmr_name = mat_data.get("name", tmr_name)
-
+			
 		TMName.text = tmr_name
 	else:
 		TMName.text = "None"
@@ -364,8 +369,9 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	SPR.text = str(stats.get("SPR"))
 
 func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
-	var tmr_data: Variant = unit_inst.get("TMR", null)
-	if tmr_data == null or typeof(tmr_data) != TYPE_ARRAY:
+	var tmr_data: Variant = unit_inst.get("trustMasterReward", null)
+	tmr_data.split(":")
+	if tmr_data == null:
 		return ""
 
 	var tmr_array: Array = tmr_data
@@ -377,12 +383,14 @@ func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
 	if tmr_id == "":
 		return ""
 
-	if tmr_type == "EQUIP":
+	if tmr_type == "21":
 		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
 		if not eq_data.is_empty():
 			return str(eq_data.get("name", ""))
 
-	if tmr_type == "MATERIA" and StaticData.game_data_materia.has(tmr_id):
-		return str(StaticData.game_data_materia[tmr_id].get("name", ""))
+	if tmr_type == "22":
+		var mat_data: Dictionary = GameDatabase.get_materia(int(tmr_id))
+		if not mat_data.is_empty():
+			return str(mat_data.get("name", ""))
 
 	return ""

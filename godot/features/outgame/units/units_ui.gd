@@ -88,10 +88,10 @@ func _get_slot_display_rect(slot_btn: Button) -> Rect2:
 		fallback_h = SLOT_FALLBACK_H
 	return Rect2(0.0, 0.0, fallback_w, fallback_h)
 
-func _set_legacy_pedestal_visible(slot_btn: Button, visible: bool) -> void:
+func _set_legacy_pedestal_visible(slot_btn: Button, visibility: bool) -> void:
 	for child in slot_btn.get_children():
 		if child is TextureRect and String(child.name).begins_with("unit_pedestal"):
-			(child as TextureRect).visible = visible
+			(child as TextureRect).visible = visibility
 			return
 
 func _ready() -> void:
@@ -130,10 +130,10 @@ func _wire_slot_input_handlers() -> void:
 func _exit_tree() -> void:
 	_commit_selected_party_on_exit()
 
-func _on_parties_updated(parties: Array) -> void:
+func _on_parties_updated() -> void:
 	_refresh_ui()
 
-func _on_units_updated(units: Array) -> void:
+func _on_units_updated(_units: Array) -> void:
 	_refresh_ui()
 
 func _on_back_pressed() -> void:
@@ -197,7 +197,7 @@ func _update_slots(unit_uuids: Array) -> void:
 		var unit_inst: Dictionary = {}
 
 		if uuid != null and typeof(uuid) == TYPE_STRING and uuid != "":
-			unit_inst = _find_unit_inst(uuid)
+			unit_inst = UnitService.owned_units_ids.filter(func(x): return x.instance_id == uuid)[0]
 			if not unit_inst.is_empty():
 				var entry_id: String = str(unit_inst.get("unitId"))
 				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id

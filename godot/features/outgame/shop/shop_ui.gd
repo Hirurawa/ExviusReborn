@@ -90,7 +90,7 @@ func _populate_shop(ids: Array, container: Control, type: String) -> void:
 
 	var matched_count: int = 0
 	for id in ids:
-		var data: Dictionary = GameDatabase.get_item(id)
+		var data: Dictionary = GameDatabase.get_item(int(id))
 		if data.is_empty():
 			data = GameDatabase.get_equipment(id)
 
@@ -252,7 +252,7 @@ func _apply_search_query() -> void:
 	_search_query = normalized
 	_populate_for_current_tab()
 
-func _on_buy_requested(id: String, type: String, quantity: int) -> void:
+func _on_buy_requested(id: String, quantity: int) -> void:
 	InventoryService.request_buy_item(id, quantity)
 
 func _on_purchase_successful() -> void:

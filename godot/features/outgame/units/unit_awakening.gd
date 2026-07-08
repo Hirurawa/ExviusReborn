@@ -207,13 +207,13 @@ func _populate_awakening_requirements() -> void:
 		if i >= material_ids.size():
 			slot.visible = false
 			continue
-		var item_id: String = str(material_ids[i])
+		var item_id: int = int(material_ids[i])
 		var count: int = int(materials[material_ids[i]])
 		var item_data: Dictionary = GameDatabase.get_item(item_id)
 
 		var icon_node: TextureRect = slot.get_node_or_null("unit_classup_item_icon") as TextureRect
 		if icon_node != null:
-			var icon_name: String = str(item_data.get("icon", ""))
+			var icon_name: String = str(item_data.get("iconFile", ""))
 			var tex: Texture2D = null
 			if icon_name != "":
 				tex = _load_cached_texture("res://assets/items/" + icon_name)

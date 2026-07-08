@@ -1,6 +1,6 @@
 extends PanelContainer
 
-signal buy_requested(item_id: String, type: String, quantity: int)
+signal buy_requested(item_id: String, quantity: int)
 
 @onready var icon_rect: TextureRect = $HBoxContainer/IconRect
 @onready var name_label: Label = $HBoxContainer/VBoxContainer/NameLabel
@@ -30,18 +30,11 @@ func setup(id: String, data: Dictionary, type: String) -> void:
 	_type = type
 	
 	name_label.text = data.get("name", "Unknown")
-	price_label.text = str(int(data.get("price_buy", 0))) + " Gil"
+	price_label.text = str(int(data.get("priceBuy", 0))) + " Gil"
 	
-	var strings: Dictionary = data.get("strings", {})
-	var desc_short_list: Array = strings.get("desc_short", [])
-	var desc_text: String = ""
-	for entry in desc_short_list:
-		if entry != null and str(entry) != "":
-			desc_text = str(entry)
-			break
-	desc_label.text = desc_text
+	desc_label.text = data.get("explainShort", "")
 		
-	var icon_name: String = data.get("icon", "")
+	var icon_name: String = data.get("iconFile", "")
 	if icon_name != "":
 		# Determine correct folder based on what exists
 		var item_tex: Texture2D = _get_dynamic_texture("res://assets/items/" + icon_name) if ResourceLoader.exists("res://assets/items/" + icon_name) else null
@@ -54,7 +47,7 @@ func setup(id: String, data: Dictionary, type: String) -> void:
 				icon_rect.texture = equip_tex
 
 func _on_buy_pressed() -> void:
-	buy_requested.emit(_item_id, _type, 1)
+	buy_requested.emit(_item_id, 1)
 
 func _on_buy_ten_pressed() -> void:
-	buy_requested.emit(_item_id, _type, 10)
+	buy_requested.emit(_item_id, 10)

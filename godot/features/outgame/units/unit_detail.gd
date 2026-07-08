@@ -111,8 +111,7 @@ func _on_units_updated(units: Array) -> void:
 
 func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_stop_idle_animation()
-
-	var unit_id: String = str(unit_inst.get("unit_id", ""))
+	
 	var unit_data: Dictionary = unit_inst
 	var entry_id: String = str(unit_inst.get("unitId"))
 
@@ -318,11 +317,12 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
 		if not eq_data.is_empty():
 			tmr_name = str(eq_data.get("name", tmr_name))
-			icon_path = "res://assets/equip/" + str(eq_data.get("icon", "0.png"))
-	elif tmr_type == "22" and StaticData.game_data_materia.has(tmr_id):
-		var mat_data: Dictionary = StaticData.game_data_materia[tmr_id]
-		tmr_name = str(mat_data.get("name", tmr_name))
-		icon_path = "res://assets/materia/" + str(mat_data.get("icon", "0.png"))
+			icon_path = "res://assets/equip/" + str(eq_data.get("iconFile", "0.png"))
+	elif tmr_type == "22":
+		var mat_data: Dictionary = GameDatabase.get_materia(int(tmr_id))
+		if not mat_data.is_empty():
+			tmr_name = str(mat_data.get("name", tmr_name))
+			icon_path = "res://assets/materia/" + str(mat_data.get("iconFile", "0.png"))
 
 	tm_name_label.text = tmr_name
 	if icon_path != "":
@@ -419,7 +419,7 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 			slot_cell.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			slot_cell.pressed.connect(_on_equip_slot_clicked.bind(unit_inst, str(slot_info.id), slot_info.types))
 
-	var ability_slots: int = int(unit_inst.get("ability_slots", unit_data.get("ability_slots", 1)))
+	var ability_slots: int = int(unit_inst.get("materiaCnt"))
 	for i in range(ability_slots):
 		var slot_id: String = "ability_" + str(i + 1)
 		var slot_cell: Control = ItemScene.instantiate()
@@ -437,8 +437,8 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 		if item_id != "":
 			var template_id: String = InventoryService.get_equipment_template_id(item_id)
 			item_data = GameDatabase.get_equipment(template_id).duplicate()
-			if item_data.is_empty() and StaticData.game_data_materia.has(template_id):
-				item_data = StaticData.game_data_materia.get(template_id, {}).duplicate()
+			if item_data.is_empty():
+				item_data = GameDatabase.get_materia(int(template_id)).duplicate()
 				_is_materia_slot_item = true
 			else:
 				if item_data.is_empty():
@@ -450,10 +450,9 @@ func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> 
 
 		unit_detail_ability_grid.add_child(slot_cell)
 		if _is_materia_slot_item:
-			var icon_name: String = str(item_data.get("icon", ""))
+			var icon_name: String = str(item_data.get("iconFile", ""))
 			var icon_path: String = "res://assets/abilities/" + icon_name if icon_name != "" else ""
-			var effects: Array = item_data.get("effects", [])
-			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
+			var detail_text: String = item_data.get("explainShort", "")
 			slot_cell.setup_placeholder(
 				str(item_data.get("name", "Unknown Materia")),
 				detail_text,
@@ -597,7 +596,7 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 	for key in valid_keys:
 		var item: Dictionary = equip_icons_data[key]
 		var type_id: int = int(item.get("type_id", 0))
-		var icon_name: String = str(item.get("icon", ""))
+		var icon_name: String = str(item.get("iconFile", ""))
 		var tex_rect: TextureRect = TextureRect.new()
 		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

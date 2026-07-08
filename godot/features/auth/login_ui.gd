@@ -63,7 +63,7 @@ func _begin_android_mount_flow() -> void:
 
 	await get_tree().process_frame
 
-	if await _try_mount_android_pck():
+	if _try_mount_android_pck():
 		_restore_normal_button_state()
 		_kick_off_priming()
 	else:
@@ -122,7 +122,7 @@ func _on_retry_mount_pressed() -> void:
 	feedback_label.text = "Retrying mount..."
 	OS.request_permissions()
 	await get_tree().process_frame
-	if await _try_mount_android_pck():
+	if _try_mount_android_pck():
 		_restore_normal_button_state()
 		_kick_off_priming()
 	else:

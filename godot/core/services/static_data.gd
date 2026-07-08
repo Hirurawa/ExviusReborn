@@ -35,7 +35,7 @@ const BAKED_SANITIZED_DIR: String = "res://baked_static_cache"
 # `keys_index.bin` caches just the key sets so those checks don't force-decode
 # the full dataset. Lazy-decoded once and reused across launches.
 const KEY_INDEXED_DATASETS: Array[String] = [
-	"materia", "summons",
+	"summons",
 ]
 
 # Legacy paths cleaned up on first launch after upgrading to per-dataset cache.
@@ -45,7 +45,6 @@ const LEGACY_MONOLITHIC_SIG: String = "user://data/sanitized_cache_sig.txt"
 # Property name -> on-disk dataset key. Property names match the historical
 # `game_data_*` fields so existing call sites keep working.
 const _PROP_TO_KEY: Dictionary = {
-	"game_data_materia": "materia",
 	"game_data_equipment_icons": "equipment-icons",
 	"game_data_summons": "summons",
 	"game_data_summons_boards": "summons_boards",
@@ -55,7 +54,7 @@ const _PROP_TO_KEY: Dictionary = {
 
 # Dataset key -> default empty value.
 const _DEFAULTS: Dictionary = {
-	"materia": {}, "equipment-icons": {},
+	"equipment-icons": {},
 	"summons": {}, "summons_boards": {},
 	"summons_exp_patterns": {}, "summons_stat_patterns": {},
 }

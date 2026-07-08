@@ -91,6 +91,7 @@ offset_right = 365.0
 offset_bottom = 98.0
 theme_override_font_sizes/font_size = 18
 text = "unit_equip_list_property3_text"
+autowrap_mode = 2
 
 [node name="UnitEquipCategory" type="TextureRect" parent="." unique_id=1391968888]
 layout_mode = 0

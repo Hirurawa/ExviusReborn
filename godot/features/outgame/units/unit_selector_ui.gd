@@ -242,7 +242,7 @@ func _on_clear_material_selection() -> void:
 		if check_box != null:
 			_set_checkbox_state(check_box, false)
 
-func _on_units_updated(units: Array) -> void:
+func _on_units_updated(_units: Array) -> void:
 	_request_units_list_refresh()
 
 func _request_units_list_refresh() -> void:

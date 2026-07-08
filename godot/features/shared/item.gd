@@ -200,7 +200,7 @@ func _reset_visual_state() -> void:
 		click_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _apply_item_icon(item_data: Dictionary) -> void:
-	var icon_name: String = str(item_data.get("icon", ""))
+	var icon_name: String = str(item_data.get("iconFile", ""))
 	if icon_name == "":
 		return
 

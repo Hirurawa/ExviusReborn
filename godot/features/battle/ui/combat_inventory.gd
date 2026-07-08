@@ -21,14 +21,14 @@ func reload_from_services() -> void:
 		if item_id == "":
 			continue
 
-		var quantity: int = int(stackables.get(item_id, 0))
-		if quantity <= 0:
+		var quant: int = int(stackables.get(item_id, 0))
+		if quant <= 0:
 			continue
-		var item_data: Dictionary = GameDatabase.get_item(item_id)
+		var item_data: Dictionary = GameDatabase.get_item(int(item_id))
 		if item_data.is_empty():
 			continue
 		if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
-			_quantities[item_id] = quantity
+			_quantities[item_id] = quant
 
 
 func quantity(item_id: String) -> int:

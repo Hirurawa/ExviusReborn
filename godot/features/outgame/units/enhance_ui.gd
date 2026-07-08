@@ -86,8 +86,7 @@ func _refresh_base_unit_ui() -> void:
 func _refresh_classup_button_state() -> void:
 	if classup_button == null:
 		return
-	var current_rarity: int = int(base_unit_inst.get("current_rarity", base_unit_inst.get("rarity", 1)))
-	var unit_id: String = str(base_unit_inst.get("unit_id", ""))
+	var current_rarity: int = int(base_unit_inst.get("current_rarity"))
 	var unit_data: Dictionary = base_unit_inst
 	var max_rarity: int = int(unit_data.get("rarity_max", 5))
 	classup_button.disabled = current_rarity >= max_rarity
@@ -210,7 +209,7 @@ func _on_confirm_pressed() -> void:
 
 	confirm_button.disabled = true
 
-	var result: Dictionary = await UnitService.enhance_unit(base_unit_instance_id, material_ids)
+	var result: Dictionary = UnitService.enhance_unit(base_unit_instance_id, material_ids)
 
 	confirm_button.disabled = false
 
@@ -247,8 +246,10 @@ func _on_confirm_pressed() -> void:
 					var eq_reward: Dictionary = GameDatabase.get_equipment(reward_template_id)
 					if not eq_reward.is_empty():
 						reward_name = str(eq_reward.get("name", reward_name))
-				elif reward_type == "MATERIA" and StaticData.game_data_materia.has(reward_template_id):
-					reward_name = str(StaticData.game_data_materia[reward_template_id].get("name", reward_name))
+				elif reward_type == "MATERIA":
+					var materia_data = GameDatabase.get_materia(int(reward_template_id))
+					if not materia_data.is_empty():
+						reward_name = str(materia_data.get("name", reward_name))
 				unlocked_reward_name = reward_name
 				msg += "\nTrust Master Reward acquired: %s" % reward_name
 
@@ -344,10 +345,10 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 			if not eq_data.is_empty():
 				tmr_name = eq_data.get("name", tmr_name)
 		elif tmr_type == "22":
-			if StaticData.game_data_materia.has(tmr_id):
-				var mat_data = StaticData.game_data_materia[tmr_id]
+			var mat_data = GameDatabase.get_materia(int(tmr_id))
+			if not mat_data.is_empty():
 				tmr_name = mat_data.get("name", tmr_name)
-
+			
 		TMName.text = tmr_name
 	else:
 		TMName.text = "None"
@@ -387,7 +388,9 @@ func _resolve_trust_reward_name(unit_inst: Dictionary) -> String:
 		if not eq_data.is_empty():
 			return str(eq_data.get("name", ""))
 
-	if tmr_type == "22" and StaticData.game_data_materia.has(tmr_id):
-		return str(StaticData.game_data_materia[tmr_id].get("name", ""))
+	if tmr_type == "22":
+		var mat_data: Dictionary = GameDatabase.get_materia(int(tmr_id))
+		if not mat_data.is_empty():
+			return str(mat_data.get("name", ""))
 
 	return ""

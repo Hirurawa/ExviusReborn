@@ -12,7 +12,6 @@ const ERR_TWO_HANDED_LOCKED: String = "ERR_TWO_HANDED_LOCKED"
 const ERR_DUAL_WIELD_REQUIRED: String = "ERR_DUAL_WIELD_REQUIRED"
 const ERR_EQUIPMENT_ALREADY_EQUIPPED: String = "ERR_EQUIPMENT_ALREADY_EQUIPPED"
 
-
 func can_equip(unit_inst: Dictionary, slot_id: String, item_template: Dictionary, owned_units: Array, requesting_item_instance_id: String = "") -> Dictionary:
 	## Returns {ok: bool, reason: String, conflicting_unit_id: String}.
 	## `owned_units` is the full list (UnitService.owned_units_ids) so we can detect
@@ -57,7 +56,6 @@ func can_equip(unit_inst: Dictionary, slot_id: String, item_template: Dictionary
 
 	return result
 
-
 func is_slot_locked_by_two_handed(unit_inst: Dictionary, slot_id: String) -> bool:
 	## True when the *other* hand holds a two-handed weapon (so this hand is reserved).
 	if not (slot_id in HAND_SLOTS):
@@ -69,7 +67,6 @@ func is_slot_locked_by_two_handed(unit_inst: Dictionary, slot_id: String) -> boo
 	var other_template_id: String = InventoryService.get_equipment_template_id(other_item_id)
 	var other_template: Dictionary = GameDatabase.get_equipment(other_template_id)
 	return bool(other_template.get("is_twohanded", false))
-
 
 func get_dual_wield_allowed_type_ids(unit_inst: Dictionary) -> Dictionary:
 	## Scans the unit's accessible passive `effects_raw` for opcode 14.
@@ -108,10 +105,8 @@ func get_dual_wield_allowed_type_ids(unit_inst: Dictionary) -> Dictionary:
 func _other_hand(slot_id: String) -> String:
 	return "l_hand" if slot_id == "r_hand" else "r_hand"
 
-
 func _is_one_handed_weapon(item_template: Dictionary) -> bool:
 	return str(item_template.get("slot", "")) == "Weapon" and not bool(item_template.get("is_twohanded", false))
-
 
 func _get_one_handed_weapon_in_slot(unit_inst: Dictionary, slot_id: String) -> Dictionary:
 	var equipment: Dictionary = unit_inst.get("equipment", {})
@@ -126,14 +121,12 @@ func _get_one_handed_weapon_in_slot(unit_inst: Dictionary, slot_id: String) -> D
 		return {}
 	return template
 
-
 func _dual_wield_permits(allow: Dictionary, weapon_type_id: int) -> bool:
 	if not bool(allow.get("has", false)):
 		return false
 	if bool(allow.get("allows_any", false)):
 		return true
 	return weapon_type_id in (allow.get("type_ids", []) as Array)
-
 
 func _find_conflicting_unit(owned_units: Array, this_unit_instance_id: String, slot_id: String, item_instance_id: String) -> String:
 	for existing in owned_units:
@@ -152,29 +145,27 @@ func _find_conflicting_unit(owned_units: Array, this_unit_instance_id: String, s
 			return other_unit_id
 	return ""
 
-
 func _gather_passive_effects_raw(unit_inst: Dictionary) -> Array:
 	## Collects `effects_raw` arrays from all passive sources currently active on
 	## the unit: filtered innate traits, equipment items' direct effects_raw,
 	## and passive skills granted by equipment.
 	var collected: Array = []
-	var rarity: int = int(unit_inst.get("current_rarity", 1))
-	var level: int = int(unit_inst.get("level", 1))
 
 	# Innate traits — same gating as StatCalculator.
 	var innate_skills: Variant = unit_inst.get("skills", [])
+	innate_skills = GameDatabase.get_unit_skills(unit_inst.get("unitSeries"), unit_inst.get("rare"), unit_inst.get("level"))
 	if innate_skills is Array:
 		for skill in innate_skills:
-			if not (skill is Dictionary):
-				continue
-			var req_rarity_var: Variant = skill.get("rarity", 999)
-			if typeof(req_rarity_var) == TYPE_STRING:
-				continue
-			var req_rarity: int = int(req_rarity_var)
-			var req_level: int = int(skill.get("level", 999))
-			if rarity > req_rarity or (rarity == req_rarity and level >= req_level):
-				_collect_passive_skill_effects(str(skill.get("id", "")), collected)
-
+			
+			var ability_id = str(skill.get("abilityId"))
+			var ability_array: Array
+			if ability_id != null:
+				if ability_id.contains(','):
+					ability_array = ability_id.split(',')
+				else:
+					ability_array = [ability_id]
+			for skill_id in ability_array:
+				_collect_passive_skill_effects(str(skill_id), collected)
 	# Equipment.
 	var equipment: Dictionary = unit_inst.get("equipment", {})
 	for slot_id in equipment.keys():
@@ -184,19 +175,21 @@ func _gather_passive_effects_raw(unit_inst: Dictionary) -> Array:
 		var template_id: String = InventoryService.get_equipment_template_id(item_id)
 		var item_data: Dictionary = GameDatabase.get_equipment(template_id)
 		if item_data.is_empty():
-			item_data = StaticData.game_data_materia.get(template_id, {})
+			item_data = GameDatabase.get_materia(int(template_id))
 		if item_data.is_empty():
 			continue
-		var raw: Variant = item_data.get("effects_raw", [])
-		if raw is Array:
-			collected.append(raw)
-		var item_skills: Variant = item_data.get("skills", [])
-		if item_skills is Array:
-			for skill_id in item_skills:
-				_collect_passive_skill_effects(str(skill_id), collected)
+		
+		var ability_id = str(item_data.get("abilityId"))
+		var ability_array: Array
+		if ability_id != null:
+			if ability_id.contains(','):
+				ability_array = ability_id.split(',')
+			else:
+				ability_array = [ability_id]
+		for skill_id in ability_array:
+			_collect_passive_skill_effects(str(skill_id), collected)
 
 	return collected
-
 
 func _collect_passive_skill_effects(skill_id: String, collected: Array) -> void:
 	if skill_id == "":

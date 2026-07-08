@@ -247,14 +247,14 @@ func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
 	if skill_name != "":
 		normalized_skill_data["name"] = skill_name
 	if skill_description != "":
-		normalized_skill_data["description"] = skill_description
+		normalized_skill_data["explainShort"] = skill_description
 
 	return {
 		"summon_id": summon_id,
 		"rank": rank,
 		"skill_id": skill_id,
 		"name": skill_name,
-		"description": skill_description,
+		"explainShort": skill_description,
 		"skill_data": normalized_skill_data
 	}
 
@@ -413,8 +413,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			var template_id = InventoryService.get_equipment_template_id(item_id)
 			var item_data: Dictionary = {}
 			item_data = GameDatabase.get_equipment(template_id)
-			if item_data.is_empty() and StaticData.dataset_has("materia", str(template_id)):
-				item_data = StaticData.game_data_materia[template_id]
+			if item_data.is_empty():
+				item_data = GameDatabase.get_materia(int(template_id))
 			if item_data.is_empty():
 				push_error("CRITICAL ERROR: template_id not found in equipment or materia data: " + str(template_id))
 				continue
@@ -427,10 +427,31 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			_accumulate_named_resists(item_stats.get("element_resist", null), element_resists, ELEMENTS)
 			_accumulate_named_resists(item_stats.get("status_resist", null), status_resists, STATUSES)
 
-			var equip_skills = item_data.get("skills", [])
-			if equip_skills != null:
-				for skill_id in equip_skills:
-					raw_skills.append({"id": skill_id, "source": "Equip"})
+			var ability_id = str(item_data.get("abilityId"))
+			var ability_array: Array
+			if ability_id != null:
+				if ability_id.contains(','):
+					ability_array = ability_id.split(',')
+				else:
+					ability_array = [ability_id]
+			for skill_id in ability_array:
+				raw_skills.append({"id": skill_id, "source": "Equip"})
+
+			var magic_id = str(item_data.get("magicId"))
+			var magic_array: Array
+			if magic_id != null:
+				if magic_id.contains(','):
+					magic_array = magic_id.split(',')
+				else:
+					magic_array = [magic_id]
+			for skill_id in magic_array:
+				raw_skills.append({"id": skill_id, "source": "Equip"})
+
+
+			#var equip_skills = item_data.get("skills", [])
+			#if equip_skills != null:
+				#for skill_id in equip_skills:
+					#raw_skills.append({"id": skill_id, "source": "Equip"})
 
 	var esper_flat_bonus: Dictionary = _compute_active_party_esper_flat_bonus(unit_instance)
 	for stat_name in CORE_STATS:

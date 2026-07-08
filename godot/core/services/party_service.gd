@@ -3,14 +3,14 @@ extends Node
 ## normalization, and assignment helpers.
 ##
 ## Signals:
-##   parties_updated(parties)        — emitted whenever the parties list changes
+##   parties_updated()               — emitted whenever the parties list changes
 ##   active_party_changed(party_idx) — emitted when the selected slot moves
 ##   party_save_requested(parties)   — convenience signal so UI panels can ask
 ##                                     for a deferred save without calling
 ##                                     `save_parties` directly. Connected to
 ##                                     `save_parties` inside `_ready`.
 
-signal parties_updated(parties: Array)
+signal parties_updated()
 signal party_save_requested(new_parties: Array)
 signal active_party_changed(party_index: int)
 
@@ -20,10 +20,8 @@ const SLOT_COUNT: int = 5
 var parties: Array = []
 var selected_party_index: int = 0
 
-
 func _ready() -> void:
 	party_save_requested.connect(save_parties)
-
 
 # === State management ===
 
@@ -31,11 +29,9 @@ func reset_to_starter(starter_parties: Array) -> void:
 	parties = starter_parties
 	selected_party_index = 0
 
-
 func emit_all() -> void:
-	parties_updated.emit(parties)
+	parties_updated.emit()
 	active_party_changed.emit(selected_party_index)
-
 
 func snapshot_payload() -> Dictionary:
 	var normalized_parties: Array = _normalize_parties_array(parties)
@@ -47,12 +43,10 @@ func snapshot_payload() -> Dictionary:
 		"selected_party_index": normalized_selected
 	}
 
-
 func load_from_local() -> void:
 	var payload: Dictionary = _load_from_local()
 	parties = payload.get("parties", [])
 	selected_party_index = clamp_selected_party_index(int(payload.get("selected_party_index", 0)))
-
 
 func build_default_parties(rain_instance_id: String, lasswell_instance_id: String) -> Array:
 	var generated_parties: Array = []
@@ -81,7 +75,6 @@ func clamp_selected_party_index(candidate_index: int) -> int:
 func get_selected_party_index() -> int:
 	return clamp_selected_party_index(selected_party_index)
 
-
 func set_selected_party_index(new_index: int) -> bool:
 	var next_index: int = clamp_selected_party_index(new_index)
 	if selected_party_index == next_index:
@@ -90,7 +83,6 @@ func set_selected_party_index(new_index: int) -> bool:
 	selected_party_index = next_index
 	active_party_changed.emit(selected_party_index)
 	return true
-
 
 func get_active_party() -> Dictionary:
 	if parties.is_empty():
@@ -105,7 +97,6 @@ func get_active_party() -> Dictionary:
 		return party_entry
 	return {}
 
-
 func save_parties(new_parties: Array) -> Dictionary:
 	var normalized_parties: Array = _normalize_parties_array(new_parties)
 	var selected_for_save: int = 0
@@ -115,7 +106,7 @@ func save_parties(new_parties: Array) -> Dictionary:
 	var previous_selected_local: int = selected_party_index
 	parties = normalized_parties
 	selected_party_index = clamp_selected_party_index(selected_for_save)
-	parties_updated.emit(parties)
+	parties_updated.emit()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "parties_saved")
 	if selected_party_index != previous_selected_local:
 		active_party_changed.emit(selected_party_index)

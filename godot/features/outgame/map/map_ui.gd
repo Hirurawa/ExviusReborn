@@ -162,9 +162,12 @@ func _parse_rect(raw: String) -> Rect2:
 func _get_dynamic_texture(path: String) -> Texture2D:
 	if _texture_cache.has(path):
 		return _texture_cache[path]
-	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
-	_texture_cache[path] = tex
-	return tex
+	var tex: Texture2D
+	if ResourceLoader.exists(path):
+		tex = ResourceLoader.load(path) as Texture2D
+		_texture_cache[path] = tex
+		return tex
+	return null
 
 func _apply_map_canvas_size(map_size: Vector2) -> void:
 	_map_canvas_base_size = map_size
@@ -379,9 +382,9 @@ func _build_area_map_tiles(area_id: String) -> Vector2:
 		var tex: Texture2D = _get_dynamic_texture(AREA_MAP_DIR + str(files[i]).strip_edges())
 		textures[i] = tex
 		if tex:
-			var size: Vector2 = Vector2(tex.get_size())
-			col_w[i % cols] = max(col_w[i % cols], size.x)
-			row_h[i / cols] = max(row_h[i / cols], size.y)
+			var tex_size: Vector2 = Vector2(tex.get_size())
+			col_w[i % cols] = max(col_w[i % cols], tex_size.x)
+			row_h[i / cols] = max(row_h[i / cols], tex_size.y)
 
 	# Columns/rows whose tiles are all missing still need a size so the tiles that
 	# do exist stay in their correct grid cells.
@@ -538,17 +541,17 @@ func _add_region_marker(rect: Rect2, label_pos: Vector2, marker_name: String, co
 	map_content.add_child(lbl)
 
 
-# Point-based marker for dungeons and towns (image centered on `position`, name
+# Point-based marker for dungeons and towns (image centered on `location`, name
 # below). When `on_click` is valid the icon becomes tappable; towns pass no
 # callable and stay non-interactive.
-func _add_point_marker(position: Vector2, icon_path: String, marker_name: String, on_click: Callable = Callable()) -> void:
+func _add_point_marker(location: Vector2, icon_path: String, marker_name: String, on_click: Callable = Callable()) -> void:
 	var icon_size: Vector2 = Vector2.ZERO
 	var tex: Texture2D = _get_dynamic_texture(icon_path)
 	if tex:
 		var icon: TextureRect = TextureRect.new()
 		icon.texture = tex
 		icon_size = Vector2(tex.get_size())
-		icon.position = position - icon_size * 0.5
+		icon.position = location - icon_size * 0.5
 		if on_click.is_valid():
 			# PASS (not STOP) so wheel-zoom and drag-pan still reach the scroll
 			# container; only a press+release that barely moved counts as a tap.
@@ -796,7 +799,11 @@ func _unlock_town_progression() -> void:
 	var open_switch: String = str(town_data.get("openSwitch", ""))
 	if open_switch != "":
 		SwitchService.unlock_switches(open_switch, "unlock_town_progression")
-
+	var story_switch = GameDatabase.get_story_sub(_pending_town_id)
+	for item in story_switch:
+		if SwitchService.is_unlocked(item.get("switchInfo")) and not SwitchService.is_unlocked(item.get("openSwitch")):
+			SwitchService.unlock_switches(item.get("openSwitch"))
+	
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return

@@ -87,16 +87,16 @@ func _on_store_clicked(store_id: String) -> void:
 		buy_button.disabled = true
 
 		if target_type == 20: # Item
-			var item_data = GameDatabase.get_item(target_id)
+			var item_data = GameDatabase.get_item(int(target_id))
 			if typeof(item_data) == TYPE_DICTIONARY and not item_data.is_empty():
 				name_label.text = item_data.get("name", "Unknown Item (" + target_id + ")")
-				var price = int(item_data.get("price_buy", 0))
+				var price = int(item_data.get("priceBuy", 0))
 				price_label.text = str(price) + " Gil"
 				buy_button.disabled = false
 				buy_button.pressed.connect(_request_buy.bind(target_id, 1))
-				var icon_id = item_data.get("icon", "")
+				var icon_id = item_data.get("iconFile", "")
 				if icon_id != "":
-					var icon_path = "res://assets/items/%s.png" % icon_id
+					var icon_path = "res://assets/items/%s" % icon_id
 					if ResourceLoader.exists(icon_path):
 						icon_rect.texture = load(icon_path)
 			else:
@@ -106,13 +106,13 @@ func _on_store_clicked(store_id: String) -> void:
 			var eq_data = GameDatabase.get_equipment(target_id)
 			if typeof(eq_data) == TYPE_DICTIONARY and not eq_data.is_empty():
 				name_label.text = eq_data.get("name", "Unknown Equipment (" + target_id + ")")
-				var price = int(eq_data.get("price_buy", 0))
+				var price = int(eq_data.get("priceBuy", 0))
 				price_label.text = str(price) + " Gil"
 				buy_button.disabled = false
 				buy_button.pressed.connect(_request_buy.bind(target_id, 1))
-				var icon_id = eq_data.get("icon", "")
+				var icon_id = eq_data.get("iconFile", "")
 				if icon_id != "":
-					var icon_path = "res://assets/items/%s.png" % icon_id
+					var icon_path = "res://assets/items/%s" % icon_id
 					if ResourceLoader.exists(icon_path):
 						icon_rect.texture = load(icon_path)
 			else:

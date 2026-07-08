@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://cge6dur454te3"]
 
-[ext_resource type="Script" path="res://features/outgame/craft/craft_ability.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b7awj7ucvd0wt" path="res://features/outgame/craft/craft_ability.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dn5ikad3sia4y" path="res://assets/ui/create/cre_btn4_2.tres" id="1_wmagf"]
 [ext_resource type="Texture2D" uid="uid://b4dtpxneo667j" path="res://assets/ui/create/cre_label_magic_black_1.tres" id="2_bpxc3"]
+[ext_resource type="Texture2D" uid="uid://dmunqh6phrvfg" path="res://assets/ui/create/cre_btn4_1.tres" id="2_jjmrh"]
 [ext_resource type="Texture2D" uid="uid://bwynx8ycnvl5y" path="res://assets/ui/create/cre_label_magic_white_1.tres" id="3_hrxm4"]
 [ext_resource type="Texture2D" uid="uid://b2lk0cyregdvv" path="res://assets/ui/create/cre_label_magic_green_1.tres" id="4_esong"]
 [ext_resource type="Texture2D" uid="uid://dafwo7wt1ktoh" path="res://assets/ui/create/cre_label_other_1.tres" id="5_bbr5a"]
@@ -20,55 +21,66 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="craft_recipe_type_black_magic" type="TextureRect" parent="." unique_id=1186192442]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=683552831]
 layout_mode = 0
-offset_left = 8.0
-offset_top = 101.0
-offset_right = 156.0
-offset_bottom = 177.0
-texture = ExtResource("1_wmagf")
-expand_mode = 1
+offset_top = 176.0
+offset_right = 642.0
+offset_bottom = 749.0
 
-[node name="CreLabelMagicBlack1" type="Sprite2D" parent="craft_recipe_type_black_magic" unique_id=1698021709]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=870682386]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=380381676]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=870217029]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TabBar" type="HBoxContainer" parent="." unique_id=2127636525]
+layout_mode = 0
+offset_top = 106.0
+offset_right = 604.0
+offset_bottom = 182.0
+alignment = 1
+
+[node name="craft_recipe_type_black_magic" type="TextureButton" parent="TabBar" unique_id=1124585359]
+layout_mode = 2
+texture_normal = ExtResource("2_jjmrh")
+texture_pressed = ExtResource("1_wmagf")
+
+[node name="CreLabelMagicBlack1" type="Sprite2D" parent="TabBar/craft_recipe_type_black_magic" unique_id=1698021709]
 position = Vector2(74, 39)
 texture = ExtResource("2_bpxc3")
 
-[node name="craft_recipe_type_white_magic" type="TextureRect" parent="." unique_id=1320481285]
-layout_mode = 0
-offset_left = 164.0
-offset_top = 101.0
-offset_right = 312.0
-offset_bottom = 177.0
-texture = ExtResource("1_wmagf")
-expand_mode = 1
+[node name="craft_recipe_type_white_magic" type="TextureButton" parent="TabBar" unique_id=472074686]
+layout_mode = 2
+texture_normal = ExtResource("2_jjmrh")
+texture_pressed = ExtResource("1_wmagf")
 
-[node name="CreLabelMagicWhite1" type="Sprite2D" parent="craft_recipe_type_white_magic" unique_id=1466583384]
+[node name="CreLabelMagicWhite1" type="Sprite2D" parent="TabBar/craft_recipe_type_white_magic" unique_id=1466583384]
 position = Vector2(74, 35)
 texture = ExtResource("3_hrxm4")
 
-[node name="craft_recipe_type_green_magic" type="TextureRect" parent="." unique_id=1155067292]
-layout_mode = 0
-offset_left = 320.0
-offset_top = 101.0
-offset_right = 468.0
-offset_bottom = 177.0
-texture = ExtResource("1_wmagf")
-expand_mode = 1
+[node name="craft_recipe_type_green_magic" type="TextureButton" parent="TabBar" unique_id=1631665894]
+layout_mode = 2
+texture_normal = ExtResource("2_jjmrh")
+texture_pressed = ExtResource("1_wmagf")
 
-[node name="CreLabelMagicGreen1" type="Sprite2D" parent="craft_recipe_type_green_magic" unique_id=1595935085]
-position = Vector2(74, 32)
+[node name="CreLabelMagicGreen1" type="Sprite2D" parent="TabBar/craft_recipe_type_green_magic" unique_id=1595935085]
+position = Vector2(74, 35)
 texture = ExtResource("4_esong")
 
-[node name="craft_recipe_type_spcial" type="TextureRect" parent="." unique_id=349060354]
-layout_mode = 0
-offset_left = 476.0
-offset_top = 101.0
-offset_right = 624.0
-offset_bottom = 177.0
-texture = ExtResource("1_wmagf")
-expand_mode = 1
+[node name="craft_recipe_type_spcial" type="TextureButton" parent="TabBar" unique_id=175381767]
+layout_mode = 2
+texture_normal = ExtResource("2_jjmrh")
+texture_pressed = ExtResource("1_wmagf")
 
-[node name="CreLabelOther1" type="Sprite2D" parent="craft_recipe_type_spcial" unique_id=1355880593]
+[node name="CreLabelOther1" type="Sprite2D" parent="TabBar/craft_recipe_type_spcial" unique_id=1355880593]
 position = Vector2(79, 36)
 texture = ExtResource("5_bbr5a")
 

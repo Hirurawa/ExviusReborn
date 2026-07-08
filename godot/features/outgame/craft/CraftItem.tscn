@@ -1,10 +1,16 @@
 [gd_scene format=3 uid="uid://daqiwnlxd4cwj"]
 
-[ext_resource type="Script" path="res://features/outgame/craft/craft_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dtaou5udxf6p2" path="res://assets/ui/create/cre_btn5_2.tres" id="1_rddch"]
+[ext_resource type="Script" uid="uid://da1ouau6aqwcb" path="res://features/outgame/craft/craft_item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bva2dfvd775at" path="res://assets/ui/create/cre_btn5_1.tres" id="2_005mf"]
 [ext_resource type="Texture2D" uid="uid://b6jx2ybi2213w" path="res://assets/ui/create/cre_prepare_title.tres" id="2_chraj"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_wdfox"]
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_005mf"]
+[ext_resource type="Texture2D" uid="uid://dvoqels41ifar" path="res://assets/ui/create/cre_label_recovery_1.tres" id="4_r480e"]
+[ext_resource type="Texture2D" uid="uid://betofuunmp3tw" path="res://assets/ui/create/cre_label_strecovery_1.tres" id="5_8cb82"]
+[ext_resource type="Texture2D" uid="uid://b3ctd8e4gjsrm" path="res://assets/ui/create/cre_label_support_1.tres" id="6_0ci0d"]
+[ext_resource type="Texture2D" uid="uid://bryjrwhirmv32" path="res://assets/ui/create/cre_label_attack_1.tres" id="7_qn3pd"]
+[ext_resource type="Texture2D" uid="uid://dafwo7wt1ktoh" path="res://assets/ui/create/cre_label_other_1.tres" id="8_bsaf4"]
 
 [node name="CraftItem" type="Control" unique_id=718299518]
 layout_mode = 3
@@ -17,50 +23,77 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="craft_recipe_type_recovery" type="TextureRect" parent="." unique_id=1906002777]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=631220167]
 layout_mode = 0
-offset_left = 7.0
-offset_top = 133.0
-offset_right = 125.0
-offset_bottom = 209.0
-texture = ExtResource("1_rddch")
-expand_mode = 1
+offset_top = 176.0
+offset_right = 642.0
+offset_bottom = 749.0
 
-[node name="craft_recipe_type_strecovery" type="TextureRect" parent="." unique_id=1724341725]
-layout_mode = 0
-offset_left = 134.0
-offset_top = 133.0
-offset_right = 252.0
-offset_bottom = 209.0
-texture = ExtResource("1_rddch")
-expand_mode = 1
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=84110173]
+layout_mode = 2
+size_flags_vertical = 3
 
-[node name="craft_recipe_type_support" type="TextureRect" parent="." unique_id=1659542569]
-layout_mode = 0
-offset_left = 261.0
-offset_top = 133.0
-offset_right = 379.0
-offset_bottom = 209.0
-texture = ExtResource("1_rddch")
-expand_mode = 1
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=55246672]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 15
 
-[node name="craft_recipe_type_attack" type="TextureRect" parent="." unique_id=665045220]
-layout_mode = 0
-offset_left = 388.0
-offset_top = 133.0
-offset_right = 506.0
-offset_bottom = 209.0
-texture = ExtResource("1_rddch")
-expand_mode = 1
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=387274139]
+layout_mode = 2
+theme_override_constants/separation = 10
 
-[node name="craft_recipe_type_other" type="TextureRect" parent="." unique_id=1914851322]
+[node name="TabBar" type="HBoxContainer" parent="." unique_id=498676659]
 layout_mode = 0
-offset_left = 515.0
-offset_top = 133.0
-offset_right = 633.0
-offset_bottom = 209.0
-texture = ExtResource("1_rddch")
-expand_mode = 1
+offset_top = 100.0
+offset_right = 606.0
+offset_bottom = 176.0
+alignment = 1
+
+[node name="craft_recipe_type_recovery" type="TextureButton" parent="TabBar" unique_id=1450986801]
+layout_mode = 2
+texture_normal = ExtResource("2_005mf")
+texture_pressed = ExtResource("1_rddch")
+
+[node name="CreLabelRecovery1" type="Sprite2D" parent="TabBar/craft_recipe_type_recovery" unique_id=569804578]
+position = Vector2(59, 36)
+texture = ExtResource("4_r480e")
+
+[node name="craft_recipe_type_strecovery" type="TextureButton" parent="TabBar" unique_id=1674285053]
+layout_mode = 2
+texture_normal = ExtResource("2_005mf")
+texture_pressed = ExtResource("1_rddch")
+
+[node name="CreLabelStrecovery1" type="Sprite2D" parent="TabBar/craft_recipe_type_strecovery" unique_id=679679597]
+position = Vector2(58, 37)
+texture = ExtResource("5_8cb82")
+
+[node name="craft_recipe_type_support" type="TextureButton" parent="TabBar" unique_id=1493810188]
+layout_mode = 2
+texture_normal = ExtResource("2_005mf")
+texture_pressed = ExtResource("1_rddch")
+
+[node name="CreLabelSupport1" type="Sprite2D" parent="TabBar/craft_recipe_type_support" unique_id=785419201]
+position = Vector2(60, 36)
+texture = ExtResource("6_0ci0d")
+
+[node name="craft_recipe_type_attack" type="TextureButton" parent="TabBar" unique_id=1225859244]
+layout_mode = 2
+texture_normal = ExtResource("2_005mf")
+texture_pressed = ExtResource("1_rddch")
+
+[node name="CreLabelAttack1" type="Sprite2D" parent="TabBar/craft_recipe_type_attack" unique_id=1988197815]
+position = Vector2(59, 34)
+texture = ExtResource("7_qn3pd")
+
+[node name="craft_recipe_type_other" type="TextureButton" parent="TabBar" unique_id=569406347]
+layout_mode = 2
+texture_normal = ExtResource("2_005mf")
+texture_pressed = ExtResource("1_rddch")
+
+[node name="CreLabelOther1" type="Sprite2D" parent="TabBar/craft_recipe_type_other" unique_id=652289273]
+position = Vector2(59, 37)
+texture = ExtResource("8_bsaf4")
 
 [node name="CrePrepareTitle" type="Sprite2D" parent="." unique_id=491988617]
 position = Vector2(212, 56)

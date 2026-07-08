@@ -4,7 +4,7 @@ signal battle_state_ready
 signal enemy_hp_changed(enemy_index: int, new_hp: int, max_hp: int, hp_percent: int)
 signal turn_changed(new_turn: int)
 signal unit_stats_updated(index: int, unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int)
-signal attack_landed(attacker_team: String, attacker_index: int, target_team: String, target_index: int, damage: int, chain_count: int, receipt_type: String)
+signal attack_landed(target_team: String, target_index: int, damage: int, chain_count: int, receipt_type: String)
 signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
 signal action_queued(unit_index: int, action: CombatAction, action_id: String)
@@ -14,7 +14,7 @@ signal mission_failed
 signal monster_defeated(monster_id: int)
 
 signal item_refunded(item_id: String)
-signal wave_changed(current_wave: int, total_waves: int)
+signal wave_changed()
 signal wave_transition_started(current_wave: int, next_wave: int, total_waves: int)
 signal item_dropped(enemy_index: int, item_id: String)
 signal limit_crystal_dropped(enemy_index: int, target_unit_index: int)
@@ -154,7 +154,7 @@ func _process(_delta: float) -> void:
 						if p_idx != -1:
 							request_unit_stats(p_idx)
 
-			attack_landed.emit(attacker_team, attacker_index, target_team, target_index, final_damage, chain_count_emitted, hit.get("type", ""))
+			attack_landed.emit(target_team, target_index, final_damage, chain_count_emitted, hit.get("type", ""))
 			pending_hits.remove_at(i)
 
 	_check_turn_progression()
@@ -273,7 +273,7 @@ func initialize_battle(mission_id: String) -> void:
 				battle_unit["current_hp"] = max_hp
 				battle_unit["max_mp"] = max_mp
 				battle_unit["current_mp"] = max_mp
-				var limitburst_id: String = str(battle_unit.get("limitburst_id", ""))
+				var limitburst_id: String = str(battle_unit.get("limitBurstId", ""))
 				battle_unit["limitburst_id"] = limitburst_id
 				var max_limit_gauge: int = SkillResolver.get_limitburst_max_gauge(limitburst_id)
 				battle_unit["limit_gauge"] = 0
@@ -739,7 +739,7 @@ func _spawn_next_wave() -> void:
 
 	_spawn_wave(current_wave, mission_data)
 
-	wave_changed.emit(current_wave, total_waves)
+	wave_changed.emit()
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()

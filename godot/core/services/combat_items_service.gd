@@ -27,7 +27,7 @@ func set_combat_item(slot_index: int, item_id: String) -> void:
 
 	var normalized_item_id: String = item_id.strip_edges()
 	if normalized_item_id != "":
-		if GameDatabase.get_item(normalized_item_id).is_empty():
+		if GameDatabase.get_item(int(normalized_item_id)).is_empty():
 			normalized_item_id = ""
 		else:
 			var stackables: Dictionary = InventoryService.owned_items.get("stackables", {})

@@ -386,7 +386,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 			total_xp_gain += int(gains.get("xp_gain", 0))
 			total_trust_gain += float(gains.get("trust_gain", 0.0))
 
-			if _get_unit_type(material_unit_data) == UNIT_TYPE_PLAYABLE and _is_duplicate_unit(base_unit, base_unit_data, material_unit, material_unit_data):
+			if _get_unit_type(material_unit_data) == UNIT_TYPE_PLAYABLE and _is_duplicate_unit(base_unit, material_unit):
 				total_trust_gain += PLAYABLE_DUPLICATE_TRUST_BONUS + _get_material_accumulated_trust(material_unit)
 
 		base_unit["xp"] = int(base_unit.get("xp", 0)) + total_xp_gain
@@ -538,12 +538,7 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 		var template_id: String = str(requested_item.get("template_id", ""))
 		item_template = GameDatabase.get_equipment(template_id)
 		if item_template.is_empty():
-			# Materia instances live in the same equipment collection but resolve
-			# their template via game_data_materia. The validator only needs the
-			# template for weapon-shape checks (slot/is_twohanded/type_id), which
-			# materia simply won't satisfy — so the dual-wield branch falls through
-			# while the sharing-conflict branch still runs.
-			item_template = StaticData.game_data_materia.get(template_id, {})
+			item_template = GameDatabase.get_materia(int(template_id))
 
 		var validation: Dictionary = EquipmentValidator.can_equip(target_unit_inst, slot_id, item_template, owned_units_ids, item_id)
 		if not bool(validation.get("ok", false)):
@@ -670,11 +665,11 @@ func _summon_fixed_units_local(unit_id: String, amount: int, source_event: Strin
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), source_event)
 	return {"summoned": summoned_units}
 
-func _name_is_latin(name: String) -> bool:
-	if name == "":
+func _name_is_latin(unit_name: String) -> bool:
+	if unit_name == "":
 		return false
-	for i in name.length():
-		var cp: int = name.unicode_at(i)
+	for i in unit_name.length():
+		var cp: int = unit_name.unicode_at(i)
 		# Basic Latin, Latin-1 Supplement, Latin Extended-A/B (0x0000..0x024F)
 		if cp > 0x024F:
 			return false
@@ -739,7 +734,7 @@ func _get_raw_unit_exp_pattern(unit_id: String, unit_data: Dictionary, rarity: i
 
 	return 0
 
-func _get_exp_unit_yield(unit_id: String, unit_data: Dictionary) -> int:
+func _get_exp_unit_yield(unit_data: Dictionary) -> int:
 	if int(unit_data.get("jobId", 0)) != EXP_UNIT_JOB_ID:
 		return 0
 	var exp_pattern: int = int(unit_data.get("expPatternId"))
@@ -751,7 +746,7 @@ func _get_base_exp_yield(unit: Dictionary, unit_data: Dictionary) -> int:
 
 	var unit_type: String = _get_unit_type(unit_data)
 	if unit_type == UNIT_TYPE_EXP_MATERIAL:
-		return _get_exp_unit_yield(str(unit.get("unit_id", "")), unit_data)
+		return _get_exp_unit_yield(unit_data)
 
 	if unit_type == UNIT_TYPE_PLAYABLE:
 		var rarity: int = maxi(1, int(unit.get("current_rarity", int(unit_data.get("rarity_min", 1)))))
@@ -774,7 +769,7 @@ func _get_trust_yield(unit_id: String, unit_data: Dictionary) -> float:
 		return max(0.0, float(unit_data.get("trust_yield", 0.0)))
 	return float(TRUST_YIELD_BY_UNIT_ID.get(int(unit_id), 0.0))
 
-func _is_duplicate_unit(base_unit: Dictionary, base_unit_data: Dictionary, material_unit: Dictionary, material_unit_data: Dictionary) -> bool:
+func _is_duplicate_unit(base_unit: Dictionary, material_unit: Dictionary) -> bool:
 	return str(base_unit.get("unitSeries")) == str(material_unit.get("unitSeries"))
 
 func _get_max_accumulated_exp(unit_data: Dictionary) -> int:
@@ -786,8 +781,6 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 	if unit_data.is_empty():
 		return {"error": "Missing unit static data for trust reward"}
 
-	var game_data_materia: Dictionary = StaticData.game_data_materia
-
 	var tmr_value: Variant = unit_data.get("trustMasterReward", null)
 	tmr_value = tmr_value.split(":")
 	if tmr_value.size() >= 2 and tmr_value[1] != null:
@@ -798,7 +791,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 				return {"error": "Trust reward equipment template not found"}
 			return {"reward_type": "EQUIP", "template_id": reward_id}
 		elif reward_type == "22":
-			if not game_data_materia.has(reward_id):
+			if GameDatabase.get_materia(int(reward_id)).is_empty():
 				return {"error": "Trust reward materia template not found"}
 			return {"reward_type": "MATERIA", "template_id": reward_id}
 		else:
@@ -808,7 +801,7 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 	if trust_mastery_id != "":
 		if not GameDatabase.get_equipment(trust_mastery_id).is_empty():
 			return {"reward_type": "EQUIP", "template_id": trust_mastery_id}
-		if game_data_materia.has(trust_mastery_id):
+		if not GameDatabase.get_materia(int(trust_mastery_id)).is_empty():
 			return {"reward_type": "MATERIA", "template_id": trust_mastery_id}
 
 	return {"error": "No supported trust reward configured"}

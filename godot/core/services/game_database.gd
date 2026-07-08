@@ -40,7 +40,6 @@ var _ability_kind_loaded: bool = false
 var _ability_cache: Dictionary = {}
 var _passive_cache: Dictionary = {}
 var _limitburst_cache: Dictionary = {}
-var _item_cache: Dictionary = {}
 var _equipment_cache: Dictionary = {}
 
 
@@ -222,7 +221,7 @@ func get_dungeons(area_id: String) -> Array:
 		"SELECT d.dungeonId, d.name, d.position, COALESCE(i.iconFile, '') AS iconFile, d.switchInfo FROM dungeon d"
 		+ " LEFT JOIN icon i ON i.iconId = d.iconId"
 		+ " WHERE d.areaId = ?"
-		+ " AND (COALESCE(d.fileInfo, '') = '' OR d.fileInfo NOT IN (SELECT fileInfo FROM town WHERE COALESCE(fileInfo, '') != ''))"
+		#+ " AND (COALESCE(d.fileInfo, '') = '' OR d.fileInfo NOT IN (SELECT fileInfo FROM town WHERE COALESCE(fileInfo, '') != ''))"
 		+ " ORDER BY d.rowid",
 		[area_id]
 	)
@@ -273,6 +272,8 @@ func get_town(town_id: String) -> Dictionary:
 	)
 	return rows[0] if not rows.is_empty() else {}
 
+func get_story_sub(town_id: String) -> Array:
+	return query("SELECT * FROM story_sub WHERE targetId = ?", [town_id])
 
 func get_quests_for_town(town_id: String) -> Array:
 	return query(
@@ -609,7 +610,7 @@ func _build_magic_record(row: Dictionary) -> Dictionary:
 	var cost_val: int = int(row.get("cost", 0))
 	return {
 		"name": str(row.get("name", "")),
-		"icon": str(row.get("iconFile", "")),
+		"iconFile": str(row.get("iconFile", "")),
 		"compendium_id": int(row.get("dispOrder", 0)),
 		"rarity": int(row.get("rarity", 0)),
 		"cost": {"MP": cost_val} if cost_val > 0 else {},
@@ -620,7 +621,7 @@ func _build_magic_record(row: Dictionary) -> Dictionary:
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
 		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
-		"description": str(row.get("explainShort", "")),
+		"explainShort": str(row.get("explainShort", "")),
 	}
 
 
@@ -709,7 +710,7 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 	var cost_val: int = int(row.get("cost", 0))
 	return {
 		"name": str(row.get("name", "")),
-		"icon": str(row.get("iconFile", "")),
+		"iconFile": str(row.get("iconFile", "")),
 		"compendium_id": int(row.get("dispOrder", 0)),
 		"rarity": int(row.get("rarity", 0)),
 		"cost": {"MP": cost_val} if cost_val > 0 else {},
@@ -721,7 +722,7 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 		"motion_type": int(row.get("motionType", 0)),
 		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
-		"description": str(row.get("explainShort", "")),
+		"explainShort": str(row.get("explainShort", "")),
 	}
 
 
@@ -729,12 +730,12 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 func _build_passive_record(row: Dictionary) -> Dictionary:
 	return {
 		"name": str(row.get("name", "")),
-		"icon": str(row.get("iconFile", "")),
+		"iconFile": str(row.get("iconFile", "")),
 		"compendium_id": int(row.get("dispOrder", 0)),
 		"rarity": int(row.get("rarity", 0)),
 		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
-		"description": str(row.get("explainShort", "")),
+		"explainShort": str(row.get("explainShort", "")),
 	}
 
 
@@ -801,6 +802,7 @@ func _build_limitburst_record(row: Dictionary, lv_rows: Array) -> Dictionary:
 ## (matching the old JSON) or a float otherwise.
 func _limitburst_gauge(cost: int) -> Variant:
 	if cost % 100 == 0:
+		@warning_ignore("integer_division")
 		return cost / 100
 	return cost / 100.0
 
@@ -876,14 +878,8 @@ const _EQUIP_TYPE_ICONS: Dictionary = {
 const _STATUS_NAMES: Array = ["Poison", "Blind", "Sleep", "Silence", "Paralysis", "Confusion", "Disease", "Petrify"]
 
 
-## Full item record reconstructed from the item (+ icon + item_explain) tables,
-## matching the shape items.json used to provide, or {} if unknown. Cached per id.
-## The old multi-language `strings` block is reduced to the English entries the
-## game actually reads (item.gd / shop_item_row read desc_short[0] / first entry).
-func get_item(item_id) -> Dictionary:
-	var key: String = str(item_id)
-	if _item_cache.has(key):
-		return _item_cache[key]
+## Full item record reconstructed from the item (+ icon + item_explain) tables.
+func get_item(item_id: int) -> Dictionary:
 	var rows: Array = query(
 		"SELECT i.*, COALESCE(ic.iconFile, '') AS iconFile,"
 		+ " COALESCE(e.explainShort, '') AS explainShort, COALESCE(e.explainLong, '') AS explainLong"
@@ -891,52 +887,57 @@ func get_item(item_id) -> Dictionary:
 		+ " LEFT JOIN icon ic ON ic.iconId = i.iconId"
 		+ " LEFT JOIN item_explain e ON e.itemId = i.itemId"
 		+ " WHERE i.itemId = ? LIMIT 1",
-		[key]
+		[item_id]
 	)
-	if rows.is_empty():
-		return {}
-	var built: Dictionary = _build_item_record(rows[0])
-	_item_cache[key] = built
-	return built
-
-
-func _build_item_record(row: Dictionary) -> Dictionary:
-	var use_case: PackedStringArray = _str_col(row, "useCase").split(",")
-	var use_way: String = _str_col(row, "useWay")
-	var flags: Array = []
-	if use_way != "":
-		for v in use_way.split(","):
-			flags.append(str(v) == "1")
-	var cat: String = _str_col(row, "category")
-	var record: Dictionary = {
-		"name": str(row.get("name", "")),
-		"type": _ITEM_TYPE_NAMES.get(cat, cat),
-		"compendium_id": int(row.get("QLfe23bu", 0)),
-		"usable_in_combat": use_case.size() > 0 and str(use_case[0]) == "1",
-		"usable_in_exploration": use_case.size() > 1 and str(use_case[1]) == "1",
-		"flags": flags,
-		"carry_limit": int(row.get("carryMaxNum", 0)),
-		"stack_size": int(row.get("possessionLimit", 0)),
-		"price_buy": int(row.get("priceBuy", 0)),
-		"price_sell": int(row.get("priceSell", 0)),
-		"icon": str(row.get("iconFile", "")),
-		"strings": {
-			"names": [str(row.get("name", ""))],
-			"desc_short": [str(row.get("explainShort", ""))],
-			"desc_long": [str(row.get("explainLong", ""))],
-		},
-	}
-	# Old JSON shape: an effects array when the item has a process, else "".
-	var effects_raw: Array = _decode_effects_raw(row)
-	record["effects_raw"] = effects_raw if not effects_raw.is_empty() else ""
-	return record
-
+	return rows[0] if not rows.is_empty() else {}
 
 func get_all_prism() -> Array[String]:
 	var rows = query("select itemId from item where name like \"%'s prism\"")
 	var values: Array[String] = []
 	values.assign(rows.map(func(dict): return str(dict["itemId"])))
 	return values
+
+# === Recipe ===
+
+func get_recipe(recipe_id: int) -> Dictionary:
+	var rows: Array = query(
+		"select * from recipe where recipeId = ? limit 1",
+		[recipe_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+func get_item_recipes(type_id: int) -> Array:
+	return query("select r.recipeId, r.targetId, r.gil, r.material, i.name, i.useType, ic.iconFile from recipe r"
+		+" join item i on i.itemId = r.targetId"
+		+" join icon ic on i.iconId = ic.iconId"
+		+" where r.targetType = ? and i.useType = ?", [20, type_id])
+
+func get_equipment_recipes(type_id: int) -> Array:
+	return query("select r.recipeId, r.targetId, r.gil, r.material, i.name, ic.iconFile from recipe r"
+		+" join equip_item i on i.equipId = r.targetId"
+		+" join icon ic on i.iconId = ic.iconId"
+		+" where r.targetType = ? and i.equipType = ?", [21, type_id])
+
+func get_materia_recipes(type_id: int) -> Array:
+	return query("select m.name, r.recipeId, r.targetId, r.gil, r.material, i.name, ic.iconFile from recipe r"
+		+" join materia i on i.materiaId = r.targetId"
+		+" join magic m on i.magicId = m.magicId"
+		+" join icon ic on i.iconId = ic.iconId"
+		+" where r.targetType = ? and m.magicType = ?", [22, type_id])
+
+# === Materia ===
+
+func get_materia(materia_id: int) -> Dictionary:
+	var rows: Array = query(
+		"SELECT m.*, COALESCE(ic.iconFile, '') AS iconFile,"
+		+ " COALESCE(x.explainShort, '') AS explainShort, COALESCE(x.explainLong, '') AS explainLong"
+		+ " FROM materia m"
+		+ " LEFT JOIN icon ic ON ic.iconId = m.iconId"
+		+ " LEFT JOIN materia_explain x ON x.materiaId = m.materiaId"
+		+ " WHERE m.materiaId = ? LIMIT 1",
+		[materia_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
 
 # === Equipment ===
 
@@ -979,7 +980,7 @@ func _build_equipment_record(row: Dictionary) -> Dictionary:
 	}
 	return {
 		"name": _str_col(row, "name"),
-		"icon": _str_col(row, "iconFile"),
+		"iconFile": _str_col(row, "iconFile"),
 		"type_id": type_id,
 		"slot_id": slot_id,
 		"type": _EQUIP_TYPE_NAMES.get(str(type_id), str(type_id)),
@@ -991,12 +992,14 @@ func _build_equipment_record(row: Dictionary) -> Dictionary:
 		"rarity": int(row.get("52KBR9qV", 0)),
 		"accuracy": int(row.get("ECbv61DK", 0)),
 		"dmg_variance": null,
-		"price_buy": int(row.get("priceBuy", 0)),
+		"priceBuy": int(row.get("priceBuy", 0)),
 		"price_sell": int(row.get("priceSell", 0)),
 		"skills": _decode_equipment_skill_ids(_str_col(row, "magicId"), _str_col(row, "abilityId")),
 		"requirements": _decode_equipment_requirements(_str_col(row, "equipCondition")),
 		"effects": [],
 		"stats": stats,
+		"explainShort": _str_col(row, "explainShort"),
+		"explainLong": _str_col(row, "explainLong"),
 		"strings": {
 			"name": [_str_col(row, "name")],
 			"desc_short": [_str_col(row, "explainShort")],
@@ -1061,7 +1064,7 @@ func _decode_named_value_map(raw: String, names: Array) -> Variant:
 		var v: int = int(v_raw)
 		if v != 0:
 			out[str(names[i])] = v
-	return out if not out.is_empty() else null
+	return out
 
 
 ## effects_raw: one entry per effect, [targetRange, target, processId, [params]].
@@ -1160,7 +1163,7 @@ func _decode_element_inflict(raw: String) -> Variant:
 		var v: String = str(vals[i]).strip_edges()
 		if v != "" and v != "0":
 			names.append(_MAGIC_ELEMENTS[i])
-	return names if not names.is_empty() else null
+	return names
 
 
 func _group_count(s: String) -> int:

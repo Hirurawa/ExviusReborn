@@ -71,10 +71,9 @@ func _populate_list() -> void:
 		item_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		equip_selection_list.add_child(item_cell)
 		if str(item_dict.get("item_type", "")) == "MATERIA":
-			var icon_name: String = str(item_dict.get("icon", ""))
+			var icon_name: String = str(item_dict.get("iconFile", ""))
 			var icon_path: String = "res://assets/abilities/" + icon_name if icon_name != "" else ""
-			var effects: Array = item_dict.get("effects", [])
-			var detail_text: String = str(effects[0]) if not effects.is_empty() else ""
+			var detail_text: String = item_dict.get("explainShort", "No description")
 			item_cell.setup_placeholder(str(item_dict.get("name", "Unknown Materia")), detail_text, {
 				"icon_path": icon_path,
 				"equipped_to_unit_id": str(item_dict.get("equipped_to", ""))

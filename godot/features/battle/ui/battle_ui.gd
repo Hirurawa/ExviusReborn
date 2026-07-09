@@ -133,9 +133,24 @@ func _enter_ally_selection_state(action_type: int, action_name: String, action_i
 	if _cancel_target_button:
 		_cancel_target_button.show()
 
+	var resolution: Dictionary = action_payload.get("resolution", {})
+	var targeting_meta: Dictionary = resolution.get("targeting", {})
+	var targets_dead: bool = targeting_meta.get("targets_dead", false)
+	var targets_living: bool = targeting_meta.get("targets_living", true)
+
 	for p in _active_panels:
-		p.is_ally_targeting_mode = true
-		p.modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
+		var is_valid: bool = false
+		var unit_idx: int = p._my_index
+		if unit_idx >= 0 and unit_idx < battle_manager.party_data.size():
+			var unit_data: Dictionary = battle_manager.party_data[unit_idx]
+			if not unit_data.is_empty():
+				var is_dead: bool = unit_data.get("current_hp", 0) <= 0
+				if is_dead and targets_dead:
+					is_valid = true
+				elif not is_dead and targets_living:
+					is_valid = true
+
+		p.set_ally_targeting_mode(true, is_valid)
 
 func _init_combat_inventory() -> void:
 	combat_inventory.reload_from_services()
@@ -152,8 +167,7 @@ func _exit_ally_selection_state() -> void:
 
 	# Reset panels visually
 	for p in _active_panels:
-		p.is_ally_targeting_mode = false
-		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		p.set_ally_targeting_mode(false)
 		p.update_action_visuals()
 
 func _queue_resolved_action(unit_index: int, action_type: int, action_name: String, resolution: Dictionary, should_consume_item: bool = true) -> bool:
@@ -566,7 +580,9 @@ func _build_targeting_metadata_from_parsed_data(parsed_data: Dictionary) -> Dict
 		"targets_allies": false,
 		"targets_enemies": false,
 		"targets_self": false,
-		"has_aoe": false
+		"has_aoe": false,
+		"targets_dead": false,
+		"targets_living": false
 	}
 
 	for effect in parsed_data.get("effects", []):
@@ -582,6 +598,10 @@ func _build_targeting_metadata_from_parsed_data(parsed_data: Dictionary) -> Dict
 			metadata["targets_enemies"] = true
 		elif target_type in [2, 6]:
 			metadata["targets_allies"] = true
+			if target_type == 6:
+				metadata["targets_dead"] = true
+			else:
+				metadata["targets_living"] = true
 			if target_area == 1:
 				metadata["needs_ally_selection"] = true
 
@@ -922,6 +942,13 @@ func _on_panel_tapped(unit_index: int) -> void:
 		if unit_index < 0 or unit_index >= battle_manager.party_data.size():
 			_exit_ally_selection_state()
 			return
+
+		# Check if the tapped panel is marked as a valid target
+		for p in _active_panels:
+			if p._my_index == unit_index:
+				if not p.is_valid_target:
+					return
+				break
 
 		var unit_data: Dictionary = battle_manager.party_data[_menu_target_unit_index]
 		if not unit_data.is_empty():

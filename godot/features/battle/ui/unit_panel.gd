@@ -5,7 +5,6 @@ class_name UnitPanel
 signal open_skill_menu(unit_index: int)
 signal open_item_menu(unit_index: int)
 signal panel_tapped(unit_index: int)
-signal info_tapped(unit_index: int)
 
 @onready var unit_thum: TextureRect = $UnitThum
 @onready var unit_name: Label = $UnitName
@@ -61,6 +60,10 @@ func _gui_input(event: InputEvent) -> void:
 	if has_acted and not is_ally_targeting_mode:
 		return
 
+	if _battle_manager.player_units[_my_index].current_hp == 0:
+		_on_unit_acted(_my_index)
+		return
+
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			_is_dragging = false
@@ -114,7 +117,10 @@ func _on_unit_acted(index: int) -> void:
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 
 func _on_turn_changed(_new_turn: int) -> void:
-	_has_acted = false
+	if _battle_manager.player_units[_my_index].current_hp == 0:
+		_has_acted = true
+	else:
+		_has_acted = false
 	_current_queued_action = 0
 	_current_queued_action_id = ""
 	if _battle_manager:
@@ -175,14 +181,12 @@ func set_hp_display(current_hp: int, max_hp: int) -> void:
 	if max_hp <= 0:
 		return
 	var fill_ratio: float = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
-	#hp_gage.scale.x = fill_ratio
 	hp_bar.scale.x = fill_ratio
 
 func set_mp_display(current_mp: int, max_mp: int) -> void:
 	if max_mp <= 0:
 		return
 	var fill_ratio: float = clampf(float(current_mp) / float(max_mp), 0.0, 1.0)
-	#mp_gage.scale.x = fill_ratio
 	mp_bar.scale.x = fill_ratio
 
 func set_limit_gauge(current_limit: int, max_limit: int) -> void:

@@ -94,6 +94,28 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 
 	return all_hit_payloads
 
+func _apply_spr_damage(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
+
+	var caster_stats = caster.get("final_stats", caster).get("stats", {})
+
+	var all_hit_payloads: Array[Dictionary] = []
+
+	for target in targets:
+		var target_stats = target.get("final_stats", target)
+		target_stats = target_stats.get("stats", target_stats)
+		var caster_SPR = _get_stat_safe(caster_stats, "SPR", 10)
+		var target_SPR = _get_stat_safe(target_stats, "SPR", 10)
+			
+		var raw_damage = (float(caster_SPR * caster_SPR) / float(max(1, target_SPR))) * modifier
+		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
+
+		all_hit_payloads.append_array(hit_payloads)
+
+	return all_hit_payloads
+
 func _apply_heal(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
 	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
 	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])

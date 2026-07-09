@@ -325,7 +325,7 @@ func _open_item_menu(unit_index: int) -> void:
 	for item_id in combat_inventory.entries().keys():
 		var quantity: int = combat_inventory.quantity(item_id)
 		if quantity > 0:
-			var item_data: Dictionary = GameDatabase.get_item(item_id)
+			var item_data: Dictionary = GameDatabase.get_item(int(item_id))
 			if not item_data.is_empty():
 				var item_name: String = item_data.get("name", "Unknown Item")
 				options.append({
@@ -758,7 +758,6 @@ func _on_battle_state_ready() -> void:
 			panel.open_skill_menu.connect(_open_skill_menu)
 			panel.open_item_menu.connect(_open_item_menu)
 			panel.panel_tapped.connect(_on_panel_tapped)
-			panel.info_tapped.connect(_on_unit_info_tapped)
 			_active_panels.append(panel)
 
 			# Add Combat Sprite to the corresponding UnitDot
@@ -1220,7 +1219,7 @@ func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: in
 	tween.tween_interval(0.5) # Hold so the player reads it
 
 	# The Odometer "Push" Effect!
-	tween.parallel().tween_property(current_num, "position:y", -50, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
+	tween.parallel().tween_property(current_num, "position:y", -60, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
 	tween.parallel().tween_property(next_num, "position:y", 0, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
 
 	tween.tween_interval(0.5) # Hold again

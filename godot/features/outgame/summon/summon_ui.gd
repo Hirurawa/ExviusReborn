@@ -42,7 +42,6 @@ func _show_summon_results(result: Dictionary) -> void:
 		return
 
 	for unit_inst in summoned_units:
-		var unit_id: String = str(unit_inst.get("unit_id", ""))
 		var unit_data: Dictionary = unit_inst
 		var unit_rarity: int = int(unit_inst.get("current_rarity", int(unit_data.get("rarity_min", 1))))
 		var vbox := VBoxContainer.new()

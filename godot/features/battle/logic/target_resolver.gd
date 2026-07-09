@@ -41,16 +41,24 @@ static func resolve(target_area: int, target_type: int, caster: Dictionary, prim
 		return [living_enemies[0]] # Fallback to first alive if intended target died
 
 	# TYPE 2/6: ALLY (own team)
-	if target_type in [2, 6]:
+	if target_type == 2: # Living allies
 		if target_area == 2:
 			var living_allies: Array[Dictionary] = get_living_units(caster_ally_pool)
 			if living_allies.is_empty():
 				return []
 			return living_allies
+		# Single Target
+		if not primary_target.is_empty() and primary_target.get("current_hp", 0) > 0:
+			return [primary_target]
+		return [caster]
+	
+	if target_type == 6: # Can target dead units
+		if target_area == 2:
+			return caster_ally_pool
 		# Single Target - dead allies are valid (e.g. revive)
 		if not primary_target.is_empty():
 			return [primary_target]
 		return [caster]
-
+	
 	# Fallback catch-all
 	return []

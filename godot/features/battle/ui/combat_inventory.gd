@@ -27,7 +27,7 @@ func reload_from_services() -> void:
 		var item_data: Dictionary = GameDatabase.get_item(int(item_id))
 		if item_data.is_empty():
 			continue
-		if item_data.get("usable_in_combat", false) == true and item_data.has("effects_raw"):
+		if item_data.get("useType", 0) == 1 and item_data.has("processParam"):
 			_quantities[item_id] = quant
 
 

@@ -88,7 +88,7 @@ static func parse_skill(skill_data: Dictionary, skill_schema: Dictionary) -> Dic
 				var value = payload[i]
 				
 				# Drop zeros and unknowns for a perfectly clean output!
-				if _has_meaningful_payload_value(value) and key != "UNKNOWN":
+				if _has_meaningful_payload_value(value) and key != "UNKNOWN" and key != "???" and key != "":
 					parsed_effect["effect"][key] = value
 					
 			parsed_action.get("effects").append(parsed_effect)

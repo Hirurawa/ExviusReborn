@@ -21,7 +21,13 @@ func apply_receipt(receipt: Dictionary, target: Dictionary) -> void:
 func _resolve_damage(receipt: Dictionary, target: Dictionary) -> void:
 	var amount = receipt.get("amount", 0)
 	var current_hp = target.get("current_hp", 0)
-	target["current_hp"] = maxi(0, current_hp - amount)
+	var dodge = target.get('active_effects', []).filter(func(eff): return eff.get("type") == "DODGE")
+	dodge = dodge[0] if not dodge.is_empty() else null
+	if dodge:
+		dodge["params"]["hits_to_dodge"] -= 1
+		print("DODGED! Remaining: " + str(dodge["params"]["hits_to_dodge"]))
+	else:
+		target["current_hp"] = maxi(0, current_hp - amount)
 
 func _resolve_heal(receipt: Dictionary, target: Dictionary) -> void:
 	var amount = receipt.get("amount", 0)

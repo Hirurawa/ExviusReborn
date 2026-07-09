@@ -308,19 +308,18 @@ func request_craft_item(recipe_id: String, quantity: int) -> void:
 				#return
 			#remove_stackable(mat_data[1], int(mat_data[2]))
 		if mat_data[0] == "21": # Equipment
-			var owned_count: int = int(owned_items.get("equipment", {}).get(mat_data[1], 0))
+			var owned_count: int = int(owned_items.get("equipment", []).filter(func(item): return item.get("template_id") == mat_data[1]).size())
 			if owned_count < int(mat_data[2]):
 				craft_failed.emit("ERR_INSUFFICIENT_RESOURCES")
 				print("Not enough equipment: " + str(mat_data[1]) + ": " + str(owned_count) + " < " + str(mat_data[2]))
 				#return
 		if mat_data[0] == "22": # Materia
-			var owned_count: int = int(owned_items.get("equipment", {}).get(mat_data[1], 0))
+			var owned_count: int = int(owned_items.get("equipment", []).filter(func(item): return item.get("template_id") == mat_data[1]).size())
 			if owned_count < int(mat_data[2]):
 				craft_failed.emit("ERR_INSUFFICIENT_RESOURCES")
 				print("Not enough materia: " + str(mat_data[1]) + ": " + str(owned_count) + " < " + str(mat_data[2]))
 				#return
-		
-
+	
 	if recipe_inst.get("targetType") == 20:
 		print("Add stackable: " + str(recipe_inst.get("targetId")))
 		add_stackable(str(recipe_inst.get("targetId")), quantity)

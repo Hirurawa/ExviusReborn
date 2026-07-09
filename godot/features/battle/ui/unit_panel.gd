@@ -55,12 +55,13 @@ func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:
 		return
 
+	var is_dead: bool = _battle_manager.player_units[_my_index].current_hp <= 0
 	var has_acted: bool = _my_index in _battle_manager.player_units_acted_this_turn
 
 	if has_acted and not is_ally_targeting_mode:
 		return
 
-	if _battle_manager.player_units[_my_index].current_hp == 0:
+	if is_dead and not is_ally_targeting_mode:
 		_on_unit_acted(_my_index)
 		return
 
@@ -74,7 +75,7 @@ func _gui_input(event: InputEvent) -> void:
 			_is_dragging = false
 
 	elif (event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or event is InputEventScreenDrag:
-		if has_acted:
+		if has_acted or is_dead:
 			return
 
 		var diff: Vector2 = event.position - _drag_start_position
@@ -117,7 +118,7 @@ func _on_unit_acted(index: int) -> void:
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 
 func _on_turn_changed(_new_turn: int) -> void:
-	if _battle_manager.player_units[_my_index].current_hp == 0:
+	if _battle_manager.player_units[_my_index].current_hp <= 0:
 		_has_acted = true
 	else:
 		_has_acted = false

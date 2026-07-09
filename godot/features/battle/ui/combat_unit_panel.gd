@@ -51,9 +51,14 @@ func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:
 		return
 
-	var has_acted = _my_index in _battle_manager.player_units_acted_this_turn
+	var is_dead: bool = _battle_manager.player_units[_my_index].current_hp <= 0
+	var has_acted: bool = _my_index in _battle_manager.player_units_acted_this_turn
 
 	if has_acted and not is_ally_targeting_mode:
+		return
+
+	if is_dead and not is_ally_targeting_mode:
+		_on_unit_acted(_my_index)
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -66,7 +71,7 @@ func _gui_input(event: InputEvent) -> void:
 			_is_dragging = false
 
 	elif (event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or event is InputEventScreenDrag:
-		if has_acted:
+		if has_acted or is_dead:
 			return
 
 		var diff = event.position - _drag_start_position
@@ -108,7 +113,10 @@ func _on_unit_acted(index: int) -> void:
 		name_label.text = name_label.text.split(" - ")[0] # Clean up action text
 
 func _on_turn_changed(_new_turn: int) -> void:
-	_has_acted = false
+	if _battle_manager and _battle_manager.player_units[_my_index].current_hp <= 0:
+		_has_acted = true
+	else:
+		_has_acted = false
 	_current_queued_action = 0 # ATTACK is 0, handled safely via variable initialization
 	if _battle_manager:
 		_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)

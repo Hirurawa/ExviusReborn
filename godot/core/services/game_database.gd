@@ -724,6 +724,7 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 		"motion_type": int(row.get("motionType", 0)),
 		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
+		"targetType": int(row.get("J35nicFV")),
 		"explainShort": str(row.get("explainShort", "")),
 	}
 

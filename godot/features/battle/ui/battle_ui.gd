@@ -29,6 +29,9 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var enemy_hp_bar: ProgressBar = %EnemyHPBar
 @onready var enemy_hp_pct_label: Label = %EnemyHPPctLabel
 @onready var bottom_ui_wrapper: Control = %BottomUIWrapper
+var _original_unit_dot_positions: Dictionary = {}
+var _unit_dot_covering_state: Dictionary = {}
+const COVER_MOVE_OFFSET: Vector2 = Vector2(-40, 0)
 @onready var bottom_section: GridContainer = %BottomSection
 @onready var unit_info_popup: Control = %UnitInfoPopup
 @onready var background: TextureRect = $Background
@@ -85,6 +88,10 @@ func _exit_tree() -> void:
 		_damage_numbers.clear_pool()
 
 func _ready() -> void:
+	for i in range(player_sprites_container.get_child_count()):
+		var dot = player_sprites_container.get_child(i)
+		_original_unit_dot_positions[i] = dot.position
+		_unit_dot_covering_state[i] = false
 	# Block the Android hardware back button / Escape key during combat — the
 	# scene has its own retreat/menu flow and accidental backing out would
 	# desync battle state.
@@ -1308,3 +1315,32 @@ func _on_reload_pressed() -> void:
 		for p in _active_panels:
 			p.update_action_visuals()
 		_show_action_feedback("Reload last actions")
+
+
+func _process(_delta: float) -> void:
+	if not battle_manager or battle_manager.party_data.is_empty():
+		return
+
+	for grid_idx in range(min(player_sprites_container.get_child_count(), GRID_TO_PARTY_MAP.size())):
+		var party_idx = GRID_TO_PARTY_MAP[grid_idx]
+		if party_idx < 0 or party_idx >= battle_manager.party_data.size():
+			continue
+
+		var unit_data: Dictionary = battle_manager.party_data[party_idx]
+		if unit_data.is_empty():
+			continue
+
+		var transient: Dictionary = unit_data.get("transient_turn_state", {})
+		var is_aoe_covering: bool = bool(transient.get(CoverSystem.STATE_AOE, false))
+
+		var currently_covering: bool = _unit_dot_covering_state.get(grid_idx, false)
+
+		if is_aoe_covering != currently_covering:
+			_unit_dot_covering_state[grid_idx] = is_aoe_covering
+			var dot = player_sprites_container.get_child(grid_idx)
+			var target_pos: Vector2 = _original_unit_dot_positions[grid_idx]
+			if is_aoe_covering:
+				target_pos += COVER_MOVE_OFFSET
+
+			var tween = create_tween().bind_node(dot)
+			tween.tween_property(dot, "position", target_pos, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)

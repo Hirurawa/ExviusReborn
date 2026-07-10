@@ -50,6 +50,7 @@ static func parse_skill(skill_data: Dictionary, skill_schema: Dictionary) -> Dic
 	var effects_raw: Array = skill_data.get("effects_raw", [])
 	var attack_damage: Array = skill_data.get("attack_damage", [])
 	var attack_frames: Array = skill_data.get("attack_frames", [])
+	var t_type = skill_data.get("targetType")
 	
 	var idx = 0
 	for effect_data in effects_raw:
@@ -68,6 +69,7 @@ static func parse_skill(skill_data: Dictionary, skill_schema: Dictionary) -> Dic
 			"type": "",
 			"target_area": target_area,
 			"target_type": target_type,
+			"t_type": t_type,
 			"attack_damage": current_attack_damage,
 			"attack_frames": current_attack_frames,
 			"effect": {}

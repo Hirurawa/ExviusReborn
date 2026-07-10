@@ -622,6 +622,7 @@ func _build_magic_record(row: Dictionary) -> Dictionary:
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
 		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
+		"targetType": int(row.get("J35nicFV")),
 		"explainShort": str(row.get("explainShort", "")),
 	}
 

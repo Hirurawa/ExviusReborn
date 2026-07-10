@@ -30,6 +30,12 @@ var _current_queued_action_id: String = ""
 var _battle_manager: Node = null
 var _has_acted: bool = false
 var is_ally_targeting_mode: bool = false
+var is_valid_target: bool = false
+
+func set_ally_targeting_mode(active: bool, valid: bool = false) -> void:
+	is_ally_targeting_mode = active
+	is_valid_target = valid
+	_update_visual_state()
 
 func _ready() -> void:
 	_battle_manager = get_tree().root.find_child("BattleManager", true, false)
@@ -149,6 +155,13 @@ func update_action_visuals() -> void:
 
 func _update_visual_state() -> void:
 	if not _battle_manager:
+		return
+
+	if is_ally_targeting_mode:
+		if is_valid_target:
+			modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
+		else:
+			modulate = Color(0.5, 0.5, 0.5, 1.0) # Grayed out
 		return
 
 	if _has_acted:

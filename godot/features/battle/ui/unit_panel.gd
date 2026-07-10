@@ -60,8 +60,10 @@ func _exit_tree() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if not _battle_manager:
 		return
+	if _my_index < 0 or _my_index >= _battle_manager.party_data.size():
+		return
 
-	var is_dead: bool = _battle_manager.player_units[_my_index].current_hp <= 0
+	var is_dead: bool = _battle_manager.party_data[_my_index].get("current_hp", 0) <= 0
 	var has_acted: bool = _my_index in _battle_manager.player_units_acted_this_turn
 
 	if has_acted and not is_ally_targeting_mode:
@@ -124,7 +126,9 @@ func _on_unit_acted(index: int) -> void:
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 
 func _on_turn_changed(_new_turn: int) -> void:
-	if _battle_manager.player_units[_my_index].current_hp <= 0:
+	if not _battle_manager or _my_index < 0 or _my_index >= _battle_manager.party_data.size():
+		return
+	if _battle_manager.party_data[_my_index].get("current_hp", 0) <= 0:
 		_has_acted = true
 	else:
 		_has_acted = false

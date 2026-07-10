@@ -24,6 +24,11 @@ signal row_pressed(mission_id: String)
 @onready var energy_label: Label = $PlateButton/Overlay/StatsColumn/QuestStamina/EnergyLabel
 @onready var battles_label: Label = $PlateButton/Overlay/StatsColumn/QuestWave/BattlesLabel
 @onready var difficulty_label: Label = $PlateButton/Overlay/StatsColumn/QuestLevel/DifficultyLabel
+@onready var objective_stars: Array[Sprite2D] = [
+	$PlateButton/QuestMissionstarMiniFrame/QuestMissionstarMini,
+	$PlateButton/QuestMissionstarMiniFrame2/QuestMissionstarMini,
+	$PlateButton/QuestMissionstarMiniFrame3/QuestMissionstarMini,
+]
 
 var _mission_id: String = ""
 
@@ -37,7 +42,8 @@ func configure(
 	energy: int,
 	battles: int,
 	difficulty: String,
-	state: RowState
+	state: RowState,
+	objectives: Array = []
 ) -> void:
 	_mission_id = mission_id
 	name_label.text = mission_name
@@ -53,6 +59,7 @@ func configure(
 
 	_apply_plate_textures()
 	_apply_status_badge(state)
+	_apply_objective_stars(objectives)
 
 func _apply_plate_textures() -> void:
 	plate_button.texture_normal = PLATE_IDLE
@@ -71,6 +78,15 @@ func _apply_status_badge(state: RowState) -> void:
 	status_badge.offset_top = PLATE_TOP - BADGE_SPLIT_LINE_Y
 	status_badge.offset_right = status_badge.offset_left + badge_size.x
 	status_badge.offset_bottom = status_badge.offset_top + badge_size.y
+
+func _apply_objective_stars(objectives: Array) -> void:
+	for i in range(objective_stars.size()):
+		var objective_index: int = i + 1
+		var star: Sprite2D = objective_stars[i]
+		var frame: Control = star.get_parent() as Control
+		if frame != null:
+			star.position = frame.size * 0.5
+		star.visible = objective_index < objectives.size() and bool(objectives[objective_index])
 
 func _on_pressed() -> void:
 	if _mission_id != "":

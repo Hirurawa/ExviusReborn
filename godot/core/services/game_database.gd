@@ -32,6 +32,7 @@ var _open_failed: bool = false
 var _magic_id_set: Dictionary = {}
 var _magic_id_set_loaded: bool = false
 var _magic_cache: Dictionary = {}
+var _skill_ids_by_name_cache: Dictionary = {}
 
 # Lazily-loaded ability caches (active + passive share the `ability` table, split
 # by abilityType): id -> "ability"/"passive" kind map, plus per-id records.
@@ -41,6 +42,7 @@ var _ability_cache: Dictionary = {}
 var _passive_cache: Dictionary = {}
 var _limitburst_cache: Dictionary = {}
 var _equipment_cache: Dictionary = {}
+var _item_ids_by_name_cache: Dictionary = {}
 
 
 # === Connection ===
@@ -138,6 +140,36 @@ func query(sql: String, params: Array = []) -> Array:
 		return []
 	# `query_result` is held by value and is not overwritten by later queries.
 	return _db.query_result
+
+func find_skill_ids_by_exact_name(skill_name: String) -> Array[String]:
+	var key: String = skill_name.strip_edges().to_lower()
+	if key == "":
+		return []
+	if _skill_ids_by_name_cache.has(key):
+		return _skill_ids_by_name_cache[key]
+
+	var ids: Array[String] = []
+	for row in query("SELECT magicId AS id FROM magic WHERE lower(name) = ?", [key]):
+		ids.append(str(row.get("id", "")))
+	for row in query("SELECT abilityId AS id FROM ability WHERE abilityType = 2 AND lower(name) = ?", [key]):
+		ids.append(str(row.get("id", "")))
+	for row in query("SELECT limitBurstId AS id FROM limitburst WHERE lower(name) = ?", [key]):
+		ids.append(str(row.get("id", "")))
+	_skill_ids_by_name_cache[key] = ids
+	return ids
+
+func find_item_ids_by_exact_name(item_name: String) -> Array[String]:
+	var key: String = item_name.strip_edges().to_lower()
+	if key == "":
+		return []
+	if _item_ids_by_name_cache.has(key):
+		return _item_ids_by_name_cache[key]
+
+	var ids: Array[String] = []
+	for row in query("SELECT itemId AS id FROM item WHERE lower(name) = ?", [key]):
+		ids.append(str(row.get("id", "")))
+	_item_ids_by_name_cache[key] = ids
+	return ids
 
 
 # === World map ===

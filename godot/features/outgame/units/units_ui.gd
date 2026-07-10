@@ -197,7 +197,7 @@ func _update_slots(unit_uuids: Array) -> void:
 		var unit_inst: Dictionary = {}
 
 		if uuid != null and typeof(uuid) == TYPE_STRING and uuid != "":
-			unit_inst = UnitService.owned_units_ids.filter(func(x): return x.instance_id == uuid)[0]
+			unit_inst = _find_unit_inst(uuid)
 			if not unit_inst.is_empty():
 				var entry_id: String = str(unit_inst.get("unitId"))
 				var path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id

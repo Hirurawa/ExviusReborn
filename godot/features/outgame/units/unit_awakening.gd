@@ -73,13 +73,13 @@ func _refresh_before_visual() -> void:
 		#if ped != null:
 			#before_stand.texture = ped
 			
-	var unit_visual_after: Control = UNIT_SCENE.instantiate() as Control
-	if unit_visual_after:
-		var next_rarity_unit_inst = GameDatabase.get_unit_class_up(base_unit_inst.get("unitId"))
-		unit_visual_after.scene_size = "large"
-		unit_visual_after.unit_data_to_load = next_rarity_unit_inst
-		unit_visual_after.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		after_unit.add_child(unit_visual_after)
+		var unit_visual_after: Control = UNIT_SCENE.instantiate() as Control
+		if unit_visual_after:
+			var next_rarity_unit_inst = GameDatabase.get_unit_class_up(_base_unit_id())
+			unit_visual_after.scene_size = "large"
+			unit_visual_after.unit_data_to_load = next_rarity_unit_inst
+			unit_visual_after.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			after_unit.add_child(unit_visual_after)
 		
 	#if after_unit != null:
 		#after_unit.texture = next_unit_tex
@@ -151,7 +151,7 @@ func _populate_after_stats() -> void:
 	if after_status_offset != null:
 		after_status_offset.visible = true
 
-	var next_entry: Dictionary = GameDatabase.get_unit_next_rarity(base_unit_inst.get("unitId"))
+	var next_entry: Dictionary = GameDatabase.get_unit_next_rarity(_base_unit_id())
 	if next_entry.is_empty():
 		if after_status_offset != null:
 			after_status_offset.visible = false
@@ -184,17 +184,17 @@ func _populate_after_stats() -> void:
 		after_spr_label.text = str(int(stats.get("SPR", 0)))
 
 func _populate_awakening_requirements() -> void:
-	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(base_unit_inst.get("unitId"))
+	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(_base_unit_id())
 	var awakening: Dictionary = awakening_var as Dictionary
 	
 	if gil_label != null:
 		gil_label.text = str(int(awakening.get("gil", 0)))
 
-	var materials_var: Variant = awakening.get("materialInfo", "").split(',')
-	var materials: Dictionary = materials_var as Dictionary if materials_var is Dictionary else {}
-	for item in materials_var:
-		var parts = item.split(":")
-		materials[parts[1]] = parts[2].to_int()
+	var materials: Dictionary = {}
+	for item in str(awakening.get("materialInfo", "")).split(',', false):
+		var parts := item.split(":")
+		if parts.size() >= 3:
+			materials[parts[1]] = parts[2].to_int()
 	var material_ids: Array = materials.keys()
 
 	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
@@ -246,6 +246,9 @@ func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 		return null
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	return _load_cached_texture(img_path)
+
+func _base_unit_id() -> int:
+	return int(base_unit_inst.get("unit_id", base_unit_inst.get("unitId", 0)))
 
 func _get_unit_texture_for_rarity(unit_inst: Dictionary, rarity: int) -> Texture2D:
 	if unit_inst.is_empty():

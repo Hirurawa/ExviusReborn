@@ -37,12 +37,16 @@ alignment = 1
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Item Name"
+clip_text = true
+text_overrun_behavior = 3
 
 [node name="DescLabel" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=317594154]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 14
 text = "Item Description"
+clip_text = true
+text_overrun_behavior = 3
 autowrap_mode = 2
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="HBoxContainer" unique_id=338701941]

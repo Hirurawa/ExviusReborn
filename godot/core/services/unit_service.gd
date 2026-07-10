@@ -137,7 +137,7 @@ func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
 	if unit_inst.is_empty():
 		return 0
 
-	var unit_data: Dictionary = GameDatabase.get_unit(unit_inst.get("unitId", ""))
+	var unit_data: Dictionary = GameDatabase.get_unit(_unit_template_id(unit_inst))
 	var runtime_unit: Dictionary = unit_inst.duplicate(true)
 	_update_unit_next_xp_local(runtime_unit, unit_data)
 	return int(runtime_unit.get("next_xp", 0))
@@ -170,7 +170,7 @@ func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 		result["reason"] = "Unit is at maximum rarity"
 		return result
 
-	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(unit.get("unitId"))
+	var awakening_var: Variant = GameDatabase.get_unit_class_up_info(_unit_template_id(unit))
 	if awakening_var.is_empty():
 		result["reason"] = "Unit is at maximum rarity"
 		return result
@@ -187,11 +187,11 @@ func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 		result["reason"] = "Insufficient gil"
 		return result
 
-	var materials_var: Variant = awakening.get("materialInfo", "").split(',')
 	var materials: Dictionary = {}
-	for item in materials_var:
-		var parts = item.split(":")
-		materials[parts[1]] = parts[2].to_int()
+	for item in str(awakening.get("materialInfo", "")).split(',', false):
+		var parts := item.split(":")
+		if parts.size() >= 3:
+			materials[parts[1]] = parts[2].to_int()
 	result["materials"] = materials
 
 	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
@@ -241,11 +241,11 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var new_rarity: int = int(unit.get("current_rarity", 1)) + 1
 	unit["current_rarity"] = new_rarity
 	
-	var awakening_data: Dictionary = GameDatabase.get_unit_class_up_info(unit.get("unitId"))
+	var awakening_data: Dictionary = GameDatabase.get_unit_class_up_info(_unit_template_id(unit))
 	var new_unit_id = awakening_data.get("classUpUnitID")
 	unit["unit_id"] = new_unit_id
 	
-	var unit_data: Dictionary = GameDatabase.get_unit(unit.get("unit_id", ""))
+	var unit_data: Dictionary = GameDatabase.get_unit(_unit_template_id(unit))
 	var exp_pattern: int = unit_data.get("expPatternId")
 	unit.merge(unit_data, true)
 	if new_rarity == 7:
@@ -266,6 +266,9 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	InventoryService.emit_updated()
 
 	return {"success": true}
+
+func _unit_template_id(unit: Dictionary) -> int:
+	return int(unit.get("unit_id", unit.get("unitId", 0)))
 
 func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Array) -> Dictionary:
 	if base_unit_instance_id == "":
@@ -625,7 +628,7 @@ func is_material_unit(unit_inst: Dictionary) -> bool:
 	if unit_inst.is_empty():
 		return false
 		
-	var unit_data: Dictionary = GameDatabase.get_unit(unit_inst.get("unitId"))
+	var unit_data: Dictionary = GameDatabase.get_unit(_unit_template_id(unit_inst))
 	if unit_data.is_empty():
 		return false
 	
@@ -925,9 +928,20 @@ func _hydrate_owned_units(units: Array) -> Array:
 		var hydrated_unit: Dictionary = {}
 
 		# Base Template Data
-		var unit_id = str(unit_instance.get("unit_id", ""))
+		var unit_id = str(unit_instance.get("unit_id", unit_instance.get("unitId", "")))
 		var template_data = game_data_units.filter(func(x): return x.unitId == int(unit_id))
 		template_data = template_data[0] if not template_data.is_empty() else null
+		if template_data == null:
+			hydrated_units.append(unit_instance)
+			continue
+
+		var saved_rarity: int = int(unit_instance.get("current_rarity", template_data.get("rare", 1)))
+		if saved_rarity != int(template_data.get("rare", saved_rarity)):
+			var series_id: int = int(template_data.get("unitSeries", 0))
+			var rarity_match: Array = game_data_units.filter(func(x): return int(x.get("unitSeries", 0)) == series_id and int(x.get("rare", 0)) == saved_rarity)
+			if not rarity_match.is_empty():
+				template_data = rarity_match[0]
+				unit_instance["unit_id"] = str(template_data.get("unitId", unit_id))
 		hydrated_unit.merge(template_data)
 
 		# Instance Data

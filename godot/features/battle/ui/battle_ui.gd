@@ -31,7 +31,7 @@ var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.ts
 @onready var bottom_ui_wrapper: Control = %BottomUIWrapper
 var _original_unit_dot_positions: Dictionary = {}
 var _unit_dot_covering_state: Dictionary = {}
-const COVER_MOVE_OFFSET: Vector2 = Vector2(-40, 0)
+const COVER_TARGET_POSITION: Vector2 = Vector2(260, 240)
 @onready var bottom_section: GridContainer = %BottomSection
 @onready var unit_info_popup: Control = %UnitInfoPopup
 @onready var background: TextureRect = $Background
@@ -1340,7 +1340,7 @@ func _process(_delta: float) -> void:
 			var dot = player_sprites_container.get_child(grid_idx)
 			var target_pos: Vector2 = _original_unit_dot_positions[grid_idx]
 			if is_aoe_covering:
-				target_pos += COVER_MOVE_OFFSET
+				target_pos = COVER_TARGET_POSITION
 
 			var tween = create_tween().bind_node(dot)
 			tween.tween_property(dot, "position", target_pos, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)

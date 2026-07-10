@@ -502,7 +502,7 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 				if source_type == SKILL_ROLE_LIMITBURST:
 					resolution = SkillResolver.resolve_combat_limitburst(action_id)
 				elif source_type == SKILL_ROLE_ESPER:
-					resolution = _build_direct_skill_resolution(action_id, skill_data, SKILL_ROLE_ESPER)
+					resolution = SkillResolver.resolve_esper_skill(skill_data)
 				else:
 					resolution = SkillResolver.resolve_combat_skill(action_id)
 				if resolution.is_empty():
@@ -563,64 +563,9 @@ func _can_unit_pay_skill_mp(unit_data: Dictionary, skill_data: Dictionary) -> bo
 		return false
 
 	var current_mp: int = int(unit_data.get("current_mp", 0))
-	var mp_cost: int = _extract_skill_mp_cost(skill_data)
+	var mp_cost: int = skill_data.get("cost", {}).get("MP", 0)
 	return current_mp >= mp_cost
 
-func _extract_skill_mp_cost(skill_data: Dictionary) -> int:
-	var cost_value: Variant = skill_data.get("cost", {})
-	if cost_value is Dictionary:
-		var cost_dict: Dictionary = cost_value
-		if cost_dict.has("MP"):
-			return maxi(0, int(cost_dict.get("MP", 0)))
-	return 0
-
-func _build_targeting_metadata_from_parsed_data(parsed_data: Dictionary) -> Dictionary:
-	var metadata: Dictionary = {
-		"needs_ally_selection": false,
-		"targets_allies": false,
-		"targets_enemies": false,
-		"targets_self": false,
-		"has_aoe": false,
-		"targets_dead": false,
-		"targets_living": false
-	}
-
-	for effect in parsed_data.get("effects", []):
-		var target_area: int = int(effect.get("target_area", 1))
-		var target_type: int = int(effect.get("target_type", 1))
-
-		if target_area == 2:
-			metadata["has_aoe"] = true
-
-		if target_type == 3:
-			metadata["targets_self"] = true
-		elif target_type == 1:
-			metadata["targets_enemies"] = true
-		elif target_type in [2, 6]:
-			metadata["targets_allies"] = true
-			if target_type == 6:
-				metadata["targets_dead"] = true
-			else:
-				metadata["targets_living"] = true
-			if target_area == 1:
-				metadata["needs_ally_selection"] = true
-
-	return metadata
-
-func _build_direct_skill_resolution(skill_id: String, skill_data: Dictionary, source_type: String = "skill") -> Dictionary:
-	if skill_data.is_empty():
-		return {}
-
-	var parsed_data: Dictionary = SkillResolver.parse_skill_effects(skill_data)
-	return {
-		"source_type": source_type,
-		"source_id": skill_id,
-		"resolved_action_id": skill_id,
-		"resolved_action_name": skill_data.get("name", ""),
-		"resolved_action_data": skill_data,
-		"parsed_data": parsed_data,
-		"targeting": _build_targeting_metadata_from_parsed_data(parsed_data)
-	}
 
 func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String) -> void:
 	if formatted_name == "":

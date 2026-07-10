@@ -707,7 +707,7 @@ func _trigger_wave_clear() -> void:
 		print("BattleManager: Wave %d cleared!" % current_wave)
 
 	# 1. Wait for the death tweens to finish (0.5 to 1.0 seconds)
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(3.0).timeout
 
 	if current_wave >= total_waves:
 		_trigger_mission_complete()

@@ -67,9 +67,7 @@ func _ensure_schemas_ready(caller_name: String) -> bool:
 func parse_passive_effects(skill_data: Dictionary) -> Dictionary:
 	if not _ensure_schemas_ready("parse_passive_effects"):
 		return {"effects": []}
-
 	return OpcodeParser.parse_passive(skill_data, opcode_passive_schema)
-
 
 func parse_skill_effects(skill_data: Dictionary) -> Dictionary:
 	if not _ensure_schemas_ready("parse_skill_effects"):
@@ -77,9 +75,22 @@ func parse_skill_effects(skill_data: Dictionary) -> Dictionary:
 			"element_inflict": skill_data.get("element_inflict", []),
 			"effects": []
 		}
-
 	return OpcodeParser.parse_skill(skill_data, opcode_skill_schema)
 
+func resolve_esper_skill(skill_data: Dictionary) -> Dictionary:
+	if skill_data.is_empty():
+		return {}
+
+	var parsed_data: Dictionary = SkillResolver.parse_skill_effects(skill_data)
+	return {
+		"source_type": "esper_skill",
+		"source_id": skill_data.get("skill_id"),
+		"resolved_action_id": skill_data.get("skill_id"),
+		"resolved_action_name": skill_data.get("name", ""),
+		"resolved_action_data": skill_data,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata(parsed_data)
+	}
 
 func resolve_combat_skill(skill_id: String) -> Dictionary:
 	var resolved_skill: Dictionary = _get_active_skill_record(skill_id)
@@ -98,7 +109,6 @@ func resolve_combat_skill(skill_id: String) -> Dictionary:
 		"targeting": _build_targeting_metadata(parsed_data)
 	}
 
-
 func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
 	var resolved_limitburst: Dictionary = GameDatabase.get_limitburst(limitburst_id)
 	if resolved_limitburst.is_empty():
@@ -115,7 +125,6 @@ func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
 		"parsed_data": parsed_data,
 		"targeting": _build_targeting_metadata(parsed_data)
 	}
-
 
 func resolve_combat_item(item_id: String) -> Dictionary:
 	var item_data: Dictionary = GameDatabase.get_item(int(item_id))
@@ -146,7 +155,6 @@ func resolve_combat_item(item_id: String) -> Dictionary:
 		"targeting": _build_targeting_metadata(parsed_data),
 		"original_item_id": item_id
 	}
-
 
 func get_limitburst_max_gauge(limitburst_id: String) -> int:
 	var default_max_gauge: int = 100
@@ -205,7 +213,7 @@ func _find_item_ability_id(effects_raw: Array) -> String:
 func _build_targeting_metadata(parsed_data: Dictionary) -> Dictionary:
 	var metadata: Dictionary = {
 		"needs_ally_selection": false,
-		"targets_allies": false,
+		"targets_living": false,
 		"targets_enemies": false,
 		"targets_self": false,
 		"has_aoe": false
@@ -214,6 +222,7 @@ func _build_targeting_metadata(parsed_data: Dictionary) -> Dictionary:
 	for effect in parsed_data.get("effects", []):
 		var target_area: int = int(effect.get("target_area", 1))
 		var target_type: int = int(effect.get("target_type", 1))
+		var t_type: int = int(effect.get("t_type", 0))
 
 		if target_area == 2:
 			metadata["has_aoe"] = true
@@ -222,8 +231,11 @@ func _build_targeting_metadata(parsed_data: Dictionary) -> Dictionary:
 			metadata["targets_self"] = true
 		elif target_type == 1:
 			metadata["targets_enemies"] = true
-		elif target_type in [2, 6]:
-			metadata["targets_allies"] = true
+		elif target_type  in [2, 6]:
+			if t_type == 7:
+				metadata["targets_dead"] = true
+			else:
+				metadata["targets_living"] = true
 			if target_area == 1:
 				metadata["needs_ally_selection"] = true
 

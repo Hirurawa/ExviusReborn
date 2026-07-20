@@ -109,6 +109,40 @@ func resolve_combat_skill(skill_id: String) -> Dictionary:
 		"targeting": _build_targeting_metadata(parsed_data)
 	}
 
+func resolve_combat_magic(skill_id: String) -> Dictionary:
+	var resolved_skill: Dictionary = GameDatabase.get_magic(skill_id)
+	if resolved_skill.is_empty():
+		push_error("SkillResolver: Combat skill not found: %s" % skill_id)
+		return {}
+
+	var parsed_data: Dictionary = parse_skill_effects(resolved_skill)
+	return {
+		"source_type": "magic",
+		"source_id": skill_id,
+		"resolved_action_id": skill_id,
+		"resolved_action_name": resolved_skill.get("name", ""),
+		"resolved_action_data": resolved_skill,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata(parsed_data)
+	}
+
+func resolve_combat_ability(skill_id: String) -> Dictionary:
+	var resolved_skill: Dictionary = GameDatabase.get_ability(skill_id)
+	if resolved_skill.is_empty():
+		push_error("SkillResolver: Combat skill not found: %s" % skill_id)
+		return {}
+
+	var parsed_data: Dictionary = parse_skill_effects(resolved_skill)
+	return {
+		"source_type": "ability",
+		"source_id": skill_id,
+		"resolved_action_id": skill_id,
+		"resolved_action_name": resolved_skill.get("name", ""),
+		"resolved_action_data": resolved_skill,
+		"parsed_data": parsed_data,
+		"targeting": _build_targeting_metadata(parsed_data)
+	}
+
 func resolve_combat_limitburst(limitburst_id: String) -> Dictionary:
 	var resolved_limitburst: Dictionary = GameDatabase.get_limitburst(limitburst_id)
 	if resolved_limitburst.is_empty():

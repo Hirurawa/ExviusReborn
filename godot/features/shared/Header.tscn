@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://cikwillrit14d" path="res://assets/ui/header/mypage_stamina_info.tres" id="7_12k04"]
 [ext_resource type="Texture2D" uid="uid://c83au14w0ngnj" path="res://assets/ui/header/mypage_stamina_bar.tres" id="8_7281i"]
 [ext_resource type="Texture2D" uid="uid://o1bhyq626acv" path="res://assets/ui/header/mypage_stamina_gauge.tres" id="9_jv5fp"]
-[ext_resource type="Texture2D" uid="uid://ccmv7yvv3jvg6" path="res://assets/ui/header/mypage_rankup_info.tres" id="10_hhlix"]
+[ext_resource type="Texture2D" uid="uid://bxgj7y4kntdtr" path="res://assets/ui/quest/result_rankup_info.tres" id="10_u18cj"]
 
 [node name="Header" type="Control" unique_id=174978603]
 layout_mode = 3
@@ -173,7 +173,7 @@ offset_left = 407.0
 offset_top = 80.0
 offset_right = 556.0
 offset_bottom = 99.0
-texture = ExtResource("10_hhlix")
+texture = ExtResource("10_u18cj")
 expand_mode = 1
 
 [node name="header_exp_num" type="Label" parent="." unique_id=22030085]

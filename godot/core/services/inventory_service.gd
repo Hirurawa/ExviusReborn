@@ -199,18 +199,15 @@ func get_available_equipment_for_slot(slot_id: String, allowed_equips: Array) ->
 			continue
 
 		var item_data_dict: Dictionary = GameDatabase.get_equipment(template_id)
-		assert(not item_data_dict.is_empty(), "CRITICAL ERROR: equipment template not found: " + template_id)
 		if item_data_dict.is_empty():
 			push_error("CRITICAL ERROR: equipment template not found: " + template_id)
 			continue
 
-		assert(item_data_dict.has("type_id"), "CRITICAL ERROR: item_data_dict is missing type_id!")
 		if not item_data_dict.has("type_id"): push_error("CRITICAL ERROR: item_data_dict is missing type_id!")
 		var item_type_id: int = item_data_dict["type_id"] # equipCategory
 
 		var is_valid_slot: bool = false
 
-		assert(item_data_dict.has("slot"), "CRITICAL ERROR: item_data_dict is missing slot!")
 		if not item_data_dict.has("slot"): push_error("CRITICAL ERROR: item_data_dict is missing slot!")
 		var item_slot: String = item_data_dict["slot"]
 		if "hand" in slot_id and (item_slot == "Weapon" or item_slot == "Shield"):

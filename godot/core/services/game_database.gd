@@ -141,37 +141,6 @@ func query(sql: String, params: Array = []) -> Array:
 	# `query_result` is held by value and is not overwritten by later queries.
 	return _db.query_result
 
-func find_skill_ids_by_exact_name(skill_name: String) -> Array[String]:
-	var key: String = skill_name.strip_edges().to_lower()
-	if key == "":
-		return []
-	if _skill_ids_by_name_cache.has(key):
-		return _skill_ids_by_name_cache[key]
-
-	var ids: Array[String] = []
-	for row in query("SELECT magicId AS id FROM magic WHERE lower(name) = ?", [key]):
-		ids.append(str(row.get("id", "")))
-	for row in query("SELECT abilityId AS id FROM ability WHERE abilityType = 2 AND lower(name) = ?", [key]):
-		ids.append(str(row.get("id", "")))
-	for row in query("SELECT limitBurstId AS id FROM limitburst WHERE lower(name) = ?", [key]):
-		ids.append(str(row.get("id", "")))
-	_skill_ids_by_name_cache[key] = ids
-	return ids
-
-func find_item_ids_by_exact_name(item_name: String) -> Array[String]:
-	var key: String = item_name.strip_edges().to_lower()
-	if key == "":
-		return []
-	if _item_ids_by_name_cache.has(key):
-		return _item_ids_by_name_cache[key]
-
-	var ids: Array[String] = []
-	for row in query("SELECT itemId AS id FROM item WHERE lower(name) = ?", [key]):
-		ids.append(str(row.get("id", "")))
-	_item_ids_by_name_cache[key] = ids
-	return ids
-
-
 # === World map ===
 
 ## All worlds for the map dropdown. The returned `dispOrder` key carries the
@@ -374,12 +343,13 @@ func get_mission(mission_id: String) -> Dictionary:
 func get_mission_challenges(mission_id: String) -> Array:
 	var out: Array = []
 	for row in query(
-		"SELECT name, rewardInfo AS rewards FROM challenge WHERE missionId = ? ORDER BY challengeId",
+		"SELECT name, rewardInfo AS rewards, parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
 		[mission_id]
 	):
 		var challenge_name: String = str(row.get("name", ""))
 		var reward: Array = _parse_reward(str(row.get("rewards", "")))
-		out.append({"string": challenge_name, "parsed": [challenge_name], "reward": reward})
+		var parameter: String = str(row.get("parameter"))
+		out.append({"string": challenge_name, "reward": reward, "parameter": parameter})
 	return out
 
 
@@ -560,8 +530,22 @@ func get_summonable_units() -> Array:
 
 func get_all_units() -> Array:
 	var val: Array = query("SELECT * FROM unit")
+		# "SELECT u.*, j.name as jobName, lb.name as limitButstName, r.name as roleName, gt.name as gameTitleName FROM unit u"
+		# + " join job j on u.jobId = j.jobId"
+		# + " join unit_role r on u.roleId = r.roleId"
+		# + " join game_title gt on u.gameTitleId = gt.gameTitleId"
+		# + " join limitburst lb on u.limitBurstId = lb.limitBurstId"
 	return val
 
+# func get_unit_all_data(unit_id: int) -> Dictionary:
+# 	var rows: Array = query("SELECT u.*, j.name as jobName, lb.name as limitButstName, r.name as roleName, gt.name as gameTitleName FROM unit u"
+# 		+ " join job j on u.jobId = j.jobId"
+# 		+ " join unit_role r on u.roleId = r.roleId"
+# 		+ " join game_title gt on u.gameTitleId = gt.gameTitleId"
+# 		+ " join limitburst lb on u.limitBurstId = lb.limitBurstId"
+# 		+ " WHERE u.unitId = ? LIMIT 1", [unit_id])
+# 	return rows[0] if not rows.is_empty() else {}
+	
 func get_unit(unit_id: int) -> Dictionary:
 	var rows: Array = query("SELECT * FROM unit WHERE unitId = ? LIMIT 1", [unit_id])
 	return rows[0] if not rows.is_empty() else {}
@@ -652,7 +636,7 @@ func _build_magic_record(row: Dictionary) -> Dictionary:
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
-		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
+		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
 		"targetType": int(row.get("J35nicFV")),
 		"explainShort": str(row.get("explainShort", "")),
@@ -754,7 +738,7 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
 		"move_type": int(row.get("moveType", 0)),
 		"motion_type": int(row.get("motionType", 0)),
-		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
+		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
 		"targetType": int(row.get("J35nicFV")),
 		"explainShort": str(row.get("explainShort", "")),
@@ -768,7 +752,7 @@ func _build_passive_record(row: Dictionary) -> Dictionary:
 		"iconFile": str(row.get("iconFile", "")),
 		"compendium_id": int(row.get("dispOrder", 0)),
 		"rarity": int(row.get("rarity", 0)),
-		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
+		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
 		"explainShort": str(row.get("explainShort", "")),
 	}
@@ -826,7 +810,7 @@ func _build_limitburst_record(row: Dictionary, lv_rows: Array) -> Dictionary:
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrame", ""))),
-		"element_inflict": _decode_element_inflict(str(row.get("element", ""))),
+		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"levels": levels,
 		"effects_raw": levels[0][1] if not levels.is_empty() else [],
 		"description": str(row.get("description", "")),
@@ -1008,10 +992,10 @@ func _build_equipment_record(row: Dictionary) -> Dictionary:
 		"DEF": int(row.get("def", 0)),
 		"MAG": int(row.get("mag", 0)),
 		"SPR": int(row.get("spr", 0)),
-		"element_resist": _decode_named_value_map(_str_col(row, "elemResistValue"), _MAGIC_ELEMENTS),
-		"status_resist": _decode_named_value_map(_str_col(row, "ailmentResistValue"), _STATUS_NAMES),
-		"element_inflict": _decode_element_inflict(_str_col(row, "elementInflict")),
-		"status_inflict": _decode_named_value_map(_str_col(row, "ailmentInflict"), _STATUS_NAMES),
+		"element_resist": _decode_values(_str_col(row, "elemResistValue")),
+		"status_resist": _decode_values(_str_col(row, "ailmentResistValue")),
+		"element_inflict": _decode_boolean(_str_col(row, "elementInflict")),
+		"status_inflict": _decode_values(_str_col(row, "ailmentInflict")),
 	}
 	return {
 		"name": _str_col(row, "name"),
@@ -1087,18 +1071,18 @@ func _decode_equipment_requirements(raw: String) -> Variant:
 
 ## CSV value map decoder used by equipment stats (resists/inflicts). Returns null
 ## when every slot is zero/blank, otherwise {Name: value} for non-zero entries.
-func _decode_named_value_map(raw: String, names: Array) -> Variant:
+func _decode_values(raw: String) -> Variant:
 	if raw == "":
 		return null
 	var out: Dictionary = {}
 	var vals: PackedStringArray = raw.split(",")
-	for i in range(min(vals.size(), names.size())):
-		var v_raw: String = str(vals[i]).strip_edges()
-		if not v_raw.is_valid_int():
-			continue
-		var v: int = int(v_raw)
-		if v != 0:
-			out[str(names[i])] = v
+
+	for i in range(vals.size()):
+		var resist_value = vals[i]
+		# We only care if it grants resistance or a weakness
+		if int(resist_value) != 0:
+			var element = (i + 1) as Types.Element
+			out[element] = resist_value
 	return out
 
 
@@ -1189,16 +1173,16 @@ func _decode_effect_frames(raw: String) -> Array:
 
 ## element_inflict: names of the inflicted elements (the non-zero slots of the
 ## 8-value `element` column), or null when the skill is non-elemental.
-func _decode_element_inflict(raw: String) -> Variant:
+func _decode_boolean(raw: String) -> Variant:
 	if raw == "":
 		return null
-	var names: Array = []
 	var vals: PackedStringArray = raw.split(",")
-	for i in range(min(vals.size(), _MAGIC_ELEMENTS.size())):
-		var v: String = str(vals[i]).strip_edges()
-		if v != "" and v != "0":
-			names.append(_MAGIC_ELEMENTS[i])
-	return names
+
+	var active_indices: Array[int] = []
+	for i in range(vals.size()):
+		if int(vals[i]) == 1:
+			active_indices.append(i + 1)
+	return active_indices
 
 
 func _group_count(s: String) -> int:

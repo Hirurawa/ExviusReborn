@@ -12,6 +12,8 @@ const SKILL_DISABLE_REASON_LACK_LIMIT: String = "lack_limit"
 const SKILL_ROLE_STANDARD: String = "standard"
 const SKILL_ROLE_LIMITBURST: String = "limitburst"
 const SKILL_ROLE_ESPER: String = "esper_skill"
+const SKILL_ROLE_MAGIC: String = "magic"
+const SKILL_ROLE_ABILITY: String = "ability"
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
@@ -306,7 +308,7 @@ func _open_skill_menu(unit_index: int) -> void:
 						"name": magic_data.get("name", "Unknown Magic"),
 						"skill_data": magic_data,
 						"level": rarity,
-						"source_type": "skill",
+						"source_type": SKILL_ROLE_MAGIC,
 						"source": str(sk.get("source", ""))
 					})
 
@@ -319,7 +321,7 @@ func _open_skill_menu(unit_index: int) -> void:
 						"name": ability_data.get("name", "Unknown Ability"),
 						"skill_data": ability_data,
 						"level": rarity,
-						"source_type": "skill",
+						"source_type": SKILL_ROLE_ABILITY,
 						"source": str(sk.get("source", ""))
 					})
 
@@ -453,12 +455,8 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 		var action_name: String = opt.get("name", "")
 
 		if is_skill:
-			#var btn = SkillEntryButtonScene.instantiate()
-			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			#btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var skill_data: Dictionary = opt.get("skill_data", {})
-			#var skill_level: int = int(opt.get("level", -1))
-			var source_type: String = str(opt.get("source_type", "skill"))
+			var source_type: String = str(opt.get("source_type"))
 			var source_name: String = str(opt.get("source", ""))
 			var role_style: String = SKILL_ROLE_STANDARD
 			var can_use_limitburst: bool = true
@@ -510,8 +508,10 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 					resolution = SkillResolver.resolve_combat_limitburst(action_id)
 				elif source_type == SKILL_ROLE_ESPER:
 					resolution = SkillResolver.resolve_esper_skill(skill_data)
-				else:
-					resolution = SkillResolver.resolve_combat_skill(action_id)
+				elif source_type == SKILL_ROLE_MAGIC:
+					resolution = SkillResolver.resolve_combat_magic(action_id)
+				elif source_type == SKILL_ROLE_ABILITY:
+					resolution = SkillResolver.resolve_combat_ability(action_id)
 				if resolution.is_empty():
 					return
 

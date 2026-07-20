@@ -135,8 +135,6 @@ func assign_esper_to_party(party_index: int, slot_index: int, summon_id: String)
 		return
 
 	var normalized_summon_id: String = summon_id.strip_edges()
-	if normalized_summon_id != "" and not StaticData.game_data_summons.has(normalized_summon_id):
-		return
 	if normalized_summon_id != "" and not EsperService.is_esper_unlocked(normalized_summon_id):
 		return
 

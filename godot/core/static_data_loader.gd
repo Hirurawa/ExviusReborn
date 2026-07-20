@@ -3,7 +3,7 @@ extends Node
 signal patch_progress(file_name: String, status: String)
 signal patch_complete
 
-var files_to_patch: Array[String] = ["equipment-icons", "summons", "summons_boards", "summons_exp_patterns", "summons_stat_patterns", "rank_exp"]
+var files_to_patch: Array[String] = ["equipment-icons", "summons", "summons_boards", "rank_exp"]
 var current_patch_index: int = 0
 const BUNDLED_STATIC_VERSION: String = "bundled-v1"
 const BUNDLED_STATIC_DIRS: Array[String] = ["res://assets/static_data", "res://assets"]

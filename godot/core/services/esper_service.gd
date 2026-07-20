@@ -19,10 +19,8 @@ var owned_summons: Array = []
 func reset_to_empty() -> void:
 	owned_summons = []
 
-
 func emit_updated() -> void:
 	espers_updated.emit(owned_summons)
-
 
 func snapshot_payload() -> Dictionary:
 	var lean_espers: Array = []
@@ -34,56 +32,18 @@ func snapshot_payload() -> Dictionary:
 		"owned_summons": lean_espers
 	}
 
-
 func load_from_local() -> void:
 	owned_summons = _load_from_local()
 
-
-func ensure_party_assigned_espers_owned(parties: Array) -> bool:
-	var changed: bool = false
-	for party_value in parties:
-		if not (party_value is Dictionary):
-			continue
-		var party_dict: Dictionary = party_value
-		var espers_value: Variant = party_dict.get("espers", [])
-		if not (espers_value is Array):
-			continue
-		for esper_value in espers_value:
-			var summon_id: String = str(esper_value).strip_edges()
-			if summon_id == "":
-				continue
-			if not StaticData.game_data_summons.has(summon_id):
-				continue
-			if _find_esper_index_by_summon_id(summon_id) >= 0:
-				continue
-			var default_record: Dictionary = _build_default_esper_progression(summon_id)
-			default_record["is_unlocked"] = true
-			owned_summons.append(default_record)
-			changed = true
-
-	if changed:
-		owned_summons = _hydrate_owned_espers(owned_summons)
-		espers_updated.emit(owned_summons)
-	return changed
-
-
 # === Public API ===
-
-func get_owned_espers() -> Array:
-	return owned_summons.duplicate(true)
-
 
 func get_esper_progression(summon_id: String) -> Dictionary:
 	var index: int = _find_esper_index_by_summon_id(summon_id)
 	if index < 0:
 		return {}
 
-	var record_value: Variant = owned_summons[index]
-	if record_value is Dictionary:
-		return (record_value as Dictionary).duplicate(true)
-
-	return {}
-
+	var record_value: Dictionary = owned_summons[index]
+	return record_value.duplicate(true) if not record_value == null else {}
 
 func get_esper_board_stat_bonuses(summon_id: String) -> Dictionary:
 	var bonus: Dictionary = {}
@@ -130,20 +90,16 @@ func get_esper_board_stat_bonuses(summon_id: String) -> Dictionary:
 
 	return bonus
 
-
 func is_esper_unlocked(summon_id: String) -> bool:
 	var progression: Dictionary = get_esper_progression(summon_id)
 	if progression.is_empty():
 		return false
 	return bool(progression.get("is_unlocked", false))
 
-
 func unlock_esper(summon_id: String) -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
 	if normalized_summon_id == "":
 		return {"success": false, "error": "ERR_INVALID_SUMMON_ID"}
-	if not StaticData.game_data_summons.has(normalized_summon_id):
-		return {"success": false, "error": "ERR_SUMMON_NOT_FOUND"}
 
 	var record: Dictionary = get_esper_progression(normalized_summon_id)
 	if record.is_empty():
@@ -154,19 +110,13 @@ func unlock_esper(summon_id: String) -> Dictionary:
 	_rehydrate_and_emit_espers("unlock_esper")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 
-
 func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, old_level: int = -1) -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
 	if normalized_summon_id == "":
 		return {"success": false, "error": "ERR_INVALID_SUMMON_ID"}
-	if not StaticData.game_data_summons.has(normalized_summon_id):
-		return {"success": false, "error": "ERR_SUMMON_NOT_FOUND"}
 
-	var summon_template: Dictionary = StaticData.game_data_summons.get(normalized_summon_id, {})
-	var entries_value: Variant = summon_template.get("entries", [])
+	var summon_template: Dictionary = GameDatabase.get_esper(int(normalized_summon_id), rank)
 	var max_rank: int = 3
-	if entries_value is Array and not (entries_value as Array).is_empty():
-		max_rank = maxi(1, (entries_value as Array).size())
 
 	var record: Dictionary = get_esper_progression(normalized_summon_id)
 	if record.is_empty():
@@ -175,23 +125,11 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 	# Calculate SP rewards if there was a level-up
 	var sp_reward: int = 0
 	if old_level > 0 and level > old_level:
-		sp_reward = _calculate_sp_reward(summon_template, rank, old_level, level)
+		sp_reward = _calculate_sp_reward(summon_template, old_level, level)
 
 	# Check for max level to unlock the next rank
-	var is_max_level: bool = false
-	if entries_value is Array:
-		var entries: Array = entries_value
-		var rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
-		if rank_index >= 0 and rank_index < entries.size():
-			var entry_value: Variant = entries[rank_index]
-			if entry_value is Dictionary:
-				var entry: Dictionary = entry_value
-				var cp_pattern_value: Variant = entry.get("cp_pattern", [])
-				if cp_pattern_value is Array:
-					var max_level: int = maxi(1, (cp_pattern_value as Array).size())
-					if level >= max_level:
-						is_max_level = true
-
+	var is_max_level: bool = level >= int(summon_template.get("maxLv"))
+	
 	record["is_unlocked"] = true
 	record["rank"] = clampi(rank, 1, max_rank)
 	record["level"] = maxi(1, level)
@@ -210,7 +148,6 @@ func set_esper_progression(summon_id: String, rank: int, level: int, xp: int, ol
 	_rehydrate_and_emit_espers("set_esper_progression")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 
-
 func set_esper_sp(summon_id: String, current_sp: int) -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
 	var record: Dictionary = get_esper_progression(normalized_summon_id)
@@ -222,12 +159,9 @@ func set_esper_sp(summon_id: String, current_sp: int) -> Dictionary:
 	_rehydrate_and_emit_espers("set_esper_sp")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 
-
 func spend_esper_sp(summon_id: String, amount: int) -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
 	var spend_amount: int = maxi(0, amount)
-	if spend_amount <= 0:
-		return {"success": false, "error": "ERR_INVALID_SP_AMOUNT"}
 
 	var record: Dictionary = get_esper_progression(normalized_summon_id)
 	if record.is_empty():
@@ -241,7 +175,6 @@ func spend_esper_sp(summon_id: String, amount: int) -> Dictionary:
 	_upsert_esper_record(record)
 	_rehydrate_and_emit_espers("spend_esper_sp")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
-
 
 func unlock_esper_skill(summon_id: String, skill_id: String) -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
@@ -262,7 +195,6 @@ func unlock_esper_skill(summon_id: String, skill_id: String) -> Dictionary:
 	_upsert_esper_record(record)
 	_rehydrate_and_emit_espers("unlock_esper_skill")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
-
 
 func unlock_esper_board_node(summon_id: String, node_id: String, sp_cost: int = 0, reward_skill_id: String = "") -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
@@ -298,7 +230,6 @@ func unlock_esper_board_node(summon_id: String, node_id: String, sp_cost: int = 
 	_upsert_esper_record(record)
 	_rehydrate_and_emit_espers("unlock_esper_board_node")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
-
 
 func reset_esper_board_progression(summon_id: String) -> Dictionary:
 	var normalized_summon_id: String = summon_id.strip_edges()
@@ -341,7 +272,6 @@ func _extract_esper_lean_record(hydrated_esper: Dictionary) -> Dictionary:
 		"unlocked_board_nodes": _normalize_string_array(hydrated_esper.get("unlocked_board_nodes", []))
 	}
 
-
 func _build_default_esper_progression(summon_id: String) -> Dictionary:
 	return {
 		"summon_id": summon_id,
@@ -354,32 +284,14 @@ func _build_default_esper_progression(summon_id: String) -> Dictionary:
 		"unlocked_board_nodes": []
 	}
 
-
-func _calculate_sp_reward(summon_template: Dictionary, rank: int, old_level: int, new_level: int) -> int:
+func _calculate_sp_reward(summon_template: Dictionary, old_level: int, new_level: int) -> int:
 	# Calculate SP rewards based on cp_pattern when esper levels up
 	# cp_pattern[N] = SP gained when reaching level N+1 (0-indexed array)
 
 	if new_level <= old_level:
 		return 0
 
-	var entries_value: Variant = summon_template.get("entries", [])
-	if not (entries_value is Array):
-		return 0
-
-	var entries: Array = entries_value
-	if entries.is_empty():
-		return 0
-
-	var rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
-	var entry_value: Variant = entries[rank_index]
-	if not (entry_value is Dictionary):
-		return 0
-
-	var entry: Dictionary = entry_value
-	var cp_pattern_value: Variant = entry.get("cp_pattern", [])
-	if not (cp_pattern_value is Array):
-		return 0
-
+	var cp_pattern_value: Variant = summon_template.get("cpPattern", []).split(',')
 	var cp_pattern: Array = cp_pattern_value
 	var total_sp_reward: int = 0
 
@@ -388,14 +300,12 @@ func _calculate_sp_reward(summon_template: Dictionary, rank: int, old_level: int
 	for level in range(old_level + 1, new_level + 1):
 		var pattern_index: int = level - 1
 		if pattern_index >= 0 and pattern_index < cp_pattern.size():
-			var sp_for_level: Variant = cp_pattern[pattern_index]
+			var sp_for_level: Variant = int(cp_pattern[pattern_index])
 			if sp_for_level is int:
 				total_sp_reward += sp_for_level
 			else:
 				total_sp_reward += maxi(0, int(sp_for_level))
-
 	return total_sp_reward
-
 
 func _normalize_esper_record(raw_record: Variant) -> Dictionary:
 	if not (raw_record is Dictionary):
@@ -415,7 +325,6 @@ func _normalize_esper_record(raw_record: Variant) -> Dictionary:
 	normalized["unlocked_skills"] = _normalize_string_array(payload.get("unlocked_skills", []))
 	normalized["unlocked_board_nodes"] = _normalize_string_array(payload.get("unlocked_board_nodes", []))
 	return normalized
-
 
 func _normalize_espers_payload(raw_payload: Variant) -> Array:
 	if not (raw_payload is Dictionary):
@@ -448,7 +357,6 @@ func _normalize_espers_payload(raw_payload: Variant) -> Array:
 
 	return normalized_records
 
-
 func _normalize_string_array(raw_values: Variant) -> Array:
 	if not (raw_values is Array):
 		return []
@@ -463,7 +371,6 @@ func _normalize_string_array(raw_values: Variant) -> Array:
 		normalized.append(normalized_value)
 
 	return normalized
-
 
 func _load_from_local() -> Array:
 	var envelope: Dictionary = Persistence.load_snapshot(SNAPSHOT_FILE)
@@ -480,27 +387,18 @@ func _load_from_local() -> Array:
 
 	return _hydrate_owned_espers(lean_espers)
 
-
 func _find_esper_index_by_summon_id(summon_id: String) -> int:
-	var normalized_summon_id: String = summon_id.strip_edges()
-	if normalized_summon_id == "":
-		return -1
-
 	for i in range(owned_summons.size()):
 		var record_value: Variant = owned_summons[i]
-		if not (record_value is Dictionary):
-			continue
-		if str(record_value.get("summon_id", "")) == normalized_summon_id:
+		if str(record_value.get("summon_id", "")) == summon_id:
 			return i
 
 	return -1
-
 
 func _rehydrate_and_emit_espers(source_event: String) -> void:
 	owned_summons = _hydrate_owned_espers(_normalize_espers_payload(snapshot_payload()))
 	espers_updated.emit(owned_summons)
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), source_event)
-
 
 func _upsert_esper_record(record: Dictionary) -> void:
 	var normalized: Dictionary = _normalize_esper_record(record)
@@ -512,7 +410,6 @@ func _upsert_esper_record(record: Dictionary) -> void:
 		owned_summons[existing_index] = normalized
 	else:
 		owned_summons.append(normalized)
-
 
 func _calculate_esper_board_sp_refund(summon_id: String, unlocked_nodes: Array) -> int:
 	var board_value: Variant = StaticData.game_data_summons_boards.get(summon_id, {})
@@ -535,7 +432,6 @@ func _calculate_esper_board_sp_refund(summon_id: String, unlocked_nodes: Array) 
 
 	return total_refund
 
-
 func _hydrate_owned_espers(espers: Array) -> Array:
 	var hydrated_espers: Array = []
 	for esper_value in espers:
@@ -547,7 +443,7 @@ func _hydrate_owned_espers(espers: Array) -> Array:
 			continue
 
 		var summon_id: String = str(normalized_record.get("summon_id", ""))
-		var template_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+		var template_data: Dictionary = GameDatabase.get_esper(int(summon_id), esper_value.get("rank"))
 		var hydrated: Dictionary = template_data.duplicate(true)
 		hydrated["summon_id"] = summon_id
 		hydrated["progression"] = normalized_record.duplicate(true)

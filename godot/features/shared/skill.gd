@@ -94,7 +94,7 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_butto
 		level_banner.hide()
 		level_label.hide()
 		
-	detail_label.text = skill_data.get("explainShort", "No description")
+	detail_label.text = skill_data.get("explainShort", skill_data.get("description", "No description"))
 	
 	action_button.visible = is_button
 	action_button.mouse_filter = Control.MOUSE_FILTER_STOP if is_button else Control.MOUSE_FILTER_IGNORE

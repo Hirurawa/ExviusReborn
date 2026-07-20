@@ -44,11 +44,11 @@ func _process(delta: float) -> void:
 func init_scene(params: Dictionary) -> void:
 	_summon_id = str(params.get("summon_id", "")).strip_edges()
 	_summon_name = str(params.get("summon_name", "")).strip_edges()
+	summon_image.texture = _get_summon_image_texture(_summon_id)
 	if is_node_ready():
 		_refresh_exp_bar()
 
 func _refresh_exp_bar() -> void:
-	summon_image.texture = _get_summon_image_texture(_summon_id)
 	if _summon_id == "":
 		summon_mix_bar_lv.text = "Lv. -"
 		summon_mix_bar_exp.text = "0 / 0"
@@ -136,22 +136,9 @@ func _add_summon_mix_xp() -> bool:
 	return new_total_xp < max_total_xp
 
 func _get_esper_exp_thresholds(rank: int) -> Array[int]:
-	var summon_template: Dictionary = StaticData.game_data_summons.get(_summon_id, {})
-	var entries_value: Variant = summon_template.get("entries", [])
-	if not (entries_value is Array):
-		return []
-
-	var entries: Array = entries_value
-	if entries.is_empty():
-		return []
-
-	var rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
-	var entry_value: Variant = entries[rank_index]
-	if not (entry_value is Dictionary):
-		return []
-
-	var entry: Dictionary = entry_value
-	var exp_pattern_id: int = int(entry.get("exp_pattern", 0))
+	var summon_template: Dictionary = GameDatabase.get_esper(int(_summon_id), rank)
+	
+	var exp_pattern_id: int = int(summon_template.get("expPatternId", 0))
 	if exp_pattern_id <= 0:
 		return []
 
@@ -194,11 +181,11 @@ func _get_summon_image_texture(summon_id: String) -> Texture2D:
 	if summon_id == "":
 		return null
 
-	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	var summon_data: Dictionary = GameDatabase.get_esper(int(summon_id))
 	if summon_data.is_empty():
 		return null
 
-	var image_filename: String = str(summon_data.get("image", "")).strip_edges()
+	var image_filename: String = str(summon_data.get("beastImage", "")).strip_edges()
 	if image_filename == "":
 		return null
 

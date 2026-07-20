@@ -825,6 +825,37 @@ func _limitburst_gauge(cost: int) -> Variant:
 		return cost / 100
 	return cost / 100.0
 
+# === Espers ===
+
+func get_esper(esper_id: int, rank: int = 1) -> Dictionary:
+	var rows: Array = query(
+		"SELECT b.beastId, b.name as esperName, b.boardId, bstatus.*, bskill.beastSkillId,"
+		+ " bskill.name as skillName,"
+		+ " bskill.target,"
+		+ " bskill.targetRange,"
+		+ " bskill.element,"
+		+ " bskill.processId,"
+		+ " bskill.processParam,"
+		+ " bskill.effectFrames,"
+		+ " bskill.attackFrames,"
+		+ " bskill.iconId,"
+		+ " bskill.description, cp.cpPattern from beast b "
+		+ " join beast_status bstatus on b.beastId = bstatus.beastId"
+		+ " join beast_skill bskill on bstatus.beastSkillId = bskill.beastSkillId"
+		+ " join beast_cp cp on bstatus.cpId = cp.cpId"
+		+ " where b.beastId = ? and rare = ?",
+		[esper_id, rank]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+func get_esper_skill(esper_id: int, rank: int) -> Dictionary:
+	var rows: Array = query("select skill.* from beast_skill skill "
+		+ " join beast_status status on status.beastSkillId = skill.beastSkillId"
+		+ " where status.beastId = 1 and status.rare  = 2", [esper_id, rank])
+	return rows[0] if not rows.is_empty() else {}
+
+func get_esper_board(esper_id: int, rank: int) -> Array:
+	return query("select * from beast_board_piece where beastId = ? and rarity <= ?", [esper_id, rank])
 
 # === Items ===
 

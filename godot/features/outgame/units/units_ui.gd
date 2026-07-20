@@ -222,7 +222,7 @@ func _update_slots(unit_uuids: Array) -> void:
 		_slot_unit_instances[i] = unit_inst
 
 func _get_summon_display_name(summon_id: String) -> String:
-	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	var summon_data: Dictionary = GameDatabase.get_esper(int(summon_id))
 	if summon_data.is_empty():
 		return "Summon %s" % summon_id
 
@@ -240,11 +240,11 @@ func _get_summon_icon_texture(summon_id: String) -> Texture2D:
 	if summon_id == "":
 		return null
 
-	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	var summon_data: Dictionary = GameDatabase.get_esper(int(summon_id))
 	if summon_data.is_empty():
 		return null
 
-	var icon_filename: String = str(summon_data.get("icon", "")).strip_edges()
+	var icon_filename: String = str(summon_data.get("thumImage", "")).strip_edges()
 	if icon_filename == "":
 		return null
 

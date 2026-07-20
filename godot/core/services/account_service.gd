@@ -217,7 +217,6 @@ func load_initial_data(email: String) -> void:
 	EsperService.emit_updated()
 
 	PartyService.load_from_local()
-	EsperService.ensure_party_assigned_espers_owned(PartyService.parties)
 	PartyService.emit_all()
 
 	if current_username == "":

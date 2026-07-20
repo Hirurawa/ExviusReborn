@@ -28,7 +28,6 @@ func _ready() -> void:
 	var updated_callable: Callable = Callable(self, "_on_espers_updated")
 	if not EsperService.espers_updated.is_connected(updated_callable):
 		EsperService.espers_updated.connect(updated_callable)
-	_refresh_ui()
 
 func _exit_tree() -> void:
 	var updated_callable: Callable = Callable(self, "_on_espers_updated")
@@ -59,14 +58,14 @@ func _refresh_ui() -> void:
 	level_label.text = "Lv. %d (R%d)" % [level, rank]
 	cp_label.text = str(current_sp)
 
-	var summon_data: Dictionary = StaticData.game_data_summons.get(_summon_id, {})
+	var summon_data: Dictionary = GameDatabase.get_esper(int(_summon_id))
 	summon_image.texture = _get_summon_image_texture(summon_data)
 	var resolved_skill: Dictionary = _resolve_rank_skill_data(summon_data, rank)
 	if not resolved_skill.is_empty():
 		skill_name.text = _get_skill_text_by_key(resolved_skill, "name")
 		skill_desc.text = _get_skill_text_by_key(resolved_skill, "desc")
 
-	var stats: Dictionary = _extract_stats_for_level_and_rank(summon_data, rank, level)
+	var stats: Dictionary = StatCalculator._extract_esper_stats_for_level_and_rank(summon_data, level)
 	var board_stat_bonus: Dictionary = EsperService.get_esper_board_stat_bonuses(_summon_id)
 	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
 		stats[stat_key] = int(stats.get(stat_key, 0)) + int(board_stat_bonus.get(stat_key, 0))
@@ -104,38 +103,22 @@ func _interpolate_stat_value(value: Variant, level: int, rank_max_level: int) ->
 		return int(round(interpolated))
 
 	return int(value)
-
-func _extract_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level: int) -> Dictionary:
-	var entries_value: Variant = summon_data.get("entries", [])
-	if not (entries_value is Array):
-		return {}
-
-	var entries: Array = entries_value
-	if entries.is_empty():
-		return {}
-
-	var clamped_rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
-	var selected_entry: Variant = entries[clamped_rank_index]
-	if not (selected_entry is Dictionary):
-		return {}
-	var entry_data: Dictionary = selected_entry
-	var rank_max_level: int = _resolve_rank_max_level(entry_data)
-
-	var stats_value: Variant = entry_data.get("stats", {})
-	if not (stats_value is Dictionary):
-		return {}
-
-	var raw_stats: Dictionary = stats_value
-	var resolved_stats: Dictionary = {}
-	for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
-		resolved_stats[stat_key] = _interpolate_stat_value(raw_stats.get(stat_key, 0), level, rank_max_level)
-	return resolved_stats
+#
+#func _extract_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level: int) -> Dictionary:
+	#var entry_data: Dictionary = summon_data
+	#var rank_max_level: int = entry_data.get("maxLv")
+#
+	#var raw_stats: Dictionary = stats_value
+	#var resolved_stats: Dictionary = {}
+	#for stat_key in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
+		#resolved_stats[stat_key] = _interpolate_stat_value(raw_stats.get(stat_key, 0), level, rank_max_level)
+	#return resolved_stats
 
 func _get_summon_image_texture(summon_data: Dictionary) -> Texture2D:
 	if summon_data.is_empty():
 		return null
 
-	var image_filename: String = str(summon_data.get("image", "")).strip_edges()
+	var image_filename: String = str(summon_data.get("beastImage", "")).strip_edges()
 	if image_filename == "":
 		return null
 

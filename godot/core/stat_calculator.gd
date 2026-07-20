@@ -88,7 +88,6 @@ func _resolve_esper_rank_max_level(entry: Dictionary) -> int:
 	return 1
 
 func _interpolate_esper_stat_value(value: Variant, level: int, rank_max_level: int) -> int:
-	if value is Array:
 		var values: Array = value
 		if values.is_empty():
 			return 0
@@ -105,32 +104,11 @@ func _interpolate_esper_stat_value(value: Variant, level: int, rank_max_level: i
 		var interpolated: float = min_value + float(clamped_level - 1) * (max_value - min_value) / float(clamped_max_level - 1)
 		return int(round(interpolated))
 
-	return int(value)
-
-func _extract_esper_stats_for_level_and_rank(summon_data: Dictionary, rank: int, level: int) -> Dictionary:
-	var entries_value: Variant = summon_data.get("entries", [])
-	if not (entries_value is Array):
-		return {}
-
-	var entries: Array = entries_value
-	if entries.is_empty():
-		return {}
-
-	var rank_index: int = clampi(rank - 1, 0, entries.size() - 1)
-	var selected_entry: Variant = entries[rank_index]
-	if not (selected_entry is Dictionary):
-		return {}
-	var entry_data: Dictionary = selected_entry
-	var rank_max_level: int = _resolve_esper_rank_max_level(entry_data)
-
-	var stats_value: Variant = entry_data.get("stats", {})
-	if not (stats_value is Dictionary):
-		return {}
-
-	var raw_stats: Dictionary = stats_value
+func _extract_esper_stats_for_level_and_rank(summon_data: Dictionary, level: int) -> Dictionary:
+	var rank_max_level: int = int(summon_data.get("maxLv"))
 	var resolved_stats: Dictionary = {}
 	for stat_name in CORE_STATS:
-		resolved_stats[stat_name] = _interpolate_esper_stat_value(raw_stats.get(stat_name, 0), level, rank_max_level)
+		resolved_stats[stat_name] = _interpolate_esper_stat_value(summon_data.get(stat_name.to_lower()).split(','), level, rank_max_level)
 	return resolved_stats
 
 func _resolve_active_party_slot_for_unit(unit_instance: Dictionary) -> int:
@@ -224,30 +202,21 @@ func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
 	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
 	if summon_id == "":
 		return {}
-	if not StaticData.game_data_summons.has(summon_id):
-		return {}
 
-	var progression: Dictionary = EsperService.get_esper_progression(summon_id)
+	var progression: Dictionary = EsperService.owned_summons.filter(func(x): return x.summon_id == summon_id)[0]#EsperService.get_esper_progression(summon_id)
 	var rank: int = maxi(1, int(progression.get("rank", 1)))
-	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+	var summon_data: Dictionary = GameDatabase.get_esper(int(summon_id), rank)
 	if summon_data.is_empty():
 		return {}
 
-	var rank_skill_data: Dictionary = _resolve_rank_skill_data_for_summon(summon_id, summon_data, rank)
-	if rank_skill_data.is_empty():
-		return {}
-
-	var skill_id: String = str(rank_skill_data.get("skill_id", "")).strip_edges()
+	var skill_id: String = str(summon_data.get("beastSkillId"))
 	if skill_id == "":
 		return {}
-
-	var normalized_skill_data: Dictionary = rank_skill_data.duplicate(true)
-	var skill_name: String = _get_esper_skill_text(rank_skill_data, "name")
-	var skill_description: String = _get_esper_skill_text(rank_skill_data, "desc")
-	if skill_name != "":
-		normalized_skill_data["name"] = skill_name
-	if skill_description != "":
-		normalized_skill_data["explainShort"] = skill_description
+	
+	var skill_data: Dictionary = GameDatabase.get_esper_skill(int(summon_id), rank)
+	
+	var skill_name: String = skill_data.get("name")
+	var skill_description: String = skill_data.get("description")
 
 	return {
 		"summon_id": summon_id,
@@ -255,7 +224,7 @@ func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
 		"skill_id": skill_id,
 		"name": skill_name,
 		"explainShort": skill_description,
-		"skill_data": normalized_skill_data
+		"skill_data": skill_data
 	}
 
 func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> Array:
@@ -294,14 +263,12 @@ func _compute_active_party_esper_flat_bonus(unit_instance: Dictionary) -> Dictio
 	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
 	if summon_id == "":
 		return bonus
-	if not StaticData.dataset_has("summons", summon_id):
-		return bonus
 
 	var progression: Dictionary = EsperService.get_esper_progression(summon_id)
 	var rank: int = maxi(1, int(progression.get("rank", 1)))
 	var level: int = maxi(1, int(progression.get("level", 1)))
-	var summon_data: Dictionary = StaticData.game_data_summons.get(summon_id, {})
-	var esper_stats: Dictionary = _extract_esper_stats_for_level_and_rank(summon_data, rank, level)
+	var summon_data: Dictionary = GameDatabase.get_esper(int(summon_id), rank)
+	var esper_stats: Dictionary = _extract_esper_stats_for_level_and_rank(summon_data, level)
 	var board_stat_bonus: Dictionary = EsperService.get_esper_board_stat_bonuses(summon_id)
 
 	for stat_name in CORE_STATS:

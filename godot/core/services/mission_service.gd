@@ -185,7 +185,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 						var unlock_result: Dictionary = EsperService.unlock_esper(summon_id)
 						if bool(unlock_result.get("success", false)):
 							var esper_name: String = summon_id
-							var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+							var summon_template: Dictionary = GameDatabase.get_esper(int(summon_id))
 							if not summon_template.is_empty():
 								esper_name = str(summon_template.get("name", summon_id))
 							rewards_text += "[First Clear] Esper unlocked: %s\n" % esper_name
@@ -201,7 +201,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 								var rank_up_result: Dictionary = EsperService.set_esper_progression(summon_id, new_rank, 1, 0, -1)
 								if bool(rank_up_result.get("success", false)):
 									var esper_name: String = summon_id
-									var summon_template: Dictionary = StaticData.game_data_summons.get(summon_id, {})
+									var summon_template: Dictionary = GameDatabase.get_esper(int(summon_id))
 									if not summon_template.is_empty():
 										esper_name = str(summon_template.get("name", summon_id))
 									# Only display the name if it is unlocked, plus append rank upgrade message

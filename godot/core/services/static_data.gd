@@ -47,16 +47,13 @@ const LEGACY_MONOLITHIC_SIG: String = "user://data/sanitized_cache_sig.txt"
 const _PROP_TO_KEY: Dictionary = {
 	"game_data_equipment_icons": "equipment-icons",
 	"game_data_summons": "summons",
-	"game_data_summons_boards": "summons_boards",
-	"game_data_summons_exp_patterns": "summons_exp_patterns",
-	"game_data_summons_stat_patterns": "summons_stat_patterns",
+	"game_data_summons_boards": "summons_boards"
 }
 
 # Dataset key -> default empty value.
 const _DEFAULTS: Dictionary = {
 	"equipment-icons": {},
-	"summons": {}, "summons_boards": {},
-	"summons_exp_patterns": {}, "summons_stat_patterns": {},
+	"summons": {}, "summons_boards": {}
 }
 
 var is_ready: bool = false
@@ -196,8 +193,7 @@ func evict_all() -> void:
 # datasets can call these to drop them; they will reload lazily if anyone
 # touches them again.
 func evict_outgame_only_datasets() -> void:
-	for k in ["summons_boards", "summons_exp_patterns", "summons_stat_patterns",
-			"equipment-icons"]:
+	for k in ["summons_boards", "equipment-icons"]:
 		_loaded.erase(k)
 
 

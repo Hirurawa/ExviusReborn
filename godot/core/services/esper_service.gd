@@ -2,8 +2,7 @@ extends Node
 ## EsperService — owns owned_summons array, esper progression, board/SP/skill
 ## unlocks, hydration, and party-assigned-esper backfill.
 ##
-## Static-data reads go through StaticData (`game_data_summons`,
-## `game_data_summons_boards`). Persistence is direct via the Persistence
+## Static-data reads go through GameDatabase. Persistence is direct via the Persistence
 ## autoload + SNAPSHOT_FILE.
 
 signal espers_updated(espers: Array)
@@ -58,35 +57,26 @@ func get_esper_board_stat_bonuses(summon_id: String) -> Dictionary:
 	if progression.is_empty():
 		return bonus
 
-	var boards_value: Variant = StaticData.game_data_summons_boards.get(normalized_summon_id, {})
-	if not (boards_value is Dictionary):
+	var rank: int = maxi(1, int(progression.get("current_rank", progression.get("rank", 1))))
+	var board_nodes: Array = GameDatabase.get_esper_board(normalized_summon_id.to_int(), rank)
+	if board_nodes.is_empty():
 		return bonus
 
-	var board_nodes: Dictionary = boards_value
 	var unlocked_nodes: Array = _normalize_string_array(progression.get("unlocked_board_nodes", []))
-	for node_id in unlocked_nodes:
-		var node_value: Variant = board_nodes.get(node_id, {})
-		if not (node_value is Dictionary):
+	for node_value in board_nodes:
+		var node_id: String = str(node_value.get("pieceId", ""))
+		if node_id == "" or not unlocked_nodes.has(node_id):
 			continue
-
-		var node_data: Dictionary = node_value
-		var reward_value: Variant = node_data.get("reward", null)
-		if not (reward_value is Array):
-			continue
-
-		var reward: Array = reward_value
-		if reward.size() < 2:
-			continue
-
-		var reward_type: String = str(reward[0]).strip_edges().to_upper()
-		if not bonus.has(reward_type):
-			continue
-
-		var reward_amount: Variant = reward[1]
-		if typeof(reward_amount) not in [TYPE_INT, TYPE_FLOAT]:
-			continue
-
-		bonus[reward_type] += int(reward_amount)
+			
+		var piece_type: int = int(node_value.get("pieceType", -1))
+		var piece_param: int = int(node_value.get("pieceParam", 0))
+		
+		if piece_type == 10: bonus["HP"] += piece_param
+		elif piece_type == 11: bonus["MP"] += piece_param
+		elif piece_type == 12: bonus["ATK"] += piece_param
+		elif piece_type == 13: bonus["DEF"] += piece_param
+		elif piece_type == 14: bonus["MAG"] += piece_param
+		elif piece_type == 15: bonus["SPR"] += piece_param
 
 	return bonus
 
@@ -412,23 +402,19 @@ func _upsert_esper_record(record: Dictionary) -> void:
 		owned_summons.append(normalized)
 
 func _calculate_esper_board_sp_refund(summon_id: String, unlocked_nodes: Array) -> int:
-	var board_value: Variant = StaticData.game_data_summons_boards.get(summon_id, {})
-	if not (board_value is Dictionary):
+	var progression: Dictionary = get_esper_progression(summon_id)
+	var rank: int = maxi(1, int(progression.get("current_rank", progression.get("rank", 1))))
+	var board_nodes: Array = GameDatabase.get_esper_board(summon_id.to_int(), rank)
+	if board_nodes.is_empty():
 		return 0
 
-	var board_nodes: Dictionary = board_value
 	var total_refund: int = 0
-	for node_id_value in unlocked_nodes:
-		var node_id: String = str(node_id_value)
-		var node_value: Variant = board_nodes.get(node_id, {})
-		if not (node_value is Dictionary):
+	for node_value in board_nodes:
+		var node_id: String = str(node_value.get("pieceId", ""))
+		if node_id == "" or not unlocked_nodes.has(node_id):
 			continue
 
-		var cost_value: Variant = (node_value as Dictionary).get("cost", {})
-		if not (cost_value is Dictionary):
-			continue
-
-		total_refund += maxi(0, int((cost_value as Dictionary).get("SP", 0)))
+		total_refund += maxi(0, int(node_value.get("costSp", 0)))
 
 	return total_refund
 

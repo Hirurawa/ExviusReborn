@@ -34,37 +34,37 @@ func _populate_espers_list() -> void:
 
 	_maybe_add_remove_entry()
 
-	var summons: Dictionary = StaticData.game_data_summons
+	var summons: Array = GameDatabase.get_all_esper()
 	if summons.is_empty():
 		_add_empty_state_label("No espers available.")
 		return
 
-	var sorted_entries: Array[Dictionary] = []
-	for summon_key in summons.keys():
-		var summon_id: String = str(summon_key)
-		var summon_data: Variant = summons.get(summon_key, {})
-		if not (summon_data is Dictionary):
-			continue
+	#var sorted_entries: Array[Dictionary] = []
+	#for s in summons:
+		#var summon_id: String = str(s.get("beastId"))
+		#var summon_data: Variant = summons.get(summon_key, {})
+		#if not (summon_data is Dictionary):
+			#continue
+#
+		#sorted_entries.append({
+			#"id": summon_id,
+			#"sort_id": int(summon_id) if summon_id.is_valid_int() else 2147483647,
+			#"data": summon_data
+		#})
+#
+	#if sorted_entries.is_empty():
+		#_add_empty_state_label("No espers available.")
+		#return
+#
+	#sorted_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		#if a["sort_id"] == b["sort_id"]:
+			#return String(a["id"]) < String(b["id"])
+		#return int(a["sort_id"]) < int(b["sort_id"])
+	#)
 
-		sorted_entries.append({
-			"id": summon_id,
-			"sort_id": int(summon_id) if summon_id.is_valid_int() else 2147483647,
-			"data": summon_data
-		})
-
-	if sorted_entries.is_empty():
-		_add_empty_state_label("No espers available.")
-		return
-
-	sorted_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if a["sort_id"] == b["sort_id"]:
-			return String(a["id"]) < String(b["id"])
-		return int(a["sort_id"]) < int(b["sort_id"])
-	)
-
-	for entry in sorted_entries:
-		var summon_id: String = str(entry["id"])
-		var summon_name: String = _get_summon_display_name(summon_id, entry["data"])
+	for entry in summons:
+		var summon_id: String = str(entry.get("beastId"))
+		var summon_name: String = entry.get("esperName")
 		var progression: Dictionary = EsperService.get_esper_progression(summon_id)
 		var is_unlocked: bool = bool(progression.get("is_unlocked", false))
 
@@ -78,15 +78,13 @@ func _populate_espers_list() -> void:
 		frame.disabled = disabled_in_select_mode
 		frame.modulate = Color(1, 1, 1, 0.5) if disabled_in_select_mode else Color(1, 1, 1, 1)
 
-
 		# Set name and level labels separately
 		frame.get_node("NameLabel").text = summon_name
 		var level: int = maxi(1, int(progression.get("level", 1)))
 		if frame.has_node("LvlLabel"):
 			frame.get_node("LvlLabel").text = "Lv. %d" % level
 		if frame.has_node("SummonIcon"):
-			var summon_data: Dictionary = entry.get("data", {})
-			var icon_filename: String = str(summon_data.get("icon", "")).strip_edges()
+			var icon_filename: String = str(entry.get("thumImage", "")).strip_edges()
 			var summon_icon: TextureRect = frame.get_node("SummonIcon")
 			summon_icon.texture = null
 			if icon_filename != "":

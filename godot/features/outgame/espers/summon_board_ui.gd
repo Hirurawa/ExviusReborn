@@ -65,19 +65,15 @@ func _render_board() -> void:
 		_show_empty("No summon board selected.")
 		return
 
-	var boards: Dictionary = StaticData.game_data_summons_boards
-	var board_value: Variant = boards.get(_summon_id, {})
-	if not (board_value is Dictionary):
-		_show_empty("No board data found for summon #%s." % _summon_id)
-		return
-
-	var board_nodes: Dictionary = board_value
-	if board_nodes.is_empty():
-		_show_empty("No board data found for summon #%s." % _summon_id)
-		return
-
 	# ESPER TRAINING: Fetch esper progression state
 	var progression: Dictionary = EsperService.get_esper_progression(_summon_id)
+	var rank: int = maxi(1, int(progression.get("current_rank", progression.get("rank", 1))))
+
+	var board_nodes: Array = GameDatabase.get_esper_board(_summon_id.to_int(), rank)
+	if board_nodes.is_empty():
+		_show_empty("No board data found for summon #%s rank %d." % [_summon_id, rank])
+		return
+
 	var unlocked_nodes_raw: Variant = progression.get("unlocked_board_nodes", [])
 	_unlocked_board_nodes.clear()
 	if unlocked_nodes_raw is Array:
@@ -94,19 +90,20 @@ func _render_board() -> void:
 	var node_lookup: Dictionary = {}
 	var sum_local := Vector2.ZERO
 	
-	for node_id_variant in board_nodes.keys():
-		var node_id: String = str(node_id_variant)
-		var node_value: Variant = board_nodes.get(node_id_variant, {})
-		if not (node_value is Dictionary): continue
+	for node_value in board_nodes:
+		var node_id: String = str(node_value.get("pieceId", ""))
+		if node_id == "": continue
 		
 		var node_data: Dictionary = node_value
 		_board_nodes_data[node_id] = node_data  # Cache for state queries
 		
-		var pos_value: Variant = node_data.get("position", [])
-		if not (pos_value is Array) or pos_value.size() < 2: continue
+		var pos_str: String = str(node_data.get("position", ""))
+		if pos_str == "": continue
+		var pos_parts = pos_str.split(":")
+		if pos_parts.size() < 2: continue
 		
 		# 1. Grab the raw Axial coordinate from the datamine
-		var raw_axial_coord := Vector2i(int(pos_value[0]), int(pos_value[1]))
+		var raw_axial_coord := Vector2i(int(pos_parts[0]), int(pos_parts[1]))
 		
 		# 2. CONVERT to Godot's internal Offset coordinate immediately!
 		var godot_offset_coord := _axial_to_offset(raw_axial_coord)
@@ -122,40 +119,73 @@ func _render_board() -> void:
 		_show_empty("Board nodes are missing valid positions.")
 		return
 
+	# ESPER TRAINING: Pre-calculate learnable nodes based on unlocked parents
+	# A node is learnable if its ID is in the unlockPiece string of any UNLOCKED node, or the START node.
+	var learnable_nodes: Dictionary = {}
+	for cell in cells:
+		var node_id: String = cell["node_id"]
+		var node_data: Dictionary = cell["data"]
+		var piece_type: int = int(node_data.get("pieceType", -1))
+		
+		if piece_type == 0 or node_id in _unlocked_board_nodes:
+			var unlock_piece: String = str(node_data.get("unlockPiece", ""))
+			if unlock_piece != "":
+				for child_id in unlock_piece.split(","):
+					var c_id = child_id.strip_edges()
+					if c_id != "":
+						learnable_nodes[c_id] = true
+						
+	# Cache learnable status
+	for cell in cells:
+		var node_id: String = cell["node_id"]
+		var piece_type: int = int(cell["data"].get("pieceType", -1))
+		if piece_type == 0:
+			cell["data"]["_computed_state"] = "start"
+		elif node_id in _unlocked_board_nodes:
+			cell["data"]["_computed_state"] = "learned"
+		elif learnable_nodes.has(node_id):
+			cell["data"]["_computed_state"] = "learnable"
+		else:
+			cell["data"]["_computed_state"] = "unreachable"
+
 	# ESPER TRAINING: Draw connectors with state-based coloring
+	# Iterate over all nodes, drawing lines to their children
 	for cell in cells:
 		var node_data: Dictionary = cell["data"]
-		var parent_id_value: Variant = node_data.get("parent_node_id", null)
-		if parent_id_value == null:
-			continue
-
-		var parent_node_id: String = str(parent_id_value)
-		var parent_lookup_value: Variant = node_lookup.get(parent_node_id, null)
-		if not (parent_lookup_value is Dictionary):
-			continue
-
-		var parent_coord: Vector2i = parent_lookup_value["coord"]
-		var child_coord: Vector2i = cell["coord"]
+		var parent_coord: Vector2i = cell["coord"]
 		var parent_pos: Vector2 = tile_map_layer.map_to_local(parent_coord)
-		var child_pos: Vector2 = tile_map_layer.map_to_local(child_coord)
-
-		# ESPER TRAINING: Color connector based on child node state
-		var child_state: String = _get_node_state(cell["node_id"])
-		var connector_color: Color
-		if child_state == "unreachable":
-			connector_color = Color(0.5, 0.5, 0.5, 0.3)  # Dimmed grey for unreachable
-		elif child_state == "learnable":
-			connector_color = Color(0.4, 0.7, 1.0, 0.6)  # Brighter blue for learnable
-		else:  # learned or start
-			connector_color = Color(0.0, 1.0, 0.0, 0.5)  # Green for learned/start
 		
-		var connector := Line2D.new()
-		connector.default_color = connector_color
-		connector.width = 6.0
-		connector.z_index = -1
-		connector.add_point(parent_pos)
-		connector.add_point(child_pos)
-		tile_map_layer.add_child(connector)
+		var unlock_piece: String = str(node_data.get("unlockPiece", ""))
+		if unlock_piece == "": continue
+		
+		for child_id in unlock_piece.split(","):
+			var c_id = child_id.strip_edges()
+			if c_id == "": continue
+			
+			var child_lookup = node_lookup.get(c_id, null)
+			if child_lookup == null: continue
+			
+			var child_coord: Vector2i = child_lookup["coord"]
+			var child_pos: Vector2 = tile_map_layer.map_to_local(child_coord)
+			
+			var child_data: Dictionary = child_lookup["data"]
+			var child_state: String = str(child_data.get("_computed_state", "unreachable"))
+
+			var connector_color: Color
+			if child_state == "unreachable":
+				connector_color = Color(0.5, 0.5, 0.5, 0.3)  # Dimmed grey for unreachable
+			elif child_state == "learnable":
+				connector_color = Color(0.4, 0.7, 1.0, 0.6)  # Brighter blue for learnable
+			else:  # learned or start
+				connector_color = Color(0.0, 1.0, 0.0, 0.5)  # Green for learned/start
+			
+			var connector := Line2D.new()
+			connector.default_color = connector_color
+			connector.width = 6.0
+			connector.z_index = -1
+			connector.add_point(parent_pos)
+			connector.add_point(child_pos)
+			tile_map_layer.add_child(connector)
 
 	# ESPER TRAINING: Render nodes with colors and click handlers
 	for cell in cells:
@@ -174,10 +204,11 @@ func _render_board() -> void:
 		node_control.position = pixel_center - (node_control.size * 0.5)
 		node_control.mouse_filter = Control.MOUSE_FILTER_PASS
 		node_control.set_meta("node_id", node_id)
-		node_control.set_meta("node_state", _get_node_state(node_id))
+		
+		var state: String = str(node_data.get("_computed_state", "unreachable"))
+		node_control.set_meta("node_state", state)
 
 		# Color state is represented by node text color.
-		var state: String = _get_node_state(node_id)
 		var text_color: Color = _get_node_color(state)
 		
 		# Create label for reward text
@@ -232,89 +263,79 @@ func _render_board() -> void:
 	info_label.text = "Nodes: %d  •  Drag to pan  •  Click to learn skills" % cells.size()
 	sp_label.text = str(int(progression.get("current_sp", 0)))
 
-func _format_reward(node_data: Dictionary) -> String:
-	var reward_value: Variant = node_data.get("reward", null)
-	var sp_cost: int = 0
-	var cost_value: Variant = node_data.get("cost", {})
-	if cost_value is Dictionary:
-		sp_cost = int(cost_value.get("SP", 0))
-	
-	if reward_value == null:
-		return "START"
-	if reward_value is Array:
-		var reward_arr: Array = reward_value
-		if reward_arr.size() >= 2:
-			var reward_type: String = str(reward_arr[0])
-			var reward_id: Variant = reward_arr[1]
-			
-			# Look up skill names for ABILITY and MAGIC rewards
-			if reward_type == "ABILITY":
-				# Check active abilities first
-				var skill_data: Dictionary = GameDatabase.get_ability(str(reward_id))
-				if not skill_data.is_empty():
-					var skill_name: String = str(skill_data.get("name", str(reward_id)))
-					if sp_cost > 0:
-						return "%s\n%d SP" % [skill_name, sp_cost]
-					return skill_name
-				# Then check passive abilities
-				skill_data = GameDatabase.get_passive(str(reward_id))
-				if not skill_data.is_empty():
-					var skill_name: String = str(skill_data.get("name", str(reward_id)))
-					if sp_cost > 0:
-						return "%s\n%d SP" % [skill_name, sp_cost]
-					return skill_name
-			elif reward_type == "MAGIC":
-				var skill_data: Dictionary = GameDatabase.get_magic(str(reward_id))
-				if not skill_data.is_empty():
-					var skill_name: String = str(skill_data.get("name", str(reward_id)))
-					if sp_cost > 0:
-						return "%s\n%d SP" % [skill_name, sp_cost]
-					return skill_name
-			
-			# Fall back to stat rewards format (ATK +5 on line 1, SP cost on line 2)
-			if sp_cost > 0:
-				return "%s +%s\n%d SP" % [reward_type, str(reward_id), sp_cost]
-			return "%s +%s" % [reward_type, str(reward_id)]
-		if reward_arr.size() == 1:
-			return str(reward_arr[0])
-	return "?"
 
-## ESPER TRAINING: State determination for nodes
+func _format_reward(node_data: Dictionary) -> String:
+	var piece_type: int = int(node_data.get("pieceType", -1))
+	var piece_param: int = int(node_data.get("pieceParam", 0))
+	var sp_cost: int = int(node_data.get("costSp", 0))
+	
+	if piece_type == 0:
+		return "START"
+		
+	var reward_type: String = ""
+	if piece_type == 10: reward_type = "HP"
+	elif piece_type == 11: reward_type = "MP"
+	elif piece_type == 12: reward_type = "ATK"
+	elif piece_type == 13: reward_type = "DEF"
+	elif piece_type == 14: reward_type = "MAG"
+	elif piece_type == 15: reward_type = "SPR"
+	elif piece_type == 20: reward_type = "MAGIC"
+	elif piece_type == 21: reward_type = "ABILITY"
+	elif piece_type == 100: reward_type = "Fire Resist"
+	elif piece_type == 101: reward_type = "Ice Resist"
+	elif piece_type == 102: reward_type = "Lightning Resist"
+	elif piece_type == 103: reward_type = "Water Resist"
+	elif piece_type == 104: reward_type = "Wind Resist"
+	elif piece_type == 105: reward_type = "Earth Resist"
+	elif piece_type == 106: reward_type = "Light Resist"
+	elif piece_type == 107: reward_type = "Dark Resist"
+	else: reward_type = "UNKNOWN"
+
+	if reward_type == "ABILITY":
+		# Check active abilities first
+		var skill_data: Dictionary = GameDatabase.get_ability(str(piece_param))
+		if not skill_data.is_empty():
+			var skill_name: String = str(skill_data.get("name", str(piece_param)))
+			if sp_cost > 0:
+				return "%s
+%d SP" % [skill_name, sp_cost]
+			return skill_name
+		# Then check passive abilities
+		skill_data = GameDatabase.get_passive(str(piece_param))
+		if not skill_data.is_empty():
+			var skill_name: String = str(skill_data.get("name", str(piece_param)))
+			if sp_cost > 0:
+				return "%s
+%d SP" % [skill_name, sp_cost]
+			return skill_name
+			
+	elif reward_type == "MAGIC":
+		var skill_data: Dictionary = GameDatabase.get_magic(str(piece_param))
+		if not skill_data.is_empty():
+			var skill_name: String = str(skill_data.get("name", str(piece_param)))
+			if sp_cost > 0:
+				return "%s
+%d SP" % [skill_name, sp_cost]
+			return skill_name
+	
+	# Fall back to stat rewards format (ATK +5 on line 1, SP cost on line 2)
+	if sp_cost > 0:
+		if "Resist" in reward_type:
+			return "%s %d%%
+%d SP" % [reward_type, piece_param, sp_cost]
+		return "%s +%d
+%d SP" % [reward_type, piece_param, sp_cost]
+	
+	if "Resist" in reward_type:
+		return "%s %d%%" % [reward_type, piece_param]
+	return "%s +%d" % [reward_type, piece_param]
+
 func _get_node_state(node_id: String) -> String:
-	"""
-	Returns the state of a node:
-	- 'learned': Node is already unlocked
-	- 'learnable': Parent is unlocked or is a START node, AND node is not yet unlocked
-	- 'unreachable': Parent is not unlocked
-	- 'start': Node is a start node (no parent)
-	"""
-	if node_id in _unlocked_board_nodes:
-		return "learned"
-	
+	# Now rely on computed state
 	var node_data: Dictionary = _board_nodes_data.get(node_id, {})
-	var parent_id_value: Variant = node_data.get("parent_node_id", null)
-	
-	# START nodes (no parent) are always learnable from the start
-	if parent_id_value == null:
-		return "start"
-	
-	var parent_id: String = str(parent_id_value)
-	
-	# Check if parent is unlocked OR if parent is a START node (no grandparent)
-	if parent_id in _unlocked_board_nodes:
-		return "learnable"
-	
-	# Check if parent is a START node (direct child of START is learnable)
-	var parent_data: Dictionary = _board_nodes_data.get(parent_id, {})
-	var grandparent_id_value: Variant = parent_data.get("parent_node_id", null)
-	if grandparent_id_value == null:
-		# Parent is a START node, so this node is learnable
-		return "learnable"
-	
-	return "unreachable"
+	return str(node_data.get("_computed_state", "unreachable"))
 
 func _get_node_color(state: String) -> Color:
-	"""Returns the color for a node based on its state"""
 	match state:
 		"learned":
 			return Color.GREEN
@@ -327,14 +348,10 @@ func _get_node_color(state: String) -> Color:
 	return Color.WHITE
 
 func _get_node_reward_skill_id(node_data: Dictionary) -> String:
-	"""Extracts skill ID from reward if it's an ability or magic skill"""
-	var reward_value: Variant = node_data.get("reward", null)
-	if reward_value is Array:
-		var reward_arr: Array = reward_value
-		if reward_arr.size() >= 2:
-			var reward_type: String = str(reward_arr[0])
-			if reward_type in ["ABILITY", "MAGIC"]:
-				return str(reward_arr[1])
+	var piece_type: int = int(node_data.get("pieceType", -1))
+	var piece_param: int = int(node_data.get("pieceParam", 0))
+	if piece_type in [20, 21]:
+		return str(piece_param)
 	return ""
 
 func _on_node_clicked(node_id: String) -> void:
@@ -355,9 +372,7 @@ func _on_node_clicked(node_id: String) -> void:
 
 	# Unlock the node via DataManager (handles persistence)
 	var sp_cost: int = 0
-	var cost_value: Variant = node_data.get("cost", {})
-	if cost_value is Dictionary:
-		sp_cost = int(cost_value.get("SP", 0))
+	sp_cost = int(node_data.get("costSp", 0))
 
 	var result: Dictionary = EsperService.unlock_esper_board_node(_summon_id, node_id, sp_cost, reward_skill_id)
 

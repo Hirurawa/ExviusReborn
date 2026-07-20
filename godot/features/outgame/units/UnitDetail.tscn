@@ -288,7 +288,7 @@ offset_right = 632.0
 offset_bottom = 315.0
 theme_override_constants/h_separation = 2
 theme_override_constants/v_separation = 2
-columns = 16
+columns = 12
 
 [node name="IllustrationButton" type="TextureButton" parent="." unique_id=71262874]
 layout_mode = 0

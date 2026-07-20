@@ -582,21 +582,19 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 	for child in unit_detail_equip_icons_grid.get_children():
 		child.queue_free()
 
-	var allowed_equip: Array = unit_data.get("equip", [])
-	var equip_icons_data: Dictionary = StaticData.game_data_equipment_icons
+	var allowed_equip: Array = unit_data.get("equipCategories", []).split(',')
+	var equip_icons_data: Dictionary = GameDatabase._EQUIP_TYPE_ICONS
 	var valid_keys: Array = []
 
 	for key in equip_icons_data.keys():
-		var type_id: int = int(equip_icons_data[key].get("type_id", 0))
+		var type_id: int = int(key)
 		if type_id < 60:
 			valid_keys.append(key)
 
 	valid_keys.sort_custom(func(a, b): return int(a) < int(b))
 
 	for key in valid_keys:
-		var item: Dictionary = equip_icons_data[key]
-		var type_id: int = int(item.get("type_id", 0))
-		var icon_name: String = str(item.get("iconFile", ""))
+		var icon_name: String = str(equip_icons_data[key])
 		var tex_rect: TextureRect = TextureRect.new()
 		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -608,7 +606,7 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 		if ResourceLoader.exists(tex_path):
 			tex_rect.texture = _get_dynamic_texture(tex_path)
 
-		if not (type_id in allowed_equip or float(type_id) in allowed_equip):
+		if not (key in allowed_equip or float(key) in allowed_equip):
 			tex_rect.modulate = Color(0.3, 0.3, 0.3, 1.0)
 
 		unit_detail_equip_icons_grid.add_child(tex_rect)

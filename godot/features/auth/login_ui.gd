@@ -41,11 +41,6 @@ func _ready() -> void:
 	if OS.get_name() != "Android":
 		assets_mounted = true
 
-	# Surface cold-path progress so the player sees forward motion instead of a
-	# freeze on first launch (signature mismatch).
-	if not StaticDataLoader.patch_progress.is_connected(_on_static_data_progress):
-		StaticDataLoader.patch_progress.connect(_on_static_data_progress)
-
 	if assets_mounted:
 		_refresh_continue_button()
 		feedback_label.text = "Choose an option"
@@ -239,19 +234,9 @@ func _on_delete_confirmed() -> void:
 # === Diagnostics ===
 
 func _kick_off_priming() -> void:
-	# Start static-data priming the moment assets are reachable. On the warm
-	# path this is a cheap signature check that completes before the user can
-	# tap "New Game". On the cold path, the patch_progress signal feeds the
-	# feedback label so the UI doesn't appear frozen.
-	if StaticData.is_ready or StaticData._loading:
-		return
-	StaticData.prime_cache.call_deferred()
-
-
-func _on_static_data_progress(file_name: String, _status: String) -> void:
-	if StaticData.is_ready:
-		return
-	feedback_label.text = "Preparing data: %s…" % file_name
+	var resolver: Node = get_node_or_null("/root/SkillResolver")
+	if resolver and resolver.has_method("load_schemas"):
+		resolver.load_schemas()
 
 
 func _log_mem(tag: String) -> void:

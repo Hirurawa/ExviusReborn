@@ -1,6 +1,6 @@
 extends Node
 ## SkillResolver — owns opcode schemas + skill / limit-burst / item resolution.
-## Reads template data from StaticData; writes nothing back.
+## Reads template data from GameDatabase; writes nothing back.
 
 const OPCODE_SKILL_SCHEMA_PATH: String = "res://features/battle/logic/skill_schema.json"
 const OPCODE_PASSIVE_SCHEMA_PATH: String = "res://features/battle/logic/passive_schema.json"
@@ -23,7 +23,6 @@ func load_schemas() -> void:
 		return
 
 	opcode_schemas_ready = true
-
 
 func _load_schema_file(schema_path: String, schema_name: String) -> Dictionary:
 	if not FileAccess.file_exists(schema_path):

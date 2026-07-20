@@ -32,7 +32,6 @@ var _open_failed: bool = false
 var _magic_id_set: Dictionary = {}
 var _magic_id_set_loaded: bool = false
 var _magic_cache: Dictionary = {}
-var _skill_ids_by_name_cache: Dictionary = {}
 
 # Lazily-loaded ability caches (active + passive share the `ability` table, split
 # by abilityType): id -> "ability"/"passive" kind map, plus per-id records.
@@ -42,8 +41,6 @@ var _ability_cache: Dictionary = {}
 var _passive_cache: Dictionary = {}
 var _limitburst_cache: Dictionary = {}
 var _equipment_cache: Dictionary = {}
-var _item_ids_by_name_cache: Dictionary = {}
-
 
 # === Connection ===
 
@@ -569,6 +566,14 @@ func get_unit_next_rarity(unit_id: int) -> Dictionary:
 	var rows: Array = query("select u.* from unit u where u.unitId = (select classUpUnitID  from unit_class_up ucu where ucu.unitId = ?)", [unit_id])
 	return rows[0] if not rows.is_empty() else {}
 
+func classify_skill_id(id: String) -> String:
+	# Returns "magic", "ability", "passive", or "" if unknown. Used by stat_calculator
+	if id == "":
+		return ""
+	if has_magic(id):
+		return "magic"
+	return ability_kind(id)
+
 # === Skills: magic ===
 
 const _MAGIC_TYPE_NAMES: Dictionary = {"1": "White", "2": "Black", "3": "Green", "4": "Blue"}
@@ -848,6 +853,26 @@ func get_esper(esper_id: int, rank: int = 1) -> Dictionary:
 	)
 	return rows[0] if not rows.is_empty() else {}
 
+	
+func get_all_esper() -> Array:
+	return query(
+		"SELECT b.beastId, b.name as esperName, b.boardId, bstatus.*, bskill.beastSkillId,"
+		+ " bskill.name as skillName,"
+		+ " bskill.target,"
+		+ " bskill.targetRange,"
+		+ " bskill.element,"
+		+ " bskill.processId,"
+		+ " bskill.processParam,"
+		+ " bskill.effectFrames,"
+		+ " bskill.attackFrames,"
+		+ " bskill.iconId,"
+		+ " bskill.description, cp.cpPattern from beast b "
+		+ " join beast_status bstatus on b.beastId = bstatus.beastId"
+		+ " join beast_skill bskill on bstatus.beastSkillId = bskill.beastSkillId"
+		+ " join beast_cp cp on bstatus.cpId = cp.cpId"
+		+ " group by b.beastId"
+	)
+
 func get_esper_skill(esper_id: int, rank: int) -> Dictionary:
 	var rows: Array = query("select skill.* from beast_skill skill "
 		+ " join beast_status status on status.beastSkillId = skill.beastSkillId"
@@ -856,6 +881,16 @@ func get_esper_skill(esper_id: int, rank: int) -> Dictionary:
 
 func get_esper_board(esper_id: int, rank: int) -> Array:
 	return query("select * from beast_board_piece where beastId = ? and rarity <= ?", [esper_id, rank])
+
+## Per-level XP rows for a beast exp pattern, ordered by level. Each row:
+## { level, needExp }. `needExp` at level L is the cumulative XP required to
+## REACH level L (the table carries an L=1=0 row); callers convert this to the
+## marginal XP per level as needed. Empty if the pattern id is unknown.
+func get_esper_exp_pattern(pattern_id: int) -> Array:
+	return query(
+		"SELECT level, needExp FROM beast_exp_pattern WHERE expPatternId = ? ORDER BY level",
+		[pattern_id]
+	)
 
 # === Items ===
 

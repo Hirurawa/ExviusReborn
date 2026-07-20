@@ -60,10 +60,8 @@ func _refresh_ui() -> void:
 
 	var summon_data: Dictionary = GameDatabase.get_esper(int(_summon_id))
 	summon_image.texture = _get_summon_image_texture(summon_data)
-	var resolved_skill: Dictionary = _resolve_rank_skill_data(summon_data, rank)
-	if not resolved_skill.is_empty():
-		skill_name.text = _get_skill_text_by_key(resolved_skill, "name")
-		skill_desc.text = _get_skill_text_by_key(resolved_skill, "desc")
+	skill_name.text = summon_data.get("skillName")
+	skill_desc.text = summon_data.get("description")
 
 	var stats: Dictionary = StatCalculator._extract_esper_stats_for_level_and_rank(summon_data, level)
 	var board_stat_bonus: Dictionary = EsperService.get_esper_board_stat_bonuses(_summon_id)
@@ -127,35 +125,6 @@ func _get_summon_image_texture(summon_data: Dictionary) -> Texture2D:
 		return null
 
 	return ResourceLoader.load(image_path) as Texture2D
-
-func _resolve_rank_skill_data(summon_data: Dictionary, rank: int) -> Dictionary:
-	var skill_value: Variant = summon_data.get("skill", {})
-	if not (skill_value is Dictionary):
-		return {}
-
-	var skill_data: Dictionary = skill_value
-	if skill_data.is_empty():
-		return {}
-
-	var summon_numeric_id: int = int(_summon_id)
-	var expected_skill_id: String = "%d%02d" % [100 + summon_numeric_id, rank]
-	var direct_match: Variant = skill_data.get(expected_skill_id, {})
-	if direct_match is Dictionary:
-		var direct_dict: Dictionary = direct_match
-		if not direct_dict.is_empty():
-			return direct_dict
-
-	# Fallback: prefer any key whose last digit matches the current rank.
-	for key_value in skill_data.keys():
-		var key: String = str(key_value)
-		if key.ends_with(str(rank)):
-			var rank_match: Variant = skill_data.get(key, {})
-			if rank_match is Dictionary:
-				var rank_dict: Dictionary = rank_match
-				if not rank_dict.is_empty():
-					return rank_dict
-
-	return {}
 
 func _get_skill_text_by_key(skill_data: Dictionary, text_key: String) -> String:
 	var strings_value: Variant = skill_data.get("strings", {})

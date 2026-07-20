@@ -57,8 +57,61 @@ func _process(delta: float) -> void:
 
 func ensure_rank_exp_loaded() -> void:
 	if rank_exp_data.is_empty():
-		rank_exp_data = StaticDataLoader.load_rank_exp_data()
+		rank_exp_data = load_rank_exp_data()
 
+func load_rank_exp_data() -> Dictionary:
+	# Load and parse rank_exp.json.
+	# JSON structure: {"<rank>": {"Exp": int, "Energy": int, ...}, ...}
+	# Exp at rank N is treated as XP needed to advance FROM rank N TO rank N+1.
+	# Result: rank_data[rank] = {"xp_needed": int, "energy": int}
+
+	var rank_data: Dictionary = {}
+	
+	# 1. Load the JSON file as a standard Resource
+	var json_resource: JSON = load("res://assets/static_data/rank_exp.json")
+	
+	# 2. Access the parsed dictionary/array directly via '.data'
+	if json_resource and json_resource.data is Dictionary:
+		var rows: Dictionary = json_resource.data
+		var sorted_ranks: Array[int] = []
+		for rank_key in rows.keys():
+			var rank_text: String = str(rank_key).strip_edges()
+			if rank_text == "" or not rank_text.is_valid_int():
+				push_warning("Skipping rank_exp.json row with invalid rank key: %s" % str(rank_key))
+				continue
+			sorted_ranks.append(int(rank_text))
+
+		sorted_ranks.sort()
+
+		for rank in sorted_ranks:
+			var row_value: Variant = rows.get(str(rank), null)
+			if not (row_value is Dictionary):
+				push_warning("Skipping rank %d in rank_exp.json: row is not an object" % rank)
+				continue
+
+			var row: Dictionary = row_value
+			if not row.has("Exp") or not row.has("Energy"):
+				push_warning("Skipping rank %d in rank_exp.json: missing Exp or Energy" % rank)
+				continue
+
+			var exp_raw: Variant = row.get("Exp", 0)
+			var energy_raw: Variant = row.get("Energy", 0)
+			if exp_raw == null:
+				# Max rank rows commonly have null Exp (no further progression).
+				continue
+			if energy_raw == null:
+				energy_raw = 0
+			var xp_needed: int = int(exp_raw)
+			var energy: int = int(energy_raw)
+			if xp_needed <= 0:
+				push_warning("Skipping rank %d in rank_exp.json: Exp must be > 0" % rank)
+				continue
+
+			rank_data[rank] = {
+				"xp_needed": xp_needed,
+				"energy": energy
+			}
+	return rank_data
 
 func set_last_entered_mission(_mission_id: String) -> void:
 	# Note: MissionService handles its own variable last_entered_mission_id,

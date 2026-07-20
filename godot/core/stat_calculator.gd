@@ -427,9 +427,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		var skill_id_str = str(raw_skill["id"])
 		var skill_entry = {"id": int(raw_skill["id"]), "source": raw_skill["source"]}
 
-		# Single keys-index lookup replaces three chained `.has()` calls that
-		# each used to force-decode a large skill dataset (~30 MB).
-		var category: String = StaticData.classify_skill_id(skill_id_str)
+		var category: String = GameDatabase.classify_skill_id(skill_id_str)
 		if category == "magic":
 			final_profile["skills"]["magic"].append(skill_entry)
 		elif category == "ability":

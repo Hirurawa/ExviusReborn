@@ -1,6 +1,6 @@
 extends Node
 ## EquipmentValidator — central rules for equipping items to a unit.
-## Pure helpers; no state, no persistence. Read template data from StaticData /
+## Pure helpers; no state, no persistence. Read template data from GameDatabase /
 ## InventoryService and answer "can this equip happen?" questions used by both
 ## the equip UI (filtering, slot-lock display) and UnitService (authoritative
 ## server-side rejection).

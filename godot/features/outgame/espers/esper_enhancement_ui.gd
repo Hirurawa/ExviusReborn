@@ -142,8 +142,7 @@ func _get_esper_exp_thresholds(rank: int) -> Array[int]:
 	if exp_pattern_id <= 0:
 		return []
 
-	var pattern_key: String = str(exp_pattern_id)
-	var pattern_value: Variant = StaticData.game_data_summons_exp_patterns.get(pattern_key, StaticData.game_data_summons_exp_patterns.get(exp_pattern_id, []))
+	var pattern_value: Variant = GameDatabase.get_esper_exp_pattern(exp_pattern_id)
 	if not (pattern_value is Array):
 		return []
 
@@ -161,7 +160,7 @@ func _get_esper_exp_thresholds(rank: int) -> Array[int]:
 func _coerce_int_array(values: Array) -> Array[int]:
 	var result: Array[int] = []
 	for value in values:
-		result.append(maxi(0, int(value)))
+		result.append(maxi(0, int(value.get("needExp"))))
 	return result
 
 func _calculate_level_from_xp(total_xp: int, thresholds: Array[int]) -> int:

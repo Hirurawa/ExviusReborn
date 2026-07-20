@@ -74,9 +74,6 @@ func start_new_local_game(username: String) -> Dictionary:
 	if normalized_username == "":
 		return {"success": false, "error_message": "Please enter a save name."}
 
-	_dbg("SNG: before StaticData.ensure_ready")
-	await StaticData.ensure_ready()
-	_dbg("SNG: after StaticData.ensure_ready")
 	Persistence.active_local_save_id = Persistence.normalize_local_save_id(normalized_username)
 
 	_dbg("SNG: before UnitService.reset_to_starter")
@@ -131,7 +128,6 @@ func load_local_game(username: String) -> Dictionary:
 	if normalized_username == "":
 		return {"success": false, "error_message": "Please enter a save name."}
 
-	await StaticData.ensure_ready()
 	var resolved_save_id: String = Persistence.set_active_save(normalized_username)
 
 	var envelope: Dictionary = Persistence.load_snapshot(PlayerProfile.SNAPSHOT_FILE)
@@ -159,8 +155,6 @@ func save_all_snapshots(source_event: String) -> void:
 
 
 func load_initial_data(email: String) -> void:
-	await StaticData.ensure_ready()
-
 	var stats: Dictionary = PlayerProfile.load_stats_from_local()
 
 	# Load rank progression data from rank_exp.json

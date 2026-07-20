@@ -97,26 +97,6 @@ func _resource_exists(path: String) -> bool:
 	_shared_path_exists_cache[path] = exists
 	return exists
 
-func _get_pedestal_texture(rarity: int) -> Texture2D:
-	if _shared_pedestal_cache.has(rarity):
-		return _shared_pedestal_cache[rarity]
-
-	var candidate_paths: Array[String] = [
-		"res://assets/ui/unit/unit_charastand_rare%s_small.tres" % rarity,
-		"res://assets/ui/unit/unit_charastand_rare%s_small.png" % rarity,
-		"res://assets/ui/unit/unit_charastand_small.tres",
-		"res://assets/ui/unit/unit_charastand_small.png"
-	]
-
-	for path in candidate_paths:
-		if _resource_exists(path):
-			var pedestal_texture: Texture2D = _get_dynamic_texture(path)
-			_shared_pedestal_cache[rarity] = pedestal_texture
-			return pedestal_texture
-
-	_shared_pedestal_cache[rarity] = null
-	return null
-
 func init_scene(params: Dictionary) -> void:
 	_has_received_init_params = true
 	if params.has("mode"):

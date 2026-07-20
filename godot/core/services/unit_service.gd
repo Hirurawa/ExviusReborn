@@ -931,17 +931,7 @@ func _hydrate_owned_units(units: Array) -> Array:
 		var unit_id = str(unit_instance.get("unit_id", unit_instance.get("unitId", "")))
 		var template_data = game_data_units.filter(func(x): return x.unitId == int(unit_id))
 		template_data = template_data[0] if not template_data.is_empty() else null
-		if template_data == null:
-			hydrated_units.append(unit_instance)
-			continue
 
-		var saved_rarity: int = int(unit_instance.get("current_rarity", template_data.get("rare", 1)))
-		if saved_rarity != int(template_data.get("rare", saved_rarity)):
-			var series_id: int = int(template_data.get("unitSeries", 0))
-			var rarity_match: Array = game_data_units.filter(func(x): return int(x.get("unitSeries", 0)) == series_id and int(x.get("rare", 0)) == saved_rarity)
-			if not rarity_match.is_empty():
-				template_data = rarity_match[0]
-				unit_instance["unit_id"] = str(template_data.get("unitId", unit_id))
 		hydrated_unit.merge(template_data)
 
 		# Instance Data

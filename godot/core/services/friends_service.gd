@@ -6,7 +6,7 @@ extends Node
 ## are reintroduced, the integration point is already separated from
 ## DataManager and the rest of the autoloads.
 
-signal friends_updated(friends: Object)
+#signal friends_updated(friends: Object)
 signal friend_action_result(success: bool, message: String)
 
 

@@ -42,6 +42,7 @@ StatCalculator="*res://core/stat_calculator.gd"
 TouchScrollInstaller="*res://core/services/touch_scroll_installer.gd"
 ButtonSoundInstaller="*res://core/services/button_sound_installer.gd"
 SwitchService="*res://core/services/switch_service.gd"
+BattleEvents="*res://features/battle/logic/battle_events.gd"
 
 [debug]
 

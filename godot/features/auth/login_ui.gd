@@ -162,7 +162,7 @@ func _on_new_game_button_pressed() -> void:
 	new_game_dialog.popup_centered()
 
 
-func _on_new_game_created(username: String) -> void:
+func _on_new_game_created(_username: String) -> void:
 	_log_mem("after start_new_local_game")
 	_refresh_continue_button()
 	feedback_label.text = "New game created!"

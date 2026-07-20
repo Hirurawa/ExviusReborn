@@ -168,8 +168,8 @@ func _get_dynamic_texture(path: String) -> Texture2D:
 	var tex: Texture2D
 	if ResourceLoader.exists(path):
 		tex = ResourceLoader.load(path) as Texture2D
-	_texture_cache[path] = tex
-	return tex
+		_texture_cache[path] = tex
+		return tex
 	return null
 
 func _apply_map_canvas_size(map_size: Vector2) -> void:

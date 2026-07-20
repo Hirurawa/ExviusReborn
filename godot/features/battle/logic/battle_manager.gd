@@ -9,9 +9,7 @@ signal unit_acted(index: int)
 signal unit_action_started(unit_index: int, action: CombatAction)
 signal action_queued(unit_index: int, action: CombatAction, action_id: String)
 signal enemy_action_started(enemy_index: int, action: CombatAction)
-signal mission_cleared
 signal mission_failed
-signal monster_defeated(monster_id: int)
 
 signal item_refunded(item_id: String)
 signal wave_changed()
@@ -75,18 +73,8 @@ var current_mission_id: String = ""
 var mission_drops: Array[String] = []
 var used_items: Dictionary = {}
 var challenge_results: Array[bool] = []
-var used_limit_burst: bool = false
-var limit_burst_uses: int = 0
-var magic_uses: int = 0
-var recovery_magic_uses: int = 0
-var magic_types_used: Dictionary = {}
-var used_skill_ids: Dictionary = {}
-var used_skill_names: Dictionary = {}
-var used_item_ids: Dictionary = {}
-var used_item_names: Dictionary = {}
-var defeated_names_by_method: Dictionary = {}
-var damage_elements_used: Array[String] = []
-var damage_element_counts: Dictionary = {}
+
+var active_challenges: Array[ChallengeTracker] = []
 
 func _ready() -> void:
 	# Processors are stateless logic; instantiate as RefCounted (no add_child).
@@ -149,18 +137,17 @@ func _process(_delta: float) -> void:
 					# Enemies can drop limit crystals when hit by player attacks.
 					if target_team == "enemy":
 						_try_drop_limit_crystal(target_index, attacker_team, hit, final_damage)
-
+						BattleEvents.enemy_damaged.emit(target["id"], hit)
 						# If this hit killed them, roll for drops!
-						if previous_hp > 0 and target["current_hp"] == 0 and target_team == "enemy":
-							_record_defeat_challenge(attacker_index, target)
+						if previous_hp > 0 and target["current_hp"] == 0:
 							_roll_enemy_drops(target, target_index)
 							PlayerProfile.record_monster_kill(str(target["id"]))
-							monster_defeated.emit(target["id"])
+							BattleEvents.enemy_defeated.emit(target["id"], hit)
 
-
-					if target_team == "enemy":
 						set_enemy_hp(target_index, target["current_hp"])
 					else:
+						if previous_hp > 0 and target["current_hp"] == 0:
+							BattleEvents.ally_defeated.emit()
 						# For UI stats, we still need the original party_data index
 						# For now, search it by instance_id or let request_unit_stats find it
 						var p_idx = target.get("index", -1)
@@ -244,18 +231,8 @@ func initialize_battle(mission_id: String) -> void:
 	var challenge_count: int = mission_challenges.size() if mission_challenges is Array else 0
 	challenge_results.resize(challenge_count)
 	challenge_results.fill(false)
-	used_limit_burst = false
-	limit_burst_uses = 0
-	magic_uses = 0
-	recovery_magic_uses = 0
-	magic_types_used.clear()
-	used_skill_ids.clear()
-	used_skill_names.clear()
-	used_item_ids.clear()
-	used_item_names.clear()
-	defeated_names_by_method.clear()
-	damage_elements_used.clear()
-	damage_element_counts.clear()
+
+	initialize_challenges(mission_challenges)
 
 	party_data = []
 
@@ -333,11 +310,9 @@ func initialize_battle(mission_id: String) -> void:
 	is_transitioning = false
 	battle_state_ready.emit()
 
-func set_challenge_result(challenge_index: int, value: bool) -> void:
-	if challenge_index < 0 or challenge_index >= challenge_results.size():
-		push_error("BattleManager: set_challenge_result index %d out of range (size %d)" % [challenge_index, challenge_results.size()])
-		return
-	challenge_results[challenge_index] = value
+func initialize_challenges(mission_challenge_data: Array):
+	for data in mission_challenge_data:
+		active_challenges.append(ChallengeFactory.create(data.parameter))
 
 func set_enemy_hp(enemy_index: int, new_hp: int) -> void:
 	if enemy_index < 0 or enemy_index >= enemy_units.size():
@@ -415,8 +390,6 @@ func _try_spend_skill_mp(unit_index: int, unit_data: Dictionary, payload_data: D
 	var source_type: String = str(payload_data.get("source_type", "skill"))
 	if source_type == "limitburst":
 		unit_data["limit_gauge"] = 0
-		used_limit_burst = true
-		limit_burst_uses += 1
 		request_unit_stats(unit_index)
 		return true
 
@@ -431,66 +404,6 @@ func _try_spend_skill_mp(unit_index: int, unit_data: Dictionary, payload_data: D
 	unit_data["current_mp"] = maxi(0, current_mp - mp_cost)
 	request_unit_stats(unit_index)
 	return true
-
-func _record_used_action(action_name: String, action: int, payload_data: Dictionary, skill_data: Dictionary, parsed_data: Dictionary) -> void:
-	if action == CombatAction.ITEM:
-		var item_id: String = str(payload_data.get("original_item_id", ""))
-		if item_id != "":
-			used_item_ids[item_id] = int(used_item_ids.get(item_id, 0)) + 1
-		var item_data: Dictionary = GameDatabase.get_item(int(item_id)) if item_id != "" else {}
-		var item_name: String = str(item_data.get("name", action_name)).to_lower()
-		if item_name != "":
-			used_item_names[item_name] = int(used_item_names.get(item_name, 0)) + 1
-		return
-
-	var skill_id: String = str(payload_data.get("source_id", ""))
-	if skill_id != "":
-		used_skill_ids[skill_id] = int(used_skill_ids.get(skill_id, 0)) + 1
-
-	var skill_name: String = str(skill_data.get("name", action_name)).to_lower()
-	if skill_name != "":
-		used_skill_names[skill_name] = int(used_skill_names.get(skill_name, 0)) + 1
-
-	var magic_type: String = str(skill_data.get("magic_type", "")).to_lower()
-	if magic_type != "":
-		magic_uses += 1
-		magic_types_used[magic_type] = int(magic_types_used.get(magic_type, 0)) + 1
-		for effect in parsed_data.get("effects", []):
-			var effect_type: String = str(effect.get("type", "")).to_lower()
-			if effect_type in ["heal", "revive", "hp_restore"]:
-				recovery_magic_uses += 1
-				break
-
-	for element in skill_data.get("element_inflict", []):
-		var element_name: String = str(element).to_lower()
-		if element_name == "":
-			continue
-		damage_element_counts[element_name] = int(damage_element_counts.get(element_name, 0)) + 1
-		if element_name not in damage_elements_used:
-			damage_elements_used.append(element_name)
-
-func _kill_method_for_action(payload_data: Dictionary, skill_data: Dictionary) -> String:
-	var source_type: String = str(payload_data.get("source_type", "")).to_lower()
-	if source_type == "limitburst":
-		return "limitburst"
-	if source_type == "esper_skill":
-		return "esper"
-	if str(skill_data.get("magic_type", "")) != "":
-		return "magic"
-	return ""
-
-func _record_defeat_challenge(attacker_index: int, target: Dictionary) -> void:
-	if attacker_index < 0 or attacker_index >= party_data.size():
-		return
-	var method: String = str(party_data[attacker_index].get("challenge_kill_method", ""))
-	if method == "":
-		return
-	var enemy_name: String = str(target.get("name", "")).to_lower()
-	if enemy_name == "":
-		return
-	if not defeated_names_by_method.has(method):
-		defeated_names_by_method[method] = []
-	defeated_names_by_method[method].append(enemy_name)
 
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:
@@ -517,7 +430,6 @@ func execute_queued_action(attacker_index: int) -> void:
 	if action == CombatAction.DEFEND:
 		attacker_data["is_defending"] = true
 		attacker_data["challenge_kill_method"] = ""
-		used_skill_names["defend"] = int(used_skill_names.get("defend", 0)) + 1
 		_check_turn_progression()
 		return
 	elif action == CombatAction.SKILL or action == CombatAction.ITEM:
@@ -533,6 +445,7 @@ func execute_queued_action(attacker_index: int) -> void:
 			var item_id: String = payload_data.get("original_item_id", "")
 			if item_id != "":
 				used_items[item_id] = used_items.get(item_id, 0) + 1
+				BattleEvents.item_used.emit(item_id)
 
 		var resolved_action: Dictionary = _resolve_queued_action_data(action_id, payload_data)
 		var target_skill_data: Dictionary = resolved_action.get("resolved_action_data", {}) if not resolved_action.is_empty() else {}
@@ -554,9 +467,7 @@ func execute_queued_action(attacker_index: int) -> void:
 			parsed_data = SkillResolver.parse_skill_effects(target_skill_data)
 		if OS.is_debug_build():
 			print("Parsed Skill/Item: ", parsed_data)
-		_record_used_action(action_name, action, payload_data, target_skill_data, parsed_data)
-		attacker_data["challenge_kill_method"] = _kill_method_for_action(payload_data, target_skill_data)
-
+		
 		# queued_target_index is always a party_data index (stable slot reference)
 		var target_team: String = attacker_data.get("queued_target_team", "enemy")
 		var target_idx: int = attacker_data.get("queued_target_index", 0)
@@ -570,6 +481,11 @@ func execute_queued_action(attacker_index: int) -> void:
 			if target_idx < 0 or target_idx >= party_data.size(): target_idx = 0
 			if party_data.size() > 0: primary_target = party_data[target_idx]
 
+		if attacker_data.get("queued_payload").get("source_type") == "ability":
+			BattleEvents.ability_used.emit(attacker_data.get("queued_payload"))
+		elif attacker_data.get("queued_payload").get("source_type") == "magic":
+			BattleEvents.magic_used.emit(attacker_data.get("queued_payload"))
+			
 		# Route the skill to the execution pipeline
 		execute_parsed_skill(parsed_data, attacker_data, primary_target)
 
@@ -592,8 +508,19 @@ func execute_queued_action(attacker_index: int) -> void:
 		var target_index: int = attacker_data.get("queued_target_index", 0)
 		var target_team: String = attacker_data.get("queued_target_team", "enemy")
 		
-		var attack_frames = attacker_data.get("attack_frames", [30])
-		var attack_damage = attacker_data.get("attack_damage", [[100]])
+		var attack_frames: Array[int] = []
+		var attack_damage: Array[int] = []
+		# 1. Split the main string by the hyphen
+		var frame_segments: PackedStringArray = attacker_data.get("attackFrames").split("-")
+
+		# 2. Loop through each segment
+		for segment in frame_segments:
+			# 3. Split by colon to isolate the first number
+			var parts: PackedStringArray = segment.split(":")
+			
+			# 4. Convert the first part to an integer and add to array
+			attack_frames.append(parts[0].to_int())
+			attack_damage.append(parts[1].to_int())
 		
 		var target_data: Dictionary = {}
 		if target_team == "enemy":
@@ -804,7 +731,7 @@ func _trigger_wave_clear() -> void:
 		print("BattleManager: Wave %d cleared!" % current_wave)
 
 	# 1. Wait for the death tweens to finish (0.5 to 1.0 seconds)
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(1.0).timeout
 
 	if current_wave >= total_waves:
 		_trigger_mission_complete()
@@ -822,172 +749,21 @@ func _trigger_mission_complete() -> void:
 		print("BattleManager: Final wave cleared. Initiating mission rewards...")
 		print("Mission Drops: ", mission_drops)
 
-	_finalize_challenge_results()
+	BattleEvents.mission_completed.emit(party_data, turn_count)
+	
+	for i in range(active_challenges.size()):
+		var passed = active_challenges[i].evaluate()
+		print("Challenge ", i, " passed: ", passed)
+		challenge_results[i] = passed
+		# Disconnect lambdas from the Autoload!
+		active_challenges[i].cleanup()
+
+	active_challenges.clear()
+
 	if MissionService.has_method("request_finish_mission"):
 		MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
 
-	mission_cleared.emit()
-
-func _count_all_values(values: Dictionary) -> int:
-	var total: int = 0
-	for value in values.values():
-		total += int(value)
-	return total
-
-func _required_count(text: String, default_value: int = 1) -> int:
-	var source_text: String = text.get_slice("within ", 1) if "within " in text else text
-	for token in source_text.replace("(", " ").replace(")", " ").split(" "):
-		var cleaned: String = str(token).strip_edges().trim_suffix(",").trim_suffix(".")
-		if cleaned.is_valid_int():
-			return int(cleaned)
-	return default_value
-
-func _has_used_name(target_name: String, names: Dictionary) -> bool:
-	target_name = target_name.strip_edges().to_lower()
-	if target_name.begins_with("a "):
-		target_name = target_name.trim_prefix("a ")
-	if target_name.begins_with("an "):
-		target_name = target_name.trim_prefix("an ")
-	if target_name == "":
-		return false
-	if names.has(target_name):
-		return true
-	for used_name in names.keys():
-		var normalized_used_name: String = str(used_name).to_lower()
-		if normalized_used_name == target_name:
-			return true
-	return false
-
-func _has_used_id(target_name: String) -> bool:
-	target_name = target_name.strip_edges().to_lower()
-	if target_name.begins_with("a "):
-		target_name = target_name.trim_prefix("a ")
-	if target_name.begins_with("an "):
-		target_name = target_name.trim_prefix("an ")
-	if target_name == "":
-		return false
-	for skill_id in GameDatabase.find_skill_ids_by_exact_name(target_name):
-		if used_skill_ids.has(skill_id):
-			return true
-	for item_id in GameDatabase.find_item_ids_by_exact_name(target_name):
-		if used_item_ids.has(item_id):
-			return true
-	return false
-
-func _party_contains_name(text: String) -> bool:
-	var target_name: String = text.get_slice(" in party", 0).strip_edges()
-	for unit in party_data:
-		if unit.is_empty():
-			continue
-		if str(unit.get("unitName", "")).to_lower() == target_name:
-			return true
-	return false
-
-func _elements_from_challenge(text: String) -> Array[String]:
-	var elements: Array[String] = []
-	for element in ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"]:
-		if element in text:
-			elements.append(element)
-	return elements
-
-func _has_element_damage(text: String) -> bool:
-	var elements: Array[String] = _elements_from_challenge(text)
-	if elements.is_empty():
-		return false
-	var required: int = _required_count(text)
-	for element in elements:
-		if int(damage_element_counts.get(element, 0)) < required:
-			return false
-	return true
-
-func _defeat_target_from_text(text: String) -> String:
-	var target: String = text.trim_prefix("defeat ")
-	for suffix in [" with a limit burst", " using a limit burst", " with magic", " using magic", " with an esper", " within "]:
-		var index: int = target.find(suffix)
-		if index >= 0:
-			target = target.substr(0, index)
-	target = target.replace("'s party", "").strip_edges()
-	if target.begins_with("a "):
-		target = target.trim_prefix("a ")
-	if target.begins_with("an "):
-		target = target.trim_prefix("an ")
-	if target.begins_with("the "):
-		target = target.trim_prefix("the ")
-	return target
-
-func _defeated_target_with_method(text: String, method: String) -> bool:
-	var target_name: String = _defeat_target_from_text(text)
-	var defeated: Array = defeated_names_by_method.get(method, [])
-	for enemy_name in defeated:
-		var name: String = str(enemy_name).to_lower()
-		if name == target_name or target_name in name or name in target_name:
-			return true
-	return false
-
-func _challenge_completed(text: String) -> bool:
-	text = text.to_lower()
-	if text == "complete the quest" or text == "no continues" or text == "no escapes":
-		return true
-	if "without an ally being ko" in text:
-		return party_data.all(func(unit): return unit.is_empty() or int(unit.get("current_hp", 0)) > 0)
-	if "party of " in text:
-		var required: int = int(text.get_slice("party of ", 1).get_slice(" ", 0))
-		var party_size: int = party_data.filter(func(unit): return not unit.is_empty()).size()
-		return party_size <= required if " or less" in text else party_size >= required
-	if " in party" in text:
-		return _party_contains_name(text)
-	if text.begins_with("clear within ") or text.begins_with("clear the last battle within ") or text.begins_with("clear battle ") or text.begins_with("finish battle "):
-		return turn_count <= _required_count(text, 999)
-	if text.begins_with("defeat ") and " within " in text:
-		return turn_count <= _required_count(text, 999)
-	if text.begins_with("defeat ") and ("with a limit burst" in text or "using a limit burst" in text):
-		return _defeated_target_with_method(text, "limitburst")
-	if text.begins_with("defeat ") and ("with magic" in text or "using magic" in text):
-		return _defeated_target_with_method(text, "magic")
-	if text.begins_with("defeat ") and "with an esper" in text:
-		return _defeated_target_with_method(text, "esper")
-	if text.begins_with("deal ") and " damage" in text:
-		return _has_element_damage(text)
-	if text == "no items" or text == "no items (except keys)":
-		return used_items.is_empty()
-	if text.begins_with("use no more than ") and " item" in text:
-		return _count_all_values(used_items) <= _required_count(text)
-	if text == "use an item":
-		return not used_items.is_empty()
-	if text == "no magic":
-		return magic_uses == 0
-	if text == "no recovery magic":
-		return recovery_magic_uses == 0
-	if text == "no limit bursts":
-		return limit_burst_uses == 0
-	if text == "use a limit burst":
-		return limit_burst_uses >= 1
-	if text.begins_with("use ") and " or more limit bursts" in text:
-		return limit_burst_uses >= _required_count(text)
-	if text.begins_with("use magic") and " or more times" in text:
-		return magic_uses >= _required_count(text)
-	if text == "use magic":
-		return magic_uses > 0
-	if text.begins_with("use ") and text.ends_with(" magic"):
-		var body: String = text.trim_prefix("use ").trim_suffix(" magic")
-		for part in body.split(" and "):
-			if int(magic_types_used.get(part.strip_edges(), 0)) <= 0:
-				return false
-		return true
-	if text.begins_with("no ") and text.ends_with(" magic"):
-		var magic_type: String = text.trim_prefix("no ").trim_suffix(" magic").strip_edges()
-		return int(magic_types_used.get(magic_type, 0)) == 0
-	if text.begins_with("use "):
-		var used_name: String = text.trim_prefix("use ").strip_edges()
-		return _has_used_id(used_name) or _has_used_name(used_name, used_skill_names) or _has_used_name(used_name, used_item_names)
-	return false
-
-func _finalize_challenge_results() -> void:
-	var challenges: Array = MissionService.get_mission_data(current_mission_id).get("challenges", [])
-	for index in range(min(challenges.size(), challenge_results.size())):
-		var text: String = str(challenges[index].get("string", "")).to_lower()
-		challenge_results[index] = _challenge_completed(text)
-
+	
 func _spawn_next_wave() -> void:
 	current_wave += 1
 	if OS.is_debug_build():
@@ -1178,7 +954,6 @@ func _on_turn_end(active_team: String) -> void:
 ## Resolves the actual target list via TargetResolver, then queues per-effect hits.
 func execute_parsed_skill(parsed_skill: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
 	var effects = parsed_skill.get("effects", [])
-
-	for i in range(effects.size()):
-		var effect = effects[i]
+	for effect in effects:
+		effect["element"] = parsed_skill.get("element_inflict")
 		_queue_effect_hits(effect, caster, primary_target)

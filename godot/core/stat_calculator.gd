@@ -447,12 +447,6 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			for skill_id in magic_array:
 				raw_skills.append({"id": skill_id, "source": "Equip"})
 
-
-			#var equip_skills = item_data.get("skills", [])
-			#if equip_skills != null:
-				#for skill_id in equip_skills:
-					#raw_skills.append({"id": skill_id, "source": "Equip"})
-
 	var esper_flat_bonus: Dictionary = _compute_active_party_esper_flat_bonus(unit_instance)
 	for stat_name in CORE_STATS:
 		flat_mods[stat_name] += int(esper_flat_bonus.get(stat_name, 0))

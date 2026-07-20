@@ -390,8 +390,6 @@ func _try_spend_skill_mp(unit_index: int, unit_data: Dictionary, payload_data: D
 	var source_type: String = str(payload_data.get("source_type", "skill"))
 	if source_type == "limitburst":
 		unit_data["limit_gauge"] = 0
-		used_limit_burst = true
-		limit_burst_uses += 1
 		request_unit_stats(unit_index)
 		return true
 
@@ -406,66 +404,6 @@ func _try_spend_skill_mp(unit_index: int, unit_data: Dictionary, payload_data: D
 	unit_data["current_mp"] = maxi(0, current_mp - mp_cost)
 	request_unit_stats(unit_index)
 	return true
-
-func _record_used_action(action_name: String, action: int, payload_data: Dictionary, skill_data: Dictionary, parsed_data: Dictionary) -> void:
-	if action == CombatAction.ITEM:
-		var item_id: String = str(payload_data.get("original_item_id", ""))
-		if item_id != "":
-			used_item_ids[item_id] = int(used_item_ids.get(item_id, 0)) + 1
-		var item_data: Dictionary = GameDatabase.get_item(int(item_id)) if item_id != "" else {}
-		var item_name: String = str(item_data.get("name", action_name)).to_lower()
-		if item_name != "":
-			used_item_names[item_name] = int(used_item_names.get(item_name, 0)) + 1
-		return
-
-	var skill_id: String = str(payload_data.get("source_id", ""))
-	if skill_id != "":
-		used_skill_ids[skill_id] = int(used_skill_ids.get(skill_id, 0)) + 1
-
-	var skill_name: String = str(skill_data.get("name", action_name)).to_lower()
-	if skill_name != "":
-		used_skill_names[skill_name] = int(used_skill_names.get(skill_name, 0)) + 1
-
-	var magic_type: String = str(skill_data.get("magic_type", "")).to_lower()
-	if magic_type != "":
-		magic_uses += 1
-		magic_types_used[magic_type] = int(magic_types_used.get(magic_type, 0)) + 1
-		for effect in parsed_data.get("effects", []):
-			var effect_type: String = str(effect.get("type", "")).to_lower()
-			if effect_type in ["heal", "revive", "hp_restore"]:
-				recovery_magic_uses += 1
-				break
-
-	for element in skill_data.get("element_inflict", []):
-		var element_name: String = str(element).to_lower()
-		if element_name == "":
-			continue
-		damage_element_counts[element_name] = int(damage_element_counts.get(element_name, 0)) + 1
-		if element_name not in damage_elements_used:
-			damage_elements_used.append(element_name)
-
-func _kill_method_for_action(payload_data: Dictionary, skill_data: Dictionary) -> String:
-	var source_type: String = str(payload_data.get("source_type", "")).to_lower()
-	if source_type == "limitburst":
-		return "limitburst"
-	if source_type == "esper_skill":
-		return "esper"
-	if str(skill_data.get("magic_type", "")) != "":
-		return "magic"
-	return ""
-
-func _record_defeat_challenge(attacker_index: int, target: Dictionary) -> void:
-	if attacker_index < 0 or attacker_index >= party_data.size():
-		return
-	var method: String = str(party_data[attacker_index].get("challenge_kill_method", ""))
-	if method == "":
-		return
-	var enemy_name: String = str(target.get("name", "")).to_lower()
-	if enemy_name == "":
-		return
-	if not defeated_names_by_method.has(method):
-		defeated_names_by_method[method] = []
-	defeated_names_by_method[method].append(enemy_name)
 
 func execute_queued_action(attacker_index: int) -> void:
 	if current_state != BattleState.PLAYER_TURN:

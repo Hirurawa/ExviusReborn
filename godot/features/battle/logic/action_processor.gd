@@ -19,7 +19,7 @@ func _get_stat_safe(stats: Dictionary, stat_name: String, default_value: int = 1
 	return stats[stat_name]
 
 
-static func generate_effect_payloads(effect_type: String, raw_amount: int, attack_damage: Array, attack_frames: Array, caster: Dictionary, target: Dictionary, duration: int = 0, params: Dictionary = {}) -> Array:
+static func generate_effect_payloads(effect_type: String, raw_amount: int, attack_damage: Array, attack_frames: Array, caster: Dictionary, target: Dictionary, duration: int = 0, params: Dictionary = {}, element: Array = []) -> Array:
 	var generated_payloads = []
 
 	var dmg_array = attack_damage[0] if typeof(attack_damage[0]) == TYPE_ARRAY else attack_damage
@@ -38,6 +38,7 @@ static func generate_effect_payloads(effect_type: String, raw_amount: int, attac
 			"target_team": target.get("team", ""),
 			"target_index": target.get("index", 0),
 			"duration": duration,
+			"element": element,
 			"params": params
 		}
 
@@ -54,19 +55,45 @@ func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targe
 	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
 	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
 	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
+	var attack_elements: Array = parsed_effect.get("element", [])
 
 	var caster_stats = caster.get("final_stats", caster).get("stats", {})
 
 	var all_hit_payloads: Array[Dictionary] = []
 
 	for target in targets:
-		var target_stats = target.get("final_stats", target)
-		target_stats = target_stats.get("stats", target_stats)
+		var target_final_stats = target.get("final_stats", target)
+		var target_stats = target_final_stats.get("stats", target_final_stats)
+		
+		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
+		var target_resists = target_final_stats.get("element_resists", {}) 
+
 		var ATK = _get_stat_safe(caster_stats, "ATK", 10)
 		var DEF = _get_stat_safe(target_stats, "DEF", 10)
 
+		# 1. Base Physical Math
 		var raw_damage = (float(ATK * ATK) / float(max(1, DEF))) * modifier
-		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
+		
+		# 2. Elemental Math
+		var element_modifier = 1.0
+		
+		if attack_elements.size() > 0:
+			var total_resist = 0.0
+			for element in attack_elements:
+				# Add the target's resistance for this element, defaulting to 0 if they don't have one
+				total_resist += target_resists.get(element, 0)
+				
+			# Average the resistances
+			var average_resist = total_resist / attack_elements.size()
+			
+			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
+			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
+			element_modifier = 1.0 - (average_resist / 100.0)
+
+		# 3. Apply modifier and prevent negative damage
+		var final_damage = max(0.0, raw_damage * element_modifier)
+
+		var hit_payloads = generate_effect_payloads("DAMAGE", final_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
 		
 		all_hit_payloads.append_array(hit_payloads)
 
@@ -76,20 +103,98 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
 	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
 	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
+	var attack_elements: Array = parsed_effect.get("element", [])
 
 	var caster_stats = caster.get("final_stats", caster).get("stats", {})
 
 	var all_hit_payloads: Array[Dictionary] = []
 
 	for target in targets:
-		var target_stats = target.get("final_stats", target)
-		target_stats = target_stats.get("stats", target_stats)
+		var target_final_stats = target.get("final_stats", target)
+		var target_stats = target_final_stats.get("stats", target_final_stats)
+		
+		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
+		var target_resists = target_final_stats.get("element_resists", {}) 
+
 		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
 		var SPR = _get_stat_safe(target_stats, "SPR", 10)
-			
+		
+		# 1. Base Magic Math
 		var raw_damage = (float(MAG * MAG) / float(max(1, SPR))) * modifier
-		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
+		# 2. Elemental Math
+		var element_modifier = 1.0
+		
+		if attack_elements.size() > 0:
+			var total_resist = 0.0
+			for element in attack_elements:
+				# Add the target's resistance for this element, defaulting to 0 if they don't have one
+				total_resist += target_resists.get(element, 0)
+				
+			# Average the resistances
+			var average_resist = total_resist / attack_elements.size()
+			
+			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
+			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
+			element_modifier = 1.0 - (average_resist / 100.0)
 
+		# 3. Apply modifier and prevent negative damage
+		var final_damage = max(0.0, raw_damage * element_modifier)
+
+		var hit_payloads = generate_effect_payloads("DAMAGE", final_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
+
+		all_hit_payloads.append_array(hit_payloads)
+
+	return all_hit_payloads
+
+func _apply_hybrid_damage(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var phys_modifier = parsed_effect.get("effect", {}).get("phys_modifier", 100.0) / 100.0
+	var mag_modifier = parsed_effect.get("effect", {}).get("mag_modifier", 100.0) / 100.0
+	var attack_elements: Array = parsed_effect.get("element", [])
+
+	var caster_stats = caster.get("final_stats", caster).get("stats", {})
+
+	var all_hit_payloads: Array[Dictionary] = []
+
+	for target in targets:
+		var target_final_stats = target.get("final_stats", target)
+		var target_stats = target_final_stats.get("stats", target_final_stats)
+		
+		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
+		var target_resists = target_final_stats.get("element_resists", {}) 
+
+		var ATK = _get_stat_safe(caster_stats, "ATK", 10)
+		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
+		var DEF = _get_stat_safe(target_stats, "DEF", 10)
+		var SPR = _get_stat_safe(target_stats, "SPR", 10)
+
+		# 1. Base Physical Math
+		var physical_part = (float(ATK * ATK) / float(max(1, DEF))) * phys_modifier
+		var magical_part = (float(MAG * MAG) / float(max(1, SPR))) * mag_modifier
+		var raw_damage = (physical_part + magical_part) / 2
+		
+		# 2. Elemental Math
+		var element_modifier = 1.0
+		
+		if attack_elements.size() > 0:
+			var total_resist = 0.0
+			for element in attack_elements:
+				# Add the target's resistance for this element, defaulting to 0 if they don't have one
+				total_resist += target_resists.get(element, 0)
+				
+			# Average the resistances
+			var average_resist = total_resist / attack_elements.size()
+			
+			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
+			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
+			element_modifier = 1.0 - (average_resist / 100.0)
+
+		# 3. Apply modifier and prevent negative damage
+		var final_damage = max(0.0, raw_damage * element_modifier)
+
+		var hit_payloads = generate_effect_payloads("DAMAGE", final_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
+		
 		all_hit_payloads.append_array(hit_payloads)
 
 	return all_hit_payloads
@@ -98,19 +203,44 @@ func _apply_spr_damage(parsed_effect: Dictionary, caster: Dictionary, targets: A
 	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
 	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
 	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
+	var attack_elements: Array = parsed_effect.get("element", [])
 
 	var caster_stats = caster.get("final_stats", caster).get("stats", {})
 
 	var all_hit_payloads: Array[Dictionary] = []
 
 	for target in targets:
-		var target_stats = target.get("final_stats", target)
-		target_stats = target_stats.get("stats", target_stats)
+		var target_final_stats = target.get("final_stats", target)
+		var target_stats = target_final_stats.get("stats", target_final_stats)
+		
+		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
+		var target_resists = target_final_stats.get("element_resists", {}) 
+
 		var caster_SPR = _get_stat_safe(caster_stats, "SPR", 10)
 		var target_SPR = _get_stat_safe(target_stats, "SPR", 10)
 			
+		# 1. Base Damage Math
 		var raw_damage = (float(caster_SPR * caster_SPR) / float(max(1, target_SPR))) * modifier
-		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target)
+		# 2. Elemental Math
+		var element_modifier = 1.0
+		
+		if attack_elements.size() > 0:
+			var total_resist = 0.0
+			for element in attack_elements:
+				# Add the target's resistance for this element, defaulting to 0 if they don't have one
+				total_resist += target_resists.get(element, 0)
+				
+			# Average the resistances
+			var average_resist = total_resist / attack_elements.size()
+			
+			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
+			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
+			element_modifier = 1.0 - (average_resist / 100.0)
+
+		# 3. Apply modifier and prevent negative damage
+		var final_damage = max(0.0, raw_damage * element_modifier)
+
+		var hit_payloads = generate_effect_payloads("DAMAGE", final_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
 
 		all_hit_payloads.append_array(hit_payloads)
 

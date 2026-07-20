@@ -211,7 +211,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 						else:
 							push_warning("Tried to rank up locked esper %s to rank %d (from switch %s)" % [summon_id, new_rank, switch_id])
 
-
 	if not was_already_cleared:
 		var raw_rewards: Variant = mission_data.get("rewards", [])
 		if raw_rewards is Array:
@@ -245,7 +244,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		"mission_id": mission_key,
 		"mission_name": str(mission_data.get("name", mission_key)),
 		"rank_exp": int(mission_data.get("exp", 0)),
-		"unit_exp": int(mission_data.get("exp", 0)),
+		"unit_exp": 0, #int(mission_data.get("exp", 0)),
 		"gil": int(mission_data.get("gil", 0)),
 		"rank_before": rank_before,
 		"xp_before": xp_before,
@@ -279,7 +278,6 @@ func get_mission_data(mission_id: String) -> Dictionary:
 
 	_mission_cache[mission_key] = mission_data
 	return mission_data
-
 
 
 func _get_latest_cleared_mission_id_from_progress(progress: Dictionary) -> String:

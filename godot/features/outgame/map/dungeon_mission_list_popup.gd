@@ -90,11 +90,11 @@ func _add_mission_row(mission: Dictionary) -> void:
 	row.configure(
 		mission_id,
 		mission_name,
-			int(mission.get("cost", 0)),
-			int(mission.get("waveCount", 0)),
-			str(mission.get("difficulty", "")),
-			_parse_row_state(str(mission.get("row_state", "default"))),
-			mission.get("objectives", [])
+		int(mission.get("cost", 0)),
+		int(mission.get("waveCount", 0)),
+		str(mission.get("difficulty", "")),
+		_parse_row_state(str(mission.get("row_state", "default"))),
+		mission.get("objectives", [])
 		)
 	row.row_pressed.connect(_on_row_pressed)
 

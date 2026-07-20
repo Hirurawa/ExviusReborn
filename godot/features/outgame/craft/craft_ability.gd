@@ -54,9 +54,9 @@ func _active_tab_button() -> TextureButton:
 func _populate_for_current_tab() -> void:
 	match _current_tab:
 		Tab.BLACK:
-			_populate_shop(GameDatabase.get_materia_recipes(1))
-		Tab.WHITE:
 			_populate_shop(GameDatabase.get_materia_recipes(2))
+		Tab.WHITE:
+			_populate_shop(GameDatabase.get_materia_recipes(1))
 		Tab.GREEN:
 			_populate_shop(GameDatabase.get_materia_recipes(3))
 		Tab.SPECIAL:

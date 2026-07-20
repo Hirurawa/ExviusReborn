@@ -83,6 +83,10 @@
 		"type": "KO",
 		"keys": ["pct"]
 	},
+	"40":{
+		"type": "HYBRID_DAMAGE",
+		"keys": ["",  "",  "",  "",  "",  "",  "",  "",  "phys_modifier",  "mag_modifier"]
+	},
 	"41": {
 		"type": "FIXED_DAMAGE",
 		"keys": ["amount"]

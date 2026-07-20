@@ -570,7 +570,8 @@ func _can_unit_pay_skill_mp(unit_data: Dictionary, skill_data: Dictionary) -> bo
 		return false
 
 	var current_mp: int = int(unit_data.get("current_mp", 0))
-	var mp_cost: int = skill_data.get("cost", {}).get("MP", 0)
+	var cost_value: Variant = skill_data.get("cost", {})
+	var mp_cost: int = int(cost_value.get("MP", 0)) if cost_value is Dictionary else int(cost_value) if typeof(cost_value) in [TYPE_INT, TYPE_FLOAT] else 0
 	return current_mp >= mp_cost
 
 
@@ -1214,10 +1215,12 @@ func _on_finish_pressed() -> void:
 	finish_button.disabled = true
 	battle_manager._trigger_mission_complete()
 
-func _on_mission_completed(rewards_text: String = "") -> void:
+func _on_mission_completed(result: Dictionary) -> void:
 	AudioService.play_music("res://assets/audio/bgm/la009_battleend.wav", false)
-	rewards_popup.dialog_text = "Mission completed successfully!" + rewards_text
-	rewards_popup.popup_centered()
+	var sequence = preload("res://features/battle/ui/MissionResultSequence.tscn").instantiate()
+	add_child(sequence)
+	sequence.start(result, battle_manager.party_data)
+	sequence.finished.connect(_on_result_sequence_finished)
 
 func _on_mission_failed(error_msg: String = "") -> void:
 	push_error("Failed to complete mission: %s" % error_msg)
@@ -1226,6 +1229,9 @@ func _on_mission_failed(error_msg: String = "") -> void:
 	rewards_popup.popup_centered()
 
 func _on_rewards_confirmed() -> void:
+	UIManager.pop()
+
+func _on_result_sequence_finished() -> void:
 	UIManager.pop()
 
 func _on_unit_action_started_feedback(unit_index: int, action: int) -> void:

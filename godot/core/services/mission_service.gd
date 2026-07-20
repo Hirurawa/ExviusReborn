@@ -12,7 +12,7 @@ extends Node
 ##     directly (esper blob via EsperService; stats blob still bundled with
 ##     DataManager facade).
 
-signal mission_completed(rewards_text: String)
+signal mission_completed(result: Dictionary)
 signal mission_failed(error_msg: String)
 signal mission_progress_loaded(latest_mission_id: String)
 signal dungeon_missions_ready(mission_ids: Array)
@@ -109,7 +109,7 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	return {"success": true}
 
 
-func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, _challenge_results: Array = [], mission_drops: Array = []) -> Dictionary:
+func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = [], mission_drops: Array = []) -> Dictionary:
 	if not win_status:
 		mission_failed.emit("Mission failed")
 		return {"error": "Mission failed"}
@@ -122,11 +122,22 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		progress_entry = existing_entry.duplicate(true)
 		was_already_cleared = bool(existing_entry.get("cleared", false))
 	progress_entry["cleared"] = true
+
+	var mission_data: Dictionary = get_mission_data(mission_id)
+	var challenges: Array = mission_data.get("challenges", [])
+	var previous_objectives: Array = progress_entry.get("objectives", [])
+	var objectives: Array = []
+	objectives.resize(challenges.size())
+	for index in range(challenges.size()):
+		var previously_completed: bool = index < previous_objectives.size() and bool(previous_objectives[index])
+		var completed_now: bool = index < challenge_results.size() and bool(challenge_results[index])
+		objectives[index] = previously_completed or completed_now
+	progress_entry["objectives"] = objectives
 	cleared_missions[mission_key] = progress_entry
 	latest_cleared_mission_id = _get_latest_cleared_mission_id_from_progress(cleared_missions)
 
-	var mission_data: Dictionary = get_mission_data(mission_id)
-
+	var rank_before: int = PlayerProfile.current_rank
+	var xp_before: int = PlayerProfile.current_xp
 	if mission_data.has("exp"):
 		PlayerProfile.add_xp(int(mission_data["exp"]))
 
@@ -229,9 +240,25 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "finish_mission")
 	PlayerProfile.emit_all()
 	InventoryService.emit_updated()
-	mission_completed.emit(rewards_text)
+	var result: Dictionary = {
+		"success": true,
+		"mission_id": mission_key,
+		"mission_name": str(mission_data.get("name", mission_key)),
+		"rank_exp": int(mission_data.get("exp", 0)),
+		"unit_exp": int(mission_data.get("exp", 0)),
+		"gil": int(mission_data.get("gil", 0)),
+		"rank_before": rank_before,
+		"xp_before": xp_before,
+		"rank_after": PlayerProfile.current_rank,
+		"xp_after": PlayerProfile.current_xp,
+		"drops": mission_drops.duplicate(),
+		"challenges": challenges,
+		"objectives": objectives,
+		"rewards_text": rewards_text,
+	}
+	mission_completed.emit(result)
 
-	return {"success": true}
+	return result
 
 
 func request_dungeon_missions(mission_ids: Array) -> void:

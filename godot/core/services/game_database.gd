@@ -273,6 +273,12 @@ func get_town(town_id: String) -> Dictionary:
 func get_story_sub(town_id: String) -> Array:
 	return query("SELECT * FROM story_sub WHERE targetId = ?", [town_id])
 
+
+func get_map_event_switch_unlock(target_id: int, switch_info: int) -> Variant:
+	var rows = query("select * from map_event where targetId = ? and switchInfo = ?", [target_id, switch_info])
+	return rows[0].get("openSwitch") if not rows.is_empty() else {}
+
+
 func get_quests_for_town(town_id: String) -> Array:
 	return query(
 		"SELECT q.questId, q.name AS questName, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.targetType, qs.targetParam"

@@ -26,7 +26,6 @@ func snapshot_payload() -> Dictionary:
 	for esper in owned_summons:
 		if esper is Dictionary:
 			lean_espers.append(_extract_esper_lean_record(esper))
-
 	return {
 		"owned_summons": lean_espers
 	}
@@ -164,26 +163,6 @@ func spend_esper_sp(summon_id: String, amount: int) -> Dictionary:
 	record["current_sp"] = current_sp - spend_amount
 	_upsert_esper_record(record)
 	_rehydrate_and_emit_espers("spend_esper_sp")
-	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
-
-func unlock_esper_skill(summon_id: String, skill_id: String) -> Dictionary:
-	var normalized_summon_id: String = summon_id.strip_edges()
-	var normalized_skill_id: String = skill_id.strip_edges()
-	if normalized_skill_id == "":
-		return {"success": false, "error": "ERR_INVALID_SKILL_ID"}
-
-	var record: Dictionary = get_esper_progression(normalized_summon_id)
-	if record.is_empty():
-		return {"success": false, "error": "ERR_ESPER_NOT_FOUND"}
-
-	var unlocked_skills: Array = _normalize_string_array(record.get("unlocked_skills", []))
-	if unlocked_skills.has(normalized_skill_id):
-		return {"success": false, "error": "ERR_SKILL_ALREADY_UNLOCKED"}
-
-	unlocked_skills.append(normalized_skill_id)
-	record["unlocked_skills"] = unlocked_skills
-	_upsert_esper_record(record)
-	_rehydrate_and_emit_espers("unlock_esper_skill")
 	return {"success": true, "esper": get_esper_progression(normalized_summon_id)}
 
 func unlock_esper_board_node(summon_id: String, node_id: String, sp_cost: int = 0, reward_skill_id: String = "") -> Dictionary:

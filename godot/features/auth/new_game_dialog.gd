@@ -49,7 +49,7 @@ func _on_confirm_pressed() -> void:
 	get_ok_button().disabled = true
 	feedback_label.text = "Creating new game..."
 
-	var result: Dictionary = await AccountService.start_new_local_game(save_name)
+	var result: Dictionary = AccountService.start_new_local_game(save_name)
 	_busy = false
 	if not bool(result.get("success", false)):
 		feedback_label.text = str(result.get("error_message", "Failed to create new game."))

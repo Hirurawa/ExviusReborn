@@ -144,7 +144,7 @@ func _on_continue_button_pressed() -> void:
 	if _continue_username == "":
 		feedback_label.text = "No save to continue."
 		return
-	await _load_and_enter(_continue_username)
+	_load_and_enter(_continue_username)
 
 
 # === New Game ===
@@ -189,12 +189,12 @@ func _on_load_game_button_pressed() -> void:
 
 
 func _on_load_selected(username: String) -> void:
-	await _load_and_enter(username)
+	_load_and_enter(username)
 
 
 func _load_and_enter(username: String) -> void:
 	feedback_label.text = "Loading game..."
-	var result: Dictionary = await AccountService.load_local_game(username)
+	var result: Dictionary = AccountService.load_local_game(username)
 	if not bool(result.get("success", false)):
 		feedback_label.text = str(result.get("error_message", "Failed to load game."))
 		return

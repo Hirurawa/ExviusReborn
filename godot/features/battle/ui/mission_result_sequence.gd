@@ -53,11 +53,11 @@ func _show_experience() -> void:
 	challenges.visible = false
 	item.visible = false
 	unit_unit_exp.text = str(_result.get("unit_exp"))
-	for unit in _party:
-		_config_unit(unit)
+	for party_unit in _party:
+		_config_unit(party_unit)
 
-func _config_unit(unit: Dictionary) -> void:
-	if unit == {}:
+func _config_unit(unit_data: Dictionary) -> void:
+	if unit_data == {}:
 		var placeholder: TextureRect = TextureRect.new()
 		placeholder.texture = ResourceLoader.load("res://assets/ui/quest/result_unit.tres") as Texture2D
 		unit_container.add_child(placeholder)
@@ -65,29 +65,29 @@ func _config_unit(unit: Dictionary) -> void:
 	
 	var unit_node = unit_panel.duplicate()
 	var hp_text = unit_node.get_node("VBoxContainer/HBoxContainer/HPLabel")
-	hp_text.text = str(unit.get("final_stats").get("stats").get("HP"))
+	hp_text.text = str(unit_data.get("final_stats").get("stats").get("HP"))
 	var atk_text = unit_node.get_node("VBoxContainer/HBoxContainer/ATKLabel")
-	atk_text.text = str(unit.get("final_stats").get("stats").get("ATK"))
+	atk_text.text = str(unit_data.get("final_stats").get("stats").get("ATK"))
 	var mag_text = unit_node.get_node("VBoxContainer/HBoxContainer/MAGLabel")
-	mag_text.text = str(unit.get("final_stats").get("stats").get("MAG"))
+	mag_text.text = str(unit_data.get("final_stats").get("stats").get("MAG"))
 	var mp_text = unit_node.get_node("VBoxContainer/HBoxContainer2/MPLabel")
-	mp_text.text = str(unit.get("final_stats").get("stats").get("MP"))
+	mp_text.text = str(unit_data.get("final_stats").get("stats").get("MP"))
 	var def_text = unit_node.get_node("VBoxContainer/HBoxContainer2/DEFLabel")
-	def_text.text = str(unit.get("final_stats").get("stats").get("DEF"))
+	def_text.text = str(unit_data.get("final_stats").get("stats").get("DEF"))
 	var spr_text = unit_node.get_node("VBoxContainer/HBoxContainer2/SPRLabel")
-	spr_text.text = str(unit.get("final_stats").get("stats").get("SPR"))
+	spr_text.text = str(unit_data.get("final_stats").get("stats").get("SPR"))
 	var lvl_text = unit_node.get_node("UnitStatusLabelLv/UnitLevel")
-	lvl_text.text = str(unit.get("level"))
+	lvl_text.text = str(unit_data.get("level"))
 	var lb_lvl_text = unit_node.get_node("UnitStatusLabelLv2/LBLevel")
-	lb_lvl_text.text = str(int(unit.get("limitburst_level")))
+	lb_lvl_text.text = str(int(unit_data.get("limitburst_level")))
 	var lb_name_text = unit_node.get_node("LBName")
-	lb_name_text.text = str(unit.get("limitBurstId"))
+	lb_name_text.text = str(unit_data.get("limitBurstId"))
 	var tm_value_text = unit_node.get_node("UnitBondsIconMini/TMValue")
-	tm_value_text.text = str(unit.get("trust_value"))
+	tm_value_text.text = str(unit_data.get("trust_value"))
 	var job_name_text = unit_node.get_node("UnitCharaLabelJob/JobName")
-	job_name_text.text = str(unit.get("jobId"))
+	job_name_text.text = str(unit_data.get("jobId"))
 	var unit_name_text = unit_node.get_node("UnitName")
-	unit_name_text.text = str(unit.get("unitName"))
+	unit_name_text.text = str(unit_data.get("unitName"))
 	unit_node.visible = true
 	unit_container.add_child(unit_node)
 
@@ -101,8 +101,8 @@ func _show_item() -> void:
 	unit.visible = false
 	item.visible = true
 	challenges.visible = false
-	for item in drops:
-		_config_item(item)
+	for dropped_item in drops:
+		_config_item(dropped_item)
 
 func _config_item(item_id: String) -> void:
 	var item_node = item_panel.duplicate()

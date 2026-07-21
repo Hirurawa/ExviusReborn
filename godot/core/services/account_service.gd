@@ -22,7 +22,7 @@ var current_username: String = ""
 var account_info = null
 
 func authenticate(email: String, _password: String) -> void:
-	await load_initial_data(email)
+	load_initial_data(email)
 	login_success.emit()
 
 func logout() -> void:
@@ -138,7 +138,7 @@ func load_local_game(username: String) -> Dictionary:
 	if envelope.is_empty():
 		return {"success": false, "error_message": "No save found with that name."}
 
-	await load_initial_data(normalized_username)
+	load_initial_data(normalized_username)
 	Persistence.upsert_save_index_entry(resolved_save_id, current_username if current_username != "" else normalized_username)
 	return {"success": true, "save_id": resolved_save_id}
 

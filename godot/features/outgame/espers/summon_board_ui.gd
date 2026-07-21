@@ -33,18 +33,11 @@ func _ready() -> void:
 		_show_empty("No summon board selected.")
 
 func _setup_tileset() -> void:
-	#var img := Image.create(TILE_SIZE, TILE_SIZE, false, Image.FORMAT_RGBA8)
-	#img.fill(Color(0.2, 0.45, 0.8, 0.9))
-	#var tex := ImageTexture.create_from_image(img)
 	var source := TileSetAtlasSource.new()
-	#source.texture = tex
 	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	#source.create_tile(TILE_ATLAS_COORD)
 	var ts := TileSet.new()
 	ts.tile_shape = TileSet.TILE_SHAPE_HEXAGON
-	#ts.tile_layout = TileSet.TILE_LAYOUT_STACKED
 	ts.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	#ts.add_source(source, TILE_SOURCE_ID)
 	tile_map_layer.tile_set = ts
 
 func init_scene(params: Dictionary) -> void:

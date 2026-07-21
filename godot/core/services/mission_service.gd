@@ -171,6 +171,11 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		var switches_str: String = str(mission_data["open_switches"])
 		any_switches_unlocked = SwitchService.unlock_switches(switches_str, "finish_mission")
 
+		for switch in switches_str.split(','):
+			var unlock = GameDatabase.get_map_event_switch_unlock(int(mission_data["dungeon_id"]), int(switch))
+			if unlock:
+				SwitchService.unlock_switches(str(unlock), "map_event")
+
 		# Parse switches for esper unlocks (Format: 82{beastId}100, length 8)
 		# Only check for new unlocks if mission wasn't already cleared.
 		if not was_already_cleared and any_switches_unlocked:

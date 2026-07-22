@@ -59,11 +59,23 @@ func _resolve_dispel(receipt: Dictionary, target: Dictionary) -> void:
 func _resolve_status(receipt: Dictionary, target: Dictionary) -> void:
 	if not target.has("active_effects"):
 		target["active_effects"] = []
-
-	var effect: Dictionary = {
-		"type": receipt.get("type", ""),
-		"duration": receipt.get("duration", 1),
-		"params": receipt.get("params", {})
-	}
-	target["active_effects"].append(effect)
+	
+	var type: String = receipt.get("type", "")
+	var duration: int = receipt.get("duration", 1)
+	var params: Dictionary = receipt.get("params", {})
+	
+	# Iterate through each stat in the receipt's params
+	for stat_name in params.keys():
+		var stat_value = params[stat_name]
+		
+		# Create a standalone effect for this specific stat
+		var individual_effect: Dictionary = {
+			"type": type,
+			"duration": duration,
+			"params": { stat_name: stat_value }
+		}
+		
+		# Append it to the target's active effects without overwriting existing ones
+		target["active_effects"].append(individual_effect)
+	
 	target["final_stats"] = StatCalculator.calculate_final_stats(target)

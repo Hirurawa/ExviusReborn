@@ -130,7 +130,14 @@ func resolve_combat_ability(skill_id: String) -> Dictionary:
 	if resolved_skill.is_empty():
 		push_error("SkillResolver: Combat skill not found: %s" % skill_id)
 		return {}
-
+	
+	# Some skills have conditional replacement effects (opcode 99)
+	# Skill is 'A' if you used 'B' else 'C'
+	# In this case we take the 'C' for now. Currently there is no way to track if the unit used a skill before.
+	for effect in resolved_skill.get("effects_raw"):
+		if effect[2] == 99:
+			resolved_skill = GameDatabase.get_ability(effect[3][5])
+	
 	var parsed_data: Dictionary = parse_skill_effects(resolved_skill)
 	return {
 		"source_type": "ability",

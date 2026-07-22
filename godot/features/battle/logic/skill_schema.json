@@ -121,7 +121,11 @@
 	},
 	"96": {
 		"type": "AOE_COVER",
-		"keys": ["", "", "dmg_reduce_min", "dmg_reduce_max", "pct_chance", "???", "turn_count", "???", "phys_mag"]
+		"keys": ["", "", "dmg_reduce_min", "dmg_reduce_max", "pct_chance", "", "turn_count", "", "phys_mag"]
+	},
+	"99": {
+		"type": "REPLACEMENT",
+		"keys": ["", "condition", "", "true", "", "false"]
 	},
 	"101": {
 		"type": "DAMAGE_REDUCE",

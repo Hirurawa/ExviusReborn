@@ -722,8 +722,7 @@ func check_battle_state() -> void:
 func _trigger_defeat() -> void:
 	if OS.is_debug_build():
 		print("BattleManager: Defeat! All allies have fallen.")
-	if MissionService.has_method("request_finish_mission"):
-		MissionService.request_finish_mission(false, current_mission_id, used_items)
+	MissionService.request_finish_mission(false, current_mission_id, used_items)
 	mission_failed.emit()
 
 func _trigger_wave_clear() -> void:
@@ -760,8 +759,7 @@ func _trigger_mission_complete() -> void:
 
 	active_challenges.clear()
 
-	if MissionService.has_method("request_finish_mission"):
-		MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
+	MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
 
 	
 func _spawn_next_wave() -> void:

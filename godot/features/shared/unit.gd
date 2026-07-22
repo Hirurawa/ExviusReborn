@@ -32,9 +32,10 @@ func setup(unit_data: Dictionary, unit_size: String = "small") -> void:
 	pedestal.texture = pedestal_texture
 	
 	var unit_texture_path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_data.get("unitId")
-	var unit_texture = ResourceLoader.load(unit_texture_path) as Texture2D
-	unit.texture = unit_texture
-	unit.size = unit.texture.get_size()
+	if ResourceLoader.exists(unit_texture_path):
+		unit.texture = ResourceLoader.load(unit_texture_path) as Texture2D
+		unit.size = unit.texture.get_size()
+	
 	if unit_size == "small":
 		unit.scale.x = sprite_scale
 		unit.scale.y = sprite_scale

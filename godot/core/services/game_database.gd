@@ -529,8 +529,10 @@ func get_all_unit_exp_patterns() -> Array:
 	return query("SELECT expPatternId, level, needExp FROM unit_exp_pattern ORDER BY expPatternId, level")
 
 
-func get_summonable_units() -> Array:
-	var val = query("select unitId, unitName, min(rare) as minRare from unit where isSummonable is 1 and rare is not 7 and unitName  NOT GLOB '*[ぁ-んァ-ヶ一-龠々]*' GROUP by unitSeries")
+func get_summonable_units(is_nv: bool = false) -> Array:
+	var nv_filter = " and isNv is not 0 " if is_nv else " and rare is not 7 "
+	var nv_group = "nvSeriesId" if is_nv else "unitSeries"
+	var val = query("select unitId, unitName, min(rare) as minRare from unit where isSummonable is 1 " + nv_filter + " and unitName  NOT GLOB '*[ぁ-んァ-ヶ一-龠々]*' GROUP by " + nv_group)
 	return val
 
 func get_all_units() -> Array:

@@ -1,6 +1,7 @@
 extends Control
 
 @onready var summon_perform_button: Button = $VBoxContainer/SummonButtonsRow/PerformSummonButton
+@onready var summon_nv_perform_button: Button = $VBoxContainer/SummonButtonsRow/PerformNVSummonButton
 @onready var get_cactuar_button: Button = $VBoxContainer/SummonButtonsRow/GetCactuarButton
 @onready var get_moogle_button: Button = $VBoxContainer/SummonButtonsRow/GetMoogleButton
 @onready var summon_overlay: ColorRect = $SummonOverlay
@@ -9,12 +10,17 @@ extends Control
 
 func _ready() -> void:
 	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
+	summon_nv_perform_button.pressed.connect(_on_summon_nv_perform_button_pressed)
 	get_cactuar_button.pressed.connect(_on_get_cactuar_button_pressed)
 	get_moogle_button.pressed.connect(_on_get_moogle_button_pressed)
 	summon_close_overlay_button.pressed.connect(func(): summon_overlay.hide())
 
 func _on_summon_perform_button_pressed() -> void:
 	var result: Dictionary = UnitService.summon_units(11)
+	_show_summon_results(result)
+
+func _on_summon_nv_perform_button_pressed() -> void:
+	var result: Dictionary = UnitService.summon_units(11, true)
 	_show_summon_results(result)
 
 func _on_get_cactuar_button_pressed() -> void:

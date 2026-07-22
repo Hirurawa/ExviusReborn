@@ -37,18 +37,22 @@ layout_mode = 2
 text = "Summon"
 horizontal_alignment = 1
 
-[node name="SummonButtonsRow" type="HBoxContainer" parent="VBoxContainer"]
+[node name="SummonButtonsRow" type="VBoxContainer" parent="VBoxContainer" unique_id=126392501]
 layout_mode = 2
 
 [node name="PerformSummonButton" type="Button" parent="VBoxContainer/SummonButtonsRow" unique_id=216101240]
 layout_mode = 2
 text = "Summon 10+1 Units"
 
-[node name="GetCactuarButton" type="Button" parent="VBoxContainer/SummonButtonsRow"]
+[node name="PerformNVSummonButton" type="Button" parent="VBoxContainer/SummonButtonsRow" unique_id=1059379328]
+layout_mode = 2
+text = "(NV) Summon 10+1 Units"
+
+[node name="GetCactuarButton" type="Button" parent="VBoxContainer/SummonButtonsRow" unique_id=145641716]
 layout_mode = 2
 text = "Get Cactuar"
 
-[node name="GetMoogleButton" type="Button" parent="VBoxContainer/SummonButtonsRow"]
+[node name="GetMoogleButton" type="Button" parent="VBoxContainer/SummonButtonsRow" unique_id=1666816215]
 layout_mode = 2
 text = "Get Moogle"
 

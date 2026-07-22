@@ -97,9 +97,9 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 		"trust_reward_claimed": false
 	}
 
-func summon_units(amount: int) -> Dictionary:
+func summon_units(amount: int, is_nv: bool = false) -> Dictionary:
 	var summoned_units: Array = []
-	var summonable_units: Array = GameDatabase.get_summonable_units()
+	var summonable_units: Array = GameDatabase.get_summonable_units(is_nv)
 
 	if summonable_units.is_empty():
 		return {"error": "ERR_NO_UNITS_AVAILABLE"}

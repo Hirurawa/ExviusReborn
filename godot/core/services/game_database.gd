@@ -346,7 +346,7 @@ func get_mission(mission_id: String) -> Dictionary:
 func get_mission_challenges(mission_id: String) -> Array:
 	var out: Array = []
 	for row in query(
-		"SELECT name, rewardInfo AS rewards, parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
+		"SELECT name, rewardInfo AS rewards, Pzn5h0Ga AS parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
 		[mission_id]
 	):
 		var challenge_name: String = str(row.get("name", ""))

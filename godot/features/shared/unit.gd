@@ -21,13 +21,13 @@ func _ready() -> void:
 	#unit_data = {"unitId": "212000204", "spriteOffset": "-15:18:150", "rare": "4"} # ashe
 	#setup(unit_data, "large")
 
-func setup(unit_data: Dictionary, size: String = "small") -> void:
+func setup(unit_data: Dictionary, unit_size: String = "small") -> void:
 	var offset_data = unit_data.get("spriteOffset").split(':')
 	var x_offset: float = float(offset_data[0])
 	var y_offset: float = float(offset_data[1])
 	var sprite_scale: float = int(offset_data[2]) / 100.0
 	
-	var pedestal_texture_path = "res://assets/ui/unit/unit_charastand_rare%s_%s.tres" % [unit_data.get("rare"), size]
+	var pedestal_texture_path = "res://assets/ui/unit/unit_charastand_rare%s_%s.tres" % [unit_data.get("rare"), unit_size]
 	var pedestal_texture = ResourceLoader.load(pedestal_texture_path) as Texture2D
 	pedestal.texture = pedestal_texture
 	
@@ -35,7 +35,7 @@ func setup(unit_data: Dictionary, size: String = "small") -> void:
 	var unit_texture = ResourceLoader.load(unit_texture_path) as Texture2D
 	unit.texture = unit_texture
 	unit.size = unit.texture.get_size()
-	if size == "small":
+	if unit_size == "small":
 		unit.scale.x = sprite_scale
 		unit.scale.y = sprite_scale
 	else:

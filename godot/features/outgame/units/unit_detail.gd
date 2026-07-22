@@ -163,7 +163,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 
 	_populate_equip_icons_grid(unit_data)
 	_populate_skills(fresh_final_stats)
-	_populate_equipment_slots(unit_inst, unit_data)
+	_populate_equipment_slots(unit_inst)
 	_populate_resistances(fresh_final_stats)
 	_populate_lb_and_tmr(unit_inst, unit_data)
 	_apply_current_mode_state()
@@ -368,7 +368,7 @@ func _populate_skills(final_stats_profile: Dictionary) -> void:
 			panel.setup_from_skill_data(passive_data, str(sk.get("source", "Trait")), false)
 			unit_detail_special_grid.add_child(panel)
 
-func _populate_equipment_slots(unit_inst: Dictionary, unit_data: Dictionary) -> void:
+func _populate_equipment_slots(unit_inst: Dictionary) -> void:
 	for child in unit_detail_equipment_grid.get_children():
 		child.queue_free()
 	for child in unit_detail_ability_grid.get_children():

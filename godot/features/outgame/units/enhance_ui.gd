@@ -131,13 +131,7 @@ func _update_get_exp_display() -> void:
 	for material_unit_value in material_units_array:
 		if not (material_unit_value is Dictionary):
 			continue
-
-		var material_unit: Dictionary = material_unit_value
-		var material_unit_data: Dictionary = GameDatabase.get_unit(material_unit.get("unitId"))
-		if material_unit_data.is_empty():
-			continue
-
-		var gains_value: Variant = UnitService.call("_calculate_material_enhance_gains", material_unit, material_unit_data)
+		var gains_value: Variant = UnitService.call("_calculate_material_enhance_gains", material_unit_value)
 		if gains_value is Dictionary:
 			total_xp_gain += int((gains_value as Dictionary).get("xp_gain", 0))
 

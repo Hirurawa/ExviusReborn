@@ -33,6 +33,8 @@ var _magic_id_set: Dictionary = {}
 var _magic_id_set_loaded: bool = false
 var _magic_cache: Dictionary = {}
 
+var _unit_cache: Dictionary = {}
+
 # Lazily-loaded ability caches (active + passive share the `ability` table, split
 # by abilityType): id -> "ability"/"passive" kind map, plus per-id records.
 var _ability_kind_map: Dictionary = {}
@@ -550,8 +552,13 @@ func get_all_units() -> Array:
 # 	return rows[0] if not rows.is_empty() else {}
 	
 func get_unit(unit_id: int) -> Dictionary:
+	var key: String = str(unit_id)
+	if _unit_cache.has(key):
+		return _unit_cache[key]
 	var rows: Array = query("SELECT * FROM unit WHERE unitId = ? LIMIT 1", [unit_id])
-	return rows[0] if not rows.is_empty() else {}
+	var built = rows[0] if not rows.is_empty() else {}
+	_unit_cache[key] = built
+	return built
 
 func get_unit_class_up_info(unit_id: int) -> Dictionary:
 	var rows: Array = query("select classUpUnitID, gil, materialInfo from unit_class_up where unitId = ? LIMIT 1", [unit_id])
@@ -965,9 +972,6 @@ const _EQUIP_TYPE_ICONS: Dictionary = {
 	"53": "robe.png",
 	"60": "accessory.png",
 }
-
-const _STATUS_NAMES: Array = ["Poison", "Blind", "Sleep", "Silence", "Paralysis", "Confusion", "Disease", "Petrify"]
-
 
 ## Full item record reconstructed from the item (+ icon + item_explain) tables.
 func get_item(item_id: int) -> Dictionary:

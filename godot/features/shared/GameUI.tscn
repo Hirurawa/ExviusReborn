@@ -49,7 +49,7 @@ popup/item_1/id = 2
 popup/item_2/text = "Logout"
 popup/item_2/id = 1
 
-[node name="DebugAddGil" type="HBoxContainer" parent="." unique_id=8814421001]
+[node name="DebugAddGil" type="HBoxContainer" parent="." unique_id=224486409]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -60,12 +60,12 @@ offset_right = 160.0
 offset_bottom = 40.0
 grow_horizontal = 2
 
-[node name="GilAmount" type="LineEdit" parent="DebugAddGil" unique_id=8814421002]
+[node name="GilAmount" type="LineEdit" parent="DebugAddGil" unique_id=224486410]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 placeholder_text = "Gil amount"
 
-[node name="AddGilButton" type="Button" parent="DebugAddGil" unique_id=8814421003]
+[node name="AddGilButton" type="Button" parent="DebugAddGil" unique_id=224486411]
 layout_mode = 2
 text = "Add Gil"
 

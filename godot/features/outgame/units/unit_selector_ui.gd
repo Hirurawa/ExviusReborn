@@ -51,7 +51,6 @@ signal materials_selected(units_array: Array)
 
 static var _shared_texture_cache: Dictionary = {}
 static var _shared_path_exists_cache: Dictionary = {}
-static var _shared_pedestal_cache: Dictionary = {}
 static var _persisted_sort_mode: String = ""
 static var _persisted_sort_loaded: bool = false
 
@@ -371,14 +370,14 @@ func _setup_sort_dropdown() -> void:
 	if not sort_option_button.item_selected.is_connected(selection_cb):
 		sort_option_button.item_selected.connect(selection_cb)
 
-func _add_sort_option(label: String, mode: String) -> void:
+func _add_sort_option(label: String, sort_mode: String) -> void:
 	var option_index: int = sort_option_button.get_item_count()
 	sort_option_button.add_item(label)
-	sort_option_button.set_item_metadata(option_index, mode)
+	sort_option_button.set_item_metadata(option_index, sort_mode)
 
-func _select_sort_option_by_mode(mode: String) -> void:
+func _select_sort_option_by_mode(sort_mode: String) -> void:
 	for idx in range(sort_option_button.get_item_count()):
-		if str(sort_option_button.get_item_metadata(idx)) == mode:
+		if str(sort_option_button.get_item_metadata(idx)) == sort_mode:
 			sort_option_button.select(idx)
 			return
 	sort_option_button.select(0)
@@ -405,12 +404,12 @@ static func _load_persisted_sort_mode() -> String:
 		_persisted_sort_mode = SORT_DEFAULT
 	return _persisted_sort_mode
 
-static func _persist_sort_mode(mode: String) -> void:
-	_persisted_sort_mode = mode
+static func _persist_sort_mode(sort_mode: String) -> void:
+	_persisted_sort_mode = sort_mode
 	_persisted_sort_loaded = true
 	var config: ConfigFile = ConfigFile.new()
 	config.load(SORT_CONFIG_PATH)
-	config.set_value(SORT_CONFIG_SECTION, SORT_CONFIG_KEY, mode)
+	config.set_value(SORT_CONFIG_SECTION, SORT_CONFIG_KEY, sort_mode)
 	config.save(SORT_CONFIG_PATH)
 
 func _setup_search_bar() -> void:

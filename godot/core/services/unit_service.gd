@@ -287,8 +287,6 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		if material_id == base_unit_instance_id:
 			return {"success": false, "error": "Base unit cannot be used as enhancement material"}
 
-	var game_data_units: Array = GameDatabase.get_all_units()
-
 	var base_unit: Dictionary = {}
 	var base_index: int = -1
 	for i in range(owned_units_ids.size()):
@@ -300,8 +298,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 	if base_index < 0:
 		return {"success": false, "error": "Ownership check failed for base unit"}
 
-	var base_unit_data = game_data_units.filter(func(x): return x.unitId == int(base_unit.get("unit_id")))
-	base_unit_data = base_unit_data[0] if not base_unit_data.is_empty() else null
+	var base_unit_data = GameDatabase.get_unit(int(base_unit.get("unit_id")))
 	if base_unit_data.is_empty():
 		return {"success": false, "error": "Base unit data not found"}
 
@@ -330,8 +327,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		if PartyService.is_unit_assigned_to_any_party(material_id):
 			return {"success": false, "error": "One or more material units are assigned to a party"}
 
-		var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
-		material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
+		var material_unit_data = GameDatabase.get_unit(int(material_unit.get("unit_id")))
 		if material_unit_data.is_empty():
 			return {"success": false, "error": "Material unit data not found"}
 
@@ -358,10 +354,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 	if base_unit_type == UNIT_TYPE_EXP_MATERIAL:
 		var total_exp_to_add: int = 0
 		for material_unit_value in material_units:
-			var material_unit: Dictionary = material_unit_value
-			var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
-			material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
-			var gains: Dictionary = _calculate_material_enhance_gains(material_unit, material_unit_data)
+			var gains: Dictionary = _calculate_material_enhance_gains(material_unit_value)
 			total_exp_to_add += int(gains.get("xp_gain", 0))
 
 		var max_accumulated_exp: int = _get_max_accumulated_exp(base_unit_data)
@@ -369,10 +362,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 	elif base_unit_type == UNIT_TYPE_TRUST_MATERIAL:
 		var total_trust_to_add: float = 0.0
 		for material_unit_value in material_units:
-			var material_unit: Dictionary = material_unit_value
-			var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
-			material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
-			var gains: Dictionary = _calculate_material_enhance_gains(material_unit, material_unit_data)
+			var gains: Dictionary = _calculate_material_enhance_gains(material_unit_value)
 			total_trust_to_add += float(gains.get("trust_gain", 0.0))
 
 		base_unit["trust_value"] = min(ENHANCE_MAX_TRUST_VALUE, float(base_unit.get("trust_value", 0.0)) + total_trust_to_add)
@@ -382,15 +372,12 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		var previous_trust_value: float = float(base_unit.get("trust_value", 0.0))
 
 		for material_unit_value in material_units:
-			var material_unit: Dictionary = material_unit_value
-			var material_unit_data = game_data_units.filter(func(x): return x.unitId == int(material_unit.get("unit_id")))
-			material_unit_data = material_unit_data[0] if not material_unit_data.is_empty() else null
-			var gains: Dictionary = _calculate_material_enhance_gains(material_unit, material_unit_data)
+			var gains: Dictionary = _calculate_material_enhance_gains(material_unit_value)
 			total_xp_gain += int(gains.get("xp_gain", 0))
 			total_trust_gain += float(gains.get("trust_gain", 0.0))
 
-			if _get_unit_type(material_unit_data) == UNIT_TYPE_PLAYABLE and _is_duplicate_unit(base_unit, material_unit):
-				total_trust_gain += PLAYABLE_DUPLICATE_TRUST_BONUS + _get_material_accumulated_trust(material_unit)
+			if _get_unit_type(material_unit_value) == UNIT_TYPE_PLAYABLE and _is_duplicate_unit(base_unit, material_unit_value):
+				total_trust_gain += PLAYABLE_DUPLICATE_TRUST_BONUS + _get_material_accumulated_trust(material_unit_value)
 
 		base_unit["xp"] = int(base_unit.get("xp", 0)) + total_xp_gain
 		var exp_pattern: int = base_unit_data.get("expPatternId")
@@ -422,41 +409,33 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 				trust_reward_warning = str(reward_info.get("error", "No supported trust reward configured"))
 
 	owned_units_ids[base_index] = base_unit
-	var material_id_set: Dictionary = {}
-	for material_id_value in material_unit_instance_ids:
-		material_id_set[str(material_id_value)] = true
-
+	
+	# 1. Store targets as keys in a dictionary for rapid lookup
+	var targets_dict : Dictionary = {}
+	for id in material_unit_instance_ids:
+		targets_dict[id] = true
+		
 	var filtered_units: Array = []
-	for unit_value in owned_units_ids:
-		if unit_value is Dictionary:
-			var instance_id: String = str(unit_value.get("instance_id", ""))
-			if material_id_set.has(instance_id):
-				continue
-		filtered_units.append(unit_value)
+	# 2. Filter using dictionary key check (much faster for large datasets)
+	filtered_units = owned_units_ids.filter(func(unit): return not targets_dict.has(unit["instance_id"]))
 
-	owned_units_ids[base_index] = _hydrate_owned_units([owned_units_ids[base_index]])
+	owned_units_ids = _hydrate_owned_units(filtered_units)
 	emit_updated()
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "enhance_unit")
 
 	if granted_trust_reward != null:
 		InventoryService.emit_updated()
 
-	var updated_base_unit: Dictionary = {}
-	for unit_value in owned_units_ids:
-		if unit_value is Dictionary and str(unit_value.get("instance_id", "")) == base_unit_instance_id:
-			updated_base_unit = unit_value
-			break
-
 	var response: Dictionary = {
 		"success": true,
 		"updated_base_unit": {
-			"instance_id": str(updated_base_unit.get("instance_id", base_unit_instance_id)),
-			"level": int(updated_base_unit.get("level", base_unit.get("level", 1))),
-			"xp": int(updated_base_unit.get("xp", base_unit.get("xp", 0))),
-			"trust_value": float(updated_base_unit.get("trust_value", base_unit.get("trust_value", 0.0))),
-			"limitburst_level": int(updated_base_unit.get("limitburst_level", base_unit.get("limitburst_level", 1))),
-			"limitburst_xp": int(updated_base_unit.get("limitburst_xp", base_unit.get("limitburst_xp", 0))),
-			"current_accumulated_exp": int(updated_base_unit.get("current_accumulated_exp", base_unit.get("current_accumulated_exp", 0)))
+			"instance_id": str(base_unit.get("instance_id", base_unit_instance_id)),
+			"level": int(base_unit.get("level", 1)),
+			"xp": int(base_unit.get("xp", 0)),
+			"trust_value": float(base_unit.get("trust_value", 0.0)),
+			"limitburst_level": int(base_unit.get("limitburst_level", 1)),
+			"limitburst_xp": int(base_unit.get("limitburst_xp", 0)),
+			"current_accumulated_exp": int(base_unit.get("current_accumulated_exp", 0))
 		},
 		"consumed_material_ids": material_unit_instance_ids.duplicate(),
 		"updated_currency": {
@@ -465,7 +444,7 @@ func enhance_unit(base_unit_instance_id: String, material_unit_instance_ids: Arr
 		"granted_trust_reward": granted_trust_reward,
 		"trust_reward_warning": trust_reward_warning,
 		# Backward-compatible field consumed by current enhance_ui.gd
-		"enhanced_unit": updated_base_unit
+		"enhanced_unit": base_unit
 	}
 	return response
 
@@ -715,19 +694,19 @@ func _get_unit_type(unit_data: Dictionary) -> String:
 		return UNIT_TYPE_TRUST_MATERIAL
 	return UNIT_TYPE_PLAYABLE
 
-func _get_base_exp_yield(unit: Dictionary, unit_data: Dictionary) -> int:
-	if unit_data.has("base_exp_yield"):
-		return int(unit_data.get("base_exp_yield", 0))
+func _get_base_exp_yield(unit: Dictionary) -> int:
+	if unit.has("base_exp_yield"):
+		return int(unit.get("base_exp_yield", 0))
 
-	var unit_type: String = _get_unit_type(unit_data)
+	var unit_type: String = _get_unit_type(unit)
 	if unit_type == UNIT_TYPE_EXP_MATERIAL:
-		if int(unit_data.get("jobId", 0)) != EXP_UNIT_JOB_ID:
+		if int(unit.get("jobId", 0)) != EXP_UNIT_JOB_ID:
 			return 0
-		var exp_pattern: int = int(unit_data.get("expPatternId"))
+		var exp_pattern: int = int(unit.get("expPatternId"))
 		return int(EXP_UNIT_YIELD_BY_PATTERN.get(exp_pattern, 0))
 
 	if unit_type == UNIT_TYPE_PLAYABLE:
-		var rarity: int = maxi(1, int(unit.get("current_rarity", int(unit_data.get("rarity_min", 1)))))
+		var rarity: int = maxi(1, int(unit.get("current_rarity", int(unit.get("rarity_min", 1)))))
 		return ENHANCE_BASE_XP_GAIN + (rarity * ENHANCE_XP_PER_RARITY) + ENHANCE_XP_PER_LEVEL
 
 	return 0
@@ -742,10 +721,10 @@ func _get_material_accumulated_exp(material_unit: Dictionary) -> int:
 func _get_material_accumulated_trust(material_unit: Dictionary) -> float:
 	return max(0.0, float(material_unit.get("trust_value", 0.0)))
 
-func _get_trust_yield(unit_id: String, unit_data: Dictionary) -> float:
+func _get_trust_yield(unit_data: Dictionary) -> float:
 	if unit_data.has("trust_yield"):
 		return max(0.0, float(unit_data.get("trust_yield", 0.0)))
-	return float(TRUST_YIELD_BY_UNIT_ID.get(int(unit_id), 0.0))
+	return float(TRUST_YIELD_BY_UNIT_ID.get(int(unit_data.get("unit_id")), 0.0))
 
 func _is_duplicate_unit(base_unit: Dictionary, material_unit: Dictionary) -> bool:
 	return str(base_unit.get("unitSeries")) == str(material_unit.get("unitSeries"))
@@ -784,18 +763,18 @@ func _resolve_trust_reward(unit_data: Dictionary) -> Dictionary:
 
 	return {"error": "No supported trust reward configured"}
 
-func _calculate_material_enhance_gains(material_unit: Dictionary, material_unit_data: Dictionary) -> Dictionary:
-	var material_type: String = _get_unit_type(material_unit_data)
+func _calculate_material_enhance_gains(material_unit: Dictionary) -> Dictionary:
+	var material_type: String = _get_unit_type(material_unit)
 
 	if material_type == UNIT_TYPE_EXP_MATERIAL:
-		var exp_total: int = _get_base_exp_yield(material_unit, material_unit_data) + _get_material_accumulated_exp(material_unit)
+		var exp_total: int = _get_base_exp_yield(material_unit) + _get_material_accumulated_exp(material_unit)
 		return {"xp_gain": exp_total, "trust_gain": 0.0, "limitburst_gain": 0}
 
 	if material_type == UNIT_TYPE_TRUST_MATERIAL:
-		var trust_total: float = _get_trust_yield(str(material_unit.get("unit_id", "")), material_unit_data) + _get_material_accumulated_trust(material_unit)
+		var trust_total: float = _get_trust_yield(material_unit) + _get_material_accumulated_trust(material_unit)
 		return {"xp_gain": 0, "trust_gain": trust_total, "limitburst_gain": 0}
 
-	var base_exp: int = _get_base_exp_yield(material_unit, material_unit_data)
+	var base_exp: int = _get_base_exp_yield(material_unit)
 	var stored_exp: int = _get_material_accumulated_exp(material_unit)
 	var xp_gain: int = base_exp + int(floor(float(stored_exp) * PLAYABLE_ACCUMULATED_EXP_TRANSFER_RATE))
 	return {"xp_gain": xp_gain, "trust_gain": 0.0, "limitburst_gain": 0}

@@ -1364,9 +1364,9 @@ func _save_repeat_record_if_turn_complete() -> void:
 			"payload": (unit_data.get("last_payload", {}) as Dictionary).duplicate(true),
 			"target_team": str(unit_data.get("last_target_team", "enemy")),
 			"target_index": int(unit_data.get("last_target_index", 0)),
-		}
+	}
 	if not commands_by_unit_id.is_empty():
-		BattleEvents.save_repeat_record(Persistence.active_local_save_id, signature, commands_by_unit_id)
+		battle_manager.save_repeat_record(Persistence.active_local_save_id, signature, commands_by_unit_id)
 
 ## Shared Reload/Repeat path. Reload stops with these commands queued; Repeat
 ## takes the returned indices and performs the one additional execution step.
@@ -1379,7 +1379,7 @@ func _restore_saved_commands() -> Array[int]:
 	var signature: Array = _party_signature()
 	if signature.is_empty():
 		return restored_indices
-	var commands: Dictionary = BattleEvents.get_repeat_commands(Persistence.active_local_save_id, signature)
+	var commands: Dictionary = battle_manager.get_repeat_commands(Persistence.active_local_save_id, signature)
 	if commands.is_empty():
 		return restored_indices
 

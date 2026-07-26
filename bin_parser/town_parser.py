@@ -1,7 +1,6 @@
 import struct
 import json
 import os
-import math
 import re
 import sys
 
@@ -622,12 +621,11 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             visual_layer_size = grid_tile_count * 4
             single_byte_layer_size = grid_tile_count * 1
             
-            # Math handles the visual layer count dynamically
+            # Upper bound only: object data also lives in the remaining chunk,
+            # so treating all available bytes as visuals over-counts many maps.
             available_tile_space = chunk_size - 16 - (single_byte_layer_size * 2)
-            visual_layer_count = max(0, math.floor(available_tile_space / visual_layer_size))
-            
-            current_offset = data_start_offset
-            sub_layers = []
+            max_visual_layer_count = max(
+                0, available_tile_space // visual_layer_size)
 
             # --- THE PADDING VACUUM ---
             # Inter-visual gap consists of 0..3 \x00 padding bytes optionally
@@ -672,74 +670,107 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 f.seek(start)
                 return 0, True
 
-            # 1. Map the Visual Layers
-            # --- PRE-VISUAL SEPARATOR ---
-            # A few chunks (e.g. layer_ids 127/128 in this corpus) place a
-            # small inter-section gap *before* the first visual layer too:
-            # up to 3 \x00 bytes optionally followed by a \x01 separator,
-            # exactly matching the inter-visual gap format. For most chunks
-            # this gap is empty (consume_separator finds no zero / no \x01
-            # and seeks back). Only when the bytes are literally
-            # `\x00*\x01` does the cursor advance; that keeps the rest of
-            # the structure aligned for chunks that need it without
-            # disturbing well-aligned chunks.
-            consumed_pre, _ok_pre = consume_separator()
-            if consumed_pre:
-                current_offset = data_start_offset + consumed_pre
+            def map_tile_layout(visual_count):
+                """Return (sub_layers, object_start) for one visual-count guess."""
+                f.seek(data_start_offset)
+                current = data_start_offset
+                layers = []
 
-            actual_visual_count = 0
-            for v in range(visual_layer_count):
-                layer_start = current_offset
-                layer_end_exclusive = layer_start + visual_layer_size
+                # Some chunks put the normal separator before visual layer 0.
+                consumed_pre, _ = consume_separator()
+                current += consumed_pre
 
-                # Safety: don't claim a visual layer that would extend past the chunk
-                if layer_end_exclusive > chunk_end_offset:
+                for v in range(visual_count):
+                    layer_start = current
+                    layer_end = layer_start + visual_layer_size
+                    if layer_end > chunk_end_offset:
+                        return None
+                    layers.append({
+                        "type": "visual",
+                        "index": v,
+                        "start_hex": hex(layer_start),
+                        "end_hex_inclusive": hex(layer_end - 1)
+                    })
+                    current = layer_end
+                    if v < visual_count - 1:
+                        f.seek(current)
+                        consumed, _ = consume_separator()
+                        current += consumed
+
+                col_start = current
+                col_end = col_start + single_byte_layer_size
+                reg_start = col_end
+                reg_end = reg_start + single_byte_layer_size
+                if reg_end > chunk_end_offset:
+                    return None
+                layers.extend([
+                    {
+                        "type": "collision",
+                        "index": visual_count,
+                        "start_hex": hex(col_start),
+                        "end_hex_inclusive": hex(col_end - 1)
+                    },
+                    {
+                        "type": "region",
+                        "index": visual_count + 1,
+                        "start_hex": hex(reg_start),
+                        "end_hex_inclusive": hex(reg_end - 1)
+                    }
+                ])
+                return layers, reg_end
+
+            def object_prefix_trailer_size(offset):
+                """Return the grid-event trailer size for a plausible object prefix."""
+                if chunk_end_offset - offset < 12:
+                    return 0
+                saved = f.tell()
+                try:
+                    for trailer_size in (2, 4):
+                        f.seek(offset)
+                        ge_count = struct.unpack(">I", f.read(4))[0]
+                        if ge_count > 5000:
+                            continue
+                        f.seek(ge_count * 9, os.SEEK_CUR)
+                        if f.tell() + trailer_size + 6 > chunk_end_offset:
+                            continue
+                        # The first trailer word is always zero. Some chunks
+                        # carry one additional map-specific word after it.
+                        if struct.unpack(">H", f.read(2))[0] != 0:
+                            continue
+                        f.seek(trailer_size - 2, os.SEEK_CUR)
+                        sa_count = struct.unpack(">I", f.read(4))[0]
+                        if sa_count > 5000:
+                            continue
+                        f.seek(sa_count * 27, os.SEEK_CUR)
+                        if f.tell() + 2 > chunk_end_offset:
+                            continue
+                        de_count = struct.unpack(">H", f.read(2))[0]
+                        if de_count <= 5000:
+                            return trailer_size
+                    return 0
+                except struct.error:
+                    return 0
+                finally:
+                    f.seek(saved)
+
+            selected_layout = None
+            visual_layer_count = max_visual_layer_count
+            grid_event_trailer_size = 2
+            for candidate_count in range(max_visual_layer_count, -1, -1):
+                candidate_layout = map_tile_layout(candidate_count)
+                trailer_size = (
+                    object_prefix_trailer_size(candidate_layout[1])
+                    if candidate_layout else 0
+                )
+                if trailer_size:
+                    visual_layer_count = candidate_count
+                    grid_event_trailer_size = trailer_size
+                    selected_layout = candidate_layout
                     break
+            if selected_layout is None:
+                selected_layout = map_tile_layout(max_visual_layer_count)
 
-                sub_layers.append({
-                    "type": "visual",
-                    "index": v,
-                    "start_hex": hex(layer_start),
-                    "end_hex_inclusive": hex(layer_end_exclusive - 1)
-                })
-                actual_visual_count = v + 1
-
-                f.seek(layer_end_exclusive)
-
-                # Check for padding and separator if NOT the last visual layer
-                if v < visual_layer_count - 1:
-                    consumed, ok = consume_separator()
-                    if not ok:
-                        # Budget exhausted -> formula over-counted; stop here.
-                        current_offset = layer_end_exclusive
-                        break
-                    current_offset = layer_end_exclusive + consumed
-                else:
-                    current_offset = layer_end_exclusive
-
-            visual_layer_count = actual_visual_count
-                        
-            # 2. Map the Collision Layer
-            col_start = current_offset
-            col_end_exclusive = col_start + single_byte_layer_size
-            sub_layers.append({
-                "type": "collision", 
-                "index": visual_layer_count,
-                "start_hex": hex(col_start), 
-                "end_hex_inclusive": hex(col_end_exclusive - 1)
-            })
-            current_offset = col_end_exclusive
-            
-            # 3. Map the Region Layer
-            reg_start = current_offset
-            reg_end_exclusive = reg_start + single_byte_layer_size
-            sub_layers.append({
-                "type": "region", 
-                "index": visual_layer_count + 1,
-                "start_hex": hex(reg_start), 
-                "end_hex_inclusive": hex(reg_end_exclusive - 1)
-            })
-            current_offset = reg_end_exclusive
+            sub_layers, current_offset = selected_layout
 
             # --- OBJECTS SECTION PARSER (correct schema) ---
             # Schema after region layer:
@@ -1140,6 +1171,8 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 if f.tell() + 2 > chunk_end_offset:
                     raise ValueError("eof at ge_trailer")
                 ge_trailer = struct.unpack(">H", f.read(2))[0]
+                if grid_event_trailer_size == 4:
+                    f.read(2)
                 _record_range("grid_events_section", ge_section_start, f.tell())
 
                 # --- Static assets section: u32 sa_count + sa_count*27B records ---

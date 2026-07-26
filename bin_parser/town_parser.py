@@ -721,8 +721,63 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
 
             def object_prefix_trailer_size(offset):
                 """Return the grid-event trailer size for a plausible object prefix."""
-                if chunk_end_offset - offset < 12:
-                    return 0
+                SECONDARY_GRID_EVENTS = -2
+                if chunk_end_offset - offset < 10:
+                    return None
+                saved = f.tell()
+                try:
+                    best = None
+                    for preference, trailer_size in enumerate((2, 0, 4)):
+                        f.seek(offset)
+                        ge_count = struct.unpack(">I", f.read(4))[0]
+                        if ge_count > 5000:
+                            continue
+                        f.seek(ge_count * 9, os.SEEK_CUR)
+                        if f.tell() + trailer_size + 6 > chunk_end_offset:
+                            continue
+                        if trailer_size:
+                            # When present, the first trailer word is zero.
+                            # Some chunks carry one extra map-specific word.
+                            if struct.unpack(">H", f.read(2))[0] != 0:
+                                continue
+                            f.seek(trailer_size - 2, os.SEEK_CUR)
+                        sa_count = struct.unpack(">I", f.read(4))[0]
+                        if sa_count > 5000:
+                            continue
+                        f.seek(sa_count * 27, os.SEEK_CUR)
+                        if f.tell() + 2 > chunk_end_offset:
+                            continue
+                        tail = f.read(chunk_end_offset - f.tell())
+                        located = _locate_de_section(tail)
+                        if located is not None:
+                            score = (located[0], preference)
+                            if best is None or score < best[0]:
+                                best = score, trailer_size
+                    if best is not None:
+                        return best[1]
+                    # One observed layer stores a second u32-counted grid-event
+                    # group followed by an empty four-byte object tail.
+                    f.seek(offset)
+                    ge_count = struct.unpack(">I", f.read(4))[0]
+                    f.seek(ge_count * 9, os.SEEK_CUR)
+                    if f.tell() + 8 <= chunk_end_offset:
+                        second_count = struct.unpack(">I", f.read(4))[0]
+                        second_size = second_count * 9
+                        if (
+                            second_count <= 5000
+                            and f.tell() + second_size + 4 == chunk_end_offset
+                        ):
+                            f.seek(second_size, os.SEEK_CUR)
+                            if f.read(4) == b"\x00\x00\x00\x00":
+                                return SECONDARY_GRID_EVENTS
+                    return None
+                except struct.error:
+                    return None
+                finally:
+                    f.seek(saved)
+
+            def fixed_object_prefix_trailer_size(offset):
+                """Preserve the established visual-count decision."""
                 saved = f.tell()
                 try:
                     for trailer_size in (2, 4):
@@ -733,8 +788,6 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                         f.seek(ge_count * 9, os.SEEK_CUR)
                         if f.tell() + trailer_size + 6 > chunk_end_offset:
                             continue
-                        # The first trailer word is always zero. Some chunks
-                        # carry one additional map-specific word after it.
                         if struct.unpack(">H", f.read(2))[0] != 0:
                             continue
                         f.seek(trailer_size - 2, os.SEEK_CUR)
@@ -744,38 +797,18 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                         f.seek(sa_count * 27, os.SEEK_CUR)
                         if f.tell() + 2 > chunk_end_offset:
                             continue
-                        de_count = struct.unpack(">H", f.read(2))[0]
-                        if de_count <= 5000:
+                        if struct.unpack(">H", f.read(2))[0] <= 5000:
                             return trailer_size
-                    return 0
+                    return None
                 except struct.error:
-                    return 0
+                    return None
                 finally:
                     f.seek(saved)
-
-            selected_layout = None
-            visual_layer_count = max_visual_layer_count
-            grid_event_trailer_size = 2
-            for candidate_count in range(max_visual_layer_count, -1, -1):
-                candidate_layout = map_tile_layout(candidate_count)
-                trailer_size = (
-                    object_prefix_trailer_size(candidate_layout[1])
-                    if candidate_layout else 0
-                )
-                if trailer_size:
-                    visual_layer_count = candidate_count
-                    grid_event_trailer_size = trailer_size
-                    selected_layout = candidate_layout
-                    break
-            if selected_layout is None:
-                selected_layout = map_tile_layout(max_visual_layer_count)
-
-            sub_layers, current_offset = selected_layout
 
             # --- OBJECTS SECTION PARSER (correct schema) ---
             # Schema after region layer:
             #   u32 ge_count + ge_count * 9 bytes  (x:u32, y:u32, event_id:u8)
-            #   u16 ge_trailer (always 0x0000)
+            #   optional 0/2/4-byte ge trailer (first u16 is 0 when present)
             #   u32 sa_count + sa_count * 27 bytes (x,y u32; w,h,z,atlas,sprite u16; params 9b)
             #   u16 de_count + de records dispatched by type byte @+0x04:
             #       0x0F -> 62 bytes (all warp variants, distinguished by sub_variant:
@@ -790,9 +823,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             objects_parse_status = "ok"
             objects_trailing_hex = ""
             objects_raw_hex_fallback = ""
-
-            obj_start = current_offset
-            obj_space = chunk_end_offset - obj_start
+            objects_pre_dynamic_hex = ""
 
             # Per-section byte ranges (filled in as we parse). Each is a dict
             # with start_hex (inclusive) and end_hex_inclusive once the section
@@ -999,7 +1030,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             DE_MIN_LEN_BY_TYPE = {
                 0x00: 36, 0x01: 54, 0x02: 70,
                 0x04: 41, 0x05: 41, 0x06: 41, 0x07: 41,
-                0x08: 41, 0x10: 41, 0x11: 41, 0x14: 46,
+                0x08: 41, 0x10: 39, 0x11: 41, 0x14: 46,
                 0x16: 41, 0x18: 41, 0x0F: 59, 0x12: 117,
                 0x1B: 51,
             }
@@ -1038,11 +1069,17 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     return False
                 w = struct.unpack(">H", payload[off+13:off+15])[0]
                 h = struct.unpack(">H", payload[off+15:off+17])[0]
-                if not (1 <= w <= 2048 and 1 <= h <= 2048):
-                    return False
-                # Real records always have w and h as multiples of 29
-                # (half-tile). Ghost records typically don't.
-                if w % 29 != 0 or h % 29 != 0:
+                normal_geometry = (
+                    1 <= w <= 2048 and 1 <= h <= 2048
+                    and w % 29 == 0 and h % 29 == 0
+                )
+                # Two observed 39-byte records use these fields as opaque
+                # type-specific values rather than width/height.
+                short_opaque = (
+                    rt == 0x10
+                    or (rt == 0x00 and len(payload) - off == 39)
+                )
+                if not normal_geometry and not short_opaque:
                     return False
                 return True
 
@@ -1151,9 +1188,65 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     return None
                 return walked
 
+            def _locate_de_section(tail):
+                """Find a u16 DE count whose payload has walkable record headers."""
+                for offset in range(max(0, len(tail) - 1)):
+                    count = struct.unpack(">H", tail[offset:offset + 2])[0]
+                    if count > 5000:
+                        continue
+                    if count == 0:
+                        if offset == 0 or offset + 2 == len(tail):
+                            return offset, count, []
+                        continue
+                    payload = tail[offset + 2:]
+                    rid_cap = max(count * 3, 200)
+                    if not _de_header_at(payload, 0, frozenset(), rid_cap):
+                        continue
+                    boundaries = _walk_de_records(payload, count)
+                    if boundaries:
+                        return offset, count, boundaries
+                return None
+
+            selected_layout = None
+            visual_layer_count = max_visual_layer_count
+            grid_event_trailer_size = 2
+            has_secondary_grid_events = False
+
+            # Keep the established tile boundaries whenever their fixed
+            # object prefix fits; rendering depends on visual-count stability.
+            for candidate_count in range(max_visual_layer_count, -1, -1):
+                candidate_layout = map_tile_layout(candidate_count)
+                trailer_size = (
+                    fixed_object_prefix_trailer_size(candidate_layout[1])
+                    if candidate_layout else None
+                )
+                if trailer_size is not None:
+                    visual_layer_count = candidate_count
+                    grid_event_trailer_size = trailer_size
+                    selected_layout = candidate_layout
+                    break
+
+            # Re-evaluate object framing without moving tile boundaries.
+            # Object heuristics are not strong enough to choose visual layers.
+            candidate_layout = map_tile_layout(visual_layer_count)
+            trailer_size = (
+                object_prefix_trailer_size(candidate_layout[1])
+                if candidate_layout else None
+            )
+            if trailer_size is not None:
+                selected_layout = candidate_layout
+                has_secondary_grid_events = trailer_size == -2
+                grid_event_trailer_size = 0 if has_secondary_grid_events else trailer_size
+            if selected_layout is None:
+                selected_layout = map_tile_layout(max_visual_layer_count)
+
+            sub_layers, current_offset = selected_layout
+            obj_start = current_offset
+            obj_space = chunk_end_offset - obj_start
+
             try:
-                if obj_space < 12:
-                    raise ValueError(f"only {obj_space} bytes after region (need >=12 for empty objects section)")
+                if obj_space < 10:
+                    raise ValueError(f"only {obj_space} bytes after region (need >=10 for empty objects section)")
 
                 f.seek(obj_start)
 
@@ -1168,11 +1261,16 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     gx, gy, gevent = struct.unpack(">IIB", f.read(9))
                     grid_events.append({"x": gx, "y": gy, "event_id": gevent})
 
-                if f.tell() + 2 > chunk_end_offset:
+                if has_secondary_grid_events:
+                    second_count = struct.unpack(">I", f.read(4))[0]
+                    for _ in range(second_count):
+                        gx, gy, gevent = struct.unpack(">IIB", f.read(9))
+                        grid_events.append({"x": gx, "y": gy, "event_id": gevent})
+
+                if f.tell() + grid_event_trailer_size > chunk_end_offset:
                     raise ValueError("eof at ge_trailer")
-                ge_trailer = struct.unpack(">H", f.read(2))[0]
-                if grid_event_trailer_size == 4:
-                    f.read(2)
+                if grid_event_trailer_size:
+                    f.read(grid_event_trailer_size)
                 _record_range("grid_events_section", ge_section_start, f.tell())
 
                 # --- Static assets section: u32 sa_count + sa_count*27B records ---
@@ -1241,27 +1339,28 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 _record_range("static_assets_section", sa_section_start, f.tell())
 
                 # --- Dynamic entities section: u16 de_count + variable-length records ---
-                de_section_start = f.tell()
-                if f.tell() + 2 > chunk_end_offset:
+                tail_start = f.tell()
+                if has_secondary_grid_events and tail_start == chunk_end_offset:
+                    located_de = (0, 0, [])
+                    tail = b""
+                elif tail_start + 2 > chunk_end_offset:
                     raise ValueError("eof at de_count")
-                de_count = struct.unpack(">H", f.read(2))[0]
-                if de_count > 5000:
-                    raise ValueError(f"de_count={de_count} insane")
-
-                # Read the entire DE payload (everything after de_count up to
-                # chunk_end) and walk records using known type-specific
-                # length tables + DFS-with-backtracking. See _walk_de_records
-                # docstring for rationale. The old assumption that record_ids
-                # were strictly +1 sequential was wrong; the new walker
-                # handles arbitrary rid orderings.
-                de_payload_start = f.tell()
-                de_payload = f.read(chunk_end_offset - de_payload_start)
+                else:
+                    tail = f.read(chunk_end_offset - tail_start)
+                    located_de = _locate_de_section(tail)
+                if located_de is None:
+                    raise ValueError("could not locate dynamic_entities section")
+                de_offset, de_count, boundaries = located_de
+                if de_offset:
+                    objects_pre_dynamic_hex = tail[:de_offset].hex().upper()
+                de_section_start = tail_start + de_offset
+                de_payload_start = de_section_start + 2
+                de_payload = tail[de_offset + 2:]
                 de_partial_status = None
 
                 if de_count == 0:
                     pass
                 else:
-                    boundaries = _walk_de_records(de_payload, de_count)
                     if boundaries is None:
                         de_partial_status = (
                             f"de walk failed (decoded 0 of {de_count})"
@@ -1709,6 +1808,8 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 objects_block["section_ranges"] = section_ranges
             if objects_trailing_hex:
                 objects_block["trailing_bytes_hex"] = objects_trailing_hex
+            if objects_pre_dynamic_hex:
+                objects_block["pre_dynamic_bytes_hex"] = objects_pre_dynamic_hex
             if objects_raw_hex_fallback:
                 objects_block["raw_hex_fallback"] = objects_raw_hex_fallback
 

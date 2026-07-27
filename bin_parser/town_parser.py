@@ -543,6 +543,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
         * total_chunks_hint      -- optional cap; loop stops early once
                                     this many chunks have been parsed.
     """
+    validate_town_semantics = pre_parsed is None
     if not os.path.exists(file_path):
         print(f"Error: Could not find {file_path}")
         return
@@ -719,6 +720,19 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 ])
                 return layers, reg_end
 
+            def static_record_semantic_errors(rec):
+                """Return violations of the confirmed 27-byte static schema."""
+                (_, _, width, height, render_flag, _, _, _, _, variant_word,
+                 _, _) = struct.unpack(">IIHHHHHHHHHB", rec)
+                errors = []
+                if width == 0 or height == 0:
+                    errors.append("zero size")
+                if render_flag != 1:
+                    errors.append(f"render_flag={render_flag}")
+                if variant_word & 0xFF > 3:
+                    errors.append(f"layer={variant_word & 0xFF}")
+                return errors
+
             def object_prefix_trailer_size(offset):
                 """Return the grid-event trailer size for a plausible object prefix."""
                 SECONDARY_GRID_EVENTS = -2
@@ -744,7 +758,12 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                         sa_count = struct.unpack(">I", f.read(4))[0]
                         if sa_count > 5000:
                             continue
-                        f.seek(sa_count * 27, os.SEEK_CUR)
+                        records = [f.read(27) for _ in range(sa_count)]
+                        if validate_town_semantics and (
+                            any(len(rec) != 27 for rec in records)
+                            or any(static_record_semantic_errors(rec) for rec in records)
+                        ):
+                            continue
                         if f.tell() + 2 > chunk_end_offset:
                             continue
                         tail = f.read(chunk_end_offset - f.tell())
@@ -824,6 +843,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             objects_trailing_hex = ""
             objects_raw_hex_fallback = ""
             objects_pre_dynamic_hex = ""
+            objects_semantic_warnings = []
 
             # Per-section byte ranges (filled in as we parse). Each is a dict
             # with start_hex (inclusive) and end_hex_inclusive once the section
@@ -1282,8 +1302,13 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     raise ValueError(f"sa_count={sa_count} insane")
                 if f.tell() + sa_count * 27 > chunk_end_offset:
                     raise ValueError("static_assets overflow chunk")
-                for _ in range(sa_count):
+                for record_index in range(sa_count):
                     rec = f.read(27)
+                    semantic_errors = static_record_semantic_errors(rec)
+                    if validate_town_semantics and semantic_errors:
+                        objects_semantic_warnings.append(
+                            f"static[{record_index}]: {', '.join(semantic_errors)}"
+                        )
                     # Static-asset record layout (27 bytes, all big-endian):
                     #   [0:4]   u32  map_x_px       — blit destination on the map
                     #   [4:8]   u32  map_y_px
@@ -1774,6 +1799,26 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                         objects_parse_status = f"ok: {de_partial_status}"
                     else:
                         objects_parse_status = f"partial: {de_partial_status}"
+                semantic_summary = []
+                if objects_semantic_warnings:
+                    semantic_summary.append(
+                        f"{len(objects_semantic_warnings)} static records violate "
+                        "the confirmed schema"
+                    )
+                if validate_town_semantics and objects_pre_dynamic_hex:
+                    opaque_size = len(objects_pre_dynamic_hex) // 2
+                    semantic_summary.append(
+                        f"{opaque_size} undecoded bytes before dynamic entities"
+                    )
+                    objects_semantic_warnings.append(
+                        f"pre_dynamic_bytes: {opaque_size} bytes are not semantically decoded"
+                    )
+                if semantic_summary:
+                    detail = "; ".join(semantic_summary)
+                    if objects_parse_status == "ok":
+                        objects_parse_status = f"partial: {detail}"
+                    else:
+                        objects_parse_status += f"; {detail}"
 
             except (ValueError, struct.error) as e:
                 objects_parse_status = f"fallback: {e}"
@@ -1810,6 +1855,8 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 objects_block["trailing_bytes_hex"] = objects_trailing_hex
             if objects_pre_dynamic_hex:
                 objects_block["pre_dynamic_bytes_hex"] = objects_pre_dynamic_hex
+            if objects_semantic_warnings:
+                objects_block["semantic_warnings"] = objects_semantic_warnings
             if objects_raw_hex_fallback:
                 objects_block["raw_hex_fallback"] = objects_raw_hex_fallback
 

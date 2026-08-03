@@ -58,6 +58,8 @@ var pending_hits: Array[Dictionary] = []
 var player_units: Array = []
 var enemy_units: Array = []
 
+static var _repeat_record: Dictionary = {}
+
 var party_data: Array = []
 var turn_count: int = 1
 
@@ -75,6 +77,27 @@ var used_items: Dictionary = {}
 var challenge_results: Array[bool] = []
 
 var active_challenges: Array[ChallengeTracker] = []
+
+## Session-only command state shared by BattleManager instances.
+func save_repeat_record(save_scope: String, party_signature: Array, commands_by_unit_id: Dictionary) -> void:
+	_repeat_record = {
+		"save_scope": save_scope,
+		"party_signature": party_signature.duplicate(true),
+		"commands_by_unit_id": commands_by_unit_id.duplicate(true),
+	}
+
+func get_repeat_commands(save_scope: String, party_signature: Array) -> Dictionary:
+	if _repeat_record.is_empty():
+		return {}
+	if str(_repeat_record.get("save_scope", "")) != save_scope \
+	or _repeat_record.get("party_signature", []) != party_signature:
+		clear_repeat_record()
+		return {}
+	var commands: Variant = _repeat_record.get("commands_by_unit_id", {})
+	return (commands as Dictionary).duplicate(true) if commands is Dictionary else {}
+
+func clear_repeat_record() -> void:
+	_repeat_record.clear()
 
 func _ready() -> void:
 	# Processors are stateless logic; instantiate as RefCounted (no add_child).

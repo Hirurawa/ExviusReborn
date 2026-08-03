@@ -39,6 +39,8 @@ const COVER_TARGET_POSITION: Vector2 = Vector2(260, 240)
 @onready var background: TextureRect = $Background
 @onready var monster_hp_bar: Sprite2D = $BattleEnemyHpBar1
 @onready var action_feedback_label: Label = %ActionFeedbackLabel
+@onready var auto_button: TextureButton = $VisualLayer/CommandButtons/AutoButtonDecor
+@onready var repeat_button: TextureButton = $VisualLayer/CommandButtons/MemoryButtonDecor
 @onready var reload_button: TextureButton = %ReloadButtonDecor
 
 const ACTION_FEEDBACK_DURATION: float = 1.5
@@ -114,6 +116,9 @@ func _ready() -> void:
 	battle_manager.unit_action_started.connect(_on_unit_action_started_feedback)
 	battle_manager.enemy_action_started.connect(_on_enemy_action_started_feedback)
 
+	auto_button.toggle_mode = true
+	auto_button.toggled.connect(_on_auto_toggled)
+	repeat_button.pressed.connect(_on_repeat_pressed)
 	reload_button.pressed.connect(_on_reload_pressed)
 
 	MissionService.mission_completed.connect(_on_mission_completed)
@@ -179,16 +184,32 @@ func _exit_ally_selection_state() -> void:
 		p.set_ally_targeting_mode(false)
 		p.update_action_visuals()
 
-func _queue_resolved_action(unit_index: int, action_type: int, action_name: String, resolution: Dictionary, should_consume_item: bool = true) -> bool:
+func _resolve_action(source_type: String, action_id: String, action_data: Dictionary = {}) -> Dictionary:
+	match source_type:
+		SKILL_ROLE_MAGIC:
+			return SkillResolver.resolve_combat_magic(action_id)
+		SKILL_ROLE_ABILITY:
+			return SkillResolver.resolve_combat_ability(action_id)
+		SKILL_ROLE_LIMITBURST:
+			return SkillResolver.resolve_combat_limitburst(action_id)
+		SKILL_ROLE_ESPER:
+			return SkillResolver.resolve_esper_skill(action_data)
+		"item":
+			return SkillResolver.resolve_combat_item(action_id)
+		_:
+			return SkillResolver.resolve_combat_skill(action_id)
+
+func _queue_resolved_action(unit_index: int, action_type: int, action_name: String, resolution: Dictionary, should_consume_item: bool = true, saved_payload: Dictionary = {}) -> bool:
 	if resolution.is_empty():
 		return false
 
-	var action_payload: Dictionary = {
+	var action_payload: Dictionary = saved_payload.duplicate(true)
+	action_payload.merge({
 		"source_type": resolution.get("source_type", "skill"),
 		"resolved_action_id": resolution.get("resolved_action_id", ""),
 		"resolved_action_data": resolution.get("resolved_action_data", {}),
 		"parsed_data": resolution.get("parsed_data", {})
-	}
+	}, true)
 
 	if resolution.get("source_type", "") == "item":
 		var original_item_id: String = str(resolution.get("original_item_id", ""))
@@ -459,10 +480,6 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 			var source_type: String = str(opt.get("source_type"))
 			var source_name: String = str(opt.get("source", ""))
 			var role_style: String = SKILL_ROLE_STANDARD
-			var can_use_limitburst: bool = true
-			var can_use_mp: bool = true
-			var can_use_action: bool = true
-			var disabled_reason: String = SKILL_DISABLE_REASON_NONE
 			var source_unit: Dictionary = {}
 
 			if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
@@ -470,25 +487,10 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 
 			if source_type == SKILL_ROLE_LIMITBURST:
 				role_style = SKILL_ROLE_LIMITBURST
-				can_use_limitburst = false
-				if not source_unit.is_empty():
-					var current_limit: int = int(source_unit.get("limit_gauge", 0))
-					var max_limit: int = int(source_unit.get("max_limit", 0))
-					can_use_limitburst = max_limit > 0 and current_limit >= max_limit
-				can_use_action = can_use_limitburst
-				if not can_use_action:
-					disabled_reason = SKILL_DISABLE_REASON_LACK_LIMIT
 			elif source_type == SKILL_ROLE_ESPER:
 				role_style = SKILL_ROLE_ESPER
-				can_use_mp = _can_unit_pay_skill_mp(source_unit, skill_data)
-				can_use_action = can_use_mp
-				if not can_use_action:
-					disabled_reason = SKILL_DISABLE_REASON_LACK_MP
-			else:
-				can_use_mp = _can_unit_pay_skill_mp(source_unit, skill_data)
-				can_use_action = can_use_mp
-				if not can_use_action:
-					disabled_reason = SKILL_DISABLE_REASON_LACK_MP
+			var disabled_reason: String = _skill_disabled_reason(source_unit, source_type, skill_data)
+			var can_use_action: bool = disabled_reason == SKILL_DISABLE_REASON_NONE
 			
 			var btn = MagicScene.instantiate() #if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -503,15 +505,7 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 				if not can_use_action:
 					return
 
-				var resolution: Dictionary = {}
-				if source_type == SKILL_ROLE_LIMITBURST:
-					resolution = SkillResolver.resolve_combat_limitburst(action_id)
-				elif source_type == SKILL_ROLE_ESPER:
-					resolution = SkillResolver.resolve_esper_skill(skill_data)
-				elif source_type == SKILL_ROLE_MAGIC:
-					resolution = SkillResolver.resolve_combat_magic(action_id)
-				elif source_type == SKILL_ROLE_ABILITY:
-					resolution = SkillResolver.resolve_combat_ability(action_id)
+				var resolution: Dictionary = _resolve_action(source_type, action_id, skill_data)
 				if resolution.is_empty():
 					return
 
@@ -535,7 +529,7 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 			var btn = _create_action_button(action_name, sub_text)
 			btn.pressed.connect(func():
 				if action_type == battle_manager.CombatAction.ITEM:
-					var resolution: Dictionary = SkillResolver.resolve_combat_item(action_id)
+					var resolution: Dictionary = _resolve_action("item", action_id)
 					if resolution.is_empty():
 						return
 
@@ -548,7 +542,7 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 						if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), resolution):
 							_close_action_menu()
 				else:
-					var skill_resolution: Dictionary = SkillResolver.resolve_combat_skill(action_id)
+					var skill_resolution: Dictionary = _resolve_action("skill", action_id)
 					if _queue_resolved_action(_menu_target_unit_index, action_type, opt.get("name", ""), skill_resolution, false):
 						_close_action_menu()
 			)
@@ -573,6 +567,17 @@ func _can_unit_pay_skill_mp(unit_data: Dictionary, skill_data: Dictionary) -> bo
 	var cost_value: Variant = skill_data.get("cost", {})
 	var mp_cost: int = int(cost_value.get("MP", 0)) if cost_value is Dictionary else int(cost_value) if typeof(cost_value) in [TYPE_INT, TYPE_FLOAT] else 0
 	return current_mp >= mp_cost
+
+func _skill_disabled_reason(unit_data: Dictionary, source_type: String, skill_data: Dictionary) -> String:
+	if unit_data.is_empty() or int(unit_data.get("current_hp", 0)) <= 0:
+		return "unit_unavailable"
+	if source_type == SKILL_ROLE_LIMITBURST:
+		var max_limit: int = int(unit_data.get("max_limit", 0))
+		if max_limit <= 0 or int(unit_data.get("limit_gauge", 0)) < max_limit:
+			return SKILL_DISABLE_REASON_LACK_LIMIT
+	elif not _can_unit_pay_skill_mp(unit_data, skill_data):
+		return SKILL_DISABLE_REASON_LACK_MP
+	return SKILL_DISABLE_REASON_NONE
 
 
 func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String) -> void:
@@ -912,6 +917,7 @@ func _on_panel_tapped(unit_index: int) -> void:
 			return
 		# Normal execution
 		battle_manager.execute_queued_action(unit_index)
+		_save_repeat_record_if_turn_complete()
 
 func _on_enemy_short_tapped(enemy_index: int) -> void:
 	if _is_ally_targeting_mode:
@@ -1039,6 +1045,41 @@ func _on_turn_changed(new_turn: int) -> void:
 		p.is_ally_targeting_mode = false
 		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		p.update_action_visuals()
+	if auto_button.button_pressed:
+		call_deferred("_execute_auto_turn")
+
+func _on_auto_toggled(enabled: bool) -> void:
+	if not enabled:
+		return
+	if _is_ally_targeting_mode:
+		auto_button.set_pressed_no_signal(false)
+		return
+	_execute_auto_turn(true)
+
+func _execute_auto_turn(save_repeat_record: bool = false) -> void:
+	if not auto_button.button_pressed or _is_ally_targeting_mode:
+		return
+	if battle_manager.current_state != battle_manager.BattleState.PLAYER_TURN:
+		return
+
+	var unit_indices: Array[int] = []
+	for unit_index in range(battle_manager.party_data.size()):
+		if unit_index in battle_manager.player_units_acted_this_turn:
+			continue
+		var unit_data: Dictionary = battle_manager.party_data[unit_index]
+		if unit_data.is_empty() or int(unit_data.get("current_hp", 0)) <= 0:
+			continue
+		unit_indices.append(unit_index)
+	_execute_queued_units(unit_indices)
+	if save_repeat_record:
+		_save_repeat_record_if_turn_complete()
+
+func _execute_queued_units(unit_indices: Array[int]) -> void:
+	var start_frame: int = battle_manager.current_battle_frame
+	for unit_index in unit_indices:
+		battle_manager.execute_queued_action(unit_index)
+	if OS.is_debug_build():
+		assert(battle_manager.current_battle_frame == start_frame, "Batch actions must start on the same battle frame")
 
 func _on_wave_changed() -> void:
 	chain_count_label.text = "Chain: 0"
@@ -1047,6 +1088,8 @@ func _on_wave_changed() -> void:
 		p.is_ally_targeting_mode = false
 		p.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		p.update_action_visuals()
+	if auto_button.button_pressed:
+		call_deferred("_execute_auto_turn")
 
 func _play_wave_one_intro(total_waves: int) -> void:
 	# Setup the labels
@@ -1272,50 +1315,168 @@ func _show_action_feedback(text: String) -> void:
 		action_feedback_label.visible = false
 
 func _on_reload_pressed() -> void:
-	if _is_ally_targeting_mode:
-		return
-	if battle_manager.current_state != battle_manager.BattleState.PLAYER_TURN:
-		return
+	if not _restore_saved_commands().is_empty():
+		_show_action_feedback("Reload last actions")
 
-	var acted: Array = battle_manager.player_units_acted_this_turn
-	var requeued_any: bool = false
+func _on_repeat_pressed() -> void:
+	var restored_indices: Array[int] = _restore_saved_commands()
+	if not restored_indices.is_empty():
+		_execute_queued_units(restored_indices)
 
+func _party_signature() -> Array:
+	var signature: Array = []
+	for unit_value in battle_manager.party_data:
+		var unit_data: Dictionary = unit_value
+		if unit_data.is_empty():
+			signature.append("")
+			continue
+		var instance_id: String = str(unit_data.get("instance_id", ""))
+		if instance_id == "":
+			return []
+		signature.append(instance_id)
+	return signature
+
+## A final manual panel tap or the user's initial Auto press is the commit point.
+## Incomplete selection, deferred Auto turns, Reload, and fully automated Repeat
+## never replace the saved command record.
+func _save_repeat_record_if_turn_complete() -> void:
 	for unit_index in range(battle_manager.party_data.size()):
-		if unit_index in acted:
+		var unit_data: Dictionary = battle_manager.party_data[unit_index]
+		if not unit_data.is_empty() and int(unit_data.get("current_hp", 0)) > 0 \
+		and unit_index not in battle_manager.player_units_acted_this_turn:
+			return
+
+	var signature: Array = _party_signature()
+	if signature.is_empty():
+		return
+	var commands_by_unit_id: Dictionary = {}
+	for unit_index in battle_manager.player_units_acted_this_turn:
+		if unit_index < 0 or unit_index >= battle_manager.party_data.size():
 			continue
 		var unit_data: Dictionary = battle_manager.party_data[unit_index]
-		if unit_data.is_empty():
+		var instance_id: String = str(unit_data.get("instance_id", ""))
+		if unit_data.is_empty() or instance_id == "" or not unit_data.has("last_action"):
 			continue
-		if int(unit_data.get("current_hp", 0)) <= 0:
+		commands_by_unit_id[instance_id] = {
+			"action": int(unit_data.get("last_action", battle_manager.CombatAction.ATTACK)),
+			"action_name": str(unit_data.get("last_action_name", "")),
+			"action_id": str(unit_data.get("last_action_id", "")),
+			"payload": (unit_data.get("last_payload", {}) as Dictionary).duplicate(true),
+			"target_team": str(unit_data.get("last_target_team", "enemy")),
+			"target_index": int(unit_data.get("last_target_index", 0)),
+	}
+	if not commands_by_unit_id.is_empty():
+		battle_manager.save_repeat_record(Persistence.active_local_save_id, signature, commands_by_unit_id)
+
+## Shared Reload/Repeat path. Reload stops with these commands queued; Repeat
+## takes the returned indices and performs the one additional execution step.
+func _restore_saved_commands() -> Array[int]:
+	var restored_indices: Array[int] = []
+	if _is_ally_targeting_mode or battle_manager.current_state != battle_manager.BattleState.PLAYER_TURN:
+		return restored_indices
+	if not battle_manager.player_units_acted_this_turn.is_empty():
+		return restored_indices
+	var signature: Array = _party_signature()
+	if signature.is_empty():
+		return restored_indices
+	var commands: Dictionary = battle_manager.get_repeat_commands(Persistence.active_local_save_id, signature)
+	if commands.is_empty():
+		return restored_indices
+
+	for unit_index in range(battle_manager.party_data.size()):
+		var unit_data: Dictionary = battle_manager.party_data[unit_index]
+		if unit_data.is_empty() or int(unit_data.get("current_hp", 0)) <= 0:
 			continue
-		if not unit_data.has("last_action"):
-			continue
+		var instance_id: String = str(unit_data.get("instance_id", ""))
+		var command_value: Variant = commands.get(instance_id, {})
+		if command_value is Dictionary and _restore_saved_command(unit_index, command_value):
+			restored_indices.append(unit_index)
+	if not restored_indices.is_empty():
+		for panel in _active_panels:
+			panel.update_action_visuals()
+	return restored_indices
 
-		var last_action: int = int(unit_data.get("last_action", battle_manager.CombatAction.ATTACK))
-		var last_name: String = str(unit_data.get("last_action_name", ""))
-		var last_id: String = str(unit_data.get("last_action_id", ""))
-		var last_payload_src: Dictionary = unit_data.get("last_payload", {})
-		var last_payload: Dictionary = last_payload_src.duplicate(true)
-		var last_target_team: String = str(unit_data.get("last_target_team", "enemy"))
-		var last_target_index: int = int(unit_data.get("last_target_index", 0))
+func _restore_saved_command(unit_index: int, command: Dictionary) -> bool:
+	var unit_data: Dictionary = battle_manager.party_data[unit_index]
+	var action: int = int(command.get("action", -1))
+	var action_name: String = str(command.get("action_name", ""))
+	var action_id: String = str(command.get("action_id", ""))
+	var payload_value: Variant = command.get("payload", {})
+	var saved_payload: Dictionary = (payload_value as Dictionary).duplicate(true) if payload_value is Dictionary else {}
+	var target_team: String = str(command.get("target_team", "enemy"))
+	var target_index: int = int(command.get("target_index", 0))
 
-		# Items: only repeat if we still have at least one in the combat inventory; consume one now.
-		if last_action == battle_manager.CombatAction.ITEM:
-			var item_id: String = str(last_payload.get("original_item_id", ""))
-			if item_id == "":
-				continue
-			if not combat_inventory.consume(item_id):
-				continue
+	if action == battle_manager.CombatAction.ATTACK or action == battle_manager.CombatAction.DEFEND:
+		battle_manager.set_queued_action(unit_index, action, action_name, action_id, saved_payload)
+		unit_data["queued_target_team"] = target_team
+		unit_data["queued_target_index"] = target_index
+		return true
+	if action != battle_manager.CombatAction.SKILL and action != battle_manager.CombatAction.ITEM:
+		return false
 
-		battle_manager.set_queued_action(unit_index, last_action, last_name, last_id, last_payload)
-		unit_data["queued_target_team"] = last_target_team
-		unit_data["queued_target_index"] = last_target_index
-		requeued_any = true
+	var source_type: String = str(saved_payload.get("source_type", "skill"))
+	if action == battle_manager.CombatAction.SKILL:
+		if not _unit_has_saved_skill(unit_data, action_id, source_type):
+			return false
+		if source_type == SKILL_ROLE_LIMITBURST \
+		and _skill_disabled_reason(unit_data, source_type, {}) != SKILL_DISABLE_REASON_NONE:
+			return false
+	var resolution_id: String = str(saved_payload.get("original_item_id", "")) if source_type == "item" else action_id
+	var saved_action_data: Variant = saved_payload.get("resolved_action_data", {})
+	var resolution: Dictionary = _resolve_action(source_type, resolution_id, saved_action_data if saved_action_data is Dictionary else {})
+	if resolution.is_empty():
+		return false
+	source_type = str(resolution.get("source_type", source_type))
+	var skill_data: Dictionary = resolution.get("resolved_action_data", {})
+	var item_id: String = str(resolution.get("original_item_id", ""))
+	var queued_payload: Dictionary = unit_data.get("queued_payload", {})
+	var item_already_queued: bool = action == battle_manager.CombatAction.ITEM \
+	and int(unit_data.get("queued_action", -1)) == battle_manager.CombatAction.ITEM \
+	and str(queued_payload.get("original_item_id", "")) == item_id
+	if action == battle_manager.CombatAction.SKILL:
+		if source_type != SKILL_ROLE_LIMITBURST \
+		and _skill_disabled_reason(unit_data, source_type, skill_data) != SKILL_DISABLE_REASON_NONE:
+			return false
+	elif not item_already_queued and not combat_inventory.has_any(item_id):
+		return false
+	if not _saved_target_is_valid(resolution, target_team, target_index):
+		return false
+	if item_already_queued:
+		unit_data["queued_target_team"] = target_team
+		unit_data["queued_target_index"] = target_index
+		return true
+	if not _queue_resolved_action(unit_index, action, action_name, resolution, action == battle_manager.CombatAction.ITEM, saved_payload):
+		return false
+	unit_data["queued_target_team"] = target_team
+	unit_data["queued_target_index"] = target_index
+	return true
 
-	if requeued_any:
-		for p in _active_panels:
-			p.update_action_visuals()
-		_show_action_feedback("Reload last actions")
+func _unit_has_saved_skill(unit_data: Dictionary, action_id: String, source_type: String) -> bool:
+	if source_type == SKILL_ROLE_LIMITBURST:
+		return str(unit_data.get("limitBurstId", "")) == action_id
+	if source_type == SKILL_ROLE_ESPER:
+		return str(StatCalculator.get_active_party_esper_rank_skill(unit_data).get("skill_id", "")) == action_id
+	var skills: Dictionary = unit_data.get("final_stats", {}).get("skills", {})
+	var categories: Array = [source_type] if source_type in [SKILL_ROLE_MAGIC, SKILL_ROLE_ABILITY] else [SKILL_ROLE_MAGIC, SKILL_ROLE_ABILITY]
+	for category in categories:
+		for entry in skills.get(category, []):
+			if str(int(entry.get("id", 0))) == action_id:
+				return true
+	return false
+
+func _saved_target_is_valid(resolution: Dictionary, target_team: String, target_index: int) -> bool:
+	var targeting: Dictionary = resolution.get("targeting", {})
+	if bool(targeting.get("targets_enemies", false)):
+		return target_team == "enemy" and not TargetResolver.get_living_units(battle_manager.enemy_units).is_empty()
+	if not bool(targeting.get("needs_ally_selection", false)):
+		return true
+	if target_team != "player" or target_index < 0 or target_index >= battle_manager.party_data.size():
+		return false
+	var target: Dictionary = battle_manager.party_data[target_index]
+	if target.is_empty():
+		return false
+	var target_is_dead: bool = int(target.get("current_hp", 0)) <= 0
+	return target_is_dead if bool(targeting.get("targets_dead", false)) else not target_is_dead
 
 
 func _process(_delta: float) -> void:

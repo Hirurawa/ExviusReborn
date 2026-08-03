@@ -125,6 +125,12 @@ func _ready() -> void:
 	battle_manager.mission_failed.connect(_on_mission_failed)
 	MissionService.mission_failed.connect(_on_mission_failed)
 
+	# In-combat story dialogue overlay (top-of-screen text, click to advance).
+	var dialogue_overlay := BattleDialogue.new()
+	add_child(dialogue_overlay)
+	battle_manager.dialogue_requested.connect(dialogue_overlay.play)
+	dialogue_overlay.finished.connect(battle_manager.close_dialogue)
+
 	
 	_hit_flash = ColorRect.new()
 	_hit_flash.color = Color(1.0, 0.0, 0.0, 0.0)
@@ -580,11 +586,10 @@ func _skill_disabled_reason(unit_data: Dictionary, source_type: String, skill_da
 	return SKILL_DISABLE_REASON_NONE
 
 
-func _apply_battle_background_from_formatted_dungeon_name(formatted_name: String) -> void:
-	if formatted_name == "":
-		return
+func _apply_battle_background() -> void:
+	var bg_file_name = GameDatabase.get_mission_bg(current_mission_id)
 
-	var bg_path = "res://assets/battle_bg/%s.jpg" % formatted_name
+	var bg_path = "res://assets/battle_bg/%s" % bg_file_name
 	if ResourceLoader.exists(bg_path):
 		background.texture = load(bg_path)
 	else:
@@ -596,26 +601,8 @@ func init_scene(params: Dictionary) -> void:
 	# allocation). This keeps the UI responsive on battle entry.
 	await get_tree().process_frame
 	current_mission_id = params.get("mission_id", "")
-	var dungeon_id: String = params.get("dungeon_id", "")
-	var formatted_name: String = ""
 
-	if dungeon_id != "":
-		var dungeon_name: String = GameDatabase.get_dungeon_name(dungeon_id)
-		if dungeon_name != "":
-			formatted_name = dungeon_name.replace(" ", "_")
-
-	if formatted_name == "" and current_mission_id != "":
-		var mission_data: Dictionary = MissionService.get_mission_data(str(current_mission_id))
-		var mission_dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
-		if mission_dungeon_id != "":
-			var mission_dungeon_name: String = GameDatabase.get_dungeon_name(mission_dungeon_id)
-			if mission_dungeon_name != "":
-				formatted_name = mission_dungeon_name.replace(" ", "_")
-
-	if formatted_name == "":
-		formatted_name = MissionService.last_played_dungeon_name
-
-	_apply_battle_background_from_formatted_dungeon_name(formatted_name)
+	_apply_battle_background()
 
 	battle_manager.initialize_battle(current_mission_id)
 

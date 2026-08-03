@@ -17,6 +17,12 @@ signal wave_transition_started(current_wave: int, next_wave: int, total_waves: i
 signal item_dropped(enemy_index: int, item_id: String)
 signal limit_crystal_dropped(enemy_index: int, target_unit_index: int)
 
+## In-combat story dialogue. BattleManager emits dialogue_requested with the
+## ordered [{speaker, text}] lines for a wave trigger; the battle UI shows an
+## overlay and calls close_dialogue() once the player has clicked through them.
+signal dialogue_requested(lines: Array)
+signal dialogue_completed
+
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 
@@ -64,6 +70,12 @@ var party_data: Array = []
 var turn_count: int = 1
 
 var is_transitioning: bool = false
+## True while a dialogue overlay is showing -- pauses the turn engine (_process)
+## so no enemy acts while the player reads. The full-screen overlay blocks input.
+var _dialogue_active: bool = false
+## Cutscene phases for the active mission (from GameDatabase.get_mission_cutscenes),
+## slotted by after_wave. Shown as placeholders via the dialogue overlay for now.
+var _cutscenes: Array = []
 
 var current_wave: int = 1
 var total_waves: int = 1
@@ -106,6 +118,8 @@ func _ready() -> void:
 	result_processor = preload("res://features/battle/logic/result_processor.gd").new()
 
 func _process(_delta: float) -> void:
+	if _dialogue_active:
+		return
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
 		return
 
@@ -247,6 +261,8 @@ func initialize_battle(mission_id: String) -> void:
 		total_waves = wave_plan.size()
 	else:
 		total_waves = mission_data.get("wave_count", 1)
+	# Cutscene phases for this mission, slotted by after_wave (see get_mission_cutscenes).
+	_cutscenes = GameDatabase.get_mission_cutscenes(str(current_mission_id))
 	current_wave = 1
 	mission_drops.clear()
 	used_items.clear()
@@ -332,6 +348,10 @@ func initialize_battle(mission_id: String) -> void:
 	turn_count = 1
 	is_transitioning = false
 	battle_state_ready.emit()
+
+	# Intro cutscenes (placeholder), then the first wave's intro dialogue.
+	await _play_cutscenes_for_slot(0)
+	await play_dialogue(wave_dialogue_lines(1, 1))
 
 func initialize_challenges(mission_challenge_data: Array):
 	for data in mission_challenge_data:
@@ -722,6 +742,96 @@ func _are_all_units_dead(team: Array) -> bool:
 
 	return true
 
+# === Story dialogue ===
+
+## Ordered [{speaker, text}] lines for a wave's trigger (cond 1 = on start,
+## 2 = on victory), or [] when the wave has no script, that trigger has no
+## lines, or the first-time gate switch is already set for the player (seen).
+func wave_dialogue_lines(wave_index: int, cond: int) -> Array:
+	if wave_index < 1 or wave_index > wave_plan.size():
+		return []
+	var wave: Dictionary = wave_plan[wave_index - 1]
+	var script_id: String = str(wave.get("battle_script_id", ""))
+	if script_id == "" or script_id == "0":
+		return []
+	if _dialogue_gate_seen(wave.get("switch_non_info")):
+		return []
+	var lines: Array = []
+	for seg in MissionTimeline.parse_battle_script(script_id):
+		if int(seg.get("cond", 0)) == cond:
+			for ln in seg.get("lines", []):
+				lines.append(ln)
+	return lines
+
+## True when the phase's first-time gate switch is already unlocked -- i.e. the
+## player has seen this dialogue (the switch is set when the mission is cleared).
+func _dialogue_gate_seen(gate: Variant) -> bool:
+	if gate == null:
+		return false
+	var s: String = str(gate).strip_edges()
+	if s == "" or s == "0" or s == "null":
+		return false
+	return SwitchService.is_unlocked(gate)
+
+## Show the given lines and pause the battle until the player clicks through.
+## No-op for empty lines. The overlay (battle_ui) drives close_dialogue().
+func play_dialogue(lines: Array) -> void:
+	if lines.is_empty():
+		return
+	_dialogue_active = true
+	dialogue_requested.emit(lines)
+	await dialogue_completed
+	_dialogue_active = false
+
+## Called by the battle UI once the player has clicked through all lines.
+func close_dialogue() -> void:
+	dialogue_completed.emit()
+
+
+## Show placeholder cards for every cutscene slotted after the given wave index
+## (0 = intro, K = after wave K, total_waves = outro). Each is gated by its own
+## first-time/replay switch. Reuses the dialogue overlay for now; swap the body
+## for an EventRunner call once the storyEvent -> event cpk mapping is resolved.
+func _play_cutscenes_for_slot(slot: int) -> void:
+	for cut in _cutscenes:
+		if int(cut.get("after_wave", -1)) != slot:
+			continue
+		if _dialogue_gate_seen(cut.get("switch_non_info")):
+			continue  # already seen
+		var si: Variant = cut.get("switch_info")
+		if _switch_present(si) and not SwitchService.is_unlocked(si):
+			continue  # replay-only cutscene, not active yet
+		await play_dialogue([_cutscene_placeholder_line(cut)])
+
+## Builds a one-line placeholder card naming the cutscene that should play here,
+## with the resolved event cpk (the folder id EventRunner takes) + resource id.
+func _cutscene_placeholder_line(cut: Dictionary) -> Dictionary:
+	var sid: String = str(cut.get("story_event_id", ""))
+	var ev: Dictionary = GameDatabase.get_story_event(sid)
+	var nm: String = str(ev.get("name", "?"))
+	var scene_ref: String = str(ev.get("sceneRes", ""))       # "map@N" = layer/block
+	var event_id: String = str(cut.get("event_id", ""))       # cpk folder for EventRunner
+	var resource_id: String = str(cut.get("resource_id", ""))
+	var line2: String = "storyEvent %s" % sid
+	if scene_ref != "":
+		line2 += "  ·  " + scene_ref
+	var line3: String = "event %s  (resource %s)" % [
+		event_id if event_id != "" else "?",
+		resource_id if resource_id != "" else "?",
+	]
+	return {
+		"speaker": "🎬 CUTSCENE (placeholder)",
+		"text": "%s\n%s\n%s" % [nm, line2, line3],
+	}
+
+## True when a switch field is an active value (not null/""/"0"/"null").
+func _switch_present(v: Variant) -> bool:
+	if v == null:
+		return false
+	var s: String = str(v).strip_edges()
+	return s != "" and s != "0" and s != "null"
+
+
 func check_battle_state() -> void:
 	# If we are already handling a win/loss, ignore further checks
 	if is_transitioning:
@@ -755,6 +865,13 @@ func _trigger_wave_clear() -> void:
 	# 1. Wait for the death tweens to finish (0.5 to 1.0 seconds)
 	await get_tree().create_timer(1.0).timeout
 
+	# Victory dialogue for the wave just cleared (gated by first-time switch).
+	await play_dialogue(wave_dialogue_lines(current_wave, 2))
+
+	# Cutscenes slotted after this wave -- mid-mission ones, and (when this is the
+	# final wave) the outro, played before the mission-complete rewards.
+	await _play_cutscenes_for_slot(current_wave)
+
 	if current_wave >= total_waves:
 		_trigger_mission_complete()
 	else:
@@ -764,7 +881,7 @@ func _trigger_wave_clear() -> void:
 		# 3. Wait for the UI animation to finish before actually spawning
 		await get_tree().create_timer(2.0).timeout
 
-		_spawn_next_wave()
+		await _spawn_next_wave()
 
 func _trigger_mission_complete() -> void:
 	if OS.is_debug_build():
@@ -810,6 +927,9 @@ func _spawn_next_wave() -> void:
 
 	battle_state_ready.emit()
 
+	# Start dialogue for the newly spawned wave (gated by first-time switch).
+	await play_dialogue(wave_dialogue_lines(current_wave, 1))
+
 	# Only unlock after everything is fully set up
 	is_transitioning = false
 
@@ -850,10 +970,21 @@ func _spawn_wave(wave_no: int, mission_data: Dictionary) -> void:
 				enemy["team"] = "enemy"
 				enemy["index"] = enemy_units.size()
 				enemy_units.append(enemy)
+			_print_wave_monster_ai(wave_no, formation)
 			return
 
 	if str(mission_data.get("type", "")) != "EXPLORATION":
 		push_error("BattleManager: mission %s wave %d has no encounter data (no MISSION_PHASE or scenario battle)." % [current_mission_id, wave_no])
+
+
+## Prints each spawned monster's resolved AI behaviour (skill set + scripted
+## condition -> action rules) to the console, in the same structure as the
+## resolve_monster_ai.py datamine tool. Runs as the wave's monster data is fetched.
+func _print_wave_monster_ai(wave_no: int, formation: Array) -> void:
+	print("\n########## Wave %d monster AI (mission %s) ##########" % [wave_no, current_mission_id])
+	for desc in formation:
+		MonsterAIResolver.print_behaviour(str(desc.get("instance_id", "")))
+
 
 ## Builds a combat-ready enemy dict from an EncounterResolver formation descriptor.
 ## Name, elemental resistances and loot drops come from the descriptor (sourced

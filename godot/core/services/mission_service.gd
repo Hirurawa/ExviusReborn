@@ -23,7 +23,6 @@ const SNAPSHOT_FILE: String = "mission_progress.json"
 var cleared_missions: Dictionary = {}
 var latest_cleared_mission_id: String = ""
 var last_entered_mission_id: String = ""
-var last_played_dungeon_name: String = ""
 
 # Per-session cache of reconstructed mission dicts (keyed by mission id), so the
 # repeated get_mission_data calls during a battle don't re-query the DB.
@@ -36,7 +35,6 @@ func reset_to_starter() -> void:
 	cleared_missions = {}
 	latest_cleared_mission_id = ""
 	last_entered_mission_id = ""
-	last_played_dungeon_name = ""
 
 
 func snapshot_payload() -> Dictionary:
@@ -51,28 +49,7 @@ func load_progress() -> void:
 	cleared_missions = local_payload.get("cleared_missions", {})
 	latest_cleared_mission_id = str(local_payload.get("latest_cleared_mission_id", ""))
 
-	if latest_cleared_mission_id != "":
-		update_last_played_dungeon_from_mission(latest_cleared_mission_id)
-
 	mission_progress_loaded.emit(latest_cleared_mission_id)
-
-
-func update_last_played_dungeon_from_mission(mission_id: String) -> void:
-	if mission_id == "":
-		last_played_dungeon_name = ""
-		return
-
-	var mission_data: Dictionary = get_mission_data(mission_id)
-	if mission_data.is_empty():
-		return
-
-	var dungeon_id: String = str(int(mission_data.get("dungeon_id", "")))
-	if dungeon_id == "":
-		return
-
-	var dungeon_name: String = GameDatabase.get_dungeon_name(dungeon_id)
-	if dungeon_name != "":
-		last_played_dungeon_name = dungeon_name.replace(" ", "_")
 
 
 # === Mission flow ===
@@ -97,7 +74,7 @@ func request_start_mission(mission_id: String) -> Dictionary:
 		PlayerProfile.deduct_nrg(cost_amount)
 
 	last_entered_mission_id = str(mission_id)
-	update_last_played_dungeon_from_mission(mission_id)
+
 	# Stats snapshot bundles last_entered_mission_id with the profile blob.
 	# We will handle it by creating a method in PlayerProfile that does this and saves.
 	PlayerProfile.set_last_entered_mission(mission_id)
@@ -127,6 +104,9 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		var previously_completed: bool = index < previous_objectives.size() and bool(previous_objectives[index])
 		var completed_now: bool = index < challenge_results.size() and bool(challenge_results[index])
 		objectives[index] = previously_completed or completed_now
+		if not previously_completed and completed_now:
+			_grant_reward(challenges[index].get("reward"))
+			pass
 	progress_entry["objectives"] = objectives
 	cleared_missions[mission_key] = progress_entry
 	latest_cleared_mission_id = _get_latest_cleared_mission_id_from_progress(cleared_missions)
@@ -153,7 +133,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		owned_items["stackables"][drop_id] = current_qty + 1
 
 	last_entered_mission_id = str(mission_id)
-	update_last_played_dungeon_from_mission(last_entered_mission_id)
 
 	var rewards_text: String = ""
 	if mission_data.has("gil"):
@@ -213,28 +192,8 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 
 	if not was_already_cleared:
 		var raw_rewards: Variant = mission_data.get("rewards", [])
-		if raw_rewards is Array:
-			for reward_value in raw_rewards:
-				if not (reward_value is Array):
-					continue
-
-				var reward: Array = reward_value
-				if reward.is_empty():
-					continue
-
-				var reward_type: String = str(reward[0]).to_upper()
-				match reward_type:
-					"LAPIS":
-						var lapis_amount: int = 0
-						if reward.size() >= 3:
-							lapis_amount = int(reward[2])
-						elif reward.size() >= 2:
-							lapis_amount = int(reward[1])
-						if lapis_amount > 0:
-							PlayerProfile.add_lapis(lapis_amount)
-							rewards_text += "[First Clear] Lapis +%s\n" % str(lapis_amount)
-					_:
-						push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
+		for reward_value in raw_rewards:
+			_grant_reward(reward_value)
 
 	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "finish_mission")
 	PlayerProfile.emit_all()
@@ -259,6 +218,49 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 
 	return result
 
+
+func _grant_reward(reward: Array):
+	print(reward)
+	var data = {}
+	var reward_type = reward[0] as Types.Category_types
+	match reward_type:
+		Types.Category_types.LAPIS:
+			var lapis_amount: int = 0
+			if reward.size() >= 3:
+				lapis_amount = int(reward[2])
+			elif reward.size() >= 2:
+				lapis_amount = int(reward[1])
+			if lapis_amount > 0:
+				print("Lapis +%s\n" % str(lapis_amount))
+				PlayerProfile.add_lapis(lapis_amount)
+		Types.Category_types.UNIT:
+			data = GameDatabase.get_unit(int(reward[1]))
+			print("GRANT UNIT: " + data.get("unitName"))
+			UnitService._summon_fixed_units(reward[1], 1, "Mission reward")
+		Types.Category_types.ITEM:
+			data = GameDatabase.get_item(int(reward[1]))
+			print("GRANT ITEM: " + data.get("name"))
+			InventoryService.add_stackable(reward[1], int(reward[2]))
+		Types.Category_types.EQUIP:
+			data = GameDatabase.get_equipment(reward[1])
+			print("GRANT EQUIP: " + data.get("name"))
+			InventoryService.add_equipment_instances(reward[1], int(reward[2]))
+		Types.Category_types.MATERIA:
+			data = GameDatabase.get_materia(int(reward[1]))
+			print("GRANT MATERIA: " + data.get("name"))
+			InventoryService.grant_instanced_items("MATERIA", reward[1], int(reward[2]))
+		Types.Category_types.KEYITEM:
+			data = GameDatabase.get_important_item(int(reward[1]))
+			print("GRANT KEYITEM")
+		Types.Category_types.VISIONCARD:
+			data["name"] = "Vision Card"
+			print("GRANT VISIONCARD")
+		Types.Category_types.RECIPE:
+			data = GameDatabase.get_recipe(reward[1])
+			print("GRANT RECIPE: " + data.get("name"))
+		_:
+			push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
+	
 
 func request_dungeon_missions(mission_ids: Array) -> void:
 	dungeon_missions_ready.emit(mission_ids)

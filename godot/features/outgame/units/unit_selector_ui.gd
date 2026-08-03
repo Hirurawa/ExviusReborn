@@ -2,7 +2,6 @@ extends Control
 
 const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 
-@onready var vbox_container: VBoxContainer = $VBoxContainer
 @onready var title_label: Label = $VBoxContainer/UnitNamebgChara/Title
 @onready var units_scroll_container: ScrollContainer = $VBoxContainer/ScrollContainer
 @onready var units_list_container: GridContainer = $VBoxContainer/ScrollContainer/UnitsListContainer

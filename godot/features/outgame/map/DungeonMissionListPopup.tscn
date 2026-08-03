@@ -2,8 +2,6 @@
 
 [ext_resource type="Script" uid="uid://cbaobfmtavf7r" path="res://features/outgame/map/dungeon_mission_list_popup.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://c187wwku6rf54" path="res://assets/ui/quest/locationnamebg.tres" id="2_title_plate"]
-[ext_resource type="Texture2D" uid="uid://cvx5kayq4wh0u" path="res://assets/ui/quest/home_icon1.tres" id="4_home_btn"]
-[ext_resource type="Texture2D" uid="uid://c5vsvyv1ih3h3" path="res://assets/ui/quest/home_icon2.tres" id="5_home_btn_pressed"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="6_back_btn"]
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="7_back_btn_pressed"]
 [ext_resource type="Texture2D" uid="uid://evapg1gurr0" path="res://assets/ui/quest/quest_tab_wave_challenge_on.tres" id="8_green_header"]
@@ -88,6 +86,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 2
 
 [node name="GreenHeader" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel" unique_id=767789937]
+visible = false
 custom_minimum_size = Vector2(640, 52)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -130,7 +129,9 @@ mouse_filter = 2
 
 [node name="ChallengesHost" type="VBoxContainer" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea" unique_id=722582171]
 layout_mode = 0
+offset_top = -3.0
 offset_right = 640.0
+offset_bottom = 183.0
 mouse_filter = 2
 theme_override_constants/separation = 10
 
@@ -211,6 +212,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="NextSpacer" type="Control" parent="ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost" unique_id=402159177]
+visible = false
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 mouse_filter = 2
@@ -241,6 +243,7 @@ vertical_alignment = 1
 
 [node name="HeaderLayer" type="CanvasLayer" parent="." unique_id=674023836]
 layer = 100
+visible = false
 
 [node name="HeaderAnchor" type="Control" parent="HeaderLayer" unique_id=1352736108]
 layout_mode = 3
@@ -314,19 +317,3 @@ theme_override_constants/outline_size = 3
 text = "Back"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="HomeButton" type="TextureButton" parent="HeaderLayer/HeaderAnchor" unique_id=55278143]
-z_index = 2
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -112.0
-offset_top = 92.0
-offset_right = -8.0
-offset_bottom = 196.0
-grow_horizontal = 0
-texture_normal = ExtResource("4_home_btn")
-texture_pressed = ExtResource("5_home_btn_pressed")
-ignore_texture_size = true
-stretch_mode = 5

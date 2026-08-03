@@ -39,3 +39,19 @@ enum Equip_slot_names{
 	CHEST = 4,
 	ACCESSORY = 5
 }
+
+enum Item_types{
+	EQUIPMENT = 21,
+	MATERIA = 22
+}
+
+enum Category_types{
+  UNIT = 10,
+  ITEM = 20,
+  EQUIP = 21,
+  MATERIA = 22,
+  KEYITEM = 23,
+  VISIONCARD = 27,
+  LAPIS = 50,
+  RECIPE = 60
+}

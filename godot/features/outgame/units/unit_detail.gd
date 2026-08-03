@@ -112,10 +112,9 @@ func _on_units_updated(units: Array) -> void:
 func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_stop_idle_animation()
 	
-	var unit_data: Dictionary = unit_inst
 	var entry_id: String = str(unit_inst.get("unitId"))
 
-	unit_detail_name_label.text = str(unit_data.get("unitName", "Unknown"))
+	unit_detail_name_label.text = str(unit_inst.get("unitName", "Unknown"))
 
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	var tex: Texture2D = load(img_path) as Texture2D
@@ -123,7 +122,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_show_idle_or_static(entry_id)
 
 	var rarity: int = int(unit_inst.get("current_rarity", 1))
-	var max_rarity: int = int(unit_data.get("rarity_max", 5))
+	var max_rarity: int = int(unit_inst.get("rarity_max", 5))
 	var stars: String = ""
 	for i in range(rarity):
 		stars += "★"
@@ -161,11 +160,11 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	unit_detail_spr_value.text = str(spr)
 	unit_detail_spr_max_value.text = "/%d" % spr
 
-	_populate_equip_icons_grid(unit_data)
+	_populate_equip_icons_grid(unit_inst)
 	_populate_skills(fresh_final_stats)
 	_populate_equipment_slots(unit_inst)
 	_populate_resistances(fresh_final_stats)
-	_populate_lb_and_tmr(unit_inst, unit_data)
+	_populate_lb_and_tmr(unit_inst)
 	_apply_current_mode_state()
 
 func _show_idle_or_static(unit_id: String) -> void:
@@ -290,7 +289,7 @@ func _populate_resistances(final_stats: Dictionary) -> void:
 			var val: int = int(status_resist.get(status_key, 0))
 			label.text = str(val) + "%" if val != 0 else "-"
 
-func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
+func _populate_lb_and_tmr(unit_inst: Dictionary) -> void:
 	var lb_id: String = str(unit_inst.get("limitburst_id", ""))
 	var lb_data: Dictionary = GameDatabase.get_limitburst(lb_id) if (lb_id != "" and lb_id != "<null>") else {}
 	if not lb_data.is_empty():
@@ -299,7 +298,7 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	else:
 		lb_name_label.text = "Limit Burst: None"
 
-	var tmr_data: Variant = unit_data.get("trustMasterReward")
+	var tmr_data: Variant = unit_inst.get("trustMasterReward")
 	tmr_data = tmr_data.split(":") if not tmr_data == null else null
 	if tmr_data == null or tmr_data.size() < 2:
 		tm_name_label.text = "Trust Master: None"
@@ -308,21 +307,21 @@ func _populate_lb_and_tmr(unit_inst: Dictionary, unit_data: Dictionary) -> void:
 	
 	tm_percent_value.text = str(unit_inst.get("trust_value"))
 	
-	var tmr_type: String = str(tmr_data[0])
+	var tmr_type = tmr_data[0] as Types.Item_types
 	var tmr_id: String = str(int(tmr_data[1]))
 	var tmr_name: String = "Unknown Reward"
 	var icon_path: String = ""
-
-	if tmr_type == "21":
-		var eq_data: Dictionary = GameDatabase.get_equipment(tmr_id)
-		if not eq_data.is_empty():
-			tmr_name = str(eq_data.get("name", tmr_name))
-			icon_path = "res://assets/equip/" + str(eq_data.get("iconFile", "0.png"))
-	elif tmr_type == "22":
-		var mat_data: Dictionary = GameDatabase.get_materia(int(tmr_id))
-		if not mat_data.is_empty():
-			tmr_name = str(mat_data.get("name", tmr_name))
-			icon_path = "res://assets/materia/" + str(mat_data.get("iconFile", "0.png"))
+	
+	if tmr_type == Types.Item_types.EQUIPMENT:
+		var data: Dictionary = GameDatabase.get_equipment(tmr_id)
+		if not data.is_empty():
+			tmr_name = str(data.get("name", tmr_name))
+			icon_path = "res://assets/equip/" + str(data.get("iconFile", "0.png"))
+	elif tmr_type == Types.Item_types.MATERIA:
+		var data: Dictionary = GameDatabase.get_materia(int(tmr_id))
+		if not data.is_empty():
+			tmr_name = str(data.get("name", tmr_name))
+			icon_path = "res://assets/materia/" + str(data.get("iconFile", "0.png"))
 
 	tm_name_label.text = tmr_name
 	if icon_path != "":

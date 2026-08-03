@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://cq0sopywedfst"]
 
 [ext_resource type="Script" uid="uid://c1a8m3b227wln" path="res://features/outgame/map/map_ui.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="2_le8hw"]
+[ext_resource type="Texture2D" uid="uid://c187wwku6rf54" path="res://assets/ui/quest/locationnamebg.tres" id="2_otgok"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_810w5"]
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_otgok"]
+[ext_resource type="Texture2D" uid="uid://cvx5kayq4wh0u" path="res://assets/ui/quest/home_icon1.tres" id="5_otgok"]
+[ext_resource type="Texture2D" uid="uid://c5vsvyv1ih3h3" path="res://assets/ui/quest/home_icon2.tres" id="6_65rpn"]
 
 [node name="MapUI" type="Control" unique_id=390236831]
 layout_mode = 3
@@ -40,7 +42,7 @@ layout_mode = 2
 
 [node name="UnitNamebgChara" type="TextureRect" parent="VBoxContainer/TopBar" unique_id=1998544103]
 layout_mode = 2
-texture = ExtResource("2_le8hw")
+texture = ExtResource("2_otgok")
 stretch_mode = 2
 
 [node name="Title" type="Label" parent="VBoxContainer/TopBar/UnitNamebgChara" unique_id=260999710]
@@ -69,6 +71,17 @@ offset_bottom = 40.0
 text = "Back"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HomeButton" type="TextureButton" parent="VBoxContainer/TopBar/UnitNamebgChara" unique_id=798129956]
+z_index = 2
+clip_contents = true
+layout_mode = 0
+offset_left = 536.0
+offset_top = -19.0
+offset_right = 640.0
+offset_bottom = 85.0
+texture_normal = ExtResource("5_otgok")
+texture_pressed = ExtResource("6_65rpn")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=45184246]
 layout_mode = 2

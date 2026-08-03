@@ -64,7 +64,16 @@ static func build_wave_plan(mission_id: String) -> Array:
 		var n: int = 0
 		for row in phases:
 			n += 1
-			plan.append({"target_id": str(row.get("targetId", "")), "phase_num": n, "is_boss": false})
+			plan.append({
+				"target_id": str(row.get("targetId", "")),
+				"phase_num": n,
+				"is_boss": false,
+				# Story hooks: the in-combat dialogue script + its first-time gate,
+				# consumed by BattleManager.wave_dialogue_lines(). Empty/absent when
+				# the wave has no scripted dialogue.
+				"battle_script_id": str(row.get("battleScriptId", "")),
+				"switch_non_info": row.get("switchNonInfo"),
+			})
 		return plan
 
 	# 2) Boss / story / exploration missions have no MISSION_PHASE; their waves

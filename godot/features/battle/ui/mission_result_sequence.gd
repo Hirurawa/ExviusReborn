@@ -127,7 +127,7 @@ func _show_mission_results() -> void:
 func _config_challenge(challenge: Dictionary, objective: bool) -> void:
 	var row = CHALLENGE_ROW.instantiate()
 	challenge_containter.add_child(row)
-	row.configure(challenge.get("string"), challenge.get("reward")[2], objective)
+	row.configure(challenge.get("string"), challenge.get("reward"), objective)
 
 func _on_next_pressed() -> void:
 	match _stage:

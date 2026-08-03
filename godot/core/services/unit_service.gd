@@ -89,7 +89,10 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 		"level": 1,
 		"xp": 0,
 		"current_rarity": initial_rarity,
-		"equipment": {},
+		"equipment": {
+			"body": instance_id + "_LeatherPlate",
+			"r_hand": instance_id + "_Broadsword"
+		},
 		"trust_value": 0,
 		"limitburst_level": 1,
 		"limitburst_xp": 0,

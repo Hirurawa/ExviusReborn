@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://da5dmb56n12dg"]
+
+[ext_resource type="Script" uid="uid://din1tk73thjcy" path="res://features/outgame/vortex/vortex_dungeon.gd" id="1_nvjib"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="2_81jfg"]
+[ext_resource type="Texture2D" uid="uid://blwgq1bghv888" path="res://assets/ui/special/spd_tab_event1.tres" id="2_jey2v"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_02aqm"]
+[ext_resource type="Texture2D" uid="uid://c2elvg1eyplxn" path="res://assets/ui/special/spd_tab_event2.tres" id="3_cyug0"]
+[ext_resource type="Texture2D" uid="uid://bkhvpnhj1x2h7" path="res://assets/ui/special/spd_tab_training1.tres" id="4_81jfg"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_uryls"]
+[ext_resource type="Texture2D" uid="uid://fr42uw4h5x4a" path="res://assets/ui/special/spd_tab_training2.tres" id="5_02aqm"]
+[ext_resource type="Texture2D" uid="uid://pwebobaspnub" path="res://assets/ui/special/spd_tab_enemy1.tres" id="6_uryls"]
+[ext_resource type="Texture2D" uid="uid://c25mihubvgnvq" path="res://assets/ui/special/spd_tab_enemy2.tres" id="7_f40g5"]
+[ext_resource type="Texture2D" uid="uid://do8dcflco4lbr" path="res://assets/spdungeon/spd_bn_top_00003.png" id="8_ox53l"]
+
+[node name="VortexDungeon" type="Control" unique_id=1373053183]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nvjib")
+
+[node name="UnitNamebgChara2" type="TextureRect" parent="." unique_id=215454299]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 640.0
+offset_bottom = 192.0
+texture = ExtResource("2_81jfg")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="UnitNamebgChara2" unique_id=1493168546]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Vortex"
+
+[node name="BackButton" type="TextureButton" parent="UnitNamebgChara2" unique_id=961516013]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("3_02aqm")
+texture_pressed = ExtResource("4_uryls")
+
+[node name="Back" type="Label" parent="UnitNamebgChara2/BackButton" unique_id=1466033995]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1683851122]
+layout_mode = 0
+offset_top = 188.0
+offset_right = 640.0
+offset_bottom = 848.0
+
+[node name="ButtonBar" type="HBoxContainer" parent="VBoxContainer" unique_id=527286449]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="SpdTabEvent1" type="TextureButton" parent="VBoxContainer/ButtonBar" unique_id=1595198638]
+layout_mode = 2
+texture_normal = ExtResource("2_jey2v")
+texture_pressed = ExtResource("3_cyug0")
+
+[node name="SpdTabTraining1" type="TextureButton" parent="VBoxContainer/ButtonBar" unique_id=1848741769]
+layout_mode = 2
+texture_normal = ExtResource("4_81jfg")
+texture_pressed = ExtResource("5_02aqm")
+
+[node name="SpdTabEnemy1" type="TextureButton" parent="VBoxContainer/ButtonBar" unique_id=1461973768]
+layout_mode = 2
+texture_normal = ExtResource("6_uryls")
+texture_pressed = ExtResource("7_f40g5")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1611772738]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Content" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=1066685402]
+layout_mode = 2
+
+[node name="SpdBnTop00003" type="TextureButton" parent="VBoxContainer/ScrollContainer/Content" unique_id=155733621]
+visible = false
+layout_mode = 2
+texture_normal = ExtResource("8_ox53l")

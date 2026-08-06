@@ -4,6 +4,12 @@ static func _has_meaningful_payload_value(value: Variant) -> bool:
 	if typeof(value) == TYPE_ARRAY:
 		return not value.is_empty()
 
+	# A processParam slot can be a literal token rather than a number -- "none", or a
+	# message id like MST_MONSTERSKILL_PARAM_MSG_78. Comparing those to 0 is an error,
+	# and "none" is the data's own way of saying the slot is unused.
+	if typeof(value) == TYPE_STRING:
+		return value != "" and value != "none"
+
 	return value != 0
 
 static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) -> Dictionary:

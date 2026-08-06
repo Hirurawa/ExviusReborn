@@ -111,6 +111,10 @@
 		"type": "PCT_RESTORE",
 		"keys": ["HP", "MP"]
 	},
+	"70": {
+		"type": "MAGIC_DAMAGE_IGNORE_SPR",
+		"keys": ["", "", "modifier", "ignore"]
+	},
 	"86": {
 		"type": "REFLECT",
 		"keys": ["", "spell_count", "turn_count"]

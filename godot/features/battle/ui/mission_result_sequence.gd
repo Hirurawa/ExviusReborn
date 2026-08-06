@@ -56,13 +56,17 @@ func _show_experience() -> void:
 	for party_unit in _party:
 		_config_unit(party_unit)
 
-func _config_unit(unit_data: Dictionary) -> void:
-	if unit_data == {}:
+func _config_unit(party_unit: Dictionary) -> void:
+	if party_unit == {}:
 		var placeholder: TextureRect = TextureRect.new()
 		placeholder.texture = ResourceLoader.load("res://assets/ui/quest/result_unit.tres") as Texture2D
 		unit_container.add_child(placeholder)
 		return
-	
+
+	# Show the roster entry when the mission's EXP levelled this unit up, so the
+	# level and the stat block on the results screen agree.
+	var unit_data: Dictionary = _post_battle_unit(party_unit)
+
 	var unit_node = unit_panel.duplicate()
 	var hp_text = unit_node.get_node("VBoxContainer/HBoxContainer/HPLabel")
 	hp_text.text = str(unit_data.get("final_stats").get("stats").get("HP"))
@@ -90,6 +94,27 @@ func _config_unit(unit_data: Dictionary) -> void:
 	unit_name_text.text = str(unit_data.get("unitName"))
 	unit_node.visible = true
 	unit_container.add_child(unit_node)
+
+## The party dicts are the pre-battle snapshot, so a unit that gained a level from
+## the mission's combat EXP would show its old level and stats. When the unit is in
+## the award list, display its refreshed roster entry instead.
+func _post_battle_unit(unit_data: Dictionary) -> Dictionary:
+	var instance_id: String = str(unit_data.get("instance_id", ""))
+	if instance_id == "":
+		return unit_data
+
+	var leveled_up: bool = false
+	for award in _result.get("unit_exp_awards", []):
+		if str(award.get("instance_id", "")) == instance_id:
+			leveled_up = int(award.get("level_after", 0)) > int(award.get("level_before", 0))
+			break
+	if not leveled_up:
+		return unit_data
+
+	for owned_unit in UnitService.owned_units_ids:
+		if owned_unit is Dictionary and str(owned_unit.get("instance_id", "")) == instance_id:
+			return owned_unit
+	return unit_data
 
 func _show_item() -> void:
 	_stage = 2

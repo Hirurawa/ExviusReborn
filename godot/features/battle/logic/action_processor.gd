@@ -22,8 +22,17 @@ func _get_stat_safe(stats: Dictionary, stat_name: String, default_value: int = 1
 static func generate_effect_payloads(effect_type: String, raw_amount: int, attack_damage: Array, attack_frames: Array, caster: Dictionary, target: Dictionary, duration: int = 0, params: Dictionary = {}, element: Array = []) -> Array:
 	var generated_payloads = []
 
-	var dmg_array = attack_damage[0] if typeof(attack_damage[0]) == TYPE_ARRAY else attack_damage
-	var frame_array = attack_frames[0] if typeof(attack_frames[0]) == TYPE_ARRAY else attack_frames
+	var dmg_array = attack_damage[0] if attack_damage.size() > 0 and typeof(attack_damage[0]) == TYPE_ARRAY else attack_damage
+	var frame_array = attack_frames[0] if attack_frames.size() > 0 and typeof(attack_frames[0]) == TYPE_ARRAY else attack_frames
+
+	# A skill can carry no attack-frame data at all -- common for buffs, debuffs and
+	# self-targeting effects, and for any skill whose effect count exceeds its frame
+	# groups. There is no multi-hit split to honour then, so apply it once at full
+	# strength on frame 0 rather than indexing past the end of an empty array.
+	if dmg_array.is_empty():
+		dmg_array = [100]
+	if frame_array.is_empty():
+		frame_array = [0]
 
 	for i in range(dmg_array.size()):
 		var percent = float(dmg_array[i]) / 100.0
@@ -31,7 +40,7 @@ static func generate_effect_payloads(effect_type: String, raw_amount: int, attac
 
 		var payload = {
 			"type": effect_type,
-			"frame_to_execute": frame_array[i],
+			"frame_to_execute": frame_array[i] if i < frame_array.size() else frame_array[frame_array.size() - 1],
 			"amount": split_amount,
 			"attacker_team": caster.get("team", ""),
 			"attacker_index": caster.get("index", 0),
@@ -118,6 +127,54 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 
 		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
 		var SPR = _get_stat_safe(target_stats, "SPR", 10)
+		
+		# 1. Base Magic Math
+		var raw_damage = (float(MAG * MAG) / float(max(1, SPR))) * modifier
+		# 2. Elemental Math
+		var element_modifier = 1.0
+		
+		if attack_elements.size() > 0:
+			var total_resist = 0.0
+			for element in attack_elements:
+				# Add the target's resistance for this element, defaulting to 0 if they don't have one
+				total_resist += target_resists.get(element, 0)
+				
+			# Average the resistances
+			var average_resist = total_resist / attack_elements.size()
+			
+			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
+			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
+			element_modifier = 1.0 - (average_resist / 100.0)
+
+		# 3. Apply modifier and prevent negative damage
+		var final_damage = max(0.0, raw_damage * element_modifier)
+
+		var hit_payloads = generate_effect_payloads("DAMAGE", final_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
+
+		all_hit_payloads.append_array(hit_payloads)
+
+	return all_hit_payloads
+
+func _apply_magic_damage_ignore_spr(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var modifier = parsed_effect.get("effect", {}).get("modifier", 100.0) / 100.0
+	var ignore_amount = parsed_effect.get("effect", {}).get("ignore", 0)
+	var attack_elements: Array = parsed_effect.get("element", [])
+
+	var caster_stats = caster.get("final_stats", caster).get("stats", {})
+
+	var all_hit_payloads: Array[Dictionary] = []
+
+	for target in targets:
+		var target_final_stats = target.get("final_stats", target)
+		var target_stats = target_final_stats.get("stats", target_final_stats)
+		
+		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
+		var target_resists = target_final_stats.get("element_resists", {})
+
+		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
+		var SPR = _get_stat_safe(target_stats, "SPR", 10) * float(100 - ignore_amount)/100
 		
 		# 1. Base Magic Math
 		var raw_damage = (float(MAG * MAG) / float(max(1, SPR))) * modifier

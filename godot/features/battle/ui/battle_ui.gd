@@ -45,6 +45,10 @@ const COVER_TARGET_POSITION: Vector2 = Vector2(260, 240)
 
 const ACTION_FEEDBACK_DURATION: float = 1.5
 
+## Safety valve for the victory pose. If a sprite never reports back (missing
+## spritesheet, freed mid-animation) the result screen still opens.
+const VICTORY_ANIM_TIMEOUT: float = 10.0
+
 ## Enemy layout tuning. `dispPos` values from BATTLE_GROUP are authored in an
 ## abstract field space (observed roughly x:110-260, y:206-426); they are mapped
 ## proportionally into the EnemyRegion using DISP_REFERENCE as the assumed field
@@ -904,7 +908,6 @@ func _on_panel_tapped(unit_index: int) -> void:
 			return
 		# Normal execution
 		battle_manager.execute_queued_action(unit_index)
-		_save_repeat_record_if_turn_complete()
 
 func _on_enemy_short_tapped(enemy_index: int) -> void:
 	if _is_ally_targeting_mode:
@@ -1041,9 +1044,9 @@ func _on_auto_toggled(enabled: bool) -> void:
 	if _is_ally_targeting_mode:
 		auto_button.set_pressed_no_signal(false)
 		return
-	_execute_auto_turn(true)
+	_execute_auto_turn()
 
-func _execute_auto_turn(save_repeat_record: bool = false) -> void:
+func _execute_auto_turn() -> void:
 	if not auto_button.button_pressed or _is_ally_targeting_mode:
 		return
 	if battle_manager.current_state != battle_manager.BattleState.PLAYER_TURN:
@@ -1058,8 +1061,6 @@ func _execute_auto_turn(save_repeat_record: bool = false) -> void:
 			continue
 		unit_indices.append(unit_index)
 	_execute_queued_units(unit_indices)
-	if save_repeat_record:
-		_save_repeat_record_if_turn_complete()
 
 func _execute_queued_units(unit_indices: Array[int]) -> void:
 	var start_frame: int = battle_manager.current_battle_frame
@@ -1242,13 +1243,51 @@ func _on_finish_pressed() -> void:
 
 func _on_mission_completed(result: Dictionary) -> void:
 	AudioService.play_music("res://assets/audio/bgm/la009_battleend.wav", false)
+
+	# Let the surviving party celebrate before the rewards screen takes over.
+	await _play_victory_animations()
+
 	var sequence = preload("res://features/battle/ui/MissionResultSequence.tscn").instantiate()
 	add_child(sequence)
 	sequence.start(result, battle_manager.party_data)
 	sequence.finished.connect(_on_result_sequence_finished)
 
+
+## Plays the win_before + win pose on every living party member and returns once
+## they have all finished (or the timeout expires). KO'd units keep their current
+## look -- they have nothing to celebrate with.
+func _play_victory_animations() -> void:
+	# Left untyped: combat_sprite.gd has no class_name, so a Control-typed handle
+	# would not resolve `win_finished` / `play_win()` at parse time.
+	var sprites: Array = []
+	for party_idx in range(battle_manager.party_data.size()):
+		var unit_data: Dictionary = battle_manager.party_data[party_idx]
+		if unit_data.is_empty() or int(unit_data.get("current_hp", 0)) <= 0:
+			continue
+		var sprite = _find_player_combat_sprite(party_idx)
+		if sprite != null:
+			sprites.append(sprite)
+
+	if sprites.is_empty():
+		return
+
+	# Single-element array so the one-shot handlers share one mutable counter.
+	var pending: Array = [sprites.size()]
+	for sprite in sprites:
+		sprite.win_finished.connect(_on_unit_win_finished.bind(pending), CONNECT_ONE_SHOT)
+		sprite.play_win()
+
+	var elapsed: float = 0.0
+	while pending[0] > 0 and elapsed < VICTORY_ANIM_TIMEOUT:
+		elapsed += get_process_delta_time()
+		await get_tree().process_frame
+
+func _on_unit_win_finished(_unit_index: int, pending: Array) -> void:
+	pending[0] -= 1
+
+
 func _on_mission_failed(error_msg: String = "") -> void:
-	push_error("Failed to complete mission: %s" % error_msg)
+	print("Failed to complete mission: %s" % error_msg)
 	AudioService.play_music("res://assets/audio/bgm/la009_battleend.wav", false)
 	rewards_popup.dialog_text = "Mission Failed!"
 	rewards_popup.popup_centered()
@@ -1280,14 +1319,28 @@ func _on_unit_action_started_feedback(unit_index: int, action: int) -> void:
 			text = "%s - %s" % [unit_name, text]
 		_show_action_feedback(text)
 
-func _on_enemy_action_started_feedback(enemy_index: int, _action: int) -> void:
-	var text: String = "Enemy attacks"
+
+## Names the enemy's action the same way the player's is named. The skill name comes
+## off the enemy dict rather than the signal, mirroring how a unit's action reads its
+## `queued_action_name` -- BattleManager sets `current_action_name` as it announces.
+func _on_enemy_action_started_feedback(enemy_index: int, action: int) -> void:
+	var enemy_name: String = ""
+	var skill_name: String = ""
 	if enemy_index >= 0 and enemy_index < battle_manager.enemy_units.size():
 		var enemy: Dictionary = battle_manager.enemy_units[enemy_index]
-		var enemy_name: String = str(enemy.get("enemy_name", ""))
-		if enemy_name != "":
-			text = "%s attacks" % enemy_name
+		enemy_name = str(enemy.get("name", ""))
+		skill_name = str(enemy.get("current_action_name", ""))
+
+	var text: String = ""
+	if action == battle_manager.CombatAction.SKILL and skill_name != "":
+		text = skill_name
+	else:
+		text = "Attack"
+
+	if enemy_name != "":
+		text = "%s - %s" % [enemy_name, text]
 	_show_action_feedback(text)
+
 
 func _show_action_feedback(text: String) -> void:
 	if action_feedback_label == null:
@@ -1310,88 +1363,44 @@ func _on_repeat_pressed() -> void:
 	if not restored_indices.is_empty():
 		_execute_queued_units(restored_indices)
 
-func _party_signature() -> Array:
-	var signature: Array = []
-	for unit_value in battle_manager.party_data:
-		var unit_data: Dictionary = unit_value
-		if unit_data.is_empty():
-			signature.append("")
-			continue
-		var instance_id: String = str(unit_data.get("instance_id", ""))
-		if instance_id == "":
-			return []
-		signature.append(instance_id)
-	return signature
-
-## A final manual panel tap or the user's initial Auto press is the commit point.
-## Incomplete selection, deferred Auto turns, Reload, and fully automated Repeat
-## never replace the saved command record.
-func _save_repeat_record_if_turn_complete() -> void:
-	for unit_index in range(battle_manager.party_data.size()):
-		var unit_data: Dictionary = battle_manager.party_data[unit_index]
-		if not unit_data.is_empty() and int(unit_data.get("current_hp", 0)) > 0 \
-		and unit_index not in battle_manager.player_units_acted_this_turn:
-			return
-
-	var signature: Array = _party_signature()
-	if signature.is_empty():
-		return
-	var commands_by_unit_id: Dictionary = {}
-	for unit_index in battle_manager.player_units_acted_this_turn:
-		if unit_index < 0 or unit_index >= battle_manager.party_data.size():
-			continue
-		var unit_data: Dictionary = battle_manager.party_data[unit_index]
-		var instance_id: String = str(unit_data.get("instance_id", ""))
-		if unit_data.is_empty() or instance_id == "" or not unit_data.has("last_action"):
-			continue
-		commands_by_unit_id[instance_id] = {
-			"action": int(unit_data.get("last_action", battle_manager.CombatAction.ATTACK)),
-			"action_name": str(unit_data.get("last_action_name", "")),
-			"action_id": str(unit_data.get("last_action_id", "")),
-			"payload": (unit_data.get("last_payload", {}) as Dictionary).duplicate(true),
-			"target_team": str(unit_data.get("last_target_team", "enemy")),
-			"target_index": int(unit_data.get("last_target_index", 0)),
-	}
-	if not commands_by_unit_id.is_empty():
-		battle_manager.save_repeat_record(Persistence.active_local_save_id, signature, commands_by_unit_id)
-
-## Shared Reload/Repeat path. Reload stops with these commands queued; Repeat
-## takes the returned indices and performs the one additional execution step.
+## Shared Reload/Repeat path. Re-queues each living unit's last executed command
+## -- stored on the unit dict by BattleManager.execute_queued_action -- after
+## re-validating it against the current MP / items / targets. Reload stops here
+## with the commands queued; Repeat takes the returned indices and performs the
+## one additional execution step.
 func _restore_saved_commands() -> Array[int]:
 	var restored_indices: Array[int] = []
 	if _is_ally_targeting_mode or battle_manager.current_state != battle_manager.BattleState.PLAYER_TURN:
 		return restored_indices
-	if not battle_manager.player_units_acted_this_turn.is_empty():
-		return restored_indices
-	var signature: Array = _party_signature()
-	if signature.is_empty():
-		return restored_indices
-	var commands: Dictionary = battle_manager.get_repeat_commands(Persistence.active_local_save_id, signature)
-	if commands.is_empty():
-		return restored_indices
 
 	for unit_index in range(battle_manager.party_data.size()):
+		# Skipped per unit, not as a whole-party bail: a unit that already acted has
+		# spent its command, but the units still waiting can be restored. Re-queueing
+		# an acted unit would refund-then-reconsume its item (its queued_payload still
+		# holds it) while execute_queued_action ignores it either way.
+		if unit_index in battle_manager.player_units_acted_this_turn:
+			continue
 		var unit_data: Dictionary = battle_manager.party_data[unit_index]
 		if unit_data.is_empty() or int(unit_data.get("current_hp", 0)) <= 0:
 			continue
-		var instance_id: String = str(unit_data.get("instance_id", ""))
-		var command_value: Variant = commands.get(instance_id, {})
-		if command_value is Dictionary and _restore_saved_command(unit_index, command_value):
+		if not unit_data.has("last_action"):
+			continue
+		if _restore_saved_command(unit_index):
 			restored_indices.append(unit_index)
 	if not restored_indices.is_empty():
 		for panel in _active_panels:
 			panel.update_action_visuals()
 	return restored_indices
 
-func _restore_saved_command(unit_index: int, command: Dictionary) -> bool:
+func _restore_saved_command(unit_index: int) -> bool:
 	var unit_data: Dictionary = battle_manager.party_data[unit_index]
-	var action: int = int(command.get("action", -1))
-	var action_name: String = str(command.get("action_name", ""))
-	var action_id: String = str(command.get("action_id", ""))
-	var payload_value: Variant = command.get("payload", {})
+	var action: int = int(unit_data.get("last_action", -1))
+	var action_name: String = str(unit_data.get("last_action_name", ""))
+	var action_id: String = str(unit_data.get("last_action_id", ""))
+	var payload_value: Variant = unit_data.get("last_payload", {})
 	var saved_payload: Dictionary = (payload_value as Dictionary).duplicate(true) if payload_value is Dictionary else {}
-	var target_team: String = str(command.get("target_team", "enemy"))
-	var target_index: int = int(command.get("target_index", 0))
+	var target_team: String = str(unit_data.get("last_target_team", "enemy"))
+	var target_index: int = int(unit_data.get("last_target_index", 0))
 
 	if action == battle_manager.CombatAction.ATTACK or action == battle_manager.CombatAction.DEFEND:
 		battle_manager.set_queued_action(unit_index, action, action_name, action_id, saved_payload)
@@ -1405,8 +1414,7 @@ func _restore_saved_command(unit_index: int, command: Dictionary) -> bool:
 	if action == battle_manager.CombatAction.SKILL:
 		if not _unit_has_saved_skill(unit_data, action_id, source_type):
 			return false
-		if source_type == SKILL_ROLE_LIMITBURST \
-		and _skill_disabled_reason(unit_data, source_type, {}) != SKILL_DISABLE_REASON_NONE:
+		if source_type == SKILL_ROLE_LIMITBURST and _skill_disabled_reason(unit_data, source_type, {}) != SKILL_DISABLE_REASON_NONE:
 			return false
 	var resolution_id: String = str(saved_payload.get("original_item_id", "")) if source_type == "item" else action_id
 	var saved_action_data: Variant = saved_payload.get("resolved_action_data", {})
@@ -1418,8 +1426,8 @@ func _restore_saved_command(unit_index: int, command: Dictionary) -> bool:
 	var item_id: String = str(resolution.get("original_item_id", ""))
 	var queued_payload: Dictionary = unit_data.get("queued_payload", {})
 	var item_already_queued: bool = action == battle_manager.CombatAction.ITEM \
-	and int(unit_data.get("queued_action", -1)) == battle_manager.CombatAction.ITEM \
-	and str(queued_payload.get("original_item_id", "")) == item_id
+		and int(unit_data.get("queued_action", -1)) == battle_manager.CombatAction.ITEM \
+		and str(queued_payload.get("original_item_id", "")) == item_id
 	if action == battle_manager.CombatAction.SKILL:
 		if source_type != SKILL_ROLE_LIMITBURST \
 		and _skill_disabled_reason(unit_data, source_type, skill_data) != SKILL_DISABLE_REASON_NONE:

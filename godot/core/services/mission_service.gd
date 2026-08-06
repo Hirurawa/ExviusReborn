@@ -81,7 +81,11 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	return {"success": true}
 
 
-func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = [], mission_drops: Array = []) -> Dictionary:
+## Finishes a mission. `unit_exp` and `battle_gil` are what the battle accumulated
+## from defeated enemies (BattleManager.mission_unit_exp / mission_gil): every unit
+## in the party that ran the mission gains the full unit EXP, and the battle gil is
+## paid out on top of the mission's own gil reward.
+func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = [], mission_drops: Array = [], unit_exp: int = 0, battle_gil: int = 0) -> Dictionary:
 	if not win_status:
 		mission_failed.emit("Mission failed")
 		return {"error": "Mission failed"}
@@ -116,8 +120,19 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	if mission_data.has("exp"):
 		PlayerProfile.add_xp(int(mission_data["exp"]))
 
-	if mission_data.has("gil"):
-		PlayerProfile.add_gil(int(mission_data["gil"]))
+	# Total gil paid out: the mission's fixed clear reward plus what the defeated
+	# enemies dropped during the battle.
+	var mission_gil: int = maxi(0, int(mission_data.get("gil", 0)))
+	var granted_gil: int = mission_gil + maxi(0, battle_gil)
+	if granted_gil > 0:
+		PlayerProfile.add_gil(granted_gil)
+
+	# Combat EXP earned during the battle, granted to every party member.
+	var granted_unit_exp: int = maxi(0, unit_exp)
+	var unit_exp_awards: Array = []
+	if granted_unit_exp > 0:
+		var award_result: Dictionary = UnitService.award_battle_exp(_active_party_instance_ids(), granted_unit_exp)
+		unit_exp_awards = award_result.get("awarded", [])
 
 	var owned_items: Dictionary = InventoryService.owned_items
 	for item_id in used_items:
@@ -135,10 +150,12 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 	last_entered_mission_id = str(mission_id)
 
 	var rewards_text: String = ""
-	if mission_data.has("gil"):
-		rewards_text += "Gil +%s\n" % str(int(mission_data["gil"]))
+	if granted_gil > 0:
+		rewards_text += "Gil +%s\n" % str(granted_gil)
 	if mission_data.has("exp"):
 		rewards_text += "Rank EXP +%s\n" % str(int(mission_data["exp"]))
+	if granted_unit_exp > 0:
+		rewards_text += "Unit EXP +%s\n" % str(granted_unit_exp)
 
 	var any_switches_unlocked: bool = false
 	if mission_data.has("open_switches"):
@@ -203,8 +220,11 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		"mission_id": mission_key,
 		"mission_name": str(mission_data.get("name", mission_key)),
 		"rank_exp": int(mission_data.get("exp", 0)),
-		"unit_exp": 0, #int(mission_data.get("exp", 0)),
-		"gil": int(mission_data.get("gil", 0)),
+		"unit_exp": granted_unit_exp,
+		"unit_exp_awards": unit_exp_awards,
+		"gil": granted_gil,
+		"mission_gil": mission_gil,
+		"battle_gil": maxi(0, battle_gil),
 		"rank_before": rank_before,
 		"xp_before": xp_before,
 		"rank_after": PlayerProfile.current_rank,
@@ -261,6 +281,32 @@ func _grant_reward(reward: Array):
 		_:
 			push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
 	
+
+## Instance ids of the party that ran the mission, in slot order (empty slots are
+## skipped). Mirrors the party BattleManager builds when it starts a battle:
+## the active party, falling back to the first saved one.
+func _active_party_instance_ids() -> Array:
+	if PartyService.parties.is_empty():
+		return []
+
+	var party_units: Array = []
+	var active_party: Dictionary = PartyService.get_active_party()
+	if not active_party.is_empty():
+		party_units = active_party.get("units", [])
+	else:
+		var fallback_party: Variant = PartyService.parties[0]
+		if fallback_party is Dictionary:
+			party_units = fallback_party.get("units", [])
+		elif fallback_party is Array:
+			party_units = fallback_party
+
+	var instance_ids: Array = []
+	for unit_value in party_units:
+		var instance_id: String = str(unit_value)
+		if instance_id != "":
+			instance_ids.append(instance_id)
+	return instance_ids
+
 
 func request_dungeon_missions(mission_ids: Array) -> void:
 	dungeon_missions_ready.emit(mission_ids)

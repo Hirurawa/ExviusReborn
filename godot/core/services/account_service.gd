@@ -154,7 +154,7 @@ func save_all_snapshots(source_event: String) -> void:
 func load_initial_data(email: String) -> void:
 	var stats: Dictionary = PlayerProfile.load_stats_from_local()
 
-	# Load rank progression data from rank_exp.json
+	# Load rank progression data from the `team_lv` database table
 	PlayerProfile.ensure_rank_exp_loaded()
 
 	# Apply stats with safe defaults

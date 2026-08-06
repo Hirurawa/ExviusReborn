@@ -138,7 +138,8 @@ static func resolve_formation(mission_id: String, target_id: String) -> Array:
 			"name": _resolve_name(parts, dict_id),
 			"disp_pos": _parse_disp_pos(row.get("dispPos", "")),
 			"is_boss": is_boss,
-			"resistances": _parse_resistances(str(parts.get("elemResistValue", ""))),
+			"elemResistValue": parts.get("elemResistValue", ""),
+			"ailmentResistValue": parts.get("ailmentResistValue", ""),
 			"loot": {"drops": _parse_loot_drops(str(parts.get("dropInfo", "")))},
 		})
 	return formation
@@ -173,22 +174,23 @@ static func _parse_loot_drops(raw: String) -> Array:
 
 ## Returns the per-instance combat stat block for a 9-digit monsterId (the id
 ## BATTLE_GROUP references), or {} if absent. Keys are game stat names:
-##   HP, MP, ATK, DEF, MAG (from intl), SPR (from mnd), plus level/exp/gil.
+##   HP, MP, ATK, DEF, MAG, SPR, plus level/exp/gil.
 static func get_monster_parts_stats(monster_id: String) -> Dictionary:
 	var p: Dictionary = GameDatabase.get_monster_parts(monster_id)
 	if p.is_empty():
 		return {}
-	# Map the raw datamine columns to in-game stat keys (intl -> MAG, mnd -> SPR).
 	return {
 		"HP": int(p.get("hp", 0)),
 		"MP": int(p.get("mp", 0)),
 		"ATK": int(p.get("atk", 0)),
 		"DEF": int(p.get("def", 0)),
-		"MAG": int(p.get("intl", 0)),
-		"SPR": int(p.get("mnd", 0)),
+		"MAG": int(p.get("mag", 0)),
+		"SPR": int(p.get("spr", 0)),
 		"level": int(p.get("level", 1)),
 		"exp": int(p.get("exp", 0)),
 		"gil": int(p.get("gil", 0)),
+		"elemResistValue": p.get("elemResistValue"),
+		"ailmentResistValue": p.get("ailmentResistValue"),
 	}
 
 

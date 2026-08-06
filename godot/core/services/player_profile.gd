@@ -7,7 +7,7 @@ extends Node
 ##   - current_rank, current_xp, next_rank_xp
 ##   - current_nrg, max_nrg, nrg_regen_rate_seconds, seconds_until_next_nrg
 ##   - gil, lapis
-##   - rank_exp_data (loaded from rank_exp.json)
+##   - rank_exp_data (loaded from the `team_lv` database table)
 ##   - rank_updated / nrg_updated / currency_updated signals
 ##
 ## Stats persistence (stats.json) still lives on DataManager because it bundles
@@ -38,7 +38,7 @@ var lapis: int = 0
 
 var monster_kill_progress: Dictionary = {}
 
-# Loaded from rank_exp.json: {rank: {"xp_needed": int, "energy": int}}
+# Loaded from the `team_lv` table: {rank: {"xp_needed": int, "energy": int}}
 var rank_exp_data: Dictionary = {}
 
 
@@ -60,57 +60,25 @@ func ensure_rank_exp_loaded() -> void:
 		rank_exp_data = load_rank_exp_data()
 
 func load_rank_exp_data() -> Dictionary:
-	# Load and parse rank_exp.json.
-	# JSON structure: {"<rank>": {"Exp": int, "Energy": int, ...}, ...}
-	# Exp at rank N is treated as XP needed to advance FROM rank N TO rank N+1.
+	# Build the rank progression table from the `team_lv` database table.
+	# GameDatabase.get_team_rank_table() already converts the datamine's
+	# "XP to REACH rank N" into "XP needed to advance FROM rank N" and drops the
+	# top rank (no further progression), so rows map straight across.
 	# Result: rank_data[rank] = {"xp_needed": int, "energy": int}
 
 	var rank_data: Dictionary = {}
-	
-	# 1. Load the JSON file as a standard Resource
-	var json_resource: JSON = load("res://assets/static_data/rank_exp.json")
-	
-	# 2. Access the parsed dictionary/array directly via '.data'
-	if json_resource and json_resource.data is Dictionary:
-		var rows: Dictionary = json_resource.data
-		var sorted_ranks: Array[int] = []
-		for rank_key in rows.keys():
-			var rank_text: String = str(rank_key).strip_edges()
-			if rank_text == "" or not rank_text.is_valid_int():
-				push_warning("Skipping rank_exp.json row with invalid rank key: %s" % str(rank_key))
-				continue
-			sorted_ranks.append(int(rank_text))
-
-		sorted_ranks.sort()
-
-		for rank in sorted_ranks:
-			var row_value: Variant = rows.get(str(rank), null)
-			if not (row_value is Dictionary):
-				push_warning("Skipping rank %d in rank_exp.json: row is not an object" % rank)
-				continue
-
-			var row: Dictionary = row_value
-			if not row.has("Exp") or not row.has("Energy"):
-				push_warning("Skipping rank %d in rank_exp.json: missing Exp or Energy" % rank)
-				continue
-
-			var exp_raw: Variant = row.get("Exp", 0)
-			var energy_raw: Variant = row.get("Energy", 0)
-			if exp_raw == null:
-				# Max rank rows commonly have null Exp (no further progression).
-				continue
-			if energy_raw == null:
-				energy_raw = 0
-			var xp_needed: int = int(exp_raw)
-			var energy: int = int(energy_raw)
-			if xp_needed <= 0:
-				push_warning("Skipping rank %d in rank_exp.json: Exp must be > 0" % rank)
-				continue
-
-			rank_data[rank] = {
-				"xp_needed": xp_needed,
-				"energy": energy
-			}
+	for row in GameDatabase.get_team_rank_table():
+		var rank: int = int(row.get("rank", 0))
+		var xp_needed: int = int(row.get("xpNeeded", 0))
+		if rank <= 0 or xp_needed <= 0:
+			push_warning("Skipping team_lv row with invalid rank/xpNeeded: %d/%d" % [rank, xp_needed])
+			continue
+		rank_data[rank] = {
+			"xp_needed": xp_needed,
+			"energy": int(row.get("energy", 0))
+		}
+	if rank_data.is_empty():
+		push_error("PlayerProfile: team_lv rank progression table is empty — rank/NRG will fall back to defaults")
 	return rank_data
 
 func set_last_entered_mission(_mission_id: String) -> void:

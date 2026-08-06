@@ -35,6 +35,10 @@ var _magic_cache: Dictionary = {}
 
 var _unit_cache: Dictionary = {}
 
+# Per-id executable monster-skill records (see get_monster_skill_record). Monsters
+# re-use a handful of skills every turn, so this saves re-decoding them mid-battle.
+var _monster_skill_cache: Dictionary = {}
+
 # Lazily-loaded ability caches (active + passive share the `ability` table, split
 # by abilityType): id -> "ability"/"passive" kind map, plus per-id records.
 var _ability_kind_map: Dictionary = {}
@@ -584,9 +588,9 @@ func get_battle_group(battle_group_id: String) -> Array:
 ## resolver expects.
 func get_monster_parts(monster_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT p.hp, p.mp, p.atk, p.def, p.mag AS intl, p.spr AS mnd, p.level, p.exp, p.gil,"
+		"SELECT p.hp, p.mp, p.atk, p.def, p.mag, p.spr, p.level, p.exp, p.gil,"
 		+ " m.dictionaryId AS dictionaryId, p.monsterName AS name,"
-		+ " p.elemResistValue, p.dropInfo"
+		+ " p.elemResistValue, p.ailmentResistValue, p.dropInfo"
 		+ " FROM monster_parts p LEFT JOIN monster m ON m.monsterId = p.monsterId"
 		+ " WHERE p.monsterId = ? ORDER BY p.partsNum LIMIT 1",
 		[monster_id]
@@ -635,20 +639,24 @@ func get_mission_scenario_groups(mission_id: String) -> Array:
 
 # === Monster AI / behaviour ===
 # Behaviour data imported from the FFBE datamine (F_AI_MST / F_MONSTER_SKILL_SET_MST
-# / F_MONSTER_SKILL_MST) into the monster_ai / monster_skill_set / monster_skill
-# tables. See features/battle/logic/monster_ai_resolver.gd, the in-game port of the
-# resolve_monster_ai.py tool that prints a monster's behaviour when a wave spawns.
+# / F_MONSTER_SKILL_MST) into the ai / monster_skill_set / monster_skill tables.
+# features/battle/logic/monster_ai_script.gd compiles the rows into typed rules and
+# documents the grammar; monster_ai_resolver.gd prints the result when a wave spawns.
 
-## Ordered AI rule rows for a 9-digit monsterId. Empty => no monster-specific
-## script (the monster uses the generic behaviour encoded in its skillSetId). Rows
-## come back ordered by ruleOrder and are evaluated top-to-bottom; the first rule
-## whose condition holds and whose probability roll passes fires. Each row:
-## ruleOrder, conditionType, conditionParam, effectType, effectParam, command,
-## rule, probability, targetSelect.
+## Ordered AI rule rows for a 9-digit monsterId, by ruleOrder. Empty => the monster
+## has no script (only 2778 of 16931 do) and needs the caller's default behaviour.
+## Each row: monsterId, ruleOrder, rule, command, probability, targetSelect,
+## scriptName, plus conditionType / conditionParam / effectType / effectParam.
+##
+## `rule` is the authoritative field -- it carries the rule's four trigger slots and
+## all five condition atoms. The condition*/effect* columns are only a projection of
+## atoms 1 and 2 and are NOT a condition/effect pair; they are selected here for
+## debugging convenience, not for evaluation. See MonsterAIScript for the grammar.
+## `scriptName` is the designer's own (mostly Japanese) name for the script.
 func get_monster_ai(monster_id: String) -> Array:
 	return query(
-		"SELECT ruleOrder, conditionType, conditionParam, effectType, effectParam,"
-		+ " command, rule, probability, targetSelect"
+		"SELECT monsterId, ruleOrder, conditionType, conditionParam, effectType,"
+		+ " effectParam, command, rule, probability, targetSelect, WhQL5ev9 AS scriptName"
 		+ " FROM ai WHERE monsterId = ? ORDER BY ruleOrder",
 		[monster_id]
 	)
@@ -656,7 +664,9 @@ func get_monster_ai(monster_id: String) -> Array:
 
 ## The skill set for a monster: { name, skillId } where skillId is the ordered,
 ## comma-separated list of monsterSkillIds the monster can use (an AI 'skill N'
-## action is a 1-based index into it). {} if the monster has no skill set.
+## action is a 1-based index into it). Slots may be blank mid-list, so the raw
+## string must be split index-preserving; see MonsterAIScript._load_skill_slots.
+## {} if the monster has no skill set.
 func get_monster_skill_set(monster_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT name, skillId FROM monster_skill_set WHERE monsterId = ? LIMIT 1",
@@ -665,7 +675,8 @@ func get_monster_skill_set(monster_id: String) -> Dictionary:
 	return rows[0] if not rows.is_empty() else {}
 
 
-## A single monster skill: { name, effectFrames }, or {} if the id is unknown.
+## A single monster skill: { name, effectFrames }, or {} if the id is unknown. This is
+## the label-only lookup; use get_monster_skill_record for an executable skill.
 func get_monster_skill(monster_skill_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT name, effectFrames FROM monster_skill WHERE monsterSkillId = ? LIMIT 1",
@@ -674,9 +685,57 @@ func get_monster_skill(monster_skill_id: String) -> Dictionary:
 	return rows[0] if not rows.is_empty() else {}
 
 
-## Behaviour meta from the monster's MONSTER_PARTS row: { monsterName, skillSetId,
-## passiveSkillSetId }. skillSetId ("X:hp:min:max") is the generic-behaviour-class
-## fallback carried even by scripted bosses. {} if the monster has no parts row.
+## An EXECUTABLE monster skill, in the same shape the magic/ability records use, so a
+## monster skill can go straight through SkillResolver.parse_skill_effects and
+## BattleManager.execute_parsed_skill. monster_skill packs its effects into the same
+## '@'-group target / targetRange / processId / processParam quartet as the player
+## tables, so the shared decoders apply unchanged. {} if the id is unknown.
+##
+## About 80% of the skills the AI actually references decode to a fully executable
+## effect list; the rest carry at least one opcode skill_schema.json does not cover and
+## OpcodeParser drops it with a warning, so callers should expect some skills to
+## resolve to an empty `effects` array.
+func get_monster_skill_record(monster_skill_id: String) -> Dictionary:
+	var key: String = str(monster_skill_id)
+	if _monster_skill_cache.has(key):
+		return _monster_skill_cache[key]
+
+	var rows: Array = query(
+		"SELECT monsterSkillId, name, cost, target, targetRange, elementInflict,"
+		+ " J35nicFV, processId, processParam, effectFrames, attackFrames"
+		+ " FROM monster_skill WHERE monsterSkillId = ? LIMIT 1",
+		[key]
+	)
+	if rows.is_empty():
+		return {}
+
+	var row: Dictionary = rows[0]
+	var attack_frames: Array = []
+	var attack_damage: Array = []
+	var attack_count: Array = []
+	_decode_attack_frames(_str_col(row, "attackFrames"), attack_frames, attack_damage, attack_count)
+	var cost_val: int = int(row.get("cost", 0))
+	var built: Dictionary = {
+		"name": _str_col(row, "name"),
+		"skill_id": key,
+		"cost": {"MP": cost_val} if cost_val > 0 else {},
+		"attack_count": attack_count,
+		"attack_damage": attack_damage,
+		"attack_frames": attack_frames,
+		"effect_frames": _decode_effect_frames(_str_col(row, "effectFrames")),
+		"element_inflict": _decode_boolean(_str_col(row, "elementInflict")),
+		"effects_raw": _decode_effects_raw(row),
+		"targetType": int(row.get("J35nicFV", 0)),
+	}
+	_monster_skill_cache[key] = built
+	return built
+
+
+## Display meta for a monster, joined off its MONSTER_PARTS row: { name, skillId,
+## passiveSkillId }. {} if the monster has no parts row -- which happens for some
+## scripted raid bosses, so an empty result is not a sign the monster is unusable.
+## Note there is no generic-behaviour / actions-per-turn field in monster_parts;
+## a monster's action budget comes only from its script's turn_end rules.
 func get_monster_ai_meta(monster_id: String) -> Dictionary:
 	var rows: Array = query(
 		" select m.name, mss.skillId, mps.passiveSkillId from monster_parts mp"
@@ -707,6 +766,23 @@ func get_unit_exp_pattern(pattern_id: int) -> Array:
 func get_all_unit_exp_patterns() -> Array:
 	return query("SELECT expPatternId, level, needExp FROM unit_exp_pattern ORDER BY expPatternId, level")
 
+
+# === Player rank progression ===
+
+## Player (team) rank progression rows, ordered by rank. Each row:
+## { rank, xpNeeded, energy } where `xpNeeded` is the XP required to advance FROM
+## this rank to the next, and `energy` is the max NRG granted at this rank.
+##
+## The shift: `team_lv.needExp[N]` is the XP required to REACH rank N (rank 1 is 0),
+## so the XP needed to advance FROM rank N is the NEXT row's needExp — the self-join
+## does that conversion. The final rank has no successor and is therefore omitted:
+## it has no further progression, which is exactly how callers treat the top row.
+func get_team_rank_table() -> Array:
+	return query(
+		"SELECT t.rank, n.needExp AS xpNeeded, t.energy FROM team_lv t"
+		+ " JOIN team_lv n ON n.rank = t.rank + 1"
+		+ " ORDER BY t.rank"
+	)
 
 func get_summonable_units(is_nv: bool = false) -> Array:
 	var nv_filter = " and isNv is not 0 " if is_nv else " and rare is not 7 "

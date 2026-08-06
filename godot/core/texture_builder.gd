@@ -1,10 +1,43 @@
 class_name TextureBuilder
 extends RefCounted
 
-static func load_unit_animation_data(unit_id: String, anim_name: String = "atk") -> Dictionary:
-	var png_path: String = "res://assets/unit_spritesheets/%s/%s-%s.rawpng" % [anim_name, unit_id, anim_name]
-	var json_path: String = "res://assets/unit_spritesheets/%s/%s-%s.json" % [anim_name, unit_id, anim_name]
+# Victory pose animations. They live in their own spritesheet folders next to the
+# combat ones, so they load through the same path pattern as "idle"/"atk".
+const WIN_BEFORE_ANIM: String = "win_before"
+const WIN_ANIM: String = "win"
+
+# Resting poses that stand in for "idle" once a unit is hurt badly enough.
+const DYING_ANIM: String = "dying"
+const DEAD_ANIM: String = "dead"
+
+# The limit burst sheets are the one case where the folder and the file suffix
+# disagree: assets/unit_spritesheets/limit/<id>-limit_atk.rawpng.
+const LIMIT_ATK_ANIM: String = "limit_atk"
+const LIMIT_ATK_FOLDER: String = "limit"
+
+## `folder` defaults to `anim_name`, which is how every sheet but limit_atk is
+## laid out. Pass it explicitly when the two disagree.
+static func load_unit_animation_data(unit_id: String, anim_name: String = "atk", folder: String = "") -> Dictionary:
+	var dir_name: String = folder if folder != "" else anim_name
+	var png_path: String = "res://assets/unit_spritesheets/%s/%s-%s.rawpng" % [dir_name, unit_id, anim_name]
+	var json_path: String = "res://assets/unit_spritesheets/%s/%s-%s.json" % [dir_name, unit_id, anim_name]
 	return _load_animation_data_internal(png_path, json_path)
+
+## Both halves of a unit's victory pose: the one-shot "win_before" lead-in and the
+## looping "win" pose. Either entry is {} when that spritesheet is missing.
+static func load_unit_win_animations(unit_id: String) -> Dictionary:
+	return {
+		WIN_BEFORE_ANIM: load_unit_animation_data(unit_id, WIN_BEFORE_ANIM),
+		WIN_ANIM: load_unit_animation_data(unit_id, WIN_ANIM)
+	}
+
+## The two low-HP resting poses. Either entry is {} when that spritesheet is
+## missing, in which case the caller is expected to fall back to plain idle.
+static func load_unit_hp_state_animations(unit_id: String) -> Dictionary:
+	return {
+		DYING_ANIM: load_unit_animation_data(unit_id, DYING_ANIM),
+		DEAD_ANIM: load_unit_animation_data(unit_id, DEAD_ANIM)
+	}
 
 static func load_monster_animation_data(monster_id: String, anim_name: String = "atk") -> Dictionary:
 	var png_path: String = "res://assets/monster_spritesheets/%s/%s-%s.rawpng" % [anim_name, monster_id, anim_name]

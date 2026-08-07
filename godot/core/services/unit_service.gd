@@ -200,6 +200,35 @@ func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
 	var runtime_unit: Dictionary = unit_inst.duplicate(true)
 	_update_unit_next_xp(runtime_unit, unit_data)
 	return int(runtime_unit.get("next_xp", 0))
+	
+## Where `total_xp` sits on `unit_inst`'s level curve, so EXP bars can draw a
+## level's fill without reaching into the exp pattern tables themselves.
+## Returns { level, level_floor, next_floor, at_max_level }; the floors are
+## cumulative XP totals. At max level the two floors are equal -- there is no
+## next level to fill toward, so callers should draw the bar full.
+func level_progress_at_xp(unit_inst: Dictionary, total_xp: int) -> Dictionary:
+	var unit_data: Dictionary = GameDatabase.get_unit(_unit_template_id(unit_inst))
+	var exp_pattern: int = int(unit_data.get("expPatternId", 0))
+	if exp_pattern <= 0:
+		exp_pattern = 5
+
+	var max_level: int = _get_unit_max_level(unit_inst)
+	var level: int = _calculate_level_from_xp(total_xp, exp_pattern, max_level)
+	var level_floor: int = _calculate_total_xp_for_level(level, exp_pattern)
+	if level >= max_level:
+		return {
+			"level": max_level,
+			"level_floor": level_floor,
+			"next_floor": level_floor,
+			"at_max_level": true,
+		}
+	return {
+		"level": level,
+		"level_floor": level_floor,
+		"next_floor": _calculate_total_xp_for_level(level + 1, exp_pattern),
+		"at_max_level": false,
+	}
+
 
 func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 	# Shared validation used by both can_awaken_unit() and awaken_unit().

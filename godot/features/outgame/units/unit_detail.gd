@@ -290,7 +290,7 @@ func _populate_resistances(final_stats: Dictionary) -> void:
 			label.text = str(val) + "%" if val != 0 else "-"
 
 func _populate_lb_and_tmr(unit_inst: Dictionary) -> void:
-	var lb_id: String = str(unit_inst.get("limitburst_id", ""))
+	var lb_id: String = str(unit_inst.get("limitBurstId", ""))
 	var lb_data: Dictionary = GameDatabase.get_limitburst(lb_id) if (lb_id != "" and lb_id != "<null>") else {}
 	if not lb_data.is_empty():
 		var lb_name: String = str(lb_data.get("name", "Unknown Limit Burst"))

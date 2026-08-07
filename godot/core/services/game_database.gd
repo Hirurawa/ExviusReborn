@@ -807,7 +807,11 @@ func get_all_units() -> Array:
 # 		+ " join limitburst lb on u.limitBurstId = lb.limitBurstId"
 # 		+ " WHERE u.unitId = ? LIMIT 1", [unit_id])
 # 	return rows[0] if not rows.is_empty() else {}
-	
+
+func get_job_name(job_id: int) -> String:
+	var rows: Array = query("SELECT name FROM job WHERE jobId = ? LIMIT 1", [job_id])
+	return rows[0]["name"] if not rows.is_empty() else ""
+
 func get_unit(unit_id: int) -> Dictionary:
 	var key: String = str(unit_id)
 	if _unit_cache.has(key):

@@ -48,6 +48,10 @@ var _passive_cache: Dictionary = {}
 var _limitburst_cache: Dictionary = {}
 var _equipment_cache: Dictionary = {}
 
+# npcId -> row (see get_npc). Town maps hit this once per NPC per chunk redraw,
+# and DialogueLoader once per <name_npc=N> tag, so misses are cached too ({}).
+var _npc_cache: Dictionary = {}
+
 # === Connection ===
 
 func preload_database() -> void:
@@ -331,6 +335,172 @@ func get_quests_for_town(town_id: String) -> Array:
 
 func get_vortex_areas() -> Array:
 	return query("select a.*, i.* from area a join icon i on a.iconId = i.iconId where a.worldId = 2")
+
+# === NPCs ===
+
+## One `npc` row ({ npcId, name, textureFile, textureInfo }), or {} if unknown.
+##
+## The table is keyed by two overlapping id namespaces, both of which map.bin
+## can put in a scripted entity's identity slot:
+##   * texture ids (200101000, ...) — generic townsfolk, shared across maps;
+##     `textureFile` is "npc<id>.png".
+##   * npc instance ids (1102060, ...) — a specific NPC on a specific map. The
+##     same ids appear in `quest.npcId` and in map_text's `<name_npc=N>` tags,
+##     which is what makes those tags resolvable at all.
+func get_npc(npc_id: int) -> Dictionary:
+	if npc_id <= 0:
+		return {}
+	if _npc_cache.has(npc_id):
+		return _npc_cache[npc_id]
+	var rows: Array = query(
+		"SELECT npcId, name, COALESCE(textureFile, '') AS textureFile,"
+		+ " COALESCE(textureInfo, '') AS textureInfo"
+		+ " FROM npc WHERE npcId = ? LIMIT 1",
+		[npc_id]
+	)
+	var row: Dictionary = rows[0] if not rows.is_empty() else {}
+	_npc_cache[npc_id] = row
+	return row
+
+
+## Display name for an NPC id, or "" when unknown. Used by DialogueLoader to
+## resolve `<name_npc=N>` tags that map_teller.txt doesn't cover.
+func get_npc_name(npc_id: int) -> String:
+	return str(get_npc(npc_id).get("name", ""))
+
+# === Cutscene events ===
+
+## Layer id a cutscene plays on, or -1 when the database doesn't say.
+##
+## `story_event."25oxcKwN"` stores it as "map@65". Only 44 of 3555 rows carry
+## the field and most of those name events absent from our asset dump, so
+## roughly a dozen of the 366 event folders resolve -- callers must keep a
+## fallback. Where it does resolve it is authoritative, which is worth having:
+## event 111010101 plays on layer 65 while its map's default layer is 61.
+##
+## An event folder is `<targetId><NN>`, NN being the 1-based position of the
+## story event among those sharing the target. `<targetId>` is a townId's map
+## when locationType=2 and a missionId when locationType=1, and the two id
+## spaces collide (folder 111020101 is claimed by both town 1101 and mission
+## 1110201). The event plays on the map its folder sits in, so the town
+## reading wins whenever a town owns that map.
+func get_event_layer(event_id: String) -> int:
+	if event_id.length() < 3:
+		return -1
+	var base: String = event_id.substr(0, event_id.length() - 2)
+	var index: int = int(event_id.right(2))
+	if index < 1:
+		return -1
+
+	# Town first: does a town own the map this event folder belongs to?
+	var town_rows: Array = query(
+		"SELECT t.townId FROM town t JOIN icon i ON i.iconId = t.iconId"
+		+ " WHERE i.iconFile = ? LIMIT 1",
+		["map_icon_%s.png" % base]
+	)
+	if not town_rows.is_empty():
+		var layer: int = _story_event_layer(2, int(town_rows[0].get("townId", 0)), index)
+		if layer >= 0:
+			return layer
+	# Otherwise the folder belongs to a dungeon; the target is the mission.
+	return _story_event_layer(1, int(base), index)
+
+
+## `map@N` of the `index`-th (1-based) story event for a location, else -1.
+func _story_event_layer(location_type: int, target_id: int, index: int) -> int:
+	if target_id <= 0:
+		return -1
+	var rows: Array = query(
+		'SELECT "25oxcKwN" AS mapRef FROM story_event'
+		+ " WHERE locationType = ? AND targetId = ? ORDER BY storyEventId",
+		[location_type, target_id]
+	)
+	if index > rows.size():
+		return -1
+	var ref: String = str(rows[index - 1].get("mapRef", ""))
+	if not ref.begins_with("map@"):
+		return -1
+	var digits: String = ref.substr(4)
+	return int(digits) if digits.is_valid_int() else -1
+
+# === Treasure chests ===
+# A chest record in map.bin carries two ids: `treasure_id` (primary key into
+# field_treasure, which holds the reward) and `open_switch_id` (the switch that
+# marks it looted, and whose switchType picks the chest's appearance).
+
+## The field_treasure row for a chest, or {} if the id is unknown. `reward` is
+## the raw "type:id:amount:rate" string; `switchType` is joined in from the
+## treasure's own openSwitch as a fallback classifier for callers that only
+## have a treasure id.
+func get_field_treasure(treasure_id: int) -> Dictionary:
+	var rows: Array = query(
+		"SELECT t.treasureId, t.reward, t.openSwitch, COALESCE(s.switchType, 0) AS switchType"
+		+ " FROM field_treasure t"
+		+ " LEFT JOIN switch s ON s.switchId = t.openSwitch"
+		+ " WHERE t.treasureId = ? LIMIT 1",
+		[treasure_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+
+## `switch.switchType` for a switch id, or 0 when unknown. Chest-relevant types:
+## 400/401 chest, 410/411 locked chest, 500/501 medal, 510 crest, 520 strongbox.
+func get_switch_type(switch_id: int) -> int:
+	var rows: Array = query(
+		"SELECT switchType FROM switch WHERE switchId = ? LIMIT 1",
+		[switch_id]
+	)
+	return int(rows[0].get("switchType", 0)) if not rows.is_empty() else 0
+
+
+## Resolves one "type:id:amount:rate" reward entry to a displayable record:
+## { typeId, type, id, amount, name, iconFile }. Unknown ids keep the raw id as
+## the name so the caller always has something to show. Recipes name themselves
+## after what they craft ("Recipe: Mythril Sword"), since the recipe table has
+## no name column of its own.
+func describe_reward(reward: Array) -> Dictionary:
+	var type_id: int = int(reward[0]) if reward.size() > 0 else 0
+	var target_id: String = str(reward[1]) if reward.size() > 1 else ""
+	var out: Dictionary = {
+		"typeId": type_id,
+		"type": _REWARD_TYPE_NAMES.get(str(type_id), str(type_id)),
+		"id": target_id,
+		"amount": int(reward[2]) if reward.size() > 2 else 1,
+		"name": target_id,
+		"iconFile": "",
+	}
+	var row: Dictionary = {}
+	match type_id:
+		Types.Category_types.UNIT:
+			row = get_unit(int(target_id))
+			out["name"] = str(row.get("unitName", target_id))
+			return out
+		Types.Category_types.ITEM:
+			row = get_item(int(target_id))
+		Types.Category_types.EQUIP:
+			row = get_equipment(target_id)
+		Types.Category_types.MATERIA:
+			row = get_materia(int(target_id))
+		Types.Category_types.KEYITEM:
+			row = get_important_item(int(target_id))
+		Types.Category_types.LAPIS:
+			out["name"] = "Lapis"
+			out["amount"] = int(reward[2]) if reward.size() > 2 else int(target_id)
+			return out
+		Types.Category_types.RECIPE:
+			var recipe: Dictionary = get_recipe(int(target_id))
+			if recipe.is_empty():
+				return out
+			var crafted: Dictionary = describe_reward([
+				str(recipe.get("targetType", "")), str(recipe.get("targetId", "")), "1",
+			])
+			out["name"] = "Recipe: %s" % str(crafted.get("name", target_id))
+			out["iconFile"] = str(crafted.get("iconFile", ""))
+			return out
+	if not row.is_empty():
+		out["name"] = str(row.get("name", target_id))
+		out["iconFile"] = str(row.get("iconFile", ""))
+	return out
 
 # === Mission details (start/finish/battle data) ===
 # Reconstructs the normalized mission dict that MissionService used to read from

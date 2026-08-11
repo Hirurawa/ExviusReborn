@@ -375,60 +375,60 @@ func build_dynamic_tileset():
 	self.tile_set = new_tileset
 	print("--- TILESET GENERATION COMPLETE! Loaded ", success_count, "/", num_textures, " images ---")
 
-#func _input(event):
-	## Only trigger when the Left Mouse Button is clicked
-	#if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		#
-		## Convert the mouse pixel position into Godot grid coordinates
-		#var local_pos := get_local_mouse_position()
-		#var clicked_cell = local_to_map(local_pos)
-		#var cx = clicked_cell.x
-		#var cy = clicked_cell.y
-#
-		## Top-left pixel of that cell, in the same coordinate space used by
-		## the blueprint's static_assets x/y fields (cell index * tile_size).
-		#var px: int = int(cx) * tile_size
-		#var py: int = int(cy) * tile_size
-		#print("Click @ grid (", cx, ", ", cy, ") top-left px (", px, ", ", py, ")")
-#
-		## List every static_asset record in the active chunk whose bounding
-		## box contains this clicked cell. Helps verify which record is
-		## *supposed* to be rendered here (vs. which sprite is visually on top).
-		#if not _active_chunk_data.is_empty() \
-				#and _active_chunk_data.has("objects") \
-				#and _active_chunk_data["objects"].has("static_assets"):
-			#var statics_dbg: Array = _active_chunk_data["objects"]["static_assets"]
-			## Use the clicked cell's pixel midpoint so a tile-aligned record
-			## (record_x = cell_x * tile_size) counts as a match.
-			#var mx: int = px + (tile_size / 2)
-			#var my: int = py + (tile_size / 2)
-			#var matches := []
-			#for i in range(statics_dbg.size()):
-				#var rec: Dictionary = statics_dbg[i]
-				#var rx: int = int(rec["x"])
-				#var ry: int = int(rec["y"])
-				#var rs: float = float(int(rec.get("scale", 100))) / 100.0
-				#var rw: int = int(round(int(rec["width"]) * rs))
-				#var rh: int = int(round(int(rec["height"]) * rs))
-				#if mx >= rx and mx < rx + rw and my >= ry and my < ry + rh:
-					#matches.append({"idx": i, "rec": rec})
-			#if matches.is_empty():
-				#print("  no static_asset bounding box contains this cell")
-			#else:
-				#print("  ", matches.size(), " static_asset record(s) overlap this cell:")
-				#for m in matches:
-					#var r: Dictionary = m["rec"]
-					#print("    [#", m["idx"], "] x=", r["x"], " y=", r["y"],
-						#" w=", r["width"], " h=", r["height"],
-						#" atlas_id=", r["atlas_id"],
-						#" atlas=(", r["atlas_x"], ",", r["atlas_y"], ")",
-						#" layer=", r.get("layer", 0),
-						#" layer_flags=", r.get("layer_flags", 0),
-						#" scale=", r.get("scale", 100))
-#
-		## Ensure we are clicking inside the actual map boundaries
-		#if cx >= 0 and cx < map_width and cy >= 0 and cy < map_height:
-			#probe_tile_data(cx, cy)
+func _input(event):
+	# Only trigger when the Left Mouse Button is clicked
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		
+		# Convert the mouse pixel position into Godot grid coordinates
+		var local_pos := get_local_mouse_position()
+		var clicked_cell = local_to_map(local_pos)
+		var cx = clicked_cell.x
+		var cy = clicked_cell.y
+
+		# Top-left pixel of that cell, in the same coordinate space used by
+		# the blueprint's static_assets x/y fields (cell index * tile_size).
+		var px: int = int(cx) * tile_size
+		var py: int = int(cy) * tile_size
+		print("Click @ grid (", cx, ", ", cy, ") top-left px (", px, ", ", py, ")")
+
+		# List every static_asset record in the active chunk whose bounding
+		# box contains this clicked cell. Helps verify which record is
+		# *supposed* to be rendered here (vs. which sprite is visually on top).
+		if not _active_chunk_data.is_empty() \
+				and _active_chunk_data.has("objects") \
+				and _active_chunk_data["objects"].has("static_assets"):
+			var statics_dbg: Array = _active_chunk_data["objects"]["static_assets"]
+			# Use the clicked cell's pixel midpoint so a tile-aligned record
+			# (record_x = cell_x * tile_size) counts as a match.
+			var mx: int = px + (tile_size / 2)
+			var my: int = py + (tile_size / 2)
+			var matches := []
+			for i in range(statics_dbg.size()):
+				var rec: Dictionary = statics_dbg[i]
+				var rx: int = int(rec["x"])
+				var ry: int = int(rec["y"])
+				var rs: float = float(int(rec.get("scale", 100))) / 100.0
+				var rw: int = int(round(int(rec["width"]) * rs))
+				var rh: int = int(round(int(rec["height"]) * rs))
+				if mx >= rx and mx < rx + rw and my >= ry and my < ry + rh:
+					matches.append({"idx": i, "rec": rec})
+			if matches.is_empty():
+				print("  no static_asset bounding box contains this cell")
+			else:
+				print("  ", matches.size(), " static_asset record(s) overlap this cell:")
+				for m in matches:
+					var r: Dictionary = m["rec"]
+					print("    [#", m["idx"], "] x=", r["x"], " y=", r["y"],
+						" w=", r["width"], " h=", r["height"],
+						" atlas_id=", r["atlas_id"],
+						" atlas=(", r["atlas_x"], ",", r["atlas_y"], ")",
+						" layer=", r.get("layer", 0),
+						" layer_flags=", r.get("layer_flags", 0),
+						" scale=", r.get("scale", 100))
+
+		# Ensure we are clicking inside the actual map boundaries
+		if cx >= 0 and cx < map_width and cy >= 0 and cy < map_height:
+			probe_tile_data(cx, cy)
 
 func probe_tile_data(cx: int, cy: int):
 	var file = FileAccess.open(map_file_path, FileAccess.READ)
@@ -793,6 +793,9 @@ func draw_chunk(chunk_index: int):
 	# `sprite_id` in the blueprint.
 	_spawn_npcs(chunk_data)
 
+	# --- SPAWN TREASURE CHESTS ---
+	_spawn_chests(chunk_data)
+
 	# --- DRAW COLLISION OVERLAY (on top of everything) ---
 	_draw_collision_overlay()
 
@@ -823,11 +826,11 @@ func _update_minimap() -> void:
 
 
 # Build the category markers for the active chunk and hand them to the
-# minimap. Whitelisted kinds: scripted entities (NPCs) and warp doors
-# (regular + alt). Chests and unknown warp variants are intentionally
-# skipped to keep the minimap focused.
+# minimap. Whitelisted kinds: scripted entities (NPCs), warp doors (regular +
+# alt) and treasure chests. Unknown warp variants are intentionally skipped to
+# keep the minimap focused.
 func _push_minimap_markers(minimap_node: Node) -> void:
-	const ALLOWED := ["scripted_entity", "warp", "warp_alt", "warp_zone"]
+	const ALLOWED := ["scripted_entity", "warp", "warp_alt", "warp_zone", "chest"]
 	var markers: Array = []
 	if _active_chunk_data.has("objects"):
 		var objs: Dictionary = _active_chunk_data["objects"]
@@ -1078,14 +1081,19 @@ func _spawn_npcs(chunk_data: Dictionary) -> void:
 	var container: Node2D = null
 	var spawned: int = 0
 	for e in entities:
-		if String(e.get("kind", "")) != "scripted_entity":
-			continue
-		if not e.has("sprite_id"):
+		var kind := String(e.get("kind", ""))
+		if kind != "scripted_entity" and kind != "shop_npc":
 			continue
 		if not (e.has("source_x_px") and e.has("source_y_px")):
 			continue
+		# The blueprint carries whichever id the record's identity slot held:
+		# a texture id (sprite_id) or an npc instance id. NpcSpriteBuilder
+		# resolves either to a spritesheet.
+		var npc_id: int = int(e.get("sprite_id", e.get("npc_instance_id", 0)))
+		if npc_id <= 0:
+			continue
 
-		var sprite := NpcSpriteBuilder.build(e["sprite_id"])
+		var sprite := NpcSpriteBuilder.build(npc_id)
 		if sprite == null:
 			continue
 
@@ -1151,6 +1159,67 @@ func _make_npc_interactable(entity: Dictionary, sprite: AnimatedSprite2D) -> Are
 	area.add_child(cs)
 	area.add_child(sprite)
 	return area
+
+
+# ============================================================================
+# Spawns a clickable chest per `chest` entity in the chunk. The blueprint
+# carries the two ids treasure_chest.gd needs (treasure_id -> field_treasure
+# reward, open_switch_id -> looted state + sprite style); everything else is
+# resolved from the database at spawn time. Chests recovered by the parser's
+# tail-marker scan have no decoded position and are skipped.
+func _spawn_chests(chunk_data: Dictionary) -> void:
+	# Clean up any prior chunk's chests.
+	for n in get_children():
+		if n.name == "Chests":
+			remove_child(n)
+			n.free()
+
+	if Engine.is_editor_hint() or not chunk_data.has("objects"):
+		return
+	var entities: Array = chunk_data["objects"].get("dynamic_entities", [])
+	if entities.is_empty():
+		return
+
+	var chest_script: Script = preload("res://features/town/treasure_chest.gd")
+	var container: Node2D = null
+	var spawned: int = 0
+	for e in entities:
+		if String(e.get("kind", "")) != "chest":
+			continue
+		if not (e.has("source_x_px") and e.has("source_y_px")):
+			continue
+
+		if container == null:
+			container = Node2D.new()
+			container.name = "Chests"
+			container.y_sort_enabled = true
+			# Same z as NPCs and the player so y-sorting interleaves them.
+			container.z_index = 5
+			add_child(container)
+
+		var chest: Area2D = chest_script.new()
+		chest.setup(e)
+		chest.position = Vector2(int(e["source_x_px"]), int(e["source_y_px"]))
+
+		# Hit rectangle from the record's declared footprint (58x116 for a
+		# standard chest: the sprite tile plus the tile you stand on).
+		var w: int = int(e.get("width_px", 0))
+		var h: int = int(e.get("height_px", 0))
+		if w <= 0: w = tile_size
+		if h <= 0: h = tile_size
+		var shape := RectangleShape2D.new()
+		shape.size = Vector2(w, h)
+		var cs := CollisionShape2D.new()
+		cs.shape = shape
+		# Chest node is top-left anchored; centre the rectangle over it.
+		cs.position = Vector2(w * 0.5, h * 0.5)
+		chest.add_child(cs)
+
+		container.add_child(chest)
+		spawned += 1
+
+	if spawned > 0:
+		print("Treasure chests: spawned %d" % spawned)
 
 
 # ============================================================================

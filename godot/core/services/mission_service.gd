@@ -63,6 +63,8 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	# (free-roam map with random encounters), not the wave-based combat the
 	# battle scene provides. Refuse to launch them so they don't drop the player
 	# into a scenario fight, and don't charge NRG.
+	# type=2 AND waveCount=0 - genuine explorations — every one is named "… - Exploration" or a story equivalent
+	# type=2 AND waveCount>=1 - Siren's Tower Top Floor, Bewitcher's Trial, and every "Trial of the …" esper unlock Not really exploration missions. They are regular missions
 	#if str(mission_data.get("type", "")) == "EXPLORATION":
 		#return {"success": false, "error": "Exploration missions aren't available yet."}
 
@@ -240,47 +242,10 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 
 
 func _grant_reward(reward: Array):
-	print(reward)
-	var data = {}
-	var reward_type = reward[0] as Types.Category_types
-	match reward_type:
-		Types.Category_types.LAPIS:
-			var lapis_amount: int = 0
-			if reward.size() >= 3:
-				lapis_amount = int(reward[2])
-			elif reward.size() >= 2:
-				lapis_amount = int(reward[1])
-			if lapis_amount > 0:
-				print("Lapis +%s\n" % str(lapis_amount))
-				PlayerProfile.add_lapis(lapis_amount)
-		Types.Category_types.UNIT:
-			data = GameDatabase.get_unit(int(reward[1]))
-			print("GRANT UNIT: " + data.get("unitName"))
-			UnitService._summon_fixed_units(reward[1], 1, "Mission reward")
-		Types.Category_types.ITEM:
-			data = GameDatabase.get_item(int(reward[1]))
-			print("GRANT ITEM: " + data.get("name"))
-			InventoryService.add_stackable(reward[1], int(reward[2]))
-		Types.Category_types.EQUIP:
-			data = GameDatabase.get_equipment(reward[1])
-			print("GRANT EQUIP: " + data.get("name"))
-			InventoryService.add_equipment_instances(reward[1], int(reward[2]))
-		Types.Category_types.MATERIA:
-			data = GameDatabase.get_materia(int(reward[1]))
-			print("GRANT MATERIA: " + data.get("name"))
-			InventoryService.grant_instanced_items("MATERIA", reward[1], int(reward[2]))
-		Types.Category_types.KEYITEM:
-			data = GameDatabase.get_important_item(int(reward[1]))
-			print("GRANT KEYITEM")
-		Types.Category_types.VISIONCARD:
-			data["name"] = "Vision Card"
-			print("GRANT VISIONCARD")
-		Types.Category_types.RECIPE:
-			data = GameDatabase.get_recipe(reward[1])
-			print("GRANT RECIPE: " + data.get("name"))
-		_:
-			push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
-	
+	# Shared with town treasure chests -- see core/reward_granter.gd.
+	var info: Dictionary = RewardGranter.grant(reward)
+	print("GRANT %s: %s x%d" % [info.get("type", ""), info.get("name", ""), int(info.get("amount", 0))])
+
 
 ## Instance ids of the party that ran the mission, in slot order (empty slots are
 ## skipped). Mirrors the party BattleManager builds when it starts a battle:

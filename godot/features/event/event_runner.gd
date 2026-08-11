@@ -134,7 +134,8 @@ func run_event(eid: String) -> void:
 	print("EventRunner: event %s finished." % eid)
 
 func _resolve_event_layer(map_dir: String, bp: Dictionary) -> void:
-	# Find the first PC spawn (actor_id=1, absolute move) in setup.
+	# Find the first PC spawn (actor_id=1, absolute move) in setup. It doubles
+	# as the warp target, so we need it even when the database names the layer.
 	var spawn := Vector2i(-1, -1)
 	for c_any in bp.get("pre_script", {}).get("setup_commands", []):
 		var c: Dictionary = c_any
@@ -142,6 +143,15 @@ func _resolve_event_layer(map_dir: String, bp: Dictionary) -> void:
 			spawn = Vector2i(int(c.get("x", 0)), int(c.get("y", 0)))
 			break
 	if spawn.x < 0:
+		return
+
+	# story_event."25oxcKwN" ("map@65") names the layer outright. It only
+	# covers a handful of events, so the spawn-bounds inference below stays as
+	# the fallback -- but when the database does answer, prefer it.
+	var db_lid := GameDatabase.get_event_layer(event_id)
+	if db_lid >= 0:
+		print("EventRunner: story_event names layer %d for event %s" % [db_lid, event_id])
+		_tile_map.call("warp_to", db_lid, spawn.x / int(TILE_SIZE), spawn.y / int(TILE_SIZE))
 		return
 	# Read the map blueprint to enumerate layer bounds + the default.
 	var bp_path := map_dir + "/map_blueprint.json"

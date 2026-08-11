@@ -29,30 +29,18 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 				for chunk in reward_chunks:
 					var parts = chunk.split(":")
 					if parts.size() >= 3:
-						var type = parts[0]
-						var id = parts[1]
-						var amount = parts[2]
-						var quest_name = ""
-
-						raw_rewards_array.append({"type": type, "id": id, "amount": int(amount)})
-
-						if type == "20":
-							var item_data = GameDatabase.get_item(id)
-							if not item_data.is_empty():
-								quest_name = str(item_data.get("quest_name", ""))
-						elif type == "21":
-							var equip_data = GameDatabase.get_equipment(id)
-							if not equip_data.is_empty():
-								quest_name = str(equip_data.get("quest_name", ""))
-						elif type == "22":
-							var materia_data = GameDatabase.get_materia(int(id))
-							if not materia_data.is_empty():
-								quest_name = str(materia_data.get("quest_name", ""))
-
-						if quest_name != "":
-							parsed_rewards.append(quest_name + " x" + amount)
-						else:
-							parsed_rewards.append(chunk)
+						raw_rewards_array.append({
+							"type": parts[0], "id": parts[1], "amount": int(parts[2]),
+						})
+						# describe_reward covers every reward type in the
+						# datamine (items, equipment, materia, key items,
+						# recipes, lapis, units) and falls back to the raw id
+						# when one can't be resolved, so there is always
+						# something to show.
+						var info: Dictionary = GameDatabase.describe_reward(parts)
+						parsed_rewards.append("%s x%d" % [
+							str(info.get("name", parts[1])), int(info.get("amount", 1)),
+						])
 					else:
 						parsed_rewards.append(chunk)
 
@@ -86,26 +74,15 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 								var type = parts[0]
 								var id = parts[1]
 								var amount = parts[2]
-								var task_name = ""
-
-								if type == "20":
-									var item_data = GameDatabase.get_item(id)
-									if not item_data.is_empty():
-										task_name = str(item_data.get("task_name", ""))
-								elif type == "21":
-									var equip_data = GameDatabase.get_equipment(id)
-									if not equip_data.is_empty():
-										task_name = str(equip_data.get("task_name", ""))
-								elif type == "22":
-									var materia_data = GameDatabase.get_materia(int(id))
-									if not materia_data.is_empty():
-										task_name = str(materia_data.get("task_name", ""))
-
-								if task_name != "":
-									var current_count = InventoryService.get_item_count(type, id)
-									task_dict["requirements"].append(task_name + " " + str(current_count) + "/" + amount)
-									task_dict["raw_requirements"] = task_dict.get("raw_requirements", [])
-									task_dict["raw_requirements"].append({"type": type, "id": id, "amount": int(amount)})
+								var info: Dictionary = GameDatabase.describe_reward(parts)
+								var current_count = InventoryService.get_item_count(type, id)
+								task_dict["requirements"].append(
+									"%s %d/%s" % [str(info.get("name", id)), current_count, amount]
+								)
+								task_dict["raw_requirements"] = task_dict.get("raw_requirements", [])
+								task_dict["raw_requirements"].append(
+									{"type": type, "id": id, "amount": int(amount)}
+								)
 
 				elif target_type == "2":
 					var target_param = str(row.get("targetParam", ""))

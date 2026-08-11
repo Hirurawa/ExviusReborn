@@ -4,6 +4,11 @@ extends RefCounted
 # Builds AnimatedSprite2D nodes from 4x4 NPC spritesheets.
 #   row 0 = down, row 1 = up, row 2 = left, row 3 = right
 #   each row has 4 frames; all rows loop at ANIM_FPS.
+#
+# `npc_id` may be either of the two id kinds map.bin puts in a scripted
+# entity's identity slot: a texture id, which names its own file
+# ("npc200101000.png"), or an npc instance id (1102060), whose sheet has to be
+# looked up in the `npc` table. Both are handled by _load_npc_texture.
 
 const NPC_DIRS: Array[String] = ["res://assets/npc1", "res://assets/npc2"]
 const ROW_NAMES: Array[String] = ["down", "up", "left", "right"]
@@ -71,8 +76,21 @@ static func _get_or_build_frames(id_str: String) -> SpriteFrames:
 
 
 static func _load_npc_texture(id_str: String) -> Texture2D:
+	var tex: Texture2D = _load_sheet("npc%s.png" % id_str)
+	if tex != null:
+		return tex
+	# Not a texture id — resolve it as an npc instance id. Instance sheets are
+	# also named after a texture id ("npc200101000.png"), but a few event NPCs
+	# use their own filenames ("npc_Yoshikiri.png", "louise_plain_walk.png").
+	var file_name: String = str(GameDatabase.get_npc(int(id_str)).get("textureFile", ""))
+	return _load_sheet(file_name) if file_name != "" else null
+
+
+static func _load_sheet(file_name: String) -> Texture2D:
+	if file_name == "":
+		return null
 	for dir_path in NPC_DIRS:
-		var path: String = "%s/npc%s.png" % [dir_path, id_str]
+		var path: String = "%s/%s" % [dir_path, file_name]
 		if ResourceLoader.exists(path):
 			var res: Resource = load(path)
 			if res is Texture2D:

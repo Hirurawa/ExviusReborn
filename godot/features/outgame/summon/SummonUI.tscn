@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://d2rlyjgyx57t5" path="res://assets/ui/common/gacha_cosmos_bg.png" id="2_roeup"]
 
 [node name="SummonUI" type="Control" unique_id=1078550173]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,26 +72,27 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -150.0
-offset_right = 150.0
-offset_bottom = 150.0
+offset_left = -320.0
+offset_top = -210.0
+offset_right = 320.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="TitleLabel" type="Label" parent="SummonOverlay/VBoxContainer" unique_id=1792991688]
 layout_mode = 2
-text = "Summon Results"
+text = "Units Obtained"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="SummonOverlay/VBoxContainer" unique_id=814462950]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ResultsListContainer" type="VBoxContainer" parent="SummonOverlay/VBoxContainer/ScrollContainer" unique_id=697020233]
+[node name="ResultsListContainer" type="GridContainer" parent="SummonOverlay/VBoxContainer/ScrollContainer" unique_id=1458522751]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+size_flags_horizontal = 4
+size_flags_vertical = 4
+columns = 5
 
 [node name="CloseOverlayButton" type="Button" parent="SummonOverlay/VBoxContainer" unique_id=826094200]
 layout_mode = 2

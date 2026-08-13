@@ -28,7 +28,6 @@ func authenticate(email: String, _password: String) -> void:
 func logout() -> void:
 	account_info = null
 	MissionService.last_entered_mission_id = ""
-	MissionService.last_played_dungeon_name = ""
 	PartyService.selected_party_index = 0
 
 func update_account(new_username: String) -> bool:
@@ -76,6 +75,8 @@ func start_new_local_game(username: String) -> Dictionary:
 
 	Persistence.active_local_save_id = Persistence.normalize_local_save_id(normalized_username)
 
+	InventoryService.reset_to_starter()
+	_dbg("SNG: after InventoryService.reset_to_starter")
 	_dbg("SNG: before UnitService.reset_to_starter")
 	if not UnitService.reset_to_starter():
 		return {"success": false, "error_message": "Failed to initialize starter units."}
@@ -84,18 +85,14 @@ func start_new_local_game(username: String) -> Dictionary:
 	PlayerProfile.reset_to_starter()
 	_dbg("SNG: after PlayerProfile.reset_to_starter")
 	MissionService.last_entered_mission_id = ""
-	MissionService.last_played_dungeon_name = ""
 	current_username = normalized_username
 
-	InventoryService.reset_to_starter()
-	_dbg("SNG: after InventoryService.reset_to_starter")
 	CombatItemsService.reset_to_empty()
 	_dbg("SNG: after CombatItemsService.reset_to_empty")
-	MissionService.cleared_missions = {}
-	MissionService.latest_cleared_mission_id = ""
+	MissionService.reset_to_starter()
 	EsperService.reset_to_empty()
 	_dbg("SNG: after EsperService.reset_to_empty")
-	PartyService.reset_to_starter(PartyService.build_default_parties(UnitService.STARTER_RAIN_INSTANCE_ID, UnitService.STARTER_LASSWELL_INSTANCE_ID))
+	PartyService.reset_to_starter(PartyService.build_default_parties(UnitService.STARTER_LASSWELL_INSTANCE_ID, UnitService.STARTER_RAIN_INSTANCE_ID))
 	_dbg("SNG: after PartyService.reset_to_starter")
 
 	save_all_snapshots("new_local_game")
@@ -157,7 +154,7 @@ func save_all_snapshots(source_event: String) -> void:
 func load_initial_data(email: String) -> void:
 	var stats: Dictionary = PlayerProfile.load_stats_from_local()
 
-	# Load rank progression data from rank_exp.json
+	# Load rank progression data from the `team_lv` database table
 	PlayerProfile.ensure_rank_exp_loaded()
 
 	# Apply stats with safe defaults
@@ -189,10 +186,6 @@ func load_initial_data(email: String) -> void:
 				PlayerProfile.next_rank_xp = int(PlayerProfile.rank_exp_data[fallback_rank].get("xp_needed", PlayerProfile.next_rank_xp))
 				PlayerProfile.max_nrg = int(PlayerProfile.rank_exp_data[fallback_rank].get("energy", PlayerProfile.max_nrg))
 	current_username = str(stats.get("username", ""))
-	if MissionService.last_entered_mission_id != "":
-		MissionService.update_last_played_dungeon_from_mission(MissionService.last_entered_mission_id)
-	else:
-		MissionService.last_played_dungeon_name = ""
 
 	MissionService.load_progress()
 	SwitchService.load_progress()

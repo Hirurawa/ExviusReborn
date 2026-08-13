@@ -188,7 +188,7 @@ func _populate_awakening_requirements() -> void:
 
 		var have_node: Label = slot.get_node_or_null("unit_classup_item_have") as Label
 		if have_node != null:
-			var owned_count: int = int(stackables.get(item_id, 0))
+			var owned_count: int = int(stackables.get(str(item_id), 0))
 			have_node.text = str(owned_count)
 			if owned_count < count:
 				have_node.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))

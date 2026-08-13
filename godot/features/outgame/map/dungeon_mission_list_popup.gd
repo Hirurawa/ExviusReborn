@@ -5,32 +5,24 @@ class_name DungeonMissionListPopup
 # No DB or game-state logic.
 
 signal mission_selected(mission_id: String)
-signal home_pressed
 signal back_pressed
 
 const ROW_SCENE: PackedScene = preload("res://features/outgame/map/DungeonMissionListRow.tscn")
 const CHALLENGE_ROW_SCENE: PackedScene = preload("res://features/outgame/map/DungeonMissionChallengeRow.tscn")
-const CONTENT_WIDTH: float = 640.0
-const CONTENT_PIVOT: Vector2 = Vector2(320.0, 360.0)
 const INITIAL_CHALLENGE_NAME: String = "complete the quest"
-const CHALLENGE_ROW_MAX_HEIGHT: float = 128.0
 
-@onready var content_root: Control = $ContentRoot
 @onready var title_label: Label = $HeaderLayer/HeaderAnchor/TitlePlate/TitleLabel
 @onready var mission_list_panel: VBoxContainer = $ContentRoot/VBoxContainer/MissionListPanel
 @onready var list_host: VBoxContainer = $ContentRoot/VBoxContainer/MissionListPanel/ScrollContainer/ListHost
 @onready var empty_label: Label = $ContentRoot/VBoxContainer/MissionListPanel/EmptyLabel
 @onready var list_scroll_container: ScrollContainer = $ContentRoot/VBoxContainer/MissionListPanel/ScrollContainer
 @onready var challenges_panel: VBoxContainer = $ContentRoot/VBoxContainer/MissionChallengesPanel
-@onready var challenges_area: Control = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea
-@onready var challenges_host: VBoxContainer = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost
 @onready var initial_header: Control = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/InitialHeader
 @onready var initial_rows_host: VBoxContainer = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/InitialRowsHost
 @onready var achievement_header: Control = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/AchievementHeader
 @onready var achievement_rows_host: VBoxContainer = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/AchievementRowsHost
 @onready var next_button: TextureButton = $ContentRoot/VBoxContainer/MissionChallengesPanel/ChallengesArea/ChallengesHost/NextButton
 @onready var back_button: TextureButton = $HeaderLayer/HeaderAnchor/BackButton
-@onready var home_button: TextureButton = $HeaderLayer/HeaderAnchor/HomeButton
 
 var _pending_init: Dictionary = {}
 var _dungeon_name: String = ""
@@ -40,12 +32,10 @@ var _showing_challenges: bool = false
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	home_button.pressed.connect(_on_home_pressed)
 	next_button.pressed.connect(_on_next_pressed)
 	if not _pending_init.is_empty():
 		_apply_init(_pending_init)
 		_pending_init.clear()
-	call_deferred("_apply_content_scale")
 
 func init_scene(params: Dictionary) -> void:
 	if is_node_ready():
@@ -162,7 +152,6 @@ func _populate_challenge_rows(mission: Dictionary) -> void:
 	_set_section_visible(initial_header, initial_rows_host, sections["initial"], objectives, 0)
 	var achievement_offset: int = sections["initial"].size()
 	_set_section_visible(achievement_header, achievement_rows_host, sections["achievement"], objectives, achievement_offset)
-	#call_deferred("_fit_challenge_rows")
 
 func _set_section_visible(
 	section_header: Control,
@@ -182,7 +171,6 @@ func _set_section_visible(
 		if challenge.is_empty():
 			continue
 		var task_text: String = str(challenge.get("string", ""))
-		var lapis_amount: int = _lapis_amount_from_reward(challenge.get("reward"))
 		var completed: bool = false
 		var objective_index: int = objective_offset + index
 		if objective_index >= 0 and objective_index < objectives.size():
@@ -191,7 +179,7 @@ func _set_section_visible(
 		if row == null:
 			continue
 		rows_host.add_child(row)
-		row.configure(task_text, lapis_amount, completed)
+		row.configure(task_text, challenge.get("reward"), completed)
 
 func _split_challenges(challenges: Array) -> Dictionary:
 	var initial: Array = []
@@ -211,16 +199,6 @@ func _split_challenges(challenges: Array) -> Dictionary:
 				achievement.append(challenge_value)
 	return {"initial": initial, "achievement": achievement}
 
-func _lapis_amount_from_reward(reward: Variant) -> int:
-	if not (reward is Array):
-		return 0
-	var reward_parts: Array = reward
-	if reward_parts.size() < 3:
-		return 0
-	if str(reward_parts[0]).to_upper() != "LAPIS":
-		return 0
-	return int(reward_parts[2])
-
 func _clear_list() -> void:
 	for child in list_host.get_children():
 		child.queue_free()
@@ -232,42 +210,7 @@ func _clear_challenge_rows() -> void:
 		child.queue_free()
 	initial_header.visible = false
 	achievement_header.visible = false
-#
-#func _fit_challenge_rows(allow_retry: bool = true) -> void:
-	#if not challenges_panel.visible:
-		#return
-#
-	#var row_count: int = initial_rows_host.get_child_count() + achievement_rows_host.get_child_count()
-	#if row_count == 0:
-		#return
-#
-	#if challenges_panel.size.y <= 0.0:
-		#if allow_retry:
-			#call_deferred("_fit_challenge_rows", false)
-		#return
-#
-	##for child in initial_rows_host.get_children():
-		##if child is DungeonMissionChallengeRow:
-			##(child as DungeonMissionChallengeRow).set_row_height(CHALLENGE_ROW_MAX_HEIGHT)
-	##for child in achievement_rows_host.get_children():
-		##if child is DungeonMissionChallengeRow:
-			##(child as DungeonMissionChallengeRow).set_row_height(CHALLENGE_ROW_MAX_HEIGHT)
-#
-	#challenges_area.custom_minimum_size = Vector2(CONTENT_WIDTH, challenges_host.get_minimum_size().y)
 
-func _apply_content_scale() -> void:
-	if not is_node_ready() or content_root == null:
-		return
-	var viewport: Viewport = get_viewport()
-	if viewport == null:
-		return
-	var viewport_width: float = viewport.get_visible_rect().size.x
-	content_root.pivot_offset = CONTENT_PIVOT
-	if viewport_width <= 0.0 or viewport_width >= CONTENT_WIDTH:
-		content_root.scale = Vector2.ONE
-		return
-	var scale_factor: float = viewport_width / CONTENT_WIDTH
-	content_root.scale = Vector2(scale_factor, scale_factor)
 
 func _on_row_pressed(mission_id: String) -> void:
 	_show_challenges(mission_id)
@@ -281,12 +224,3 @@ func _on_back_pressed() -> void:
 		_show_mission_list()
 		return
 	back_pressed.emit()
-
-func _on_home_pressed() -> void:
-	home_pressed.emit()
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and is_node_ready():
-		call_deferred("_apply_content_scale")
-		#if _showing_challenges:
-			#call_deferred("_fit_challenge_rows")

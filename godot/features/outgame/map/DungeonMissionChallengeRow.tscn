@@ -131,7 +131,7 @@ offset_right = 96.0
 offset_bottom = 96.0
 texture = ExtResource("12_t8h14")
 
-[node name="LapisIcon" type="TextureRect" parent="VBoxContainer/QuestMissionplate" unique_id=1627747725]
+[node name="RewardIcon" type="TextureRect" parent="VBoxContainer/QuestMissionplate" unique_id=1627747725]
 layout_mode = 0
 offset_left = 572.0
 offset_top = 70.0

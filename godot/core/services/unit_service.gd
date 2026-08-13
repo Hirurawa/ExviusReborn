@@ -89,7 +89,10 @@ func build_starter_unit(unit_id: String, instance_id: String) -> Dictionary:
 		"level": 1,
 		"xp": 0,
 		"current_rarity": initial_rarity,
-		"equipment": {},
+		"equipment": {
+			"body": instance_id + "_LeatherPlate",
+			"r_hand": instance_id + "_Broadsword"
+		},
 		"trust_value": 0,
 		"limitburst_level": 1,
 		"limitburst_xp": 0,
@@ -133,6 +136,62 @@ func summon_exp_boost_units(amount: int = 3) -> Dictionary:
 func summon_trust_units(amount: int = 3) -> Dictionary:
 	return _summon_fixed_units("904000105", amount, "summon_trust_units")
 
+## Grants combat EXP to the listed owned units (the party that just cleared a
+## mission). Every listed unit gains the full exp_amount -- the accumulated yield
+## of the enemies defeated, not a per-unit split. Material units are skipped:
+## their EXP is stored as enhance fodder (current_accumulated_exp), not levels.
+## Returns { success, awarded: [{instance_id, xp_before, xp_after,
+## level_before, level_after}] }.
+func award_battle_exp(instance_ids: Array, exp_amount: int) -> Dictionary:
+	if exp_amount <= 0 or instance_ids.is_empty():
+		return {"success": true, "awarded": []}
+
+	var target_ids: Dictionary = {}
+	for id_value in instance_ids:
+		var instance_id: String = str(id_value)
+		if instance_id != "":
+			target_ids[instance_id] = true
+	if target_ids.is_empty():
+		return {"success": true, "awarded": []}
+
+	var awarded: Array = []
+	for unit_value in owned_units_ids:
+		if not (unit_value is Dictionary):
+			continue
+		var unit: Dictionary = unit_value
+		if not target_ids.has(str(unit.get("instance_id", ""))):
+			continue
+		# Hydrated units carry the template's jobId, so material units are
+		# identifiable without a second DB lookup.
+		if int(unit.get("jobId", 0)) in MATERIAL_UNIT_JOB_IDS:
+			continue
+
+		var xp_before: int = int(unit.get("xp", 0))
+		unit["xp"] = xp_before + exp_amount
+		awarded.append({
+			"instance_id": str(unit.get("instance_id", "")),
+			"xp_before": xp_before,
+			"xp_after": int(unit["xp"]),
+			"level_before": int(unit.get("level", 1)),
+			"level_after": int(unit.get("level", 1)),
+		})
+
+	if awarded.is_empty():
+		return {"success": true, "awarded": []}
+
+	# Re-hydrate so level / next_xp / final_stats follow the new xp totals.
+	owned_units_ids = _hydrate_owned_units(owned_units_ids)
+
+	for entry in awarded:
+		for hydrated_value in owned_units_ids:
+			if hydrated_value is Dictionary and str(hydrated_value.get("instance_id", "")) == str(entry["instance_id"]):
+				entry["level_after"] = int(hydrated_value.get("level", entry["level_before"]))
+				break
+
+	emit_updated()
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "award_battle_exp")
+	return {"success": true, "awarded": awarded}
+
 func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
 	if unit_inst.is_empty():
 		return 0
@@ -141,6 +200,35 @@ func calculate_next_xp_for_unit(unit_inst: Dictionary) -> int:
 	var runtime_unit: Dictionary = unit_inst.duplicate(true)
 	_update_unit_next_xp(runtime_unit, unit_data)
 	return int(runtime_unit.get("next_xp", 0))
+	
+## Where `total_xp` sits on `unit_inst`'s level curve, so EXP bars can draw a
+## level's fill without reaching into the exp pattern tables themselves.
+## Returns { level, level_floor, next_floor, at_max_level }; the floors are
+## cumulative XP totals. At max level the two floors are equal -- there is no
+## next level to fill toward, so callers should draw the bar full.
+func level_progress_at_xp(unit_inst: Dictionary, total_xp: int) -> Dictionary:
+	var unit_data: Dictionary = GameDatabase.get_unit(_unit_template_id(unit_inst))
+	var exp_pattern: int = int(unit_data.get("expPatternId", 0))
+	if exp_pattern <= 0:
+		exp_pattern = 5
+
+	var max_level: int = _get_unit_max_level(unit_inst)
+	var level: int = _calculate_level_from_xp(total_xp, exp_pattern, max_level)
+	var level_floor: int = _calculate_total_xp_for_level(level, exp_pattern)
+	if level >= max_level:
+		return {
+			"level": max_level,
+			"level_floor": level_floor,
+			"next_floor": level_floor,
+			"at_max_level": true,
+		}
+	return {
+		"level": level,
+		"level_floor": level_floor,
+		"next_floor": _calculate_total_xp_for_level(level + 1, exp_pattern),
+		"at_max_level": false,
+	}
+
 
 func _evaluate_awakening_requirements(instance_id: String) -> Dictionary:
 	# Shared validation used by both can_awaken_unit() and awaken_unit().

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ditkrev5tgerl"]
 
 [ext_resource type="Script" uid="uid://bxxc7pktal8rf" path="res://features/shared/game_ui.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bgswfcmv7h7ck" path="res://assets/ui/home/home_spdungeon3.tres" id="2_nbm5i"]
 
 [node name="GameUI" type="Control" unique_id=323836925]
 layout_mode = 3
@@ -121,3 +122,12 @@ offset_top = 350.0
 offset_right = 613.0
 offset_bottom = 452.0
 mouse_filter = 2
+
+[node name="VortexDungeon" type="TextureButton" parent="." unique_id=1934497227]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 168.0
+offset_right = 184.0
+offset_bottom = 314.0
+texture_normal = ExtResource("2_nbm5i")
+stretch_mode = 5

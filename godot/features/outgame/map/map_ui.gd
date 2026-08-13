@@ -45,6 +45,9 @@ const AREA_RECT_COLOR: Color = Color(1.0, 0.6, 0.3, 0.35)
 @onready var map_world_row: Control = $VBoxContainer/HBoxContainer
 @onready var map_top_bar: Control = $VBoxContainer/TopBar
 @onready var map_back_button: TextureButton = $VBoxContainer/TopBar/UnitNamebgChara/BackButton
+@onready var home_button: TextureButton = $"VBoxContainer/TopBar/UnitNamebgChara/HomeButton"
+#TODO: Write the currently selected location's name to this label:
+@onready var location_name_label: Label = $"VBoxContainer/TopBar/UnitNamebgChara/Title"
 
 var map_zoom_level: float = 1.0
 var _is_panning_map: bool = false
@@ -71,6 +74,7 @@ var _town_stores_button: Button = null
 
 func _ready() -> void:
 	map_back_button.pressed.connect(_on_back_pressed)
+	home_button.pressed.connect(_on_home_pressed)
 	map_world_option.item_selected.connect(_on_map_world_selected)
 	map_scroll.gui_input.connect(_on_map_scroll_gui_input)
 	SwitchService.switches_unlocked.connect(_on_switches_unlocked)
@@ -608,6 +612,8 @@ func _on_back_pressed() -> void:
 		return
 	UIManager.pop()
 
+func _on_home_pressed() -> void:
+	UIManager.set_root("game_ui")
 
 # === Dungeon mission-list popup ===
 
@@ -625,14 +631,13 @@ func _open_mission_popup(dungeon_name: String, missions: Array[Dictionary]) -> v
 
 	add_child(popup)
 	_mission_popup = popup
-	_set_map_top_bar_visible(false)
+	#_set_map_top_bar_visible(false)
 
 	popup.init_scene({
 		"dungeon_name": dungeon_name,
 		"missions": missions,
 	})
 	popup.mission_selected.connect(_on_mission_row_pressed)
-	popup.home_pressed.connect(_on_mission_popup_home_pressed)
 	popup.back_pressed.connect(_on_back_pressed)
 
 

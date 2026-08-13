@@ -5,8 +5,10 @@ extends Control
 @onready var get_cactuar_button: Button = $VBoxContainer/SummonButtonsRow/GetCactuarButton
 @onready var get_moogle_button: Button = $VBoxContainer/SummonButtonsRow/GetMoogleButton
 @onready var summon_overlay: ColorRect = $SummonOverlay
-@onready var summon_results_list: VBoxContainer = $SummonOverlay/VBoxContainer/ScrollContainer/ResultsListContainer
+@onready var summon_results_list: GridContainer = $SummonOverlay/VBoxContainer/ScrollContainer/ResultsListContainer
 @onready var summon_close_overlay_button: Button = $SummonOverlay/VBoxContainer/CloseOverlayButton
+
+const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 
 func _ready() -> void:
 	summon_perform_button.pressed.connect(_on_summon_perform_button_pressed)
@@ -50,20 +52,28 @@ func _show_summon_results(result: Dictionary) -> void:
 	for unit_inst in summoned_units:
 		var unit_data: Dictionary = unit_inst
 		var unit_rarity: int = int(unit_inst.get("current_rarity", int(unit_data.get("rarity_min", 1))))
-		var vbox := VBoxContainer.new()
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_data.get("unitId")
+		
+		var container: VBoxContainer = VBoxContainer.new()
+		if ResourceLoader.exists(path):
+			#var unit_visual: Control = UNIT_SCENE.instantiate() as Control
+			#unit_visual.scene_size = "small"
+			#unit_visual.unit_data_to_load = unit_data
+			#unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			#container.add_child(unit_visual)
+			var sprite_texture = TextureRect.new()
+			sprite_texture.texture = ResourceLoader.load(path) as Texture2D
+			sprite_texture.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			container.add_child(sprite_texture)
+		else:
+			var name_label := Label.new()
+			name_label.text = "%s (Rarity: %d★)" % [
+				unit_data.get("unitName", "Unknown"),
+				unit_rarity
+			]
+			name_label.add_theme_font_size_override("font_size", 18)
+			container.add_child(name_label)
 
-		var name_label := Label.new()
-		name_label.text = "%s (Rarity: %d★)" % [
-			unit_data.get("unitName", "Unknown"),
-			unit_rarity
-		]
-		name_label.add_theme_font_size_override("font_size", 18)
-		vbox.add_child(name_label)
-
-		var separator := HSeparator.new()
-		vbox.add_child(separator)
-
-		summon_results_list.add_child(vbox)
+		summon_results_list.add_child(container)
 
 	summon_overlay.show()

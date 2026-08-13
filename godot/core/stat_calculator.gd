@@ -9,6 +9,9 @@ const RESIST_KEY_ALIASES: Dictionary = {
 	"PETRIFICATION": "PETRIFY"
 }
 
+## Ceiling on the summed percentage bonus a single stat can receive.
+const MAX_STAT_PCT_BONUS: int = 400
+
 const RARITY_MAX_LEVELS: Dictionary = {
 	1: 15,
 	2: 30,
@@ -78,6 +81,107 @@ func _apply_parsed_passive_effects(effects: Array, pct_mods: Dictionary, element
 						status_resists[st_key] += effect_payload[st]
 					else:
 						push_warning("Unknown status resist key from passive: %s" % st_key)
+
+# === Shared with MonsterStatCalculator ===
+# Units and monsters agree on three things: the stat/element/status vocabulary, how
+# innate resistances are encoded, and how active buffs and debuffs combine. Those live
+# here and are called from both, so a Full Break resolves identically on a boss and on
+# a party member. Everything else about the two is different -- see
+# MonsterStatCalculator for why the bodies are separate.
+
+## The zeroed profile every calculator fills in and returns.
+func empty_stat_profile() -> Dictionary:
+	var stats: Dictionary = {}
+	for stat_name in CORE_STATS:
+		stats[stat_name] = 0
+	return {
+		"stats": stats,
+		"element_resist": {},
+		"status_resist": {},
+		"skills": {"magic": [], "ability": [], "passive": []},
+		"passive_effects": [],
+	}
+
+
+## Fresh zeroed accumulators: { pct, element, status }.
+func new_modifier_pools() -> Dictionary:
+	var pct: Dictionary = {}
+	for stat_name in CORE_STATS:
+		pct[stat_name] = 0
+	var element: Dictionary = {}
+	for el in ELEMENTS:
+		element[el] = 0
+	var status: Dictionary = {}
+	for st in STATUSES:
+		status[st] = 0
+	return {"pct": pct, "element": element, "status": status}
+
+
+## Seeds an instance's innate elemental / status resistances into the pools. Units and
+## monsters both store these as the datamine's comma-separated strings in the same
+## element and status order, so this is genuinely shared. A missing, null or non-string
+## value contributes nothing.
+func seed_innate_resists(instance: Dictionary, element_resists: Dictionary, status_resists: Dictionary) -> void:
+	_seed_resist_string(instance.get("elemResistValue"), element_resists, ELEMENTS)
+	_seed_resist_string(instance.get("ailmentResistValue"), status_resists, STATUSES)
+
+
+func _seed_resist_string(raw: Variant, targets: Dictionary, ordered_keys: Array) -> void:
+	if raw == null or typeof(raw) != TYPE_STRING or str(raw) == "":
+		return
+	var values: PackedStringArray = str(raw).split(",")
+	# min() guards a datamine array that is longer or shorter than our key list.
+	for i in range(min(values.size(), ordered_keys.size())):
+		if str(values[i]).is_valid_int():
+			targets[ordered_keys[i]] += int(values[i])
+
+
+## Aggregates an instance's active_effects into { key: delta }. Buffs keep the highest
+## value per key and debuffs the lowest, then the two are summed -- so a buff and a
+## debuff on the same stat partially cancel rather than one simply winning.
+func collect_active_modifiers(instance: Dictionary) -> Dictionary:
+	var active_buffs: Dictionary = {}
+	var active_debuffs: Dictionary = {}
+
+	for effect in instance.get("active_effects", []):
+		var effect_type: String = str(effect.get("type", "")).to_lower()
+		if effect_type not in ["buff", "debuff"]:
+			continue
+		var modifiers: Dictionary = effect.get("params", {})
+		for key in modifiers.keys():
+			var val = modifiers[key]
+			if typeof(val) not in [TYPE_INT, TYPE_FLOAT]:
+				continue
+			if val > 0:
+				active_buffs[key] = max(active_buffs.get(key, 0), val)
+			elif val < 0:
+				active_debuffs[key] = min(active_debuffs.get(key, 0), val)
+
+	var combined: Dictionary = active_buffs.duplicate()
+	for key in active_debuffs.keys():
+		combined[key] = combined.get(key, 0) + active_debuffs[key]
+	return combined
+
+
+## Routes each aggregated modifier into whichever pool owns that key.
+func apply_active_modifiers(mods: Dictionary, pct_mods: Dictionary, element_resists: Dictionary, status_resists: Dictionary) -> void:
+	for key in mods.keys():
+		var val = mods[key]
+		if pct_mods.has(key):
+			pct_mods[key] += val
+		elif element_resists.has(key):
+			element_resists[key] += val
+		elif status_resists.has(key):
+			status_resists[key] += val
+		else:
+			push_warning("StatCalculator: Unhandled modifier -> " + str(key))
+
+
+## base * (1 + pct/100) + flat, with the percentage contribution capped.
+func combine_stat(base: float, pct: int, flat: int) -> int:
+	var capped_pct: int = mini(pct, MAX_STAT_PCT_BONUS)
+	return int(round((base * (1.0 + (float(capped_pct) / 100.0))) + float(flat)))
+
 
 func _resolve_esper_rank_max_level(entry: Dictionary) -> int:
 	var cp_pattern_value: Variant = entry.get("cp_pattern", [])
@@ -277,39 +381,33 @@ func _compute_active_party_esper_flat_bonus(unit_instance: Dictionary) -> Dictio
 
 	return bonus
 
+## The final-stat profile for a battle/roster instance: { stats, element_resist,
+## status_resist, skills, passive_effects }.
+##
+## Monsters take a different path. They are not units with pieces missing -- their base
+## stats come flat from MONSTER_PARTS instead of a rarity growth curve, and they have no
+## equipment, espers or trait skills. Keeping one entry point means every caller
+## (result_processor, _tick_active_effect_durations, dispel) works for both sides
+## without knowing which it holds; keeping separate bodies means neither has to pretend
+## to be the other. See MonsterStatCalculator.
 func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
-	var final_profile = {
-		"stats": {
-			"HP": 0,
-			"MP": 0,
-			"ATK": 0,
-			"DEF": 0,
-			"MAG": 0,
-			"SPR": 0
-		},
-		"element_resist": {},
-		"status_resist": {},
-		"skills": {
-			"magic": [],
-			"ability": [],
-			"passive": []
-		},
-		"passive_effects": []
-	}
-	
-	var pct_mods = {}
-	for stat in CORE_STATS:
-		pct_mods[stat] = 0
+	if bool(unit_instance.get("is_monster", false)):
+		return MonsterStatCalculator.calculate_final_stats(unit_instance)
 
-	var element_resists = {}
-	for el in ELEMENTS:
-		element_resists[el] = 0
+	var final_profile = empty_stat_profile()
 
-	var status_resists = {}
-	for st in STATUSES:
-		status_resists[st] = 0
+	var pools: Dictionary = new_modifier_pools()
+	var pct_mods: Dictionary = pools["pct"]
+	var element_resists: Dictionary = pools["element"]
+	var status_resists: Dictionary = pools["status"]
 
-	if not unit_instance.has("current_rarity"): push_error("CRITICAL ERROR: unit_instance is missing current_rarity!")
+	if not unit_instance.has("current_rarity"):
+		# A monster reaching this line means its dict was built without is_monster (only
+		# BattleManager._generate_enemy_from_descriptor sets it), so it is being run
+		# through the unit path it has none of the inputs for.
+		push_error("CRITICAL ERROR: unit_instance is missing current_rarity!%s" % [
+			"  (this looks like a monster -- is_monster is not set on it)" if unit_instance.has("base_stats") else "",
+		])
 	var rarity = int(unit_instance["current_rarity"])
 
 	if not unit_instance.has("level"): push_error("CRITICAL ERROR: unit_instance is missing level!")
@@ -318,18 +416,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	if not RARITY_MAX_LEVELS.has(rarity): push_error("CRITICAL ERROR: RARITY_MAX_LEVELS is missing rarity: " + str(rarity))
 	var max_level = RARITY_MAX_LEVELS[rarity]
 	
-	# Seed innate resistances into pools
-	var innate_elements = unit_instance.get("elemResistValue", []).split(',')
-	# Use min() to prevent out-of-bounds crashes if the datamine array is too long/short
-	for i in range(min(innate_elements.size(), ELEMENTS.size())):
-		var element_name = ELEMENTS[i]
-		element_resists[element_name] += int(innate_elements[i])
+	seed_innate_resists(unit_instance, element_resists, status_resists)
 
-	var innate_statuses = unit_instance.get("ailmentResistValue", []).split(',')
-	for i in range(min(innate_statuses.size(), STATUSES.size())):
-		var status_name = STATUSES[i]
-		status_resists[status_name] += int(innate_statuses[i])
-	
 	var base_calculated = {
 		"HP": 0.0,
 		"MP": 0.0,
@@ -443,47 +531,18 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			
 	# TODO: Parse effects_raw for pct_mods here
 
-	var active_buffs = {}
-	var active_debuffs = {}
-
-	for effect in unit_instance.get("active_effects", []):
-		var effect_type: String = str(effect.get("type", "")).to_lower()
-		if effect_type not in ["buff", "debuff"]:
-			continue
-		var modifiers: Dictionary = effect.get("params", {})
-		for key in modifiers.keys():
-			var val = modifiers[key]
-
-			# If it's a positive buff, keep the highest value
-			if val > 0:
-				active_buffs[key] = max(active_buffs.get(key, 0), val)
-			# If it's a negative debuff, keep the lowest (most negative) value
-			elif val < 0:
-				active_debuffs[key] = min(active_debuffs.get(key, 0), val)
-
-	var all_active_mods = active_buffs.duplicate()
-	for key in active_debuffs.keys():
-		all_active_mods[key] = all_active_mods.get(key, 0) + active_debuffs[key]
-
-	for key in all_active_mods.keys():
-		var val = all_active_mods[key]
-		if pct_mods.has(key):
-			pct_mods[key] += val
-		elif element_resists.has(key):
-			element_resists[key] += val
-		elif status_resists.has(key):
-			status_resists[key] += val
-		else:
-			push_warning("StatCalculator: Unhandled modifier -> " + key)
+	apply_active_modifiers(
+		collect_active_modifiers(unit_instance), pct_mods, element_resists, status_resists
+	)
 
 	for stat_name in final_profile["stats"].keys():
-		var base = base_calculated.get(stat_name, 0.0)
-		var total_flat = flat_mods.get(stat_name, 0)
-		var capped_pct = mini(int(pct_mods.get(stat_name, 0)), 400)
+		final_profile["stats"][stat_name] = combine_stat(
+			float(base_calculated.get(stat_name, 0.0)),
+			int(pct_mods.get(stat_name, 0)),
+			int(flat_mods.get(stat_name, 0))
+		)
 
-		var final_val = (base * (1.0 + (float(capped_pct) / 100.0))) + total_flat
-		final_profile["stats"][stat_name] = int(round(final_val))
-		
+
 	final_profile["element_resist"] = element_resists
 	final_profile["status_resist"] = status_resists
 

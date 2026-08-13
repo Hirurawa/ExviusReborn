@@ -35,6 +35,10 @@ var _magic_cache: Dictionary = {}
 
 var _unit_cache: Dictionary = {}
 
+# Per-id executable monster-skill records (see get_monster_skill_record). Monsters
+# re-use a handful of skills every turn, so this saves re-decoding them mid-battle.
+var _monster_skill_cache: Dictionary = {}
+
 # Lazily-loaded ability caches (active + passive share the `ability` table, split
 # by abilityType): id -> "ability"/"passive" kind map, plus per-id records.
 var _ability_kind_map: Dictionary = {}
@@ -147,7 +151,7 @@ func query(sql: String, params: Array = []) -> Array:
 ## with no map art -> "" so they render blank). The result keys (worldName,
 ## dispOrder) are aliases kept stable for the map UI consumer.
 func get_worlds() -> Array:
-	return query("SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder, switchInfo FROM world ORDER BY rowid")
+	return query("SELECT worldId, name AS worldName, COALESCE(imageInfo, '') AS dispOrder, switchInfo FROM world WHERE worldType is 1 ORDER BY rowid")
 
 
 ## A single world row (worldId, worldName, dispOrder), or {} if not found.
@@ -234,6 +238,10 @@ func get_missions(dungeon_id: String) -> Array:
 		[dungeon_id]
 	)
 
+func get_mission_bg(mission_id: String) -> String:
+	var rows = query("SELECT bg.fileInfo from battle_bg bg join mission m on m.battleBgId = bg.battleBgId where m.missionId = ? limit 1", [mission_id])
+	return str(rows[0].get("fileInfo", "")) if not rows.is_empty() else ""
+
 
 ## Display name of a dungeon (dungeon.name), or "" if the dungeon id is unknown.
 ## Used to build the combat background path and the last-played-dungeon label.
@@ -281,6 +289,35 @@ func get_map_event_switch_unlock(target_id: int, switch_info: int) -> Variant:
 	return rows[0].get("openSwitch") if not rows.is_empty() else {}
 
 
+## Map-object cutscene triggers for a location. locationType: 1=mission, 2=town,
+## 3=dungeon. Returns every map_event row for the target (a location may have
+## several, gated by different switches). Each row: locationType, targetId,
+## resourceId (comma list; first id -> event cpk via resource_map), storyEventId,
+## switchInfo (gate to trigger), openSwitch (the "watched" marker). Caller plays a
+## row iff SwitchService.is_unlocked(switchInfo) and NOT is_unlocked(openSwitch).
+func get_map_event(target_id: int, location_type: int) -> Array:
+	return query(
+		"SELECT locationType, targetId, resourceId, storyEventId, switchInfo, openSwitch"
+		+ " FROM map_event WHERE targetId = ? AND locationType = ?",
+		[target_id, location_type]
+	)
+
+
+## Resolves a resourceId (or a comma list, e.g. map_event.resourceId "311102103,400205")
+## to its event cpk folder id (fileName minus ".cpk"), which is what EventRunner takes.
+## The first resource in the list is the event; the rest are sound. "" if unresolved.
+func get_event_id_for_resource(resource_csv: String) -> String:
+	if resource_csv == null or str(resource_csv).strip_edges() == "":
+		return ""
+	var first: String = str(resource_csv).split(",")[0].strip_edges()
+	if not first.is_valid_int():
+		return ""
+	var rows: Array = query("SELECT fileName FROM resource_map WHERE resourceId = ?", [int(first)])
+	if rows.is_empty():
+		return ""
+	return str(rows[0].get("fileName", "")).get_basename()  # "111010203.cpk" -> "111010203"
+
+
 func get_quests_for_town(town_id: String) -> Array:
 	return query(
 		"SELECT q.questId, q.name AS questName, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.targetType, qs.targetParam"
@@ -291,6 +328,9 @@ func get_quests_for_town(town_id: String) -> Array:
 		[town_id]
 	)
 
+
+func get_vortex_areas() -> Array:
+	return query("select a.*, i.* from area a join icon i on a.iconId = i.iconId where a.worldId = 2")
 
 # === Mission details (start/finish/battle data) ===
 # Reconstructs the normalized mission dict that MissionService used to read from
@@ -352,7 +392,7 @@ func get_mission_challenges(mission_id: String) -> Array:
 		[mission_id]
 	):
 		var challenge_name: String = str(row.get("name", ""))
-		var reward: Array = _parse_reward(str(row.get("rewards", "")))
+		var reward: Array = row.get("rewards", "").split(':')
 		var parameter: String = str(row.get("parameter"))
 		out.append({"string": challenge_name, "reward": reward, "parameter": parameter})
 	return out
@@ -365,24 +405,10 @@ func _parse_reward_list(raw: String) -> Array:
 	if raw == "" or raw == "0":
 		return out
 	for chunk in raw.split(",", false):
-		var reward: Array = _parse_reward(str(chunk))
+		var reward: Array = chunk.split(':')
 		if not reward.is_empty():
 			out.append(reward)
 	return out
-
-
-## Parses a single "type:id:amount[:rate]" reward token into [TYPE_NAME, id, amount].
-## Unknown type codes pass through as their raw number string. Returns [] if blank.
-func _parse_reward(raw: String) -> Array:
-	if raw == "" or raw == "0":
-		return []
-	var parts: PackedStringArray = raw.split(":")
-	if parts.is_empty():
-		return []
-	var type_name: String = _REWARD_TYPE_NAMES.get(str(parts[0]), str(parts[0]))
-	var id_val: int = int(parts[1]) if parts.size() > 1 else 0
-	var amount: int = int(parts[2]) if parts.size() > 2 else 1
-	return [type_name, id_val, amount]
 
 
 ## World-map location of a single mission: { worldId, landId, areaId, dungeonId,
@@ -417,7 +443,7 @@ func get_mission_location(mission_id: String) -> Dictionary:
 ## phaseNum, targetId.
 func get_mission_phases(mission_id: String) -> Array:
 	return query(
-		"SELECT p.phaseNum, p.targetId FROM mission_phase p"
+		"SELECT p.phaseNum, p.targetId, p.battleScriptId, p.switchNonInfo FROM mission_phase p"
 		+ " WHERE p.missionId = ? AND COALESCE(p.switchInfo, '') = ''"
 		+ " AND ( p.battleBgId != 0"
 		+ "   OR EXISTS (SELECT 1 FROM battle_lottery l WHERE l.poolId = p.targetId AND l.weight > 0)"
@@ -425,6 +451,107 @@ func get_mission_phases(mission_id: String) -> Array:
 		+ " ORDER BY p.phaseNum",
 		[mission_id]
 	)
+
+
+## FULL, unfiltered phase timeline for a mission -- the story-aware companion to
+## get_mission_phases (which returns only combat waves). Returns every phase with
+## the fields needed to classify it (cutscene vs battle vs dialogue) and to apply
+## first-time/replay gating. Ordered by phaseNum. See core/story/mission_timeline.gd,
+## which turns these rows into typed, switch-gated steps. Each row:
+##   phaseNum, condInfoStr (1=scene, 2=battle), targetType, targetId,
+##   battleScriptId (present -> in-combat dialogue), switchInfo / switchNonInfo
+##   (gates), beforeEffectType, afterEffectType, backSceneType, battleBgId.
+func get_mission_timeline(mission_id: String) -> Array:
+	return query(
+		"SELECT phaseNum, condInfoStr, targetType, targetId, battleScriptId,"
+		+ " switchInfo, switchNonInfo, beforeEffectType, afterEffectType,"
+		+ " backSceneType, battleBgId, bgmResourceId"
+		+ " FROM mission_phase WHERE missionId = ? ORDER BY phaseNum",
+		[mission_id]
+	)
+
+
+## In-combat dialogue segments for a battleScriptId, ordered by trigger (cond).
+## One row per trigger segment: cond (1=start, 2=victory, 3=enemy-defeated,
+## 4=HP% [condParam monsterId,HP%], 5=state, 7=on-hit, 8=turn, 10=passive),
+## condParam, skipFlg, paramEn (EN dialogue string; null when only JP exists),
+## paramJp. mission_timeline.gd parses paramEn into ordered {speaker,text} lines.
+func get_battle_script(battle_script_id: String) -> Array:
+	return query(
+		"SELECT cond, condParam, skipFlg, paramEn, paramJp"
+		+ " FROM battle_script WHERE battleScriptId = ? ORDER BY cond",
+		[battle_script_id]
+	)
+
+
+## Cutscene phases (condInfoStr == 1) for a mission, each tagged with how many
+## battle WAVES precede it (after_wave): 0 = intro (before wave 1), K = after wave
+## K clears, total_waves = outro (before rewards). Wave count uses the same phases
+## as get_mission_phases, so the slots line up with BattleManager.total_waves.
+## Each row: story_event_id, after_wave, switch_info, switch_non_info (the
+## cutscene's own first-time/replay gate, if any).
+func get_mission_cutscenes(mission_id: String) -> Array:
+	var wave_phase_nums: Array = []
+	for w in get_mission_phases(mission_id):
+		wave_phase_nums.append(int(w.get("phaseNum", 0)))
+	var cuts: Array = query(
+		"SELECT phaseNum, targetId, switchInfo, switchNonInfo FROM mission_phase"
+		+ " WHERE missionId = ? AND condInfoStr = 1 ORDER BY phaseNum",
+		[mission_id]
+	)
+	# The mission's cutscene event cpk (shared by all its in-mission scenes; the
+	# per-scene layer/block is the story_event's "map@N"). Resolved once here.
+	var ev_res: Dictionary = get_mission_event_resource(mission_id)
+	var out: Array = []
+	for c in cuts:
+		var pn: int = int(c.get("phaseNum", 0))
+		var after: int = 0
+		for wp in wave_phase_nums:
+			if wp < pn:
+				after += 1
+		out.append({
+			"story_event_id": str(c.get("targetId", "")),
+			"after_wave": after,
+			"switch_info": c.get("switchInfo"),
+			"switch_non_info": c.get("switchNonInfo"),
+			"event_id": str(ev_res.get("event_id", "")),
+			"resource_id": str(ev_res.get("resource_id", "")),
+		})
+	return out
+
+
+## Story-event display info for a cutscene (placeholder now; EventRunner later).
+## {} when unknown. name = scene name (e.g. "main1-1_OP1"); sceneRes = the scene
+## resource ref (source column "25oxcKwN", e.g. "map@65").
+func get_story_event(story_event_id: String) -> Dictionary:
+	var rows: Array = query(
+		"SELECT storyEventId, name, \"25oxcKwN\" AS sceneRes FROM story_event WHERE storyEventId = ?",
+		[story_event_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+
+## The event cpk that holds a mission's in-mission cutscenes. The story_event
+## row itself has no cpk pointer; the link is: mission -> map_ext_resource
+## (F_MAP_EXT_RESOURCE_MST, keyed by mission) -> its resource list -> the first
+## EVENT-type resource -> resource_map -> cpk. The per-scene layer/block is the
+## story_event's "map@N". Returns {resource_id, event_id, file_name} or {};
+## event_id = fileName without ".cpk" = the folder id EventRunner takes.
+func get_mission_event_resource(mission_id: String) -> Dictionary:
+	var rows: Array = query("SELECT resourceId FROM map_ext_resource WHERE targetId = ?", [mission_id])
+	if rows.is_empty():
+		return {}
+	for token in str(rows[0].get("resourceId", "")).split(","):
+		var rid: String = token.strip_edges()
+		if not rid.is_valid_int():
+			continue
+		var rr: Array = query("SELECT fileName, drE35YcF FROM resource_map WHERE resourceId = ?", [int(rid)])
+		if rr.is_empty():
+			continue
+		if str(rr[0].get("drE35YcF", "")) == "event":
+			var fn: String = str(rr[0].get("fileName", ""))
+			return {"resource_id": rid, "event_id": fn.get_basename(), "file_name": fn}
+	return {}
 
 
 ## Weighted formation pool for a lottery poolId: rows of battleGroupId, weight
@@ -461,9 +588,9 @@ func get_battle_group(battle_group_id: String) -> Array:
 ## resolver expects.
 func get_monster_parts(monster_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT p.hp, p.mp, p.atk, p.def, p.mag AS intl, p.spr AS mnd, p.level, p.exp, p.gil,"
+		"SELECT p.hp, p.mp, p.atk, p.def, p.mag, p.spr, p.level, p.exp, p.gil,"
 		+ " m.dictionaryId AS dictionaryId, p.monsterName AS name,"
-		+ " p.elemResistValue, p.dropInfo"
+		+ " p.elemResistValue, p.ailmentResistValue, p.dropInfo"
 		+ " FROM monster_parts p LEFT JOIN monster m ON m.monsterId = p.monsterId"
 		+ " WHERE p.monsterId = ? ORDER BY p.partsNum LIMIT 1",
 		[monster_id]
@@ -510,6 +637,117 @@ func get_mission_scenario_groups(mission_id: String) -> Array:
 	return battle_groups
 
 
+# === Monster AI / behaviour ===
+# Behaviour data imported from the FFBE datamine (F_AI_MST / F_MONSTER_SKILL_SET_MST
+# / F_MONSTER_SKILL_MST) into the ai / monster_skill_set / monster_skill tables.
+# features/battle/logic/monster_ai_script.gd compiles the rows into typed rules and
+# documents the grammar; monster_ai_resolver.gd prints the result when a wave spawns.
+
+## Ordered AI rule rows for a 9-digit monsterId, by ruleOrder. Empty => the monster
+## has no script (only 2778 of 16931 do) and needs the caller's default behaviour.
+## Each row: monsterId, ruleOrder, rule, command, probability, targetSelect,
+## scriptName, plus conditionType / conditionParam / effectType / effectParam.
+##
+## `rule` is the authoritative field -- it carries the rule's four trigger slots and
+## all five condition atoms. The condition*/effect* columns are only a projection of
+## atoms 1 and 2 and are NOT a condition/effect pair; they are selected here for
+## debugging convenience, not for evaluation. See MonsterAIScript for the grammar.
+## `scriptName` is the designer's own (mostly Japanese) name for the script.
+func get_monster_ai(monster_id: String) -> Array:
+	return query(
+		"SELECT monsterId, ruleOrder, conditionType, conditionParam, effectType,"
+		+ " effectParam, command, rule, probability, targetSelect, WhQL5ev9 AS scriptName"
+		+ " FROM ai WHERE monsterId = ? ORDER BY ruleOrder",
+		[monster_id]
+	)
+
+
+## The skill set for a monster: { name, skillId } where skillId is the ordered,
+## comma-separated list of monsterSkillIds the monster can use (an AI 'skill N'
+## action is a 1-based index into it). Slots may be blank mid-list, so the raw
+## string must be split index-preserving; see MonsterAIScript._load_skill_slots.
+## {} if the monster has no skill set.
+func get_monster_skill_set(monster_id: String) -> Dictionary:
+	var rows: Array = query(
+		"SELECT name, skillId FROM monster_skill_set WHERE monsterId = ? LIMIT 1",
+		[monster_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+
+## A single monster skill: { name, effectFrames }, or {} if the id is unknown. This is
+## the label-only lookup; use get_monster_skill_record for an executable skill.
+func get_monster_skill(monster_skill_id: String) -> Dictionary:
+	var rows: Array = query(
+		"SELECT name, effectFrames FROM monster_skill WHERE monsterSkillId = ? LIMIT 1",
+		[monster_skill_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+
+## An EXECUTABLE monster skill, in the same shape the magic/ability records use, so a
+## monster skill can go straight through SkillResolver.parse_skill_effects and
+## BattleManager.execute_parsed_skill. monster_skill packs its effects into the same
+## '@'-group target / targetRange / processId / processParam quartet as the player
+## tables, so the shared decoders apply unchanged. {} if the id is unknown.
+##
+## About 80% of the skills the AI actually references decode to a fully executable
+## effect list; the rest carry at least one opcode skill_schema.json does not cover and
+## OpcodeParser drops it with a warning, so callers should expect some skills to
+## resolve to an empty `effects` array.
+func get_monster_skill_record(monster_skill_id: String) -> Dictionary:
+	var key: String = str(monster_skill_id)
+	if _monster_skill_cache.has(key):
+		return _monster_skill_cache[key]
+
+	var rows: Array = query(
+		"SELECT monsterSkillId, name, cost, target, targetRange, elementInflict,"
+		+ " J35nicFV, processId, processParam, effectFrames, attackFrames"
+		+ " FROM monster_skill WHERE monsterSkillId = ? LIMIT 1",
+		[key]
+	)
+	if rows.is_empty():
+		return {}
+
+	var row: Dictionary = rows[0]
+	var attack_frames: Array = []
+	var attack_damage: Array = []
+	var attack_count: Array = []
+	_decode_attack_frames(_str_col(row, "attackFrames"), attack_frames, attack_damage, attack_count)
+	var cost_val: int = int(row.get("cost", 0))
+	var built: Dictionary = {
+		"name": _str_col(row, "name"),
+		"skill_id": key,
+		"cost": {"MP": cost_val} if cost_val > 0 else {},
+		"attack_count": attack_count,
+		"attack_damage": attack_damage,
+		"attack_frames": attack_frames,
+		"effect_frames": _decode_effect_frames(_str_col(row, "effectFrames")),
+		"element_inflict": _decode_boolean(_str_col(row, "elementInflict")),
+		"effects_raw": _decode_effects_raw(row),
+		"targetType": int(row.get("J35nicFV", 0)),
+	}
+	_monster_skill_cache[key] = built
+	return built
+
+
+## Display meta for a monster, joined off its MONSTER_PARTS row: { name, skillId,
+## passiveSkillId }. {} if the monster has no parts row -- which happens for some
+## scripted raid bosses, so an empty result is not a sign the monster is unusable.
+## Note there is no generic-behaviour / actions-per-turn field in monster_parts;
+## a monster's action budget comes only from its script's turn_end rules.
+func get_monster_ai_meta(monster_id: String) -> Dictionary:
+	var rows: Array = query(
+		" select m.name, mss.skillId, mps.passiveSkillId from monster_parts mp"
+			+ " left join monster m on m.monsterId = mp.monsterId"
+			+ " left join monster_skill_set mss on mp.monsterId = mss.monsterId"
+			+ " left join monster_passive_skill_set mps on mp.passiveSkillSetId = mps.skillSetId"
+			+ " WHERE mp.monsterId = ?",
+		[monster_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+
 # === Unit progression ===
 
 ## Per-level XP rows for a unit exp pattern, ordered by level. Each row:
@@ -528,6 +766,23 @@ func get_unit_exp_pattern(pattern_id: int) -> Array:
 func get_all_unit_exp_patterns() -> Array:
 	return query("SELECT expPatternId, level, needExp FROM unit_exp_pattern ORDER BY expPatternId, level")
 
+
+# === Player rank progression ===
+
+## Player (team) rank progression rows, ordered by rank. Each row:
+## { rank, xpNeeded, energy } where `xpNeeded` is the XP required to advance FROM
+## this rank to the next, and `energy` is the max NRG granted at this rank.
+##
+## The shift: `team_lv.needExp[N]` is the XP required to REACH rank N (rank 1 is 0),
+## so the XP needed to advance FROM rank N is the NEXT row's needExp — the self-join
+## does that conversion. The final rank has no successor and is therefore omitted:
+## it has no further progression, which is exactly how callers treat the top row.
+func get_team_rank_table() -> Array:
+	return query(
+		"SELECT t.rank, n.needExp AS xpNeeded, t.energy FROM team_lv t"
+		+ " JOIN team_lv n ON n.rank = t.rank + 1"
+		+ " ORDER BY t.rank"
+	)
 
 func get_summonable_units(is_nv: bool = false) -> Array:
 	var nv_filter = " and isNv is not 0 " if is_nv else " and rare is not 7 "
@@ -552,7 +807,11 @@ func get_all_units() -> Array:
 # 		+ " join limitburst lb on u.limitBurstId = lb.limitBurstId"
 # 		+ " WHERE u.unitId = ? LIMIT 1", [unit_id])
 # 	return rows[0] if not rows.is_empty() else {}
-	
+
+func get_job_name(job_id: int) -> String:
+	var rows: Array = query("SELECT name FROM job WHERE jobId = ? LIMIT 1", [job_id])
+	return rows[0]["name"] if not rows.is_empty() else ""
+
 func get_unit(unit_id: int) -> Dictionary:
 	var key: String = str(unit_id)
 	if _unit_cache.has(key):
@@ -983,6 +1242,18 @@ func get_item(item_id: int) -> Dictionary:
 		+ " FROM item i"
 		+ " LEFT JOIN icon ic ON ic.iconId = i.iconId"
 		+ " LEFT JOIN item_explain e ON e.itemId = i.itemId"
+		+ " WHERE i.itemId = ? LIMIT 1",
+		[item_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+func get_important_item(item_id: int) -> Dictionary:
+	var rows: Array = query(
+		"SELECT i.*, COALESCE(ic.iconFile, '') AS iconFile,"
+		+ " COALESCE(e.explainShort, '') AS explainShort, COALESCE(e.explainLong, '') AS explainLong"
+		+ " FROM important_item i"
+		+ " LEFT JOIN icon ic ON ic.iconId = i.iconId"
+		+ " LEFT JOIN important_item_explain e ON e.itemId = i.itemId"
 		+ " WHERE i.itemId = ? LIMIT 1",
 		[item_id]
 	)

@@ -35,7 +35,8 @@ var _scenes_map: Dictionary = {
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn",
 	"town_map_ui": "res://features/town/Map.tscn",
-	"settings_ui": "res://features/outgame/profile/SettingsUI.tscn"
+	"settings_ui": "res://features/outgame/profile/SettingsUI.tscn",
+	"vortex_dungeon_ui": "res://features/outgame/vortex/vortex_dungeon.tscn"
 }
 
 # === BGM routing ===

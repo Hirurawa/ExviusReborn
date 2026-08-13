@@ -6,6 +6,7 @@ extends Control
 @onready var player_sprites_container: Control = $PlayerSpritesContainer
 @onready var debug_gil_amount: LineEdit = $DebugAddGil/GilAmount
 @onready var debug_add_gil_button: Button = $DebugAddGil/AddGilButton
+@onready var vortex_dungeon: TextureButton = $VortexDungeon
 
 const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
 const COMBAT_SPRITE_SCRIPT: GDScript = preload("res://features/battle/ui/combat_sprite.gd")
@@ -16,6 +17,7 @@ func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 	user_menu_button.get_popup().id_pressed.connect(_on_user_menu_pressed)
 	debug_add_gil_button.pressed.connect(_on_debug_add_gil_pressed)
+	vortex_dungeon.pressed.connect(_on_vortex_dungeon_pressed)
 	if not PartyService.parties_updated.is_connected(_on_parties_updated):
 		PartyService.parties_updated.connect(_on_parties_updated)
 	if not PartyService.active_party_changed.is_connected(_on_active_party_changed):
@@ -94,8 +96,9 @@ func _find_unit_inst(instance_id: String) -> Dictionary:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		if MissionService.last_played_dungeon_name != "":
-			var bg_path = "res://assets/battle_bg/%s.jpg" % MissionService.last_played_dungeon_name
+		if MissionService.last_entered_mission_id != "":
+			var bg_tex = GameDatabase.get_mission_bg(MissionService.last_entered_mission_id)
+			var bg_path = "res://assets/battle_bg/%s" % bg_tex
 			if ResourceLoader.exists(bg_path):
 				background.texture = load(bg_path)
 				background.show()
@@ -128,3 +131,6 @@ func _on_debug_add_gil_pressed() -> void:
 		return
 	PlayerProfile.add_gil(amount)
 	debug_gil_amount.text = ""
+
+func _on_vortex_dungeon_pressed() -> void:
+	UIManager.push("vortex_dungeon_ui")

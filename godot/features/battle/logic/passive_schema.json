@@ -45,7 +45,7 @@
 	},
 	"13": {
 		"type": "EQUIPMENT_ATK",
-		"keys": ["pct", "???"]
+		"keys": ["pct", ""]
 	},
 	"14": {
 		"type": "DUAL_WIELD",
@@ -53,7 +53,7 @@
 	},
 	"16": {
 		"type": "STEAL",
-		"keys": ["success_rate", "???"]
+		"keys": ["success_rate", ""]
 	},
 	"17": {
 		"type": "JUMP",
@@ -97,7 +97,7 @@
 	},
 	"29": {
 		"type": "EXPLORATION_HEAL",
-		"keys": ["???", "HP", "???", "MP", "per_step"]
+		"keys": ["", "HP", "", "MP", "per_step"]
 	},
 	"30": {
 		"type": "DRAIN_MP",
@@ -153,15 +153,15 @@
 	},
 	"49": {
 		"type": "PHYS_COUNTER_ABILITY",
-		"keys": ["pct", "???", "ability_id"]
+		"keys": ["pct", "", "ability_id"]
 	},
 	"50": {
 		"type": "MAG_COUNTER_ABILITY",
-		"keys": ["pct", "???", "ability_id"]
+		"keys": ["pct", "", "ability_id"]
 	},
 	"51": {
 		"type": "FATAL_PREVENT",
-		"keys": ["hp_threshold", "pct", "???", "times"]
+		"keys": ["hp_threshold", "pct", "", "times"]
 	},
 	"52": {
 		"type": "MULTICAST",
@@ -181,7 +181,7 @@
 	},
 	"59": {
 		"type": "ST_MAGIC_COVER",
-		"keys": ["???", "???", "phys_pct", "mag_pct", "chance_pct"]
+		"keys": ["", "", "phys_pct", "mag_pct", "chance_pct"]
 	},
 	"66": {
 		"type": "TURN_START_CAST",
@@ -193,11 +193,11 @@
 	},
 	"69": {
 		"type": "DUAL_WIELD_EQUIPMENT_STAT",
-		"keys": ["stat_id", "pct", "???"]
+		"keys": ["stat_id", "pct", ""]
 	},
 	"77": {
 		"type": "MP_REDUCTION",
-		"keys": ["pct", "???", "???"]
+		"keys": ["pct", "", ""]
 	},
 	"100": {
 		"type": "NORMAL_ATTACK_REPLACE",

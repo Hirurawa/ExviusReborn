@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://b3gglfmm1skye" path="res://assets/ui/icon/icon_gil.png" id="10_n6taw"]
 [ext_resource type="Texture2D" uid="uid://ca0jdcuodi2f7" path="res://assets/ui/quest/result_txt_unitexp.tres" id="11_5aiie"]
 [ext_resource type="Texture2D" uid="uid://bxeaofbyqy6gl" path="res://assets/ui/quest/result_txt_exp.tres" id="12_rv35e"]
+[ext_resource type="Texture2D" uid="uid://btxargjwbj1px" path="res://assets/ui/quest/result_exp_bar.tres" id="13_1mpdy"]
 [ext_resource type="Texture2D" uid="uid://bbxnuwgmr2ccr" path="res://assets/ui/quest/result_exp_bg.tres" id="13_r2lym"]
 [ext_resource type="Texture2D" uid="uid://fdevw0xuk6md" path="res://assets/ui/quest/result_exp_gauge.tres" id="14_ply1j"]
 [ext_resource type="Texture2D" uid="uid://bxgj7y4kntdtr" path="res://assets/ui/quest/result_rankup_info.tres" id="15_ehi4q"]
@@ -26,11 +27,11 @@
 [ext_resource type="Texture2D" uid="uid://b4ml1w7w53xee" path="res://assets/ui/quest/fellow_status_label_defense.tres" id="23_njfwy"]
 [ext_resource type="Texture2D" uid="uid://b8vfpt6h614tl" path="res://assets/ui/quest/fellow_status_label_mind.tres" id="24_5koxr"]
 [ext_resource type="Texture2D" uid="uid://bpwnd25hx5luo" path="res://assets/ui/unit/unit_exp_bg.tres" id="25_binhp"]
-[ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="26_41ohd"]
+[ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="26_1mpdy"]
 [ext_resource type="Texture2D" uid="uid://cyc1yl2d75bvy" path="res://assets/ui/unit/unit_exp_gauge.tres" id="27_5vsrt"]
 [ext_resource type="Texture2D" uid="uid://d2toxw8324o22" path="res://assets/ui/unit/unit_status_label_lv.tres" id="28_apkcm"]
 [ext_resource type="Texture2D" uid="uid://cix3i4u2s3dr7" path="res://assets/ui/unit/unit_lvup_info.tres" id="29_vuduu"]
-[ext_resource type="Texture2D" uid="uid://nkbw3vsua3ps" path="res://assets/ui/unit/unit_limit_exp_bar.tres" id="30_lcvjj"]
+[ext_resource type="Texture2D" uid="uid://nkbw3vsua3ps" path="res://assets/ui/unit/unit_limit_exp_bar.tres" id="30_n6taw"]
 [ext_resource type="Texture2D" uid="uid://dklsrxl3a2sgn" path="res://assets/ui/unit/unit_bonds_icon_mini.tres" id="31_c7m5s"]
 [ext_resource type="Texture2D" uid="uid://dbw1yo6p5cqni" path="res://assets/ui/unit/unit_chara_label_job.tres" id="32_n567u"]
 [ext_resource type="Texture2D" uid="uid://bn10qsub3qsex" path="res://assets/ui/item/item_frame_1.tres" id="33_awhe3"]
@@ -184,25 +185,38 @@ size_flags_horizontal = 4
 texture = ExtResource("13_r2lym")
 stretch_mode = 2
 
+[node name="ResultExpBar" type="TextureProgressBar" parent="General/ResultBg/VBoxContainer/ResultExpBg" unique_id=1926713406]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.002762431
+anchor_top = 0.071428575
+anchor_right = 0.002762431
+anchor_bottom = 0.10714286
+offset_right = 359.0
+offset_bottom = 23.0
+texture_progress = ExtResource("13_1mpdy")
+metadata/_edit_use_anchors_ = true
+
 [node name="ResultExpGauge" type="TextureRect" parent="General/ResultBg/VBoxContainer/ResultExpBg" unique_id=1648652049]
 layout_mode = 0
 offset_left = -10.0
 offset_top = -4.0
-offset_right = 665.0
+offset_right = 370.0
 offset_bottom = 42.0
 texture = ExtResource("14_ply1j")
 stretch_mode = 2
-
-[node name="ResultExpBar" type="TextureProgressBar" parent="General/ResultBg/VBoxContainer/ResultExpBg/ResultExpGauge" unique_id=1926713406]
-layout_mode = 0
-offset_right = 1.0
-offset_bottom = 1.0
-metadata/_edit_use_anchors_ = true
 
 [node name="ResultRankupInfo" type="TextureRect" parent="General/ResultBg/VBoxContainer" unique_id=330812497]
 layout_mode = 2
 texture = ExtResource("15_ehi4q")
 stretch_mode = 3
+
+[node name="Label" type="Label" parent="General/ResultBg/VBoxContainer/ResultRankupInfo" unique_id=1530230232]
+layout_mode = 0
+offset_left = 396.0
+offset_top = -3.0
+offset_right = 482.0
+offset_bottom = 20.0
 
 [node name="ResultBgBottom" type="TextureRect" parent="General" unique_id=178841390]
 layout_mode = 2
@@ -252,12 +266,20 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_k2yo7")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Unit/ResultBg" unique_id=984357730]
 layout_mode = 2
-theme_override_constants/separation = 0
+theme_override_constants/separation = -20
 
 [node name="ResultUnit" type="TextureRect" parent="Unit/ResultBg/VBoxContainer" unique_id=1484803782]
-visible = false
+custom_minimum_size = Vector2(640, 180)
 layout_mode = 2
 texture = ExtResource("18_s1b2v")
+expand_mode = 1
+
+[node name="UnitTexture" type="Control" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1635550412]
+anchors_preset = 0
+offset_left = 11.0
+offset_top = 6.0
+offset_right = 138.0
+offset_bottom = 133.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1842836996]
 layout_mode = 0
@@ -271,48 +293,75 @@ layout_mode = 2
 
 [node name="FellowStatusLabelHp" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer" unique_id=1405930119]
 layout_mode = 2
+size_flags_horizontal = 3
 texture = ExtResource("19_ggmxf")
+stretch_mode = 3
 
 [node name="HPLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer" unique_id=1646403693]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+vertical_alignment = 1
 
 [node name="FellowStatusLabelAttack" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer" unique_id=148515190]
 layout_mode = 2
+size_flags_horizontal = 3
 texture = ExtResource("20_f431u")
+stretch_mode = 3
 
 [node name="ATKLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer" unique_id=1037268265]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+vertical_alignment = 1
 
 [node name="FellowStatusLabelMagic" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer" unique_id=1487346657]
 layout_mode = 2
+size_flags_horizontal = 3
 texture = ExtResource("21_tsfg6")
+stretch_mode = 3
 
 [node name="MAGLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer" unique_id=258575156]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+vertical_alignment = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer" unique_id=1081627526]
 layout_mode = 2
 
 [node name="FellowStatusLabelMp" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer2" unique_id=2063505383]
 layout_mode = 2
+size_flags_horizontal = 3
 texture = ExtResource("22_5vu3d")
+stretch_mode = 3
 
 [node name="MPLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer2" unique_id=1650532008]
 layout_mode = 2
+size_flags_horizontal = 3
+vertical_alignment = 1
 
 [node name="FellowStatusLabelDefense" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer2" unique_id=1864159394]
 layout_mode = 2
+size_flags_horizontal = 3
 texture = ExtResource("23_njfwy")
+stretch_mode = 3
 
 [node name="DEFLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer2" unique_id=1558101033]
 layout_mode = 2
+size_flags_horizontal = 3
+vertical_alignment = 1
 
 [node name="FellowStatusLabelMind" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer2" unique_id=2083640701]
 layout_mode = 2
+size_flags_horizontal = 3
 texture = ExtResource("24_5koxr")
+stretch_mode = 3
 
 [node name="SPRLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/VBoxContainer/HBoxContainer2" unique_id=1002982191]
 layout_mode = 2
+size_flags_horizontal = 3
+vertical_alignment = 1
 
 [node name="UnitExpBg" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=591767614]
 layout_mode = 0
@@ -322,13 +371,13 @@ offset_right = 617.0
 offset_bottom = 70.0
 texture = ExtResource("25_binhp")
 
-[node name="UnitExpBar" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg" unique_id=462946580]
+[node name="UnitExpBar" type="TextureProgressBar" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg" unique_id=1637589856]
 layout_mode = 0
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 349.0
 offset_bottom = 7.0
-texture = ExtResource("26_41ohd")
+texture_progress = ExtResource("26_1mpdy")
 
 [node name="UnitExpGauge" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg" unique_id=1837660943]
 layout_mode = 0
@@ -337,16 +386,18 @@ texture = ExtResource("27_5vsrt")
 [node name="UnitStatusLabelLv" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1225071431]
 layout_mode = 0
 offset_left = 163.0
-offset_top = 47.0
+offset_top = 44.0
 offset_right = 205.0
-offset_bottom = 67.0
+offset_bottom = 64.0
 texture = ExtResource("28_apkcm")
 
 [node name="UnitLevel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitStatusLabelLv" unique_id=1977450909]
 layout_mode = 0
 offset_left = 40.0
+offset_top = -1.0
 offset_right = 80.0
-offset_bottom = 23.0
+offset_bottom = 22.0
+vertical_alignment = 1
 
 [node name="UnitLvupInfo2" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1665187214]
 layout_mode = 0
@@ -356,6 +407,14 @@ offset_right = 576.0
 offset_bottom = 58.0
 texture = ExtResource("29_vuduu")
 
+[node name="NextExpLabel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitLvupInfo2" unique_id=1599207240]
+layout_mode = 0
+offset_left = 28.0
+offset_top = -3.0
+offset_right = 68.0
+offset_bottom = 20.0
+vertical_alignment = 1
+
 [node name="UnitExpBg2" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=589953451]
 layout_mode = 0
 offset_left = 262.0
@@ -364,13 +423,13 @@ offset_right = 616.0
 offset_bottom = 152.0
 texture = ExtResource("25_binhp")
 
-[node name="UnitLimitExpBar" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg2" unique_id=260887484]
+[node name="UnitLimitExpBar" type="TextureProgressBar" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg2" unique_id=1147498723]
 layout_mode = 0
 offset_left = 4.0
 offset_top = 3.0
 offset_right = 350.0
 offset_bottom = 7.0
-texture = ExtResource("30_lcvjj")
+texture_progress = ExtResource("30_n6taw")
 
 [node name="UnitExpGauge2" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg2" unique_id=892825229]
 layout_mode = 0
@@ -386,16 +445,18 @@ offset_bottom = 144.0
 [node name="UnitStatusLabelLv2" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1573995757]
 layout_mode = 0
 offset_left = 440.0
-offset_top = 124.0
+offset_top = 123.0
 offset_right = 482.0
-offset_bottom = 144.0
+offset_bottom = 143.0
 texture = ExtResource("28_apkcm")
 
 [node name="LBLevel" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitStatusLabelLv2" unique_id=1771178624]
 layout_mode = 0
 offset_left = 34.0
+offset_top = -2.0
 offset_right = 74.0
-offset_bottom = 23.0
+offset_bottom = 21.0
+vertical_alignment = 1
 
 [node name="UnitLvupInfo" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1878637897]
 layout_mode = 0
@@ -430,9 +491,10 @@ texture = ExtResource("32_n567u")
 
 [node name="JobName" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitCharaLabelJob" unique_id=790569754]
 layout_mode = 0
-offset_left = 57.0
-offset_right = 97.0
-offset_bottom = 23.0
+offset_left = 48.0
+offset_top = 1.0
+offset_right = 151.0
+offset_bottom = 24.0
 
 [node name="UnitName" type="Label" parent="Unit/ResultBg/VBoxContainer/ResultUnit" unique_id=1834373200]
 layout_mode = 0
@@ -488,6 +550,7 @@ layout_mode = 2
 [node name="ItemFrame1" type="TextureRect" parent="Items/ResultBg/VBoxContainer/ItemRow" unique_id=630177667]
 layout_mode = 2
 texture = ExtResource("33_awhe3")
+expand_mode = 1
 stretch_mode = 2
 
 [node name="ItemTexture" type="TextureRect" parent="Items/ResultBg/VBoxContainer/ItemRow/ItemFrame1" unique_id=1605970672]

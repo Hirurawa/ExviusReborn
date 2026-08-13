@@ -17,10 +17,28 @@ signal wave_transition_started(current_wave: int, next_wave: int, total_waves: i
 signal item_dropped(enemy_index: int, item_id: String)
 signal limit_crystal_dropped(enemy_index: int, target_unit_index: int)
 
+## In-combat story dialogue. BattleManager emits dialogue_requested with the
+## ordered [{speaker, text}] lines for a wave trigger; the battle UI shows an
+## overlay and calls close_dialogue() once the player has clicked through them.
+signal dialogue_requested(lines: Array)
+signal dialogue_completed
+
 enum BattleState { INIT, PLAYER_TURN, RESOLVING_TURN, ENEMY_TURN, BATTLE_OVER }
 enum CombatAction { ATTACK, DEFEND, SKILL, ITEM }
 
 const ENEMY_ATTACK_DELAY_FRAMES: int = 60
+## Frames left between consecutive enemy actions so a multi-action monster turn reads
+## as a sequence instead of every hit landing on the same frame.
+const ENEMY_ACTION_GAP_FRAMES: int = 20
+## Least amount of timeline one enemy action may occupy. An action whose effects carry
+## no attack frames at all -- a buff, a debuff, a self-heal -- would otherwise resolve
+## and be announced within ENEMY_ACTION_GAP_FRAMES of the next one, which is too fast to
+## read. Sized to roughly cover BattleUI.ACTION_FEEDBACK_DURATION so each action's label
+## is legible before the next replaces it.
+const ENEMY_ACTION_MIN_SPAN_FRAMES: int = 90
+## What an unscripted monster does on its turn. 14153 of the 16931 monsters carry no
+## `ai` rows at all, so this is the common path, not an error case.
+const ENEMY_DEFAULT_ATTACKS_PER_TURN: int = 1
 ## HP applied to an enemy when its bestiary entry has no usable encounter HP.
 const DEFAULT_ENEMY_HP: int = 1000
 ## Offensive/defensive stat applied to an enemy when no MONSTER_PARTS row exists
@@ -54,14 +72,33 @@ var current_state: BattleState = BattleState.INIT
 var player_units_acted_this_turn: Array = []
 var current_battle_frame: int = 0
 var pending_hits: Array[Dictionary] = []
+## Enemy action announcements waiting on the battle frame clock, as
+## { execute_on_frame, enemy_index, action, action_name }. A monster's whole turn is
+## queued in one pass, so emitting enemy_action_started as each action is queued would
+## fire every announcement on the same frame: the feedback label would only ever show
+## the last one, and combat_sprite would play all the attack animations at once.
+## Draining them on the same clock the hits use puts each announcement where its action
+## actually resolves. See _schedule_enemy_announcement.
+var pending_announcements: Array[Dictionary] = []
 
 var player_units: Array = []
 var enemy_units: Array = []
+
+## Per-enemy AI, keyed by the enemy's index in enemy_units:
+## { script: MonsterAIScript, state: MonsterAIState }. Rebuilt each wave, since the
+## flag banks and limited_act counters belong to one monster in one encounter.
+var _enemy_ai: Dictionary = {}
 
 var party_data: Array = []
 var turn_count: int = 1
 
 var is_transitioning: bool = false
+## True while a dialogue overlay is showing -- pauses the turn engine (_process)
+## so no enemy acts while the player reads. The full-screen overlay blocks input.
+var _dialogue_active: bool = false
+## Cutscene phases for the active mission (from GameDatabase.get_mission_cutscenes),
+## slotted by after_wave. Shown as placeholders via the dialogue overlay for now.
+var _cutscenes: Array = []
 
 var current_wave: int = 1
 var total_waves: int = 1
@@ -71,6 +108,14 @@ var total_waves: int = 1
 var wave_plan: Array = []
 var current_mission_id: String = ""
 var mission_drops: Array[String] = []
+## Unit EXP earned so far this battle. Accumulated per defeated enemy from its
+## MONSTER_PARTS exp value (see _accumulate_enemy_rewards) and handed to
+## MissionService.request_finish_mission on victory, where every party member
+## gains it. Lost on defeat, like mission_drops.
+var mission_unit_exp: int = 0
+## Gil earned from defeated enemies (MONSTER_PARTS gil). Escrowed like
+## mission_unit_exp; MissionService adds it to the mission's own gil reward.
+var mission_gil: int = 0
 var used_items: Dictionary = {}
 var challenge_results: Array[bool] = []
 
@@ -83,10 +128,16 @@ func _ready() -> void:
 	result_processor = preload("res://features/battle/logic/result_processor.gd").new()
 
 func _process(_delta: float) -> void:
+	if _dialogue_active:
+		return
 	if current_state != BattleState.PLAYER_TURN and current_state != BattleState.ENEMY_TURN:
 		return
 
 	current_battle_frame += 1
+
+	# Drained before the hits so an action's label and animation are already on screen
+	# when its damage lands on the same frame.
+	_drain_pending_announcements()
 
 	for i in range(pending_hits.size() - 1, -1, -1):
 		var hit: Dictionary = pending_hits[i]
@@ -141,6 +192,7 @@ func _process(_delta: float) -> void:
 						# If this hit killed them, roll for drops!
 						if previous_hp > 0 and target["current_hp"] == 0:
 							_roll_enemy_drops(target, target_index)
+							_accumulate_enemy_rewards(target)
 							PlayerProfile.record_monster_kill(str(target["id"]))
 							BattleEvents.enemy_defeated.emit(target["id"], hit)
 
@@ -224,8 +276,12 @@ func initialize_battle(mission_id: String) -> void:
 		total_waves = wave_plan.size()
 	else:
 		total_waves = mission_data.get("wave_count", 1)
+	# Cutscene phases for this mission, slotted by after_wave (see get_mission_cutscenes).
+	_cutscenes = GameDatabase.get_mission_cutscenes(str(current_mission_id))
 	current_wave = 1
 	mission_drops.clear()
+	mission_unit_exp = 0
+	mission_gil = 0
 	used_items.clear()
 	var mission_challenges: Variant = mission_data.get("challenges", [])
 	var challenge_count: int = mission_challenges.size() if mission_challenges is Array else 0
@@ -305,10 +361,15 @@ func initialize_battle(mission_id: String) -> void:
 	player_units_acted_this_turn.clear()
 	current_battle_frame = 0
 	pending_hits.clear()
+	pending_announcements.clear()
 
 	turn_count = 1
 	is_transitioning = false
 	battle_state_ready.emit()
+
+	# Intro cutscenes (placeholder), then the first wave's intro dialogue.
+	await _play_cutscenes_for_slot(0)
+	await play_dialogue(wave_dialogue_lines(1, 1))
 
 func initialize_challenges(mission_challenge_data: Array):
 	for data in mission_challenge_data:
@@ -542,7 +603,9 @@ func execute_queued_action(attacker_index: int) -> void:
 		_queue_effect_hits(dummy_effect, attacker_data, target_data)
 
 func _check_turn_progression() -> void:
-	if not pending_hits.is_empty():
+	# Announcements are part of the turn playing out: ending it while a monster still has
+	# actions left to announce would hand control back to the player mid-sequence.
+	if not pending_hits.is_empty() or not pending_announcements.is_empty():
 		return
 
 	check_battle_state()
@@ -609,65 +672,306 @@ func _tick_active_effect_durations(units: Array) -> void:
 		unit["active_effects"] = remaining_effects
 		unit["final_stats"] = StatCalculator.calculate_final_stats(unit)
 
+## Runs every living enemy's turn. Scripted monsters (2778 of them) are driven by
+## MonsterAIRuntime, which can produce several actions per monster; the rest fall back
+## to one basic attack. Actions are queued into pending_hits staggered along the frame
+## timeline so a multi-action turn plays out in sequence rather than all at once.
 func _execute_enemy_turn() -> void:
-	var living_player_indices: Array[int] = []
-	for i in range(player_units.size()):
-		var unit: Dictionary = player_units[i]
-		if not unit.is_empty() and unit.has("current_hp") and unit.get("current_hp") > 0:
-			living_player_indices.append(i)
+	if _get_living_units(player_units).is_empty():
+		return
 
-	# Pick the attacker from living enemies only. Previously this hardcoded
-	# index 0, so a dead enemy could still queue an attack.
-	var living_enemy_indices: Array[int] = []
-	for i in range(enemy_units.size()):
-		var e: Dictionary = enemy_units[i]
-		if not e.is_empty() and e.get("current_hp", 0) > 0:
-			living_enemy_indices.append(i)
+	var frame_cursor: int = 0
+	for enemy_index in range(enemy_units.size()):
+		var enemy: Dictionary = enemy_units[enemy_index]
+		if enemy.is_empty() or int(enemy.get("current_hp", 0)) <= 0:
+			continue
+		# The party can be wiped partway through the enemy turn.
+		if _get_living_units(player_units).is_empty():
+			break
+		frame_cursor += _run_enemy_turn(enemy_index, frame_cursor)
 
-	if living_player_indices.size() > 0 and living_enemy_indices.size() > 0:
-		var random_idx: int = randi() % living_player_indices.size()
-		var target_index: int = living_player_indices[random_idx]
-		var target_unit: Dictionary = {}
-		if target_index >= 0 and target_index < player_units.size():
-			target_unit = player_units[target_index]
 
-		var attacker_index: int = living_enemy_indices[randi() % living_enemy_indices.size()]
-		
-		# Emit signal so the UI can play the attack animation
-		enemy_action_started.emit(attacker_index, CombatAction.ATTACK)
+## Queues one enemy's whole turn starting at `frame_cursor`, returning how many frames
+## of timeline it consumed.
+func _run_enemy_turn(enemy_index: int, frame_cursor: int) -> int:
+	var enemy: Dictionary = enemy_units[enemy_index]
+	var ai: Dictionary = _enemy_ai_for(enemy_index)
+	var ai_script: MonsterAIScript = ai.get("script")
+	var state: MonsterAIState = ai.get("state")
 
-		var dummy_effect = {
-			"type": "PHYSICAL_DAMAGE",
-			"modifier": 1.0,
-			"target_area": 1,
-			"target_type": 1
-		}
-		
-		# Calculate dynamic attack frames based on enemy's animation duration (looping twice)
-		var monster_id: String = str(enemy_units[attacker_index].get("id", "5010010"))
-		var anim_data = TextureBuilder.load_monster_animation_data(monster_id, "atk")
-		
-		var attack_delay_frames = ENEMY_ATTACK_DELAY_FRAMES
-		if not anim_data.is_empty():
-			var delays = anim_data.get("delays", [])
-			var total_frames: int = 0
-			for d in delays:
-				# delays in JSON are typically frame counts at 60fps
-				# combat_sprite uses float(d)/60.0 for seconds.
-				# We want total frames to wait.
-				total_frames += int(d)
-			if total_frames > 0:
-				attack_delay_frames = total_frames * 2 # Play animation twice
+	if ai_script == null or not ai_script.has_script():
+		var span: int = 0
+		for _i in range(ENEMY_DEFAULT_ATTACKS_PER_TURN):
+			span += _action_timeline_span(_queue_enemy_basic_attack(enemy_index, frame_cursor + span))
+		return span
 
-		var attack_frames = [attack_delay_frames]
-		var attack_damage = [[100]]
-		
-		var caster_data = enemy_units[attacker_index]
+	var actions: Array[Dictionary] = MonsterAIRuntime.run_turn(ai_script, state, _build_enemy_ai_context(enemy_index))
+	if OS.is_debug_build():
+		print("[AI] %s (#%d) turn %d: %d action(s)  %s" % [
+			str(enemy.get("name", "?")), enemy_index, turn_count, actions.size(), state.describe(),
+		])
 
-		# Insert attack frames/damage directly into the dummy effect so standard processing can read them
-		dummy_effect["attack_frames"] = attack_frames
-		dummy_effect["attack_damage"] = attack_damage
-		_queue_effect_hits(dummy_effect, caster_data, target_unit)
+	var consumed: int = 0
+	for action in actions:
+		consumed += _action_timeline_span(_queue_enemy_action(enemy_index, action, frame_cursor + consumed))
+	return consumed
+
+
+## How much timeline one enemy action occupies: its own hit span plus a beat, but never
+## less than ENEMY_ACTION_MIN_SPAN_FRAMES. A `wait` or `turn_end` reports a span of 0 and
+## takes no timeline at all -- it produces nothing to see, so pausing on it would just
+## look like the game had hung.
+func _action_timeline_span(hit_span: int) -> int:
+	if hit_span <= 0:
+		return 0
+	return maxi(hit_span + ENEMY_ACTION_GAP_FRAMES, ENEMY_ACTION_MIN_SPAN_FRAMES)
+
+
+
+## Queues a single MonsterAIRuntime action, returning the frames it spans. `wait` and
+## `guard` occupy a slot without producing hits, and an unresolvable skill degrades to
+## a basic attack rather than silently doing nothing.
+func _queue_enemy_action(enemy_index: int, action: Dictionary, frame_offset: int) -> int:
+	var kind: String = str(action.get("kind", ""))
+
+	if kind == MonsterAIRuntime.KIND_WAIT or kind == MonsterAIRuntime.KIND_GUARD:
+		if kind == MonsterAIRuntime.KIND_GUARD:
+			enemy_units[enemy_index]["is_defending"] = true
+		return 0
+
+	if kind == MonsterAIRuntime.KIND_SKILL:
+		var skill_id: String = str(action.get("skill_id", ""))
+		print(GameDatabase.get_monster_skill(skill_id).get("name"))
+		if skill_id != "":
+			var span: int = _queue_enemy_skill(enemy_index, skill_id, action, frame_offset)
+			if span >= 0:
+				return span
+		# No usable skill: the rule named an index outside this monster's skill set, or
+		# every opcode in it is one skill_schema.json does not cover.
+		return _queue_enemy_basic_attack(enemy_index, frame_offset)
+
+	return _queue_enemy_basic_attack(enemy_index, frame_offset)
+
+
+## Queues a monster skill through the shared opcode pipeline. Returns the frames it
+## spans, or -1 when the skill decoded to nothing executable so the caller can fall
+## back. Primary targets are chosen per effect, because one skill can mix
+## player-targeting and self/ally-targeting effects and TargetResolver trusts the
+## primary target it is handed.
+func _queue_enemy_skill(enemy_index: int, skill_id: String, action: Dictionary, frame_offset: int) -> int:
+	var record: Dictionary = GameDatabase.get_monster_skill_record(skill_id)
+	if record.is_empty():
+		return -1
+	var parsed: Dictionary = SkillResolver.parse_skill_effects(record)
+	var effects: Array = parsed.get("effects", [])
+	if effects.is_empty():
+		return -1
+
+	var caster: Dictionary = enemy_units[enemy_index]
+
+	var span: int = 0
+	var queued: int = 0
+	for effect in effects:
+		effect["element"] = parsed.get("element_inflict")
+		var primary: Dictionary = _pick_enemy_target(caster, int(effect.get("target_type", 1)), action)
+		if primary.is_empty():
+			continue
+		_queue_effect_hits(effect, caster, primary, frame_offset)
+		span = maxi(span, _effect_span(effect))
+		queued += 1
+
+	if queued == 0:
+		return -1
+
+# Announced only once we know the skill actually landed something -- otherwise the
+	# caller's fallback to a basic attack would announce a second time and the UI would
+	# flash the skill name before replacing it.
+	_schedule_enemy_announcement(enemy_index, CombatAction.SKILL, str(record.get("name", "")), frame_offset)
+	return maxi(span, ENEMY_ATTACK_DELAY_FRAMES)
+
+
+## Queues the plain physical attack, timed off the monster's attack animation. This is
+## the path unscripted monsters and `attack` rules both take.
+func _queue_enemy_basic_attack(enemy_index: int, frame_offset: int) -> int:
+	var caster: Dictionary = enemy_units[enemy_index]
+	var target: Dictionary = _pick_enemy_target(caster, 1, {})
+	if target.is_empty():
+		return 0
+
+	# An empty name so a skill name from an earlier action this turn cannot leak into
+	# the feedback for a plain attack.
+	_schedule_enemy_announcement(enemy_index, CombatAction.ATTACK, "", frame_offset)
+	var delay: int = _enemy_attack_delay_frames(str(caster.get("id", "")))
+	_queue_effect_hits({
+		"type": "PHYSICAL_DAMAGE",
+		"modifier": 1.0,
+		"target_area": 1,
+		"target_type": 1,
+		"attack_frames": [delay],
+		"attack_damage": [[100]],
+	}, caster, target, frame_offset)
+	return delay
+
+
+## How long the monster's attack animation runs, in frames (played twice, matching the
+## original hand-rolled enemy attack). Falls back to ENEMY_ATTACK_DELAY_FRAMES.
+func _enemy_attack_delay_frames(monster_id: String) -> int:
+	var anim_data: Dictionary = TextureBuilder.load_monster_animation_data(monster_id, "atk")
+	if anim_data.is_empty():
+		return ENEMY_ATTACK_DELAY_FRAMES
+	var total_frames: int = 0
+	for d in anim_data.get("delays", []):
+		total_frames += int(d)
+	return total_frames * 2 if total_frames > 0 else ENEMY_ATTACK_DELAY_FRAMES
+
+## Queues an enemy action announcement for the frame its action starts on, instead of
+## emitting now. `action_name` is carried here rather than added to the signal, so the
+## signal's other listener (combat_sprite) is unaffected; the drain writes it onto the
+## enemy dict just before emitting, which is where BattleUI reads it from.
+func _schedule_enemy_announcement(enemy_index: int, action: CombatAction, action_name: String, frame_offset: int) -> void:
+	pending_announcements.append({
+		"execute_on_frame": current_battle_frame + frame_offset,
+		"enemy_index": enemy_index,
+		"action": action,
+		"action_name": action_name,
+	})
+
+
+## Emits every scheduled announcement whose frame has arrived, oldest first so a
+## monster's actions are announced in the order it chose them.
+func _drain_pending_announcements() -> void:
+	if pending_announcements.is_empty():
+		return
+
+	var still_pending: Array[Dictionary] = []
+	for announcement in pending_announcements:
+		if int(announcement.get("execute_on_frame", 0)) > current_battle_frame:
+			still_pending.append(announcement)
+			continue
+
+		var enemy_index: int = int(announcement.get("enemy_index", -1))
+		if enemy_index < 0 or enemy_index >= enemy_units.size():
+			continue
+		var enemy: Dictionary = enemy_units[enemy_index]
+		if enemy.is_empty():
+			continue
+		enemy["current_action_name"] = str(announcement.get("action_name", ""))
+		enemy_action_started.emit(enemy_index, announcement.get("action", CombatAction.ATTACK))
+
+	pending_announcements = still_pending
+
+
+## The last frame an effect's hits land on, used to space consecutive actions.
+func _effect_span(effect: Dictionary) -> int:
+	var span: int = 0
+	for frame in effect.get("attack_frames", []):
+		span = maxi(span, int(frame))
+	return span
+
+
+## The compiled script + live state for an enemy, built on first use this wave. Keyed on
+## the 9-digit instance_id, which is what the `ai` table keys on -- the base `id` is the
+## shared monster and would hand a boss its trash-mob variant's behaviour.
+func _enemy_ai_for(enemy_index: int) -> Dictionary:
+	if _enemy_ai.has(enemy_index):
+		return _enemy_ai[enemy_index]
+	var enemy: Dictionary = enemy_units[enemy_index]
+	var monster_id: String = str(enemy.get("instance_id", enemy.get("id", "")))
+	var entry: Dictionary = {
+		"script": MonsterAIScript.compile(monster_id),
+		"state": MonsterAIState.new(monster_id),
+	}
+	_enemy_ai[enemy_index] = entry
+	return entry
+
+
+## The battle-state view MonsterAIRuntime evaluates conditions against. `party` is
+## party_data, not player_units, so the AI's 1-based party slots line up with the UI's
+## stable slots (player_units is a compact subset that shifts when a slot is empty).
+func _build_enemy_ai_context(enemy_index: int) -> Dictionary:
+	var by_id: Dictionary = {}
+	for other in enemy_units:
+		if not other.is_empty():
+			by_id[str(other.get("instance_id", other.get("id", "")))] = other
+	return {
+		"self": enemy_units[enemy_index],
+		"party": party_data,
+		"enemies": enemy_units,
+		"monsters_by_id": by_id,
+	}
+
+
+## targetSelect stat modes -> [final_stats key, pick the maximum?]. In the datamine's
+## vocabulary `int` is MAG and `mind` is SPR.
+const _TARGET_STAT_MODES: Dictionary = {
+	"atk_max": ["ATK", true], "atk_min": ["ATK", false],
+	"def_max": ["DEF", true], "def_min": ["DEF", false],
+	"int_max": ["MAG", true], "int_min": ["MAG", false],
+	"mind_max": ["SPR", true], "mind_min": ["SPR", false],
+}
+## targetSelect modes that compare a live pool value instead of a base stat.
+const _TARGET_LIVE_MODES: Dictionary = {
+	"hp_max": ["current_hp", true], "hp_min": ["current_hp", false],
+	"mp_max": ["current_mp", true], "mp_min": ["current_mp", false],
+}
+
+
+## The primary target for one enemy effect. `target_type` is the effect's own
+## (1 = the player party, 2/6 = the monster's own side, 3 = itself); the AI rule's
+## targetSelect mode then picks which party member. {} when there is nobody to hit.
+func _pick_enemy_target(caster: Dictionary, target_type: int, action: Dictionary) -> Dictionary:
+	if target_type == 3:
+		return caster
+	if target_type == 2 or target_type == 6:
+		var allies: Array[Dictionary] = _get_living_units(enemy_units)
+		return allies[randi() % allies.size()] if not allies.is_empty() else caster
+
+	var living: Array[Dictionary] = _get_living_units(player_units)
+	if living.is_empty():
+		return {}
+	return _select_by_target_mode(
+		living,
+		str(action.get("target_mode", "random")),
+		int(action.get("target_param", 0))
+	)
+
+
+## Applies an AI rule's targetSelect mode to a pool of living units. 48089 of the
+## table's 49944 rules just say "random"; the rest aim at a stat extreme or a fixed
+## party slot. Modes we do not model (the ~60 rows keying off buffs, statuses or
+## revenge counters) fall back to random rather than dropping the action.
+func _select_by_target_mode(pool: Array[Dictionary], mode: String, param: int) -> Dictionary:
+	if mode == "disp_order":
+		for unit in pool:
+			if int(unit.get("index", -1)) == param:
+				return unit
+	elif _TARGET_LIVE_MODES.has(mode):
+		var live: Array = _TARGET_LIVE_MODES[mode]
+		return _pick_extreme(pool, str(live[0]), bool(live[1]), false)
+	elif _TARGET_STAT_MODES.has(mode):
+		var stat: Array = _TARGET_STAT_MODES[mode]
+		return _pick_extreme(pool, str(stat[0]), bool(stat[1]), true)
+	return pool[randi() % pool.size()]
+
+
+## The pool member with the highest (or lowest) value of `key`, read either from the
+## unit dict directly or from its final_stats block.
+func _pick_extreme(pool: Array[Dictionary], key: String, want_max: bool, from_stats: bool) -> Dictionary:
+	var best: Dictionary = pool[0]
+	var best_value: int = _target_metric(best, key, from_stats)
+	for unit in pool:
+		var value: int = _target_metric(unit, key, from_stats)
+		if value > best_value if want_max else value < best_value:
+			best = unit
+			best_value = value
+	return best
+
+
+func _target_metric(unit: Dictionary, key: String, from_stats: bool) -> int:
+	if not from_stats:
+		return int(unit.get(key, 0))
+	var stats: Dictionary = unit.get("final_stats", {}).get("stats", {})
+	return int(stats.get(key, 0))
 
 ## Re-emits unit_stats_updated for the given party slot so UI can pull fresh values
 ## without holding a direct reference to party_data.
@@ -698,6 +1002,96 @@ func _are_all_units_dead(team: Array) -> bool:
 			return false
 
 	return true
+
+# === Story dialogue ===
+
+## Ordered [{speaker, text}] lines for a wave's trigger (cond 1 = on start,
+## 2 = on victory), or [] when the wave has no script, that trigger has no
+## lines, or the first-time gate switch is already set for the player (seen).
+func wave_dialogue_lines(wave_index: int, cond: int) -> Array:
+	if wave_index < 1 or wave_index > wave_plan.size():
+		return []
+	var wave: Dictionary = wave_plan[wave_index - 1]
+	var script_id: String = str(wave.get("battle_script_id", ""))
+	if script_id == "" or script_id == "0":
+		return []
+	if _dialogue_gate_seen(wave.get("switch_non_info")):
+		return []
+	var lines: Array = []
+	for seg in MissionTimeline.parse_battle_script(script_id):
+		if int(seg.get("cond", 0)) == cond:
+			for ln in seg.get("lines", []):
+				lines.append(ln)
+	return lines
+
+## True when the phase's first-time gate switch is already unlocked -- i.e. the
+## player has seen this dialogue (the switch is set when the mission is cleared).
+func _dialogue_gate_seen(gate: Variant) -> bool:
+	if gate == null:
+		return false
+	var s: String = str(gate).strip_edges()
+	if s == "" or s == "0" or s == "null":
+		return false
+	return SwitchService.is_unlocked(gate)
+
+## Show the given lines and pause the battle until the player clicks through.
+## No-op for empty lines. The overlay (battle_ui) drives close_dialogue().
+func play_dialogue(lines: Array) -> void:
+	if lines.is_empty():
+		return
+	_dialogue_active = true
+	dialogue_requested.emit(lines)
+	await dialogue_completed
+	_dialogue_active = false
+
+## Called by the battle UI once the player has clicked through all lines.
+func close_dialogue() -> void:
+	dialogue_completed.emit()
+
+
+## Show placeholder cards for every cutscene slotted after the given wave index
+## (0 = intro, K = after wave K, total_waves = outro). Each is gated by its own
+## first-time/replay switch. Reuses the dialogue overlay for now; swap the body
+## for an EventRunner call once the storyEvent -> event cpk mapping is resolved.
+func _play_cutscenes_for_slot(slot: int) -> void:
+	for cut in _cutscenes:
+		if int(cut.get("after_wave", -1)) != slot:
+			continue
+		if _dialogue_gate_seen(cut.get("switch_non_info")):
+			continue  # already seen
+		var si: Variant = cut.get("switch_info")
+		if _switch_present(si) and not SwitchService.is_unlocked(si):
+			continue  # replay-only cutscene, not active yet
+		await play_dialogue([_cutscene_placeholder_line(cut)])
+
+## Builds a one-line placeholder card naming the cutscene that should play here,
+## with the resolved event cpk (the folder id EventRunner takes) + resource id.
+func _cutscene_placeholder_line(cut: Dictionary) -> Dictionary:
+	var sid: String = str(cut.get("story_event_id", ""))
+	var ev: Dictionary = GameDatabase.get_story_event(sid)
+	var nm: String = str(ev.get("name", "?"))
+	var scene_ref: String = str(ev.get("sceneRes", ""))       # "map@N" = layer/block
+	var event_id: String = str(cut.get("event_id", ""))       # cpk folder for EventRunner
+	var resource_id: String = str(cut.get("resource_id", ""))
+	var line2: String = "storyEvent %s" % sid
+	if scene_ref != "":
+		line2 += "  ·  " + scene_ref
+	var line3: String = "event %s  (resource %s)" % [
+		event_id if event_id != "" else "?",
+		resource_id if resource_id != "" else "?",
+	]
+	return {
+		"speaker": "🎬 CUTSCENE (placeholder)",
+		"text": "%s\n%s\n%s" % [nm, line2, line3],
+	}
+
+## True when a switch field is an active value (not null/""/"0"/"null").
+func _switch_present(v: Variant) -> bool:
+	if v == null:
+		return false
+	var s: String = str(v).strip_edges()
+	return s != "" and s != "0" and s != "null"
+
 
 func check_battle_state() -> void:
 	# If we are already handling a win/loss, ignore further checks
@@ -732,6 +1126,13 @@ func _trigger_wave_clear() -> void:
 	# 1. Wait for the death tweens to finish (0.5 to 1.0 seconds)
 	await get_tree().create_timer(1.0).timeout
 
+	# Victory dialogue for the wave just cleared (gated by first-time switch).
+	await play_dialogue(wave_dialogue_lines(current_wave, 2))
+
+	# Cutscenes slotted after this wave -- mid-mission ones, and (when this is the
+	# final wave) the outro, played before the mission-complete rewards.
+	await _play_cutscenes_for_slot(current_wave)
+
 	if current_wave >= total_waves:
 		_trigger_mission_complete()
 	else:
@@ -741,12 +1142,14 @@ func _trigger_wave_clear() -> void:
 		# 3. Wait for the UI animation to finish before actually spawning
 		await get_tree().create_timer(2.0).timeout
 
-		_spawn_next_wave()
+		await _spawn_next_wave()
 
 func _trigger_mission_complete() -> void:
 	if OS.is_debug_build():
 		print("BattleManager: Final wave cleared. Initiating mission rewards...")
 		print("Mission Drops: ", mission_drops)
+		print("Unit EXP earned: ", mission_unit_exp)
+		print("Battle gil earned: ", mission_gil)
 
 	BattleEvents.mission_completed.emit(party_data, turn_count)
 	
@@ -759,7 +1162,7 @@ func _trigger_mission_complete() -> void:
 
 	active_challenges.clear()
 
-	MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops)
+	MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops, mission_unit_exp, mission_gil)
 
 	
 func _spawn_next_wave() -> void:
@@ -777,6 +1180,7 @@ func _spawn_next_wave() -> void:
 	player_units_acted_this_turn.clear()
 	current_battle_frame = 0
 	pending_hits.clear()
+	pending_announcements.clear()
 
 	# Clear queued actions so previous wave's selections don't bleed into the new wave.
 	# Without this, BattleComIcon resets visually but execute_queued_action still reads
@@ -786,6 +1190,9 @@ func _spawn_next_wave() -> void:
 			_reset_unit_queued_action(unit)
 
 	battle_state_ready.emit()
+
+	# Start dialogue for the newly spawned wave (gated by first-time switch).
+	await play_dialogue(wave_dialogue_lines(current_wave, 1))
 
 	# Only unlock after everything is fully set up
 	is_transitioning = false
@@ -809,6 +1216,13 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 	mission_drops.append(selected_item_id)
 	item_dropped.emit(enemy_index, selected_item_id)
 
+## Adds a defeated enemy's unit EXP and gil yield (MONSTER_PARTS.exp / .gil,
+## resolved onto the enemy dict at spawn) to the battle escrow. Held until the
+## mission is completed, so a defeat forfeits everything earned this run.
+func _accumulate_enemy_rewards(enemy_data: Dictionary) -> void:
+	mission_unit_exp += maxi(0, int(enemy_data.get("exp", 0)))
+	mission_gil += maxi(0, int(enemy_data.get("gil", 0)))
+
 ## Spawns the enemy formation for `wave_no` from the data-driven encounter chain
 ## (EncounterResolver). Missions with no resolvable formation get no enemies:
 ## exploration missions (type 2) are expected to be empty here (their encounters
@@ -816,6 +1230,10 @@ func _roll_enemy_drops(enemy_data: Dictionary, enemy_index: int) -> void:
 ## logged as an error.
 func _spawn_wave(wave_no: int, mission_data: Dictionary) -> void:
 	enemy_units.clear()
+	# AI state is keyed by enemy index, and both the indices and the monsters behind
+	# them change with the formation. Flag banks and limited_act counters belong to one
+	# monster in one encounter, so they must not survive into the next wave.
+	_enemy_ai.clear()
 
 	if wave_plan.size() > 0 and wave_no >= 1 and wave_no <= wave_plan.size():
 		var wave: Dictionary = wave_plan[wave_no - 1]
@@ -827,10 +1245,21 @@ func _spawn_wave(wave_no: int, mission_data: Dictionary) -> void:
 				enemy["team"] = "enemy"
 				enemy["index"] = enemy_units.size()
 				enemy_units.append(enemy)
+			_print_wave_monster_ai(wave_no, formation)
 			return
 
 	if str(mission_data.get("type", "")) != "EXPLORATION":
 		push_error("BattleManager: mission %s wave %d has no encounter data (no MISSION_PHASE or scenario battle)." % [current_mission_id, wave_no])
+
+
+## Prints each spawned monster's resolved AI behaviour (skill set + scripted
+## condition -> action rules) to the console, in the same structure as the
+## resolve_monster_ai.py datamine tool. Runs as the wave's monster data is fetched.
+func _print_wave_monster_ai(wave_no: int, formation: Array) -> void:
+	print("\n########## Wave %d monster AI (mission %s) ##########" % [wave_no, current_mission_id])
+	for desc in formation:
+		MonsterAIResolver.print_behaviour(str(desc.get("instance_id", "")))
+
 
 ## Builds a combat-ready enemy dict from an EncounterResolver formation descriptor.
 ## Name, elemental resistances and loot drops come from the descriptor (sourced
@@ -844,7 +1273,6 @@ func _generate_enemy_from_descriptor(desc: Dictionary) -> Dictionary:
 	enemy_data["name"] = str(desc.get("name", "Unknown Monster"))
 	enemy_data["disp_pos"] = desc.get("disp_pos", Vector2.ZERO)
 	enemy_data["is_boss"] = bool(desc.get("is_boss", false))
-	enemy_data["resistances"] = desc.get("resistances", {})
 	enemy_data["loot"] = desc.get("loot", {})
 
 	# Per-instance combat stats from MONSTER_PARTS (exact hp/mp/atk/def/mag/spr for
@@ -861,18 +1289,37 @@ func _generate_enemy_from_descriptor(desc: Dictionary) -> Dictionary:
 	enemy_data["max_mp"] = max_mp
 	enemy_data["current_mp"] = max_mp
 	enemy_data["level"] = int(combat_stats["level"])
+	# Unit EXP / gil this enemy yields when defeated (see _accumulate_enemy_rewards).
+	enemy_data["exp"] = int(combat_stats["exp"])
+	enemy_data["gil"] = int(combat_stats["gil"])
 
-	# Combat damage formulas read attacker/target stats from final_stats.stats
-	# (same shape as player units). Without this, enemy ATK/DEF/MAG/SPR fell back
-	# to 10 and the action processor logged a CRITICAL error every hit.
-	enemy_data["final_stats"] = {"stats": {
+	# Marks this dict as a monster so StatCalculator.calculate_final_stats routes it to
+	# MonsterStatCalculator. Without it, any recalculation (a debuff landing, a dispel,
+	# the per-turn duration tick) would run a monster through the unit path and fail on
+	# the first thing it looked for -- rarity, growth curves, equipment, trait skills.
+	enemy_data["is_monster"] = true
+
+	# Flat base stats, the input a recalculation works from. These have to live on the
+	# instance rather than only inside final_stats: final_stats is the OUTPUT, so once a
+	# buff or debuff lands there is nothing left to recompute from.
+	enemy_data["base_stats"] = {
 		"HP": max_hp,
 		"MP": max_mp,
 		"ATK": int(combat_stats["ATK"]),
 		"DEF": int(combat_stats["DEF"]),
 		"MAG": int(combat_stats["MAG"]),
 		"SPR": int(combat_stats["SPR"]),
-	}}
+	}
+	# Innate resistances stay in the datamine's raw comma-separated form, which is what
+	# the shared resist decoder expects (`resistances` above is the parsed dictionary the
+	# UI uses -- different consumer, different shape).
+	enemy_data["elemResistValue"] = str(combat_stats.get("elemResistValue", ""))
+	enemy_data["ailmentResistValue"] = str(combat_stats.get("ailmentResistValue", ""))
+	enemy_data["active_effects"] = []
+
+	# Combat damage formulas read attacker/target stats from final_stats.stats (same
+	# shape as player units), so seed it the same way a unit's is seeded.
+	enemy_data["final_stats"] = StatCalculator.calculate_final_stats(enemy_data)
 
 	# Tracking variables (mirror _generate_enemy_data).
 	enemy_data["chain_count"] = 0
@@ -882,7 +1329,7 @@ func _generate_enemy_from_descriptor(desc: Dictionary) -> Dictionary:
 
 ## Resolves an enemy's combat stat block from its MONSTER_PARTS stats. Falls back
 ## to modest defaults when the monster has no parts row. Always returns keys
-## HP, MP, ATK, DEF, MAG, SPR, level.
+## HP, MP, ATK, DEF, MAG, SPR, level, exp, gil, elemResistValue, ailmentResistValue.
 func _resolve_enemy_combat_stats(parts: Dictionary, _unused: Dictionary = {}) -> Dictionary:
 	if not parts.is_empty():
 		var parts_hp: int = int(parts.get("HP", 0))
@@ -896,6 +1343,11 @@ func _resolve_enemy_combat_stats(parts: Dictionary, _unused: Dictionary = {}) ->
 			"MAG": maxi(1, int(parts.get("MAG", DEFAULT_ENEMY_STAT))),
 			"SPR": maxi(1, int(parts.get("SPR", DEFAULT_ENEMY_STAT))),
 			"level": maxi(1, int(parts.get("level", 1))),
+			"exp": maxi(0, int(parts.get("exp", 0))),
+			"gil": maxi(0, int(parts.get("gil", 0))),
+			# Raw datamine strings, forwarded untouched for MonsterStatCalculator.
+			"elemResistValue": str(parts.get("elemResistValue", "")),
+			"ailmentResistValue": str(parts.get("ailmentResistValue", "")),
 		}
 
 	return {
@@ -906,7 +1358,12 @@ func _resolve_enemy_combat_stats(parts: Dictionary, _unused: Dictionary = {}) ->
 		"MAG": DEFAULT_ENEMY_STAT,
 		"SPR": DEFAULT_ENEMY_STAT,
 		"level": 1,
+		"exp": 0,
+		"gil": 0,
+		"elemResistValue": "",
+		"ailmentResistValue": "",
 	}
+
 
 # Helper function to grab only living units
 static func _get_living_units(team_array: Array) -> Array[Dictionary]:
@@ -920,7 +1377,10 @@ func _resolve_targets(target_area: int, target_type: int, caster: Dictionary, pr
 	var ally_pool: Array = party_data if is_player_caster else enemy_units
 	return TargetResolver.resolve(target_area, target_type, caster, primary_target, enemy_pool, ally_pool)
 
-func _queue_effect_hits(effect: Dictionary, caster: Dictionary, primary_target: Dictionary) -> void:
+## Resolves an effect's targets and queues its hits. `frame_offset` pushes the whole
+## effect further down the timeline, which is how a multi-action enemy turn is spaced
+## out instead of landing every hit on the same frame.
+func _queue_effect_hits(effect: Dictionary, caster: Dictionary, primary_target: Dictionary, frame_offset: int = 0) -> void:
 	var actual_targets: Array[Dictionary] = _resolve_targets(
 		effect.get("target_area", 1),
 		effect.get("target_type", 1),
@@ -933,7 +1393,7 @@ func _queue_effect_hits(effect: Dictionary, caster: Dictionary, primary_target: 
 
 	var hit_payloads: Array[Dictionary] = action_processor.execute_parsed_effect(effect, caster, actual_targets)
 	for hit in hit_payloads:
-		hit["frame_to_execute"] += current_battle_frame
+		hit["frame_to_execute"] += current_battle_frame + frame_offset
 		hit["execute_on_frame"] = hit["frame_to_execute"]
 		hit.erase("frame_to_execute")
 		pending_hits.append(hit)

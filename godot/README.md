@@ -55,8 +55,8 @@ Configured in [project.godot](project.godot):
 
 ## Startup Flow
 
-- Main scene is [demo.tscn](demo.tscn).
-- [demo.gd](demo.gd) calls `UIManager.set_root("login_ui")` on `_ready()`.
+- Main scene is [Main.tscn](Main.tscn).
+- [main.gd](main.gd) calls `UIManager.set_root("login_ui")` on `_ready()`.
 - `UIManager` instantiates scenes from `_scenes_map`, pushes to stack, and frees popped scenes with `queue_free()`.
 
 ## UI Navigation Contract

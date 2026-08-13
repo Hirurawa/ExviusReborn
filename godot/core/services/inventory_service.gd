@@ -39,7 +39,28 @@ func load_from_local() -> void:
 	owned_items = _normalize_payload(data)
 
 func reset_to_starter() -> void:
-	owned_items = {"stackables": {}, "equipment": []}
+	owned_items = {"stackables": {}, "equipment": [
+		{
+			"equipped_to": "starter_100000102",
+			"instance_id": "starter_100000102_LeatherPlate",
+			"template_id": "406000100"
+		},
+		{
+			"equipped_to": "starter_100000102",
+			"instance_id": "starter_100000102_Broadsword",
+			"template_id": "302000100"
+		},
+		{
+			"equipped_to": "starter_100000202",
+			"instance_id": "starter_100000202_LeatherPlate",
+			"template_id": "406000100"
+		},
+		{
+			"equipped_to": "starter_100000202",
+			"instance_id": "starter_100000202_Broadsword",
+			"template_id": "302000100"
+		}
+	]}
 
 func emit_updated() -> void:
 	items_updated.emit(owned_items)

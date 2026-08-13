@@ -34,27 +34,65 @@ _TEXT_PREVIEW_CHARS = 60
 _MAX_SCRIPT_CMDS = 100_000  # safety cap; real scripts are much smaller
 _SETUP_MIN_CMDS = 3          # require at least this many ops to count
 
+# A text anchor can land *inside* an entity record's payload, where a `08 00 04`
+# byte triple happens to be followed by an id that is really in the sidecar. The
+# walk from such an anchor decodes garbage: it runs away for tens of kB and dies
+# in a padding run. Measured over the corpus, blocks separate cleanly on the
+# share of frames carrying a named opcode -- real script sits at 0.8..1.0 (692
+# blocks), while runaways sit at or below 0.65. In 111010105 the false anchors
+# score 0.636 / 0.651 against 0.731..0.929 for every real block.
+#
+# A candidate below the threshold is not dropped: we reject it and retry from
+# the next anchor, so the real block further on is still found. Without this,
+# 111010105 lost 16 of its 30 dialogue lines to a single runaway.
+_BLOCK_MIN_NAMED_FRACTION = 0.70
+_BLOCK_GATE_MIN_FRAMES = 10   # too few frames to judge; accept and move on
 
-def _walk_setup_region(raw, ps_start, ps_end):
+
+def _walk_setup_region(raw, ps_start, ps_end, record_offsets=()):
     """Locate and walk the setup-opcode region inside a pre_script.
 
-    The pre_script begins with a small fixed header, then a long run
-    of fill bytes (0x00 or 0xFF), then a setup-opcode stream that
-    flows directly into the first dialog frame at ``ps_end``.
+    The pre_script begins with a small fixed header, then the sub-scene's
+    entity-record table, then a setup-opcode stream that flows directly into the
+    first dialog frame at ``ps_end``.
 
-    We don't yet know how to derive the setup-start offset from the
-    header, so we brute-force it: try every non-fill byte offset
-    between ``ps_start + 12`` and ``ps_end``; the correct start is the
-    earliest offset at which ``walk_script`` walks cleanly (no stop
-    record) and the *next* frame after the last walked command begins
-    exactly at ``ps_end``.
+    We don't yet know how to derive the setup-start offset from the header, so we
+    brute-force it: try every non-fill byte offset between ``ps_start + 12`` and
+    ``ps_end`` and keep the ones at which ``walk_script`` walks cleanly (no stop
+    record) and the *next* frame after the last walked command begins exactly at
+    ``ps_end``.
 
-    Returns ``(start_offset, commands)`` or ``(None, [])`` if nothing
-    parses cleanly.
+    ⚠️ Many offsets satisfy that. A false sync point still lands on ``ps_end``
+    because the misread ``<op> <length>`` pairs happen to swallow whole regions
+    in one phantom long frame and resync afterwards -- so the choice among
+    candidates is the whole ballgame. This used to prefer the **earliest**
+    candidate, which is systematically the worst one: the earliest clean walk
+    starts inside the entity-record table and swallows the real setup frames.
+    In 111010105 it started at 7028, read the record table as a 58-byte
+    `op_0x66` plus a 256-byte `op_0x64`, and ate the two absolute `move_actor`
+    spawns at 7182/7200 -- so the party had no initial placement at all and
+    every actor rendered stacked at (0,0). 154 of 497 files were affected.
+
+    Two signals separate real sync points from false ones:
+
+    * **A real frame never swallows an entity record.** Record offsets are known
+      exactly (`find_entity_records`), so any candidate with a record header
+      strictly inside a frame's payload is out of sync.
+    * **A named opcode has a fixed payload length** (`NAMED_OPCODE_LENGTHS`).
+      A `camera_scroll` of length 1542 (111010201 @15993) is not a camera
+      scroll; it is proof the walk is misaligned.
+
+    Among the survivors we take the one decoding the most well-formed named
+    frames, tie-broken by the earliest offset. Pools are tried in decreasing
+    strictness so a file whose true setup genuinely trips a signal still gets
+    its best-effort walk rather than nothing.
+
+    Returns ``(start_offset, commands, sync_quality)``, or ``(None, [], None)``
+    if nothing parses cleanly.
     """
     if ps_end <= ps_start + 12:
-        return None, []
-    best = None  # (non_noop_count, total_count, start, cmds)
+        return None, [], None
+    candidates = []
     scan_start = ps_start + 12
     for off in range(scan_start, ps_end):
         b = raw[off]
@@ -85,22 +123,107 @@ def _walk_setup_region(raw, ps_start, ps_end):
         non_noop = sum(1 for c in cmds if c["name"] != "op_0x00")
         if non_noop < _SETUP_MIN_CMDS:
             continue
-        # Prefer the earliest start that still walks cleanly (captures
-        # the most setup info).
-        if best is None or off < best[2]:
-            best = (non_noop, len(cmds), off, cmds)
-    if best is None:
-        return None, []
-    return best[2], best[3]
+        swallows_record = any(
+            any(c["offset"] < r < c["offset"] + 3 + c["length"]
+                for r in record_offsets)
+            for c in cmds
+        )
+        malformed = sum(1 for c in cmds
+                        if c["op"] in event_script.NAMED_OPCODE_LENGTHS
+                        and c["length"] != event_script.NAMED_OPCODE_LENGTHS[c["op"]])
+        candidates.append({
+            "offset": off,
+            "commands": cmds,
+            "swallows_record": swallows_record,
+            "malformed": malformed,
+            "well_formed": sum(1 for c in cmds if event_script.is_well_formed(c)),
+        })
+    if not candidates:
+        return None, [], None
+    pools = [
+        ("clean", [c for c in candidates
+                   if not c["swallows_record"] and not c["malformed"]]),
+        ("malformed_frames", [c for c in candidates
+                              if not c["swallows_record"]]),
+        ("record_overlap", candidates),
+    ]
+    for quality, pool in pools:
+        if not pool:
+            continue
+        best = max(pool, key=lambda c: (c["well_formed"], -c["offset"]))
+        return best["offset"], best["commands"], quality
+    return None, [], None
 
 
-def _load_text_strings(event_id):
+def _group_entity_tables(records):
+    """Split a file's entity records into tables, one per sub-scene.
+
+    Record slots are not a single monotonic sequence over the file -- they
+    restart, so a slot that is not greater than its predecessor marks the start
+    of a new table. 111020101 splits into 4 tables this way, matching its four
+    fade-separated sub-scenes.
+
+    Provisional: slots rise monotonically *within* a table, so this rule cannot
+    see a table that is interrupted by a script region. 111010105's "table 4"
+    (slots 3, 9, 13) is really two tables with a dialogue block between them.
+    Use `records` for anything load-bearing; the grouping is for readability.
+    """
+    tables = []
+    current = None
+    prev_slot = None
+    for rec in records:
+        if current is None or prev_slot is None or rec["slot"] <= prev_slot:
+            current = {
+                "table_index": len(tables),
+                "start_offset": rec["offset"],
+                "records": [],
+            }
+            tables.append(current)
+        current["records"].append(rec)
+        prev_slot = rec["slot"]
+    for t in tables:
+        t["record_count"] = len(t["records"])
+        t["end_offset"] = t["records"][-1]["offset"]
+    return tables
+
+
+def _annotate_actor_refs(commands, by_rid):
+    """Resolve `actor_rid` on actor-scoped commands to its entity record.
+
+    Adds `actor_identity` (the npc texture / instance id the actor is drawn
+    with) and `actor_spawn` (the record's pixel position) so a command can be
+    played back without a second lookup pass.
+    """
+    resolved = unresolved = 0
+    for cmd in commands:
+        rid = cmd.get("actor_rid")
+        if rid is None:
+            continue
+        rec = by_rid.get(rid)
+        if rec is None:
+            cmd["actor_record"] = None
+            unresolved += 1
+            continue
+        resolved += 1
+        cmd["actor_record_offset"] = rec["offset"]
+        if "identity" in rec:
+            cmd["actor_identity"] = rec["identity"]
+        cmd["actor_spawn"] = {"x": rec["src_x"], "y": rec["src_y"]}
+    return resolved, unresolved
+
+
+def _load_text_strings(event_id, folder=None):
     """Load `<event_id>_event_text.txt` as {text_id: line}. Returns {}
     if the file is missing. The sidecar lets us preview which text each
     `op 0x08` command references without leaving the parser, so the
     blueprint reads as a screenplay.
+
+    `folder` defaults to the folder named after `event_id`, but 136 of the 502
+    bins live in a folder named for a *different* event id (e.g.
+    `111020201/111020101_event.bin`), and their sidecar is named after the bin.
+    Callers that know the real folder should pass it.
     """
-    folder = Path(event_common.EVENT_ASSET_ROOT) / event_id
+    folder = Path(folder) if folder else Path(event_common.EVENT_ASSET_ROOT) / event_id
     p = folder / f"{event_id}_event_text.txt"
     if not p.exists():
         return {}
@@ -118,8 +241,14 @@ def _load_text_strings(event_id):
 def _build_blueprint(bin_path):
     """Read header + manifest + script and assemble the blueprint."""
     actual_size = os.path.getsize(bin_path)
-    event_id = os.path.basename(os.path.dirname(bin_path))
-    text_strings = _load_text_strings(event_id)
+    folder = os.path.dirname(os.path.abspath(bin_path))
+    folder_id = os.path.basename(folder)
+    # The event id is the bin's own name, not its folder's: 136 bins sit in a
+    # folder named for another event, and their text sidecar follows the bin.
+    basename = os.path.basename(bin_path)
+    event_id = (basename[:-len("_event.bin")]
+                if basename.endswith("_event.bin") else folder_id)
+    text_strings = _load_text_strings(event_id, folder)
     text_id_set = set(text_strings.keys())
 
     with open(bin_path, "rb") as f:
@@ -145,7 +274,35 @@ def _build_blueprint(bin_path):
     # walk forward from the first text anchor; when the walker bails on
     # a non-canonical opcode we scan ahead for the next text anchor and
     # resume, so every dialogue line in the file is captured.
+    # --- embedded entity records ---------------------------------------------
+    # Tables of actor / asset declarations interleaved with the script. These
+    # are what the old walker mis-read as 781-byte `op_0x00` blobs; see
+    # event_script.decode_entity_record.
+    # Prefer the block framing: the post-manifest region is a chain of sized
+    # blocks, and each block header states how many entity records its body
+    # holds, so records are picked against a known count instead of being
+    # fished out of the whole file. Fall back to the blind scan when a bin
+    # does not frame cleanly.
+    block_frames = event_script.find_blocks(raw, manifest_end)
+    if block_frames:
+        entity_records, blocks_agreeing, blocks_with_entities = (
+            event_script.find_entity_records_blockwise(raw, block_frames))
+        entity_framing = {
+            "source": "block_framed",
+            "block_count": len(block_frames),
+            "blocks_with_entities": blocks_with_entities,
+            "blocks_matching_declared_count": blocks_agreeing,
+            "declared_entity_total": sum(bl["num_entities"]
+                                         for bl in block_frames),
+        }
+    else:
+        entity_records = event_script.find_entity_records(raw, manifest_end)
+        entity_framing = {"source": "scan", "block_count": 0}
+    entity_by_rid = {r["rid"]: r for r in entity_records}
+    entity_tables = _group_entity_tables(entity_records)
+
     blocks = []
+    rejected = []
     next_search = manifest_end
     while True:
         anchor = event_script.find_first_text_anchor(
@@ -172,11 +329,31 @@ def _build_blueprint(bin_path):
                 break
         last_end = (commands[-1]["offset"] + 3 + commands[-1]["length"]
                     if commands else anchor)
+        named = sum(1 for c in commands
+                    if c["op"] in event_script.NAMED_OPCODES)
+        named_fraction = named / len(commands) if commands else 0.0
+        if (len(commands) >= _BLOCK_GATE_MIN_FRAMES
+                and named_fraction < _BLOCK_MIN_NAMED_FRACTION):
+            # False anchor inside record data -- retry from the next anchor
+            # rather than letting this runaway consume the region.
+            rejected.append({
+                "start_offset": anchor,
+                "end_offset": last_end,
+                "command_count": len(commands),
+                "named_fraction": round(named_fraction, 3),
+                "reason": "named_opcode_fraction below threshold",
+                "_commands": commands,
+                "_stop_record": stop_record,
+            })
+            next_search = anchor + 8
+            continue
+        _annotate_actor_refs(commands, entity_by_rid)
         blocks.append({
             "block_index": len(blocks),
             "start_offset": anchor,
             "end_offset": last_end,
             "command_count": len(commands),
+            "named_fraction": round(named_fraction, 3),
             "stop_record": stop_record,
             "commands": commands,
         })
@@ -184,6 +361,29 @@ def _build_blueprint(bin_path):
         # searching for the next one, otherwise we'd loop forever on the
         # same anchor.
         next_search = max(last_end, anchor + 8)
+
+    # If the gate rejected every candidate, keep the best one rather than
+    # reporting nothing: a low-confidence block is still more than no block, and
+    # 14 files would otherwise go from "partial" to "no anchor".
+    if not blocks and rejected:
+        best = max(rejected, key=lambda r: (r["named_fraction"],
+                                            r["command_count"]))
+        rejected.remove(best)
+        commands = best.pop("_commands")
+        _annotate_actor_refs(commands, entity_by_rid)
+        blocks.append({
+            "block_index": 0,
+            "start_offset": best["start_offset"],
+            "end_offset": best["end_offset"],
+            "command_count": len(commands),
+            "named_fraction": best["named_fraction"],
+            "low_confidence": True,
+            "stop_record": best.pop("_stop_record"),
+            "commands": commands,
+        })
+    for r in rejected:
+        r.pop("_commands", None)
+        r.pop("_stop_record", None)
 
     # Aggregate opcode histogram across all blocks.
     op_counter = Counter()
@@ -211,6 +411,7 @@ def _build_blueprint(bin_path):
             "command_count": 0,
             "parse_status": "no text anchor found",
             "opcode_histogram": [],
+            "rejected_anchors": rejected,
             "blocks": [],
         }
     else:
@@ -230,23 +431,34 @@ def _build_blueprint(bin_path):
             "last_block_end": blocks[-1]["end_offset"],
             "parse_status": parse_status,
             "opcode_histogram": histogram,
+            "rejected_anchors": rejected,
             "blocks": blocks,
         }
 
     # --- setup walk (inside pre_script, immediately before block 0) ----
-    # We walk every non-fill offset between manifest_end+12 and the
-    # first dialog block; the correct start is the one that lands
-    # exactly on the dialog opcode.
+    # We walk every non-fill offset between manifest_end+12 and the first dialog
+    # block, then choose among the candidates that land exactly on the dialog
+    # opcode. The entity-record offsets are load-bearing for that choice -- a
+    # candidate whose frames swallow a record is out of sync.
     setup_start = None
     setup_cmds = []
+    setup_sync = None
     if blocks:
-        setup_start, setup_cmds = _walk_setup_region(
-            raw, manifest_end, blocks[0]["start_offset"]
+        pre_script_records = [r["offset"] for r in entity_records
+                              if r["offset"] < blocks[0]["start_offset"]]
+        setup_start, setup_cmds, setup_sync = _walk_setup_region(
+            raw, manifest_end, blocks[0]["start_offset"], pre_script_records
         )
+
+    actor_refs = [c for b in blocks for c in b["commands"]
+                  if c.get("actor_rid") is not None]
+    resolved_refs = sum(1 for c in actor_refs if c.get("actor_record") is not None
+                        or "actor_record_offset" in c)
 
     blueprint = {
         "source_file": os.path.basename(bin_path),
         "event_id": event_id,
+        "folder_id": folder_id,
         "header": {
             "file_size": header["file_size"],
             "actual_file_size": actual_size,
@@ -274,13 +486,26 @@ def _build_blueprint(bin_path):
             "preview_hex": post_manifest_preview,
             "setup_start_offset": setup_start,
             "setup_command_count": len(setup_cmds),
+            # Which pool the sync point came from: "clean" (no record swallowed,
+            # every named frame the right length), or a named signal the chosen
+            # candidate trips -- treat those as low confidence.
+            "setup_sync": setup_sync,
             "setup_commands": setup_cmds,
             "parse_status": (
-                f"setup ok: {len(setup_cmds)} commands from offset "
-                f"{setup_start}"
+                f"setup ok ({setup_sync}): {len(setup_cmds)} commands from "
+                f"offset {setup_start}"
                 if setup_cmds else
                 "setup region not located"
             ),
+        },
+        "blocks": block_frames,
+        "entities": {
+            "record_count": len(entity_records),
+            "framing": entity_framing,
+            "table_count": len(entity_tables),
+            "actor_ref_count": len(actor_refs),
+            "actor_refs_resolved": resolved_refs,
+            "tables": entity_tables,
         },
         "script": script_block,
     }
@@ -319,6 +544,11 @@ def parse_all():
     ok = bad = mismatched = manifest_unrecognised = 0
     script_ok = script_partial = script_none = 0
     setup_ok = setup_none = 0
+    setup_sync = Counter()
+    setup_abs_spawns = 0
+    stop_reasons = Counter()
+    entity_records = entity_tables = 0
+    refs_total = refs_resolved = 0
     for p in files:
         try:
             bp = parse_event_bin(str(p), verbose=False)
@@ -340,13 +570,31 @@ def parse_all():
             script_none += 1
         if bp["pre_script"].get("setup_command_count", 0) > 0:
             setup_ok += 1
+            setup_sync[bp["pre_script"].get("setup_sync")] += 1
+            setup_abs_spawns += sum(
+                1 for c in bp["pre_script"]["setup_commands"]
+                if c["name"] == "move_actor" and c.get("mode") == "absolute")
         else:
             setup_none += 1
+        for blk in bp["script"]["blocks"]:
+            sr = blk.get("stop_record")
+            stop_reasons[sr["_stop"] if sr else "clean_end"] += 1
+        ent = bp["entities"]
+        entity_records += ent["record_count"]
+        entity_tables += ent["table_count"]
+        refs_total += ent["actor_ref_count"]
+        refs_resolved += ent["actor_refs_resolved"]
     print(f"\nbatch: ok={ok}/{len(files)}  hard_errors={bad}  "
           f"size_mismatch={mismatched}  manifest_unrecognised={manifest_unrecognised}")
     print(f"       script: ok={script_ok}  partial={script_partial}  "
           f"no_anchor={script_none}")
-    print(f"       setup:  decoded={setup_ok}  none={setup_none}")
+    print(f"       setup:  decoded={setup_ok}  none={setup_none}  "
+          f"absolute_spawns={setup_abs_spawns}  sync: "
+          + "  ".join(f"{k}={v}" for k, v in setup_sync.most_common()))
+    print(f"       block stops: "
+          + "  ".join(f"{k}={v}" for k, v in stop_reasons.most_common()))
+    print(f"       entities: {entity_records} records in {entity_tables} tables; "
+          f"actor refs resolved {refs_resolved}/{refs_total}")
 
 
 def main(argv):

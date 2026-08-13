@@ -65,8 +65,10 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	# into a scenario fight, and don't charge NRG.
 	# type=2 AND waveCount=0 - genuine explorations — every one is named "… - Exploration" or a story equivalent
 	# type=2 AND waveCount>=1 - Siren's Tower Top Floor, Bewitcher's Trial, and every "Trial of the …" esper unlock Not really exploration missions. They are regular missions
-	#if str(mission_data.get("type", "")) == "EXPLORATION":
-		#return {"success": false, "error": "Exploration missions aren't available yet."}
+
+	var exploration_folder = ""
+	if str(mission_data.get("type", "")) == "EXPLORATION" and mission_data.get("wave_count", -1) == 0:
+		exploration_folder = GameDatabase.get_exploration_folder(str(mission_data.get("dungeon_id")))
 
 	var cost_type: String = str(mission_data.get("cost_type", "NRG")).to_upper()
 	var cost_amount: int = int(mission_data.get("cost", 0))
@@ -80,7 +82,7 @@ func request_start_mission(mission_id: String) -> Dictionary:
 	# Stats snapshot bundles last_entered_mission_id with the profile blob.
 	# We will handle it by creating a method in PlayerProfile that does this and saves.
 	PlayerProfile.set_last_entered_mission(mission_id)
-	return {"success": true}
+	return {"success": true, "exploration": exploration_folder}
 
 
 ## Finishes a mission. `unit_exp` and `battle_gil` are what the battle accumulated

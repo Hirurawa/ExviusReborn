@@ -552,6 +552,13 @@ func get_mission(mission_id: String) -> Dictionary:
 	}
 
 
+func get_exploration_folder(dungeon_id: String) -> String:
+	var rows = query("select rm.fileName from resource_map rm"
+		+ " join dungeon d on d.fileInfo = rm.resourceId"
+		+ " where d.dungeonId = ?", [dungeon_id])
+	return rows[0].get("fileName").left(-4) if not rows.is_empty() else ""
+
+
 ## Challenge list for a mission as { string, parsed, reward } entries (mirrors the
 ## old missions.json `challenges` shape). Empty if the mission has none. The
 ## reward column is challenge.rewardInfo, aliased to `rewards`.

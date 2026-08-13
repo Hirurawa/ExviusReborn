@@ -50,22 +50,59 @@ def event_bin_path(event_id):
 
 
 def default_blueprint_path(bin_path):
-    return os.path.join(os.path.dirname(os.path.abspath(bin_path)),
-                        "event_blueprint.json")
+    """Where to write the blueprint for `bin_path`.
+
+    A folder can hold several event bins -- 136 of the 502 are named for an
+    event other than their folder (e.g. `111020201/111020101_event.bin`). The
+    bin whose name matches its folder keeps the canonical
+    `event_blueprint.json` that `event_runner.gd` loads by folder id; the others
+    would otherwise overwrite it, so they get an id-qualified name.
+    """
+    folder = os.path.dirname(os.path.abspath(bin_path))
+    basename = os.path.basename(bin_path)
+    if basename.endswith("_event.bin"):
+        event_id = basename[:-len("_event.bin")]
+        if event_id != os.path.basename(folder):
+            return os.path.join(folder, f"{event_id}_event_blueprint.json")
+    return os.path.join(folder, "event_blueprint.json")
+
+
+# Builds from 1023 onwards carry an extra metadata word (`count_d`) before
+# the asset count, making the header 28 bytes instead of 24. The split is
+# clean across the corpus: no format_version appears on both sides of it.
+HEADER_COUNT_D_MIN_VERSION = 1023
 
 
 def read_event_header(f):
-    """Read the 28-byte fixed header. Leaves `f` positioned at byte 28,
-    the start of the asset manifest.
+    """Read the fixed header. Leaves `f` positioned at the first byte of
+    the asset manifest -- 24 or 28 in, depending on `format_version`.
 
     Returns a dict with the verified `file_size`, the verbatim metadata
-    words, and the asset count that drives the manifest reader.
+    words, and the asset count that drives the manifest reader. On the
+    older layout `count_d` is None.
     """
     f.seek(0)
     raw = f.read(28)
+    if len(raw) < 24:
+        raise ValueError("File too small for the event header")
+    version = struct.unpack_from(">I", raw, 4)[0]
+    if version < HEADER_COUNT_D_MIN_VERSION:
+        fields = struct.unpack_from(">6I", raw, 0)
+        f.seek(24)
+        return {
+            "file_size": fields[0],
+            "format_version": fields[1],
+            "count_a": fields[2],
+            "count_b": fields[3],
+            "count_c": fields[4],
+            "count_d": None,
+            "num_assets": fields[5],
+            "header_size": 24,
+        }
     if len(raw) < 28:
         raise ValueError("File too small for 28-byte event header")
     fields = struct.unpack(">7I", raw)
+    f.seek(28)
     return {
         "file_size": fields[0],
         "format_version": fields[1],
@@ -74,6 +111,7 @@ def read_event_header(f):
         "count_c": fields[4],
         "count_d": fields[5],
         "num_assets": fields[6],
+        "header_size": 28,
     }
 
 

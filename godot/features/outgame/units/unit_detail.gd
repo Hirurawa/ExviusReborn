@@ -2,27 +2,19 @@ extends Control
 
 const MagicScene: PackedScene = preload("res://features/shared/Skill.tscn")
 const ItemScene: PackedScene = preload("res://features/shared/Item.tscn")
-const UnitScene: PackedScene = preload("res://features/shared/Unit.tscn")
 const UNIT_ANIM_TARGET_HEIGHT: float = 128.0
 const TAB_SMALL_TEXTURE_NORMAL: Texture2D = preload("res://assets/ui/unit/unit_status_button.tres")
 const TAB_SMALL_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_button_on.tres")
 const TAB_BIG_TEXTURE_NORMAL: Texture2D = preload("res://assets/ui/unit/unit_status_button_big.tres")
 const TAB_BIG_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_button_big_on.tres")
 
-@onready var unit_ills: Control = $UnitIllustration
-
-@onready var unit_name_label: Label = $UnitNamebgChara2/Title
-
 @onready var illustration_button: TextureButton = $IllustrationButton
 @onready var unit_detail_sprite: TextureRect = $IllustrationButton/unit_charastand_large/unit_chara
-@onready var unit_detail_pedestal: TextureRect = $IllustrationButton/unit_charastand_large
 @onready var anim_sprite: Sprite2D = $IllustrationButton/AnimSprite
 @onready var unit_detail_back_button: TextureButton = $UnitNamebgChara2/BackButton
 @onready var unit_detail_name_label: Label = $unit_sublimation_name
 @onready var unit_detail_rarity_label: Label = $RarityStarsLabel
-@onready var unit_detail_level_label: Label = $UnitStatusLabelLv/UnitLevel
-@onready var unit_detail_level_next_exp_label: Label = $UnitLvupInfo2/NextExpLabel
-@onready var unit_detail_exp_bar: TextureProgressBar = $UnitExpBg/UnitExpBar
+@onready var unit_detail_level_label: Label = $unit_sublimation_number
 @onready var unit_detail_hp_value: Label = $unit_statusbg/unit_status_label_hp/unit_status_ext_hp_now_number
 @onready var unit_detail_hp_max_value: Label = $unit_statusbg/unit_status_label_hp/unit_status_ext_hp_max_number
 @onready var unit_detail_mp_value: Label = $unit_statusbg/unit_status_label_mp/unit_status_ext_mp_now_number
@@ -58,10 +50,9 @@ const TAB_BIG_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_
 @onready var unit_detail_ability_content: ScrollContainer = $ContentLayer/AbilityContent
 @onready var unit_detail_ability_grid: GridContainer = $ContentLayer/AbilityContent/AbilityGrid
 
-@onready var elem_resist_grid: HBoxContainer = $VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid
-@onready var status_resist_grid: HBoxContainer = $VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid
+@onready var elem_resist_grid: GridContainer = $VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid
+@onready var status_resist_grid: GridContainer = $VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid
 @onready var lb_name_label: Label = $VBoxContainer/TraitContent/unit_detail_limit_offset/LimitBurstLabel
-@onready var lb_desc_label: Label = $VBoxContainer/TraitContent/unit_detail_limit_offset/LimitBurstDesc
 @onready var tm_name_label: Label = $VBoxContainer/TraitContent/UnitBondsbg/unit_mix_bonds_name
 @onready var tm_icon_rect: TextureRect = $VBoxContainer/TraitContent/UnitBondsbg/TrustMasterIcon
 @onready var tm_percent_value: Label = $VBoxContainer/TraitContent/UnitBondsbg/unit_mix_bonds_rate
@@ -123,7 +114,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	
 	var entry_id: String = str(unit_inst.get("unitId"))
 
-	unit_name_label.text = str(unit_inst.get("unitName", "Unknown"))
+	unit_detail_name_label.text = str(unit_inst.get("unitName", "Unknown"))
 
 	var img_path: String = "res://assets/unit_illustrations/unit_ills_%s.png" % entry_id
 	var tex: Texture2D = load(img_path) as Texture2D
@@ -131,9 +122,6 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	_show_idle_or_static(entry_id)
 
 	var rarity: int = int(unit_inst.get("current_rarity", 1))
-	var pedestal_img_path: String = "res://assets/ui/unit/unit_charastand_rare%s_large.tres" % str(rarity)
-	var pedestal_tex: Texture2D = load(pedestal_img_path) as Texture2D
-	unit_detail_pedestal.texture = pedestal_tex
 	var max_rarity: int = int(unit_inst.get("rarity_max", 5))
 	var stars: String = ""
 	for i in range(rarity):
@@ -145,22 +133,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var level: int = int(unit_inst.get("level", 1))
 	var max_level: int = int(StatCalculator.RARITY_MAX_LEVELS.get(rarity, 15))
 	var next_xp: int = UnitService.calculate_next_xp_for_unit(unit_inst)
-	unit_detail_level_label.text = "%d/%d" % [level, max_level]
-	unit_detail_level_next_exp_label.text = str(next_xp)
-	var xp = unit_inst.get("xp")
-	var progress: Dictionary = UnitService.level_progress_at_xp(unit_inst, xp)
-	var level_floor: float = float(progress.get("level_floor", 0))
-	var span: float = maxf(1.0, float(progress.get("next_floor", 1)) - level_floor)
-	var into_level: float = clampf(xp - level_floor, 0.0, span)
-	unit_detail_exp_bar.max_value = span
-	unit_detail_exp_bar.value = into_level
-	
-	#var unit_scene = UnitScene.instantiate()
-	#if unit_scene:
-		#unit_scene.scene_size = "large"
-		#unit_scene.unit_data_to_load = unit_inst
-		#unit_scene.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		#unit_ills.add_child(unit_scene)
+	unit_detail_level_label.text = "Lvl %d/%d  next %d" % [level, max_level, next_xp]
 
 	# Recalculate stats fresh to reflect current equipment/esper assignments,
 	# and persist back so other screens (enhance_ui, etc.) read up-to-date data.
@@ -170,22 +143,22 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var hp: int = int(final_stats.get("HP", 0))
 	var mp: int = int(final_stats.get("MP", 0))
 	var atk: int = int(final_stats.get("ATK", 0))
-	var def: int = int(final_stats.get("DEF", 0))
+	var dfn: int = int(final_stats.get("DEF", 0))
 	var mag: int = int(final_stats.get("MAG", 0))
 	var spr: int = int(final_stats.get("SPR", 0))
 
 	unit_detail_hp_value.text = str(hp)
-	#unit_detail_hp_max_value.text = "/%d" % hp
+	unit_detail_hp_max_value.text = "/%d" % hp
 	unit_detail_mp_value.text = str(mp)
-	#unit_detail_mp_max_value.text = "/%d" % mp
+	unit_detail_mp_max_value.text = "/%d" % mp
 	unit_detail_atk_value.text = str(atk)
-	#unit_detail_atk_max_value.text = "/%d" % atk
-	unit_detail_def_value.text = str(def)
-	#unit_detail_def_max_value.text = "/%d" % def
+	unit_detail_atk_max_value.text = "/%d" % atk
+	unit_detail_def_value.text = str(dfn)
+	unit_detail_def_max_value.text = "/%d" % dfn
 	unit_detail_mag_value.text = str(mag)
-	#unit_detail_mag_max_value.text = "/%d" % mag
+	unit_detail_mag_max_value.text = "/%d" % mag
 	unit_detail_spr_value.text = str(spr)
-	#unit_detail_spr_max_value.text = "/%d" % spr
+	unit_detail_spr_max_value.text = "/%d" % spr
 
 	_populate_equip_icons_grid(unit_inst)
 	_populate_skills(fresh_final_stats)
@@ -321,8 +294,7 @@ func _populate_lb_and_tmr(unit_inst: Dictionary) -> void:
 	var lb_data: Dictionary = GameDatabase.get_limitburst(lb_id) if (lb_id != "" and lb_id != "<null>") else {}
 	if not lb_data.is_empty():
 		var lb_name: String = str(lb_data.get("name", "Unknown Limit Burst"))
-		lb_name_label.text = lb_name
-		lb_desc_label.text = lb_data.get("description", "No description")
+		lb_name_label.text = "Limit Burst: %s" % lb_name
 	else:
 		lb_name_label.text = "Limit Burst: None"
 
@@ -333,7 +305,7 @@ func _populate_lb_and_tmr(unit_inst: Dictionary) -> void:
 		tm_icon_rect.texture = null
 		return
 	
-	tm_percent_value.text = str(unit_inst.get("trust_value")) + " %"
+	tm_percent_value.text = str(unit_inst.get("trust_value"))
 	
 	var tmr_type = tmr_data[0] as Types.Item_types
 	var tmr_id: String = str(int(tmr_data[1]))

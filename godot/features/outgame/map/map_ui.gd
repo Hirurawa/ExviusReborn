@@ -681,7 +681,11 @@ func _on_mission_row_pressed(mission_id: String) -> void:
 	# with no encounter data return success=false and surface a friendly error.
 	var result: Dictionary = MissionService.request_start_mission(mission_id)
 	if result.get("success", false) == true:
-		UIManager.push("combat_ui", {"mission_id": mission_id})
+		if result.get("exploration").is_empty():
+			UIManager.push("combat_ui", {"mission_id": mission_id})
+		else:
+			print("Exploration mission: " + result.get("exploration"))
+			UIManager.push("combat_ui", {"mission_id": mission_id})
 	else:
 		_show_mission_error(str(result.get("error", "Could not start this mission.")))
 

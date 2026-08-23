@@ -12,7 +12,14 @@ extends RefCounted
 #   map_teller.txt : <speaker_id>,<display-name>
 #
 # Markup tokens recognised in v1:
-#   <name=ID> / <name_npc=ID>   substituted with map_teller display name
+#   <name=ID> / <name_npc=ID>   substituted with a display name: map_teller.txt
+#                               first, then the `npc` table. The two tags use
+#                               different id namespaces — <name=ID> indexes the
+#                               town's own teller list, while <name_npc=ID> uses
+#                               npc instance ids (1102010, ...), which the town
+#                               files don't carry at all. Nearly every
+#                               <name_npc=…> tag in the corpus (845 of 846)
+#                               needs the database to resolve.
 #   <br>                        line break
 #   <page>                      page boundary
 #   <keywait>                   treated as a page boundary (mid-line pauses
@@ -98,7 +105,7 @@ static func _resolve_pages(raw: String, name_by_id: Dictionary) -> Array:
 		# field. Subsequent name tags (rare) are left inline-resolved.
 		var first_name := _extract_first_name_tag(body)
 		if first_name.id != -1:
-			speaker = String(name_by_id.get(first_name.id, "[name:%d]" % first_name.id))
+			speaker = _speaker_name(first_name.id, name_by_id)
 			body = body.substr(0, first_name.start) + body.substr(first_name.end, body.length() - first_name.end)
 		# Pages produced by <page>/<keywait> splits don't repeat the
 		# <name…> tag; carry the most recent speaker forward so the
@@ -146,10 +153,21 @@ static func _resolve_inline_names(s: String, name_by_id: Dictionary) -> String:
 		var m := re.search(result)
 		if m == null:
 			break
-		var nid := int(m.get_string(1))
-		var replacement := String(name_by_id.get(nid, "[name:%d]" % nid))
+		var replacement := _speaker_name(int(m.get_string(1)), name_by_id)
 		result = result.substr(0, m.get_start()) + replacement + result.substr(m.get_end(), result.length() - m.get_end())
 	return result
+
+
+# Display name for a <name…> id: the town's own teller list first, then the
+# `npc` table (which is where every <name_npc=ID> lives). Falls back to the
+# bracketed raw id so an unresolved tag is visible rather than silently blank.
+static func _speaker_name(name_id: int, name_by_id: Dictionary) -> String:
+	if name_by_id.has(name_id):
+		return String(name_by_id[name_id])
+	var npc_name := GameDatabase.get_npc_name(name_id)
+	if npc_name != "":
+		return npc_name
+	return "[name:%d]" % name_id
 
 
 # Strips any <…> tag not already handled. Logs unknown tag names once.

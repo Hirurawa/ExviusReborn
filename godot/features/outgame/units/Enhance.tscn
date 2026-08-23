@@ -27,7 +27,6 @@
 [ext_resource type="Texture2D" uid="uid://csl1y13mp5fhe" path="res://assets/ui/unit/ability_awake_unitstatus.tres" id="25_dox0t"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="28_2c7m1"]
 [ext_resource type="Texture2D" uid="uid://dbys00uemtltk" path="res://assets/ui/unit/unit_bonds_icon.tres" id="28_47ltg"]
-[ext_resource type="Texture2D" uid="uid://bpwnd25hx5luo" path="res://assets/ui/unit/unit_exp_bg.tres" id="28_hik2k"]
 [ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="29_oo6e2"]
 [ext_resource type="Texture2D" uid="uid://cd0ytoi8pg642" path="res://assets/ui/unit/unit_bondsname_bg.tres" id="29_p5wqb"]
 [ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="30_5t2gi"]
@@ -35,7 +34,6 @@
 [ext_resource type="Texture2D" uid="uid://bax1b5kuda14" path="res://assets/ui/unit/unit_lbframe.tres" id="31_3ad8q"]
 [ext_resource type="Texture2D" uid="uid://cyc1yl2d75bvy" path="res://assets/ui/unit/unit_exp_gauge.tres" id="31_dox0t"]
 [ext_resource type="Texture2D" uid="uid://cmdstbc5siynl" path="res://assets/ui/unit/unit_skill_info.tres" id="32_o6f46"]
-[ext_resource type="Texture2D" uid="uid://cix3i4u2s3dr7" path="res://assets/ui/unit/unit_lvup_info.tres" id="33_dox0t"]
 [ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="35_3n2xg"]
 
 [node name="Enhance" type="Control" unique_id=174978603]
@@ -455,29 +453,17 @@ offset_right = 380.0
 offset_bottom = 25.0
 texture = ExtResource("29_oo6e2")
 
+[node name="UnitLimitExpBar" type="Sprite2D" parent="UnitLbframe" unique_id=797773728]
+position = Vector2(213, 38)
+texture = ExtResource("30_hik2k")
+
+[node name="UnitExpGauge" type="Sprite2D" parent="UnitLbframe" unique_id=1959993576]
+position = Vector2(212, 38)
+texture = ExtResource("31_dox0t")
+
 [node name="UnitSkillInfo" type="Sprite2D" parent="UnitLbframe" unique_id=1884176809]
 position = Vector2(82, 52)
 texture = ExtResource("32_o6f46")
-
-[node name="UnitExpBg" type="TextureRect" parent="UnitLbframe" unique_id=131921545]
-layout_mode = 0
-offset_left = 34.0
-offset_top = 33.0
-offset_right = 388.0
-offset_bottom = 43.0
-texture = ExtResource("28_hik2k")
-
-[node name="UnitExpBar" type="TextureProgressBar" parent="UnitLbframe/UnitExpBg" unique_id=1442620575]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 3.0
-offset_right = 349.0
-offset_bottom = 7.0
-texture_progress = ExtResource("30_hik2k")
-
-[node name="UnitExpGauge" type="TextureRect" parent="UnitLbframe/UnitExpBg" unique_id=927039744]
-layout_mode = 0
-texture = ExtResource("31_dox0t")
 
 [node name="TM" type="Control" parent="." unique_id=471649301]
 anchors_preset = 0
@@ -557,48 +543,20 @@ offset_right = 229.0
 offset_bottom = -402.0
 texture = ExtResource("29_oo6e2")
 
+[node name="UnitExpBar" type="Sprite2D" parent="UnitLevel" unique_id=1138539788]
+position = Vector2(403, -398)
+texture = ExtResource("35_3n2xg")
+
+[node name="UnitExpGauge" type="Sprite2D" parent="UnitLevel" unique_id=704774694]
+position = Vector2(403, -398)
+texture = ExtResource("31_dox0t")
+
 [node name="UnitLevel" type="Label" parent="UnitLevel" unique_id=1013082980]
 layout_mode = 0
 offset_left = 232.0
 offset_top = -423.0
-offset_right = 303.0
+offset_right = 272.0
 offset_bottom = -400.0
-
-[node name="UnitLvupInfo2" type="TextureRect" parent="UnitLevel" unique_id=1067979524]
-layout_mode = 0
-offset_left = 496.0
-offset_top = -422.0
-offset_right = 522.0
-offset_bottom = -406.0
-texture = ExtResource("33_dox0t")
-
-[node name="NextExpLabel" type="Label" parent="UnitLevel/UnitLvupInfo2" unique_id=1973757576]
-layout_mode = 0
-offset_left = 45.0
-offset_top = -3.0
-offset_right = 85.0
-offset_bottom = 20.0
-vertical_alignment = 1
-
-[node name="UnitExpBg" type="TextureRect" parent="UnitLevel" unique_id=1352885250]
-layout_mode = 0
-offset_left = 227.0
-offset_top = -405.0
-offset_right = 581.0
-offset_bottom = -395.0
-texture = ExtResource("28_hik2k")
-
-[node name="UnitExpBar" type="TextureProgressBar" parent="UnitLevel/UnitExpBg" unique_id=2061453461]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 3.0
-offset_right = 349.0
-offset_bottom = 7.0
-texture_progress = ExtResource("35_3n2xg")
-
-[node name="UnitExpGauge" type="TextureRect" parent="UnitLevel/UnitExpBg" unique_id=540851742]
-layout_mode = 0
-texture = ExtResource("31_dox0t")
 
 [node name="EnhanceFlowRoot" type="Control" parent="." unique_id=111200001]
 anchors_preset = 0

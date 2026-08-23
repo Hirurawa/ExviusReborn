@@ -134,7 +134,8 @@ func run_event(eid: String) -> void:
 	print("EventRunner: event %s finished." % eid)
 
 func _resolve_event_layer(map_dir: String, bp: Dictionary) -> void:
-	# Find the first PC spawn (actor_id=1, absolute move) in setup.
+	# Find the first PC spawn (actor_id=1, absolute move) in setup. It doubles
+	# as the warp target, so we need it even when the database names the layer.
 	var spawn := Vector2i(-1, -1)
 	for c_any in bp.get("pre_script", {}).get("setup_commands", []):
 		var c: Dictionary = c_any
@@ -142,6 +143,15 @@ func _resolve_event_layer(map_dir: String, bp: Dictionary) -> void:
 			spawn = Vector2i(int(c.get("x", 0)), int(c.get("y", 0)))
 			break
 	if spawn.x < 0:
+		return
+
+	# story_event."25oxcKwN" ("map@65") names the layer outright. It only
+	# covers a handful of events, so the spawn-bounds inference below stays as
+	# the fallback -- but when the database does answer, prefer it.
+	var db_lid := GameDatabase.get_event_layer(event_id)
+	if db_lid >= 0:
+		print("EventRunner: story_event names layer %d for event %s" % [db_lid, event_id])
+		_tile_map.call("warp_to", db_lid, spawn.x / int(TILE_SIZE), spawn.y / int(TILE_SIZE))
 		return
 	# Read the map blueprint to enumerate layer bounds + the default.
 	var bp_path := map_dir + "/map_blueprint.json"
@@ -251,10 +261,16 @@ func _execute_commands(commands: Array) -> void:
 			"play_vfx":
 				print("[event] play_vfx %s" % c.get("filename", "?"))
 			"scene_config":
-				# op_0x3a is a container -- its embedded_moves field
-				# carries the initial actor placements (absolute coords).
-				# Apply them synchronously so the party is positioned
-				# before any subsequent relative dy/dx moves run.
+				# Vestigial. op_0x3a was read as a container whose
+				# embedded_moves carried the initial party placement.
+				# That was an artifact of the setup walk syncing inside
+				# the entity-record table, which swallowed the real setup
+				# frames into one phantom long payload. With the sync
+				# point fixed no blueprint emits embedded_moves or
+				# camera_position any more -- initial placement arrives
+				# as ordinary top-level move_actor frames. Kept as a
+				# no-op in case a real container turns up.
+				# See PARSER-NOTES.md §4.
 				_handle_scene_config(c)
 			"set_move_mode":
 				_run_mode = String(c.get("mode", "walk")) == "run"
@@ -281,7 +297,7 @@ func _log_command(c: Dictionary) -> void:
 	var off: int = int(c.get("offset", -1))
 	var name: String = c.get("name", "?")
 	var extras: Array[String] = []
-	for k in ["actor_id", "variant", "direction_name", "visible",
+	for k in ["actor_id", "actor_kind", "actor_identity", "direction_name", "visible",
 		"mode", "x", "y", "dx", "dy", "ticks",
 		"text_id", "bubble_name", "duration",
 		"filename", "flag"]:
@@ -307,7 +323,7 @@ func _get_or_spawn_actor(actor_id: int, is_npc: bool) -> EventActor:
 
 func _handle_move_actor(c: Dictionary) -> void:
 	var aid: int = int(c.get("actor_id", 0))
-	var is_npc: bool = int(c.get("variant", 0)) == 1
+	var is_npc: bool = String(c.get("actor_kind", "party")) == "entity"
 	var actor := _get_or_spawn_actor(aid, is_npc)
 	var mode: String = c.get("mode", "absolute")
 	var ticks: int = int(c.get("ticks", 0))
@@ -331,7 +347,7 @@ func _handle_move_actor(c: Dictionary) -> void:
 
 func _handle_face_actor(c: Dictionary) -> void:
 	var aid: int = int(c.get("actor_id", 0))
-	var is_npc: bool = int(c.get("variant", 0)) == 1
+	var is_npc: bool = String(c.get("actor_kind", "party")) == "entity"
 	var actor := _get_or_spawn_actor(aid, is_npc)
 	actor.face(c.get("direction_name", "down"))
 
@@ -342,7 +358,7 @@ func _handle_visibility(c: Dictionary) -> void:
 	# not yet ground-truthed; some events emit only flag=0 calls so
 	# whichever direction we pick will be wrong for some events.
 	var aid: int = int(c.get("actor_id", 0))
-	var is_npc: bool = int(c.get("variant", 0)) == 1
+	var is_npc: bool = String(c.get("actor_kind", "party")) == "entity"
 	var actor := _get_or_spawn_actor(aid, is_npc)
 	actor.set_visible_state(int(c.get("visible", 1)) != 0)
 
@@ -383,7 +399,7 @@ func _handle_scene_config(c: Dictionary) -> void:
 	for m_any in moves:
 		var m: Dictionary = m_any
 		var aid: int = int(m.get("actor_id", 0))
-		var is_npc: bool = int(m.get("variant", 0)) == 1
+		var is_npc: bool = String(m.get("actor_kind", "party")) == "entity"
 		var actor := _get_or_spawn_actor(aid, is_npc)
 		if m.get("mode") == "absolute":
 			actor.position = Vector2(int(m.get("x", 0)), int(m.get("y", 0)))

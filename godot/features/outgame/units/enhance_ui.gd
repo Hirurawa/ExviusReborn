@@ -13,8 +13,6 @@ const UNIT_SCENE: PackedScene = preload("res://features/shared/Unit.tscn")
 @onready var need_gil_number_label: Label = $unit_mix_ui_sell_info/unit_mix_need_money_label/unit_mix_need_money_number
 
 @onready var UnitLevel: Label = $UnitLevel/UnitLevel
-@onready var unit_detail_exp_bar: TextureProgressBar = $UnitLevel/UnitExpBg/UnitExpBar
-@onready var unit_detail_level_next_exp_label: Label = $UnitLevel/UnitLvupInfo2/NextExpLabel
 
 @onready var HP: Label = $unit_statusbg/unit_status_label_hp/unit_status_ext_hp_now_number
 @onready var MP: Label = $unit_statusbg/unit_status_label_mp/unit_status_ext_mp_now_number
@@ -321,18 +319,7 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 	var currentRarity = int(unit_inst.current_rarity)
 	var maxLevel = StatCalculator.RARITY_MAX_LEVELS.get(int(currentRarity), 15)
 	var xpForNextLevel: int = UnitService.calculate_next_xp_for_unit(unit_inst)
-	UnitLevel.text += " / " + str(maxLevel)
-	unit_detail_level_next_exp_label.text = str(xpForNextLevel)
-	
-	var xp = unit_inst.get("xp")
-	var progress: Dictionary = UnitService.level_progress_at_xp(unit_inst, xp)
-	var level_floor: float = float(progress.get("level_floor", 0))
-	var span: float = maxf(1.0, float(progress.get("next_floor", 1)) - level_floor)
-	var into_level: float = clampf(xp - level_floor, 0.0, span)
-	unit_detail_exp_bar.max_value = span
-	unit_detail_exp_bar.value = into_level
-	
-	
+	UnitLevel.text += " / " + str(maxLevel) + "   next " + str(xpForNextLevel)
 	var lb_id = str(unit_inst.get("limitburst_id", ""))
 	var lb_data: Dictionary = GameDatabase.get_limitburst(lb_id) if lb_id != "" else {}
 	if not lb_data.is_empty():

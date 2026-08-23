@@ -36,8 +36,11 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 		return
 	if event.button_index != MOUSE_BUTTON_LEFT or not event.pressed:
 		return
+	# Not every placed NPC talks: 18 of the 195 scripted entities in the
+	# current corpus carry no dialogue line at all, and shop NPCs reference a
+	# store (shop_id_raw -> town_store) instead of a line. Those are silent
+	# scenery until their interaction is wired up.
 	if dialogue_line_id < 0 or town_id == "":
-		push_warning("NpcInteractable: missing dialogue_line_id or town_id")
 		return
 
 	var pages := DialogueLoader.get_dialogue(town_id, dialogue_line_id)

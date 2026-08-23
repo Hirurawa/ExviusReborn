@@ -244,8 +244,11 @@ func get_missions(dungeon_id: String) -> Array:
 	)
 
 func get_mission_bg(mission_id: String) -> String:
-	var rows = query("SELECT bg.fileInfo from battle_bg bg join mission m on m.battleBgId = bg.battleBgId where m.missionId = ? limit 1", [mission_id])
-	return str(rows[0].get("fileInfo", "")) if not rows.is_empty() else ""
+	var rows: Array = query("SELECT battleBgId FROM mission WHERE missionId = ? LIMIT 1", [mission_id])
+	var battle_bg_id: String = str(rows[0].get("battleBgId", "")) if not rows.is_empty() else ""
+	if battle_bg_id.length() != 6 or battle_bg_id == "0":
+		return ""
+	return "battle_bg_%s_0%s.jpg" % [battle_bg_id.substr(1, 4), battle_bg_id.right(1)]
 
 
 ## Display name of a dungeon (dungeon.name), or "" if the dungeon id is unknown.
@@ -583,7 +586,7 @@ func get_exploration_folder(dungeon_id: String) -> String:
 func get_mission_challenges(mission_id: String) -> Array:
 	var out: Array = []
 	for row in query(
-		"SELECT name, rewardInfo AS rewards, parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
+		"SELECT name, rewardInfo AS rewards, Pzn5h0Ga AS parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
 		[mission_id]
 	):
 		var challenge_name: String = str(row.get("name", ""))

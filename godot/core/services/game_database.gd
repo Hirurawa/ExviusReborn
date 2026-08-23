@@ -51,6 +51,7 @@ var _equipment_cache: Dictionary = {}
 # npcId -> row (see get_npc). Town maps hit this once per NPC per chunk redraw,
 # and DialogueLoader once per <name_npc=N> tag, so misses are cached too ({}).
 var _npc_cache: Dictionary = {}
+var _npc_table_available: Variant = null
 
 # === Connection ===
 
@@ -275,6 +276,16 @@ func get_store_items(store_id: String) -> Array:
 	)
 
 
+func get_town_store_greeting(store_id: int) -> Dictionary:
+	var rows := query(
+		"SELECT s.name, s.ownerName, c.comment FROM town_store s"
+		+ " LEFT JOIN town_store_comment c ON c.storeId = s.storeId AND c.\"5uDYV3nK\" = 1"
+		+ " WHERE s.storeId = ? LIMIT 1",
+		[store_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+
 func get_town(town_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile, COALESCE(t.openSwitch, '') AS openSwitch FROM town t"
@@ -324,7 +335,7 @@ func get_event_id_for_resource(resource_csv: String) -> String:
 
 func get_quests_for_town(town_id: String) -> Array:
 	return query(
-		"SELECT q.questId, q.name AS questName, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.targetType, qs.targetParam"
+		"SELECT q.questId, q.name AS questName, q.npcId, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.detail, qs.targetType, qs.targetParam"
 		+ " FROM quest q"
 		+ " LEFT JOIN quest_sub qs ON q.questId = qs.questId"
 		+ " WHERE q.locationType = 2 AND q.locationId = ?"
@@ -352,6 +363,13 @@ func get_npc(npc_id: int) -> Dictionary:
 		return {}
 	if _npc_cache.has(npc_id):
 		return _npc_cache[npc_id]
+	if _npc_table_available == null:
+		_npc_table_available = not query(
+			"SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npc' LIMIT 1"
+		).is_empty()
+	if not _npc_table_available:
+		_npc_cache[npc_id] = {}
+		return {}
 	var rows: Array = query(
 		"SELECT npcId, name, COALESCE(textureFile, '') AS textureFile,"
 		+ " COALESCE(textureInfo, '') AS textureInfo"

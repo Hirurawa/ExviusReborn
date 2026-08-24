@@ -1,7 +1,6 @@
 import struct
 import json
 import os
-import math
 import re
 import sys
 
@@ -9,14 +8,13 @@ import bin_common
 from bin_common import TOWN_DATA_ROOT
 
 
-def _split_scripted_payload(payload):
+def _split_scripted_payload(payload, identity_offset):
     """Decompose a scripted_entity payload into bundled hex regions.
 
     The payload's fixed prefix splits naturally around the already-
-    decoded identity slot at bytes [6:10] (sprite_id XOR
-    npc_instance_id, handled by the caller). Everything in
-    payload[0:6] is one contiguous header region; everything from
-    payload[10] up to the first tail-block marker is one contiguous
+    decoded identity slot (sprite_id XOR npc_instance_id, handled by
+    the caller). Everything before it is one contiguous header region;
+    everything after it up to the first tail-block marker is one contiguous
     body region. Previously these were exposed as ten separate
     `unknown_1`..`unknown_11` hex fields, but every adjacent pair was
     byte-aligned in the bin, so the split was cosmetic clutter. We
@@ -24,18 +22,12 @@ def _split_scripted_payload(payload):
     further once we actually decode the inner fields.
 
     Internal byte layout (relative to payload start):
-      header_hex  [0:6]    bytes 0-1  class tag (00BA / 00C8)
+      header_hex  [0:I]    bytes 0-1  class tag (00BA / 00C8)
                             bytes 2-3  always 0101 in this corpus
-                            bytes 4-5  varies (0101 / 0201 / 0010)
-      [6:10]               sprite_id  XOR  npc_instance_id  (caller)
-      body_hex    [10:T]   bytes 10-13 usually zeros
-                            bytes 14-15 0104 / 0004
-                            byte  16    usually 0x14
-                            byte  17    flag
-                            byte  18    flag
-                            bytes 19-22 4-byte flag block
-                            byte  23    flag
-                            bytes 24..T scratch / per-instance event id
+                            newer records add bytes 4-5 (0101 / 0201)
+      [I:I+4]              sprite_id XOR npc_instance_id (caller)
+      body_hex    [I+4:T]  begins with four zero bytes, followed by
+                            flags and per-instance event data
                             (T = first tail-block marker offset)
 
     After the body region, the payload contains chained TLV-style
@@ -49,7 +41,7 @@ def _split_scripted_payload(payload):
     n = len(payload)
 
     # Locate the first tail-block marker. Everything before it (minus
-    # the identity slot at [6:10]) is the bundled header+body region.
+    # the identity slot) is the bundled header+body region.
     tail_start = None
     for off in range(24, n - 7):
         tag = payload[off]
@@ -63,10 +55,11 @@ def _split_scripted_payload(payload):
 
     # Bundle the two contiguous hex regions around the identity slot.
     if n >= 1:
-        out["header_hex"] = payload[0:min(6, n)].hex().upper() or None
-    if n > 10:
+        out["header_hex"] = payload[0:min(identity_offset, n)].hex().upper() or None
+    body_start = identity_offset + 4
+    if n > body_start:
         body_end = min(tail_start, n)
-        body_bytes = payload[10:body_end]
+        body_bytes = payload[body_start:body_end]
         out["body_hex"] = body_bytes.hex().upper() or None
 
     # Parse chained tail blocks starting from the first marker. Each
@@ -126,8 +119,13 @@ def _decode_scripted_entities(blueprint):
                 payload = bytes.fromhex(payload_hex)
             except ValueError:
                 continue
-            # Sprite/NPC ID is a u32 BE at payload offset 6. Values
-            # in the ~100000000 - 900300000 range correspond to
+            # Older records place the identity at offset 4; newer records
+            # insert a two-byte variant first and place it at offset 6.
+            identity_offset = (
+                4 if len(payload) >= 12 and payload[8:12] == b"\x00" * 4
+                else 6
+            )
+            # Values in the ~100000000 - 900300000 range correspond to
             # `npc<id>.png` filenames. Outside that range the bytes
             # encode an `npc_instance_id` -- the per-area NPC
             # handle that the dialogue table references via the
@@ -135,16 +133,20 @@ def _decode_scripted_entities(blueprint):
             # cross-checking against datamined per-town reference
             # files (e.g. quest-giver 0x0010D0EC == 1102060 == the
             # Hill Gigas mission giver in town 111020200).
-            if len(payload) >= 10:
-                sprite_id = struct.unpack(">I", payload[6:10])[0]
+            if len(payload) >= identity_offset + 4:
+                sprite_id = struct.unpack(
+                    ">I", payload[identity_offset:identity_offset + 4]
+                )[0]
                 if 100_000_000 <= sprite_id <= 900_300_000:
                     ent["sprite_id"] = sprite_id
                 else:
                     ent["npc_instance_id"] = sprite_id
-                    ent["npc_instance_id_hex"] = payload[6:10].hex().upper()
+                    ent["npc_instance_id_hex"] = payload[
+                        identity_offset:identity_offset + 4
+                    ].hex().upper()
             # Split the rest of the payload into atomic named fields
             # so unknown bytes can be pattern-hunted by the frontend.
-            ent.update(_split_scripted_payload(payload))
+            ent.update(_split_scripted_payload(payload, identity_offset))
             # Structural extraction of dialogue_line_id: take the
             # LAST tail block carrying the `08 00 04` marker (large
             # records can chain multiple dialogue blocks; the final
@@ -173,6 +175,27 @@ def _decode_scripted_entities(blueprint):
             # per-kind extraction needed here.
             # Drop the now-redundant raw payload dump.
             ent.pop("payload_hex", None)
+
+
+def _promote_valid_suspect_warps(blueprint):
+    """Keep subtype-0 warps only when their destination fits this map."""
+    dimensions = {
+        layer["layer_id"]: (layer["grid_width"], layer["grid_height"])
+        for layer in blueprint.get("layers", [])
+    }
+    for layer in blueprint.get("layers", []):
+        for entity in layer.get("objects", {}).get("dynamic_entities", []):
+            if entity.get("kind") != "warp_suspect":
+                continue
+            target_lid = entity.get("target_lid")
+            target_x = entity.get("target_x")
+            target_y = entity.get("target_y")
+            if target_lid not in dimensions:
+                continue
+            width, height = dimensions[target_lid]
+            if 0 <= target_x < width and 0 <= target_y < height:
+                entity["kind"] = "warp"
+                entity["note"] = "validated subtype-0 warp against target layer"
 
 
 def _is_event_flag_value(v):
@@ -544,6 +567,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
         * total_chunks_hint      -- optional cap; loop stops early once
                                     this many chunks have been parsed.
     """
+    validate_town_semantics = pre_parsed is None
     if not os.path.exists(file_path):
         print(f"Error: Could not find {file_path}")
         return
@@ -622,12 +646,11 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             visual_layer_size = grid_tile_count * 4
             single_byte_layer_size = grid_tile_count * 1
             
-            # Math handles the visual layer count dynamically
+            # Upper bound only: object data also lives in the remaining chunk,
+            # so treating all available bytes as visuals over-counts many maps.
             available_tile_space = chunk_size - 16 - (single_byte_layer_size * 2)
-            visual_layer_count = max(0, math.floor(available_tile_space / visual_layer_size))
-            
-            current_offset = data_start_offset
-            sub_layers = []
+            max_visual_layer_count = max(
+                0, available_tile_space // visual_layer_size)
 
             # --- THE PADDING VACUUM ---
             # Inter-visual gap consists of 0..3 \x00 padding bytes optionally
@@ -672,80 +695,264 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 f.seek(start)
                 return 0, True
 
-            # 1. Map the Visual Layers
-            # --- PRE-VISUAL SEPARATOR ---
-            # A few chunks (e.g. layer_ids 127/128 in this corpus) place a
-            # small inter-section gap *before* the first visual layer too:
-            # up to 3 \x00 bytes optionally followed by a \x01 separator,
-            # exactly matching the inter-visual gap format. For most chunks
-            # this gap is empty (consume_separator finds no zero / no \x01
-            # and seeks back). Only when the bytes are literally
-            # `\x00*\x01` does the cursor advance; that keeps the rest of
-            # the structure aligned for chunks that need it without
-            # disturbing well-aligned chunks.
-            consumed_pre, _ok_pre = consume_separator()
-            if consumed_pre:
-                current_offset = data_start_offset + consumed_pre
+            def map_tile_layout(visual_count):
+                """Return (sub_layers, object_start) for one visual-count guess."""
+                f.seek(data_start_offset)
+                current = data_start_offset
+                layers = []
 
-            actual_visual_count = 0
-            for v in range(visual_layer_count):
-                layer_start = current_offset
-                layer_end_exclusive = layer_start + visual_layer_size
+                # Some chunks put the normal separator before visual layer 0.
+                consumed_pre, _ = consume_separator()
+                current += consumed_pre
 
-                # Safety: don't claim a visual layer that would extend past the chunk
-                if layer_end_exclusive > chunk_end_offset:
-                    break
+                for v in range(visual_count):
+                    layer_start = current
+                    layer_end = layer_start + visual_layer_size
+                    if layer_end > chunk_end_offset:
+                        return None
+                    layers.append({
+                        "type": "visual",
+                        "index": v,
+                        "start_hex": hex(layer_start),
+                        "end_hex_inclusive": hex(layer_end - 1)
+                    })
+                    current = layer_end
+                    if v < visual_count - 1:
+                        f.seek(current)
+                        consumed, _ = consume_separator()
+                        current += consumed
 
-                sub_layers.append({
-                    "type": "visual",
-                    "index": v,
-                    "start_hex": hex(layer_start),
-                    "end_hex_inclusive": hex(layer_end_exclusive - 1)
-                })
-                actual_visual_count = v + 1
+                col_start = current
+                col_end = col_start + single_byte_layer_size
+                reg_start = col_end
+                reg_end = reg_start + single_byte_layer_size
+                if reg_end > chunk_end_offset:
+                    return None
+                layers.extend([
+                    {
+                        "type": "collision",
+                        "index": visual_count,
+                        "start_hex": hex(col_start),
+                        "end_hex_inclusive": hex(col_end - 1)
+                    },
+                    {
+                        "type": "region",
+                        "index": visual_count + 1,
+                        "start_hex": hex(reg_start),
+                        "end_hex_inclusive": hex(reg_end - 1)
+                    }
+                ])
+                return layers, reg_end
 
-                f.seek(layer_end_exclusive)
+            def static_record_semantic_errors(rec, allowed_render_flags=(1,)):
+                """Return violations of the confirmed 27-byte static schema."""
+                (_, _, width, height, render_flag, _, _, _, _, variant_word,
+                 _, _) = struct.unpack(">IIHHHHHHHHHB", rec)
+                errors = []
+                if width == 0 or height == 0:
+                    errors.append("zero size")
+                if render_flag not in allowed_render_flags:
+                    errors.append(f"render_flag={render_flag}")
+                if variant_word & 0xFF > 3:
+                    errors.append(f"layer={variant_word & 0xFF}")
+                return errors
 
-                # Check for padding and separator if NOT the last visual layer
-                if v < visual_layer_count - 1:
-                    consumed, ok = consume_separator()
-                    if not ok:
-                        # Budget exhausted -> formula over-counted; stop here.
-                        current_offset = layer_end_exclusive
-                        break
-                    current_offset = layer_end_exclusive + consumed
-                else:
-                    current_offset = layer_end_exclusive
+            def decode_static_record(rec):
+                (sx, sy, sw, sh, srflag, satlas,
+                 satlas_x, satlas_y, sflags_a, svariant_word,
+                 sflags_c, sscale) = struct.unpack(">IIHHHHHHHHHB", rec)
+                return {
+                    "x": sx, "y": sy, "width": sw, "height": sh,
+                    "render_flag": srflag,
+                    "atlas_id": satlas,
+                    "atlas_x": satlas_x,
+                    "atlas_y": satlas_y,
+                    "flags_a": sflags_a,
+                    "layer": svariant_word & 0xFF,
+                    "layer_flags": (svariant_word >> 8) & 0xFF,
+                    "flags_c": sflags_c,
+                    "scale": sscale,
+                }
 
-            visual_layer_count = actual_visual_count
-                        
-            # 2. Map the Collision Layer
-            col_start = current_offset
-            col_end_exclusive = col_start + single_byte_layer_size
-            sub_layers.append({
-                "type": "collision", 
-                "index": visual_layer_count,
-                "start_hex": hex(col_start), 
-                "end_hex_inclusive": hex(col_end_exclusive - 1)
-            })
-            current_offset = col_end_exclusive
-            
-            # 3. Map the Region Layer
-            reg_start = current_offset
-            reg_end_exclusive = reg_start + single_byte_layer_size
-            sub_layers.append({
-                "type": "region", 
-                "index": visual_layer_count + 1,
-                "start_hex": hex(reg_start), 
-                "end_hex_inclusive": hex(reg_end_exclusive - 1)
-            })
-            current_offset = reg_end_exclusive
+            def decode_secondary_static_block(payload):
+                """Decode u16-counted 14B hidden and 27B/35B drawable statics."""
+                if len(payload) < 2:
+                    return None
+                count = struct.unpack(">H", payload[:2])[0]
+                offset = 2
+                drawable = []
+                hidden = []
+                for _ in range(count):
+                    if offset + 14 > len(payload):
+                        return None
+                    sx, sy, sw, sh, render_flag = struct.unpack(
+                        ">IIHHH", payload[offset:offset + 14])
+                    if render_flag == 0:
+                        hidden.append({
+                            "x": sx, "y": sy, "width": sw, "height": sh,
+                            "render_flag": render_flag,
+                        })
+                        offset += 14
+                        continue
+                    if render_flag not in (1, 0x0101):
+                        return None
+                    record_size = 35 if render_flag == 0x0101 else 27
+                    if offset + record_size > len(payload):
+                        return None
+                    rec = payload[offset:offset + 27]
+                    if static_record_semantic_errors(rec, (1, 0x0101)):
+                        return None
+                    asset = decode_static_record(rec)
+                    if record_size == 35:
+                        asset["extension_words"] = list(struct.unpack(
+                            ">HHHH", payload[offset + 27:offset + 35]
+                        ))
+                    drawable.append(asset)
+                    offset += record_size
+                if offset != len(payload):
+                    return None
+                return drawable, hidden
+
+            SECONDARY_GRID_EVENTS = -2
+            SECONDARY_GRID_EVENTS_U16_STATICS = -3
+
+            def object_prefix_trailer_size(offset):
+                """Return the grid-event trailer size for a plausible object prefix."""
+                if chunk_end_offset - offset < 10:
+                    return None
+                saved = f.tell()
+                try:
+                    # Some layers use u16 counts for both a second grid-event
+                    # group and the following static-assets group.
+                    f.seek(offset)
+                    ge_count = struct.unpack(">I", f.read(4))[0]
+                    if (
+                        ge_count <= 5000
+                        and f.tell() + ge_count * 9 + 6 <= chunk_end_offset
+                    ):
+                        f.seek(ge_count * 9, os.SEEK_CUR)
+                        if struct.unpack(">H", f.read(2))[0] == 0:
+                            second_count = struct.unpack(">H", f.read(2))[0]
+                            second_size = second_count * 9
+                            if (
+                                0 < second_count <= 5000
+                                and f.tell() + second_size + 4
+                                <= chunk_end_offset
+                            ):
+                                f.seek(second_size, os.SEEK_CUR)
+                                sa_count = struct.unpack(">H", f.read(2))[0]
+                                static_size = sa_count * 27
+                                if (
+                                    sa_count <= 5000
+                                    and f.tell() + static_size + 2
+                                    <= chunk_end_offset
+                                ):
+                                    records = [
+                                        f.read(27) for _ in range(sa_count)
+                                    ]
+                                    if not any(
+                                        static_record_semantic_errors(rec)
+                                        for rec in records
+                                    ):
+                                        tail = f.read(
+                                            chunk_end_offset - f.tell()
+                                        )
+                                        located = _locate_de_section(tail)
+                                        if (
+                                            located is not None
+                                            and located[0] == 0
+                                        ):
+                                            return SECONDARY_GRID_EVENTS_U16_STATICS
+
+                    best = None
+                    for preference, trailer_size in enumerate((2, 0, 4)):
+                        f.seek(offset)
+                        ge_count = struct.unpack(">I", f.read(4))[0]
+                        if ge_count > 5000:
+                            continue
+                        f.seek(ge_count * 9, os.SEEK_CUR)
+                        if f.tell() + trailer_size + 6 > chunk_end_offset:
+                            continue
+                        if trailer_size:
+                            # When present, the first trailer word is zero.
+                            # Some chunks carry one extra map-specific word.
+                            if struct.unpack(">H", f.read(2))[0] != 0:
+                                continue
+                            f.seek(trailer_size - 2, os.SEEK_CUR)
+                        sa_count = struct.unpack(">I", f.read(4))[0]
+                        if sa_count > 5000:
+                            continue
+                        records = [f.read(27) for _ in range(sa_count)]
+                        if validate_town_semantics and (
+                            any(len(rec) != 27 for rec in records)
+                            or any(static_record_semantic_errors(rec) for rec in records)
+                        ):
+                            continue
+                        if f.tell() + 2 > chunk_end_offset:
+                            continue
+                        tail = f.read(chunk_end_offset - f.tell())
+                        located = _locate_de_section(tail)
+                        if located is not None:
+                            score = (located[0], preference)
+                            if best is None or score < best[0]:
+                                best = score, trailer_size
+                    if best is not None:
+                        return best[1]
+                    # One observed layer stores a second u32-counted grid-event
+                    # group followed by an empty four-byte object tail.
+                    f.seek(offset)
+                    ge_count = struct.unpack(">I", f.read(4))[0]
+                    f.seek(ge_count * 9, os.SEEK_CUR)
+                    if f.tell() + 8 <= chunk_end_offset:
+                        second_count = struct.unpack(">I", f.read(4))[0]
+                        second_size = second_count * 9
+                        if (
+                            second_count <= 5000
+                            and f.tell() + second_size + 4 == chunk_end_offset
+                        ):
+                            f.seek(second_size, os.SEEK_CUR)
+                            if f.read(4) == b"\x00\x00\x00\x00":
+                                return SECONDARY_GRID_EVENTS
+                    return None
+                except struct.error:
+                    return None
+                finally:
+                    f.seek(saved)
+
+            def fixed_object_prefix_trailer_size(offset):
+                """Preserve the established visual-count decision."""
+                saved = f.tell()
+                try:
+                    for trailer_size in (2, 4):
+                        f.seek(offset)
+                        ge_count = struct.unpack(">I", f.read(4))[0]
+                        if ge_count > 5000:
+                            continue
+                        f.seek(ge_count * 9, os.SEEK_CUR)
+                        if f.tell() + trailer_size + 6 > chunk_end_offset:
+                            continue
+                        if struct.unpack(">H", f.read(2))[0] != 0:
+                            continue
+                        f.seek(trailer_size - 2, os.SEEK_CUR)
+                        sa_count = struct.unpack(">I", f.read(4))[0]
+                        if sa_count > 5000:
+                            continue
+                        f.seek(sa_count * 27, os.SEEK_CUR)
+                        if f.tell() + 2 > chunk_end_offset:
+                            continue
+                        if struct.unpack(">H", f.read(2))[0] <= 5000:
+                            return trailer_size
+                    return None
+                except struct.error:
+                    return None
+                finally:
+                    f.seek(saved)
 
             # --- OBJECTS SECTION PARSER (correct schema) ---
             # Schema after region layer:
             #   u32 ge_count + ge_count * 9 bytes  (x:u32, y:u32, event_id:u8)
-            #   u16 ge_trailer (always 0x0000)
-            #   u32 sa_count + sa_count * 27 bytes (x,y u32; w,h,z,atlas,sprite u16; params 9b)
+            #   optional 0/2/4-byte ge trailer (first u16 is 0 when present)
+            #   u32/u16 sa_count + sa_count * 27 bytes (x,y u32; w,h,z,atlas,sprite u16; params 9b)
             #   u16 de_count + de records dispatched by type byte @+0x04:
             #       0x0F -> 62 bytes (all warp variants, distinguished by sub_variant:
             #               0x01=entrance, 0x02=overworld doorway, 0x03=exit,
@@ -759,9 +966,9 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             objects_parse_status = "ok"
             objects_trailing_hex = ""
             objects_raw_hex_fallback = ""
-
-            obj_start = current_offset
-            obj_space = chunk_end_offset - obj_start
+            objects_pre_dynamic_hex = ""
+            objects_semantic_warnings = []
+            non_rendering_static_assets = []
 
             # Per-section byte ranges (filled in as we parse). Each is a dict
             # with start_hex (inclusive) and end_hex_inclusive once the section
@@ -960,7 +1167,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             # by locating the next plausible record header in the payload.
             DE_KNOWN_TYPES = {
                 0x00, 0x01, 0x02, 0x04, 0x05, 0x06, 0x07, 0x08,
-                0x0F, 0x10, 0x11, 0x12, 0x14, 0x16, 0x18, 0x1B,
+                0x0E, 0x0F, 0x10, 0x11, 0x12, 0x14, 0x16, 0x18, 0x1B,
             }
             # Per-type minimum record length (the fixed 17-byte header +
             # 8-byte extra block is 25 bytes; some types observed to need
@@ -968,13 +1175,15 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             DE_MIN_LEN_BY_TYPE = {
                 0x00: 36, 0x01: 54, 0x02: 70,
                 0x04: 41, 0x05: 41, 0x06: 41, 0x07: 41,
-                0x08: 41, 0x10: 41, 0x11: 41, 0x14: 46,
+                0x08: 41, 0x10: 39, 0x11: 41, 0x14: 46,
                 0x16: 41, 0x18: 41, 0x0F: 59, 0x12: 117,
-                0x1B: 51,
+                0x0E: 39, 0x1B: 51,
             }
             DE_MIN_REC_LEN = 25  # safety floor: never accept a shorter record
 
-            def _de_header_at(payload, off, seen_now, rid_cap):
+            def _de_header_at(
+                payload, off, seen_now, rid_cap, allowed_types=DE_KNOWN_TYPES
+            ):
                 """Return True if `off` looks like the start of a DE record
                 header (u32 rid, u8 known type, plausible w/h, unique rid).
                 The caller supplies the rid plausibility bound. Real records
@@ -994,7 +1203,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     return False
                 rid = struct.unpack(">I", payload[off:off+4])[0]
                 rt = payload[off+4]
-                if rt not in DE_KNOWN_TYPES:
+                if rt not in allowed_types:
                     return False
                 if rid < 1 or rid > rid_cap or rid in seen_now:
                     return False
@@ -1007,11 +1216,32 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     return False
                 w = struct.unpack(">H", payload[off+13:off+15])[0]
                 h = struct.unpack(">H", payload[off+15:off+17])[0]
-                if not (1 <= w <= 2048 and 1 <= h <= 2048):
+                effect_marker = (
+                    payload[off + 17:off + 26] == b"\x00" * 9
+                    and payload[off + 26:off + 28] == b"\x64\x01"
+                )
+                if rt == 0x0E and not effect_marker:
                     return False
-                # Real records always have w and h as multiples of 29
-                # (half-tile). Ghost records typically don't.
-                if w % 29 != 0 or h % 29 != 0:
+                normal_geometry = (
+                    1 <= w <= 2048 and 1 <= h <= 2048
+                    and w % 29 == 0 and h % 29 == 0
+                )
+                # Two observed 39-byte records use these fields as opaque
+                # type-specific values rather than width/height.
+                short_opaque = (
+                    rt == 0x10
+                    or (
+                        rt == 0x00
+                        and (
+                            len(payload) - off == 39
+                            or (
+                                1 <= w <= 2048 and 1 <= h <= 2048
+                                and effect_marker
+                            )
+                        )
+                    )
+                )
+                if not normal_geometry and not short_opaque:
                     return False
                 return True
 
@@ -1120,9 +1350,128 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     return None
                 return walked
 
+            def _locate_de_section(tail):
+                """Find a u16 DE count whose payload has walkable record headers."""
+                for offset in range(max(0, len(tail) - 1)):
+                    count = struct.unpack(">H", tail[offset:offset + 2])[0]
+                    if count > 5000:
+                        continue
+                    if count == 0:
+                        if offset == 0 or offset + 2 == len(tail):
+                            return offset, count, []
+                        continue
+                    payload = tail[offset + 2:]
+                    rid_cap = max(count * 3, 200)
+                    if not _de_header_at(payload, 0, frozenset(), rid_cap):
+                        continue
+                    boundaries = _walk_de_records(payload, count)
+                    if boundaries:
+                        return offset, count, boundaries
+                return None
+
+            def decode_auxiliary_dynamic_block(payload, absolute_start):
+                """Decode the u16-counted 0x00/0x13/0x1F entity block."""
+                if len(payload) < 27:
+                    return None
+                declared_count = struct.unpack(">H", payload[:2])[0]
+                body = payload[2:]
+                allowed_types = frozenset((0x00, 0x13, 0x1F))
+                starts = [
+                    offset for offset in range(len(body) - 24)
+                    if _de_header_at(
+                        body, offset, frozenset(), 200, allowed_types
+                    )
+                ]
+                if (
+                    not starts
+                    or starts[0] != 0
+                    or len(starts) > declared_count
+                    or not any(body[start + 4] in (0x13, 0x1F) for start in starts)
+                ):
+                    return None
+
+                entities = []
+                for index, start in enumerate(starts):
+                    end = starts[index + 1] if index + 1 < len(starts) else len(body)
+                    rec = body[start:end]
+                    rec_id = struct.unpack(">I", rec[:4])[0]
+                    rec_type = rec[4]
+                    entity = _decode_common_header(rec, rec_id, rec_type)
+                    entity.update({
+                        "kind": "auxiliary_entity",
+                        "length_bytes": len(rec),
+                        "start_hex": hex(absolute_start + 2 + start),
+                        "end_hex_inclusive": hex(absolute_start + 1 + end),
+                        "payload_hex": rec[25:].hex().upper(),
+                    })
+                    strings = _extract_pascal_strings(rec[25:])
+                    if strings:
+                        entity["strings"] = strings
+                    entities.append(entity)
+                return entities
+
+            selected_layout = None
+            visual_layer_count = max_visual_layer_count
+            grid_event_trailer_size = 2
+            has_secondary_grid_events = False
+            secondary_grid_events_use_u16 = False
+
+            # Keep the established tile boundaries whenever their fixed
+            # object prefix fits; rendering depends on visual-count stability.
+            for candidate_count in range(max_visual_layer_count, -1, -1):
+                candidate_layout = map_tile_layout(candidate_count)
+                trailer_size = (
+                    fixed_object_prefix_trailer_size(candidate_layout[1])
+                    if candidate_layout else None
+                )
+                if trailer_size is not None:
+                    visual_layer_count = candidate_count
+                    grid_event_trailer_size = trailer_size
+                    selected_layout = candidate_layout
+                    break
+
+            # Exploration layers with u16-counted secondary objects do not
+            # match the legacy fixed prefix. Use their fully validated object
+            # framing instead of treating object bytes as another tile layer.
+            if selected_layout is None:
+                for candidate_count in range(max_visual_layer_count, -1, -1):
+                    candidate_layout = map_tile_layout(candidate_count)
+                    trailer_size = (
+                        object_prefix_trailer_size(candidate_layout[1])
+                        if candidate_layout else None
+                    )
+                    if trailer_size == SECONDARY_GRID_EVENTS_U16_STATICS:
+                        visual_layer_count = candidate_count
+                        selected_layout = candidate_layout
+                        break
+
+            # Re-evaluate object framing without moving tile boundaries.
+            # Object heuristics are not strong enough to choose visual layers.
+            candidate_layout = map_tile_layout(visual_layer_count)
+            trailer_size = (
+                object_prefix_trailer_size(candidate_layout[1])
+                if candidate_layout else None
+            )
+            if trailer_size is not None:
+                selected_layout = candidate_layout
+                has_secondary_grid_events = trailer_size in (
+                    SECONDARY_GRID_EVENTS,
+                    SECONDARY_GRID_EVENTS_U16_STATICS,
+                )
+                secondary_grid_events_use_u16 = (
+                    trailer_size == SECONDARY_GRID_EVENTS_U16_STATICS
+                )
+                grid_event_trailer_size = 0 if has_secondary_grid_events else trailer_size
+            if selected_layout is None:
+                selected_layout = map_tile_layout(max_visual_layer_count)
+
+            sub_layers, current_offset = selected_layout
+            obj_start = current_offset
+            obj_space = chunk_end_offset - obj_start
+
             try:
-                if obj_space < 12:
-                    raise ValueError(f"only {obj_space} bytes after region (need >=12 for empty objects section)")
+                if obj_space < 10:
+                    raise ValueError(f"only {obj_space} bytes after region (need >=10 for empty objects section)")
 
                 f.seek(obj_start)
 
@@ -1137,22 +1486,48 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     gx, gy, gevent = struct.unpack(">IIB", f.read(9))
                     grid_events.append({"x": gx, "y": gy, "event_id": gevent})
 
-                if f.tell() + 2 > chunk_end_offset:
+                if has_secondary_grid_events:
+                    if secondary_grid_events_use_u16:
+                        if struct.unpack(">H", f.read(2))[0] != 0:
+                            raise ValueError("invalid secondary grid-event marker")
+                        second_count = struct.unpack(">H", f.read(2))[0]
+                    else:
+                        second_count = struct.unpack(">I", f.read(4))[0]
+                    if (
+                        second_count > 5000
+                        or f.tell() + second_count * 9 > chunk_end_offset
+                    ):
+                        raise ValueError("secondary grid_events overflow chunk")
+                    for _ in range(second_count):
+                        gx, gy, gevent = struct.unpack(">IIB", f.read(9))
+                        grid_events.append({"x": gx, "y": gy, "event_id": gevent})
+
+                if f.tell() + grid_event_trailer_size > chunk_end_offset:
                     raise ValueError("eof at ge_trailer")
-                ge_trailer = struct.unpack(">H", f.read(2))[0]
+                if grid_event_trailer_size:
+                    f.read(grid_event_trailer_size)
                 _record_range("grid_events_section", ge_section_start, f.tell())
 
-                # --- Static assets section: u32 sa_count + sa_count*27B records ---
+                # --- Static assets section: u32/u16 sa_count + 27B records ---
                 sa_section_start = f.tell()
-                if f.tell() + 4 > chunk_end_offset:
+                sa_count_size = 2 if secondary_grid_events_use_u16 else 4
+                if f.tell() + sa_count_size > chunk_end_offset:
                     raise ValueError("eof at sa_count")
-                sa_count = struct.unpack(">I", f.read(4))[0]
+                sa_count = struct.unpack(
+                    ">H" if secondary_grid_events_use_u16 else ">I",
+                    f.read(sa_count_size),
+                )[0]
                 if sa_count > 5000:
                     raise ValueError(f"sa_count={sa_count} insane")
                 if f.tell() + sa_count * 27 > chunk_end_offset:
                     raise ValueError("static_assets overflow chunk")
-                for _ in range(sa_count):
+                for record_index in range(sa_count):
                     rec = f.read(27)
+                    semantic_errors = static_record_semantic_errors(rec)
+                    if validate_town_semantics and semantic_errors:
+                        objects_semantic_warnings.append(
+                            f"static[{record_index}]: {', '.join(semantic_errors)}"
+                        )
                     # Static-asset record layout (27 bytes, all big-endian):
                     #   [0:4]   u32  map_x_px       — blit destination on the map
                     #   [4:8]   u32  map_y_px
@@ -1181,54 +1556,59 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                     # mis-led the renderer into using pixel coordinates as
                     # opaque ids. Corrected after user observation that the
                     # same "sprite_id" placed unrelated tiles on the map.
-                    (sx, sy, sw, sh, srflag, satlas,
-                     satlas_x, satlas_y, sflags_a, svariant_word,
-                     sflags_c, sscale) = struct.unpack(
-                        ">IIHHHHHHHHHB", rec)
-                    # Split the u16 "variant_word" into its two bytes. The
-                    # low byte (always 0..3 in observed data) tells the
-                    # renderer which visual sub-layer the asset belongs to.
-                    # The high byte is non-zero only on a handful of
-                    # records (values 10/12/15) and is exposed as
-                    # "layer_flags" so we can investigate it later.
-                    slayer = svariant_word & 0xFF
-                    slayer_flags = (svariant_word >> 8) & 0xFF
-                    static_assets.append({
-                        "x": sx, "y": sy, "width": sw, "height": sh,
-                        "render_flag": srflag,
-                        "atlas_id": satlas,
-                        "atlas_x": satlas_x,
-                        "atlas_y": satlas_y,
-                        "flags_a": sflags_a,
-                        "layer": slayer,
-                        "layer_flags": slayer_flags,
-                        "flags_c": sflags_c,
-                        "scale": sscale,
-                    })
+                    static_assets.append(decode_static_record(rec))
                 _record_range("static_assets_section", sa_section_start, f.tell())
 
                 # --- Dynamic entities section: u16 de_count + variable-length records ---
-                de_section_start = f.tell()
-                if f.tell() + 2 > chunk_end_offset:
+                tail_start = f.tell()
+                if (
+                    has_secondary_grid_events
+                    and not secondary_grid_events_use_u16
+                    and tail_start == chunk_end_offset
+                ):
+                    located_de = (0, 0, [])
+                    tail = b""
+                elif tail_start + 2 > chunk_end_offset:
                     raise ValueError("eof at de_count")
-                de_count = struct.unpack(">H", f.read(2))[0]
-                if de_count > 5000:
-                    raise ValueError(f"de_count={de_count} insane")
-
-                # Read the entire DE payload (everything after de_count up to
-                # chunk_end) and walk records using known type-specific
-                # length tables + DFS-with-backtracking. See _walk_de_records
-                # docstring for rationale. The old assumption that record_ids
-                # were strictly +1 sequential was wrong; the new walker
-                # handles arbitrary rid orderings.
-                de_payload_start = f.tell()
-                de_payload = f.read(chunk_end_offset - de_payload_start)
+                else:
+                    tail = f.read(chunk_end_offset - tail_start)
+                    located_de = _locate_de_section(tail)
+                if located_de is None:
+                    raise ValueError("could not locate dynamic_entities section")
+                de_offset, de_count, boundaries = located_de
+                if de_offset:
+                    pre_dynamic = tail[:de_offset]
+                    decoded_statics = decode_secondary_static_block(pre_dynamic)
+                    if decoded_statics is not None:
+                        drawable, hidden = decoded_statics
+                        static_assets.extend(drawable)
+                        non_rendering_static_assets.extend(hidden)
+                        _record_range(
+                            "secondary_static_assets_section",
+                            tail_start,
+                            tail_start + de_offset,
+                        )
+                    else:
+                        auxiliary_entities = decode_auxiliary_dynamic_block(
+                            pre_dynamic, tail_start
+                        )
+                        if auxiliary_entities is None:
+                            objects_pre_dynamic_hex = pre_dynamic.hex().upper()
+                        else:
+                            dynamic_entities.extend(auxiliary_entities)
+                            _record_range(
+                                "auxiliary_dynamic_entities_section",
+                                tail_start,
+                                tail_start + de_offset,
+                            )
+                de_section_start = tail_start + de_offset
+                de_payload_start = de_section_start + 2
+                de_payload = tail[de_offset + 2:]
                 de_partial_status = None
 
                 if de_count == 0:
                     pass
                 else:
-                    boundaries = _walk_de_records(de_payload, de_count)
                     if boundaries is None:
                         de_partial_status = (
                             f"de walk failed (decoded 0 of {de_count})"
@@ -1479,6 +1859,51 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                                     entity["kind"] = "effect_spawner"
                             dynamic_entities.append(entity)
 
+                # Some maps pack a warp behind a one-byte record id instead
+                # of the normal u32 id. Recover and normalize that layout.
+                known_warp_trailers = set()
+                for entity in dynamic_entities:
+                    if entity.get("record_type") != "0x0F":
+                        continue
+                    try:
+                        known_warp_trailers.add(
+                            int(entity["start_hex"], 16)
+                            - de_payload_start
+                            + int(entity["trailer_offset"], 16)
+                        )
+                    except (KeyError, TypeError, ValueError):
+                        pass
+                marker_pos = 0
+                while True:
+                    marker_pos = de_payload.find(b"\x05\x00\x0F", marker_pos)
+                    if marker_pos < 0:
+                        break
+                    compact_start = marker_pos - 0x37
+                    if (
+                        marker_pos not in known_warp_trailers
+                        and compact_start >= 0
+                        and de_payload[compact_start + 1] == 0x0F
+                    ):
+                        normalized = (
+                            b"\x00\x00\x00"
+                            + de_payload[compact_start:marker_pos + 16]
+                        )
+                        if _de_header_at(
+                            normalized, 0, frozenset(), 255, {0x0F}
+                        ):
+                            compact_id = de_payload[compact_start]
+                            entity = _read_warp_record(normalized, compact_id)
+                            entity["length_bytes"] = len(normalized) - 3
+                            entity["start_hex"] = hex(
+                                de_payload_start + compact_start
+                            )
+                            entity["end_hex_inclusive"] = hex(
+                                de_payload_start + marker_pos + 15
+                            )
+                            entity["note"] = "recovered compact warp header"
+                            dynamic_entities.append(entity)
+                    marker_pos += 3
+
                 # Post-process: scan the entire DE payload for any chest
                 # tail markers (`4D 00 05 00 10 [u16] 01`) whose absolute
                 # bin offset isn't already covered by an existing chest's
@@ -1642,6 +2067,30 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                         objects_parse_status = f"ok: {de_partial_status}"
                     else:
                         objects_parse_status = f"partial: {de_partial_status}"
+                semantic_summary = []
+                if objects_semantic_warnings:
+                    semantic_summary.append(
+                        f"{len(objects_semantic_warnings)} static records violate "
+                        "the confirmed schema"
+                    )
+                if validate_town_semantics and objects_pre_dynamic_hex:
+                    opaque_size = len(objects_pre_dynamic_hex) // 2
+                    semantic_summary.append(
+                        f"{opaque_size} undecoded bytes before dynamic entities"
+                    )
+                    objects_semantic_warnings.append(
+                        f"pre_dynamic_bytes: {opaque_size} bytes are not semantically decoded"
+                    )
+                if semantic_summary:
+                    detail = "; ".join(semantic_summary)
+                    if objects_parse_status == "ok":
+                        objects_parse_status = f"partial: {detail}"
+                    elif objects_parse_status.startswith("ok: "):
+                        objects_parse_status = (
+                            f"partial: {objects_parse_status[4:]}; {detail}"
+                        )
+                    else:
+                        objects_parse_status += f"; {detail}"
 
             except (ValueError, struct.error) as e:
                 objects_parse_status = f"fallback: {e}"
@@ -1650,6 +2099,7 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 static_assets = []
                 dynamic_entities = []
                 objects_trailing_hex = ""
+                non_rendering_static_assets = []
                 if obj_space > 0:
                     f.seek(obj_start)
                     objects_raw_hex_fallback = f.read(obj_space).hex().upper()
@@ -1676,6 +2126,12 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
                 objects_block["section_ranges"] = section_ranges
             if objects_trailing_hex:
                 objects_block["trailing_bytes_hex"] = objects_trailing_hex
+            if objects_pre_dynamic_hex:
+                objects_block["pre_dynamic_bytes_hex"] = objects_pre_dynamic_hex
+            if objects_semantic_warnings:
+                objects_block["semantic_warnings"] = objects_semantic_warnings
+            if non_rendering_static_assets:
+                objects_block["non_rendering_static_assets"] = non_rendering_static_assets
             if objects_raw_hex_fallback:
                 objects_block["raw_hex_fallback"] = objects_raw_hex_fallback
 
@@ -1703,6 +2159,9 @@ def parse_ffbe_map(file_path, output_path=None, pre_parsed=None):
             blueprint["chunk_stream_trailing_hex"] = f.read(tail_remaining).hex().upper()
             print(f"Chunk stream trailing bytes: {tail_remaining} B")
 
+    # Subtype 0 is used by both real doors and malformed record slices;
+    # target-layer bounds cleanly distinguish every case in the corpus.
+    _promote_valid_suspect_warps(blueprint)
     # Decode scripted_entity payloads into named fields (sprite_id,
     # dialogue_line_id, unknown_N, tail_blocks) using bin data only.
     _decode_scripted_entities(blueprint)

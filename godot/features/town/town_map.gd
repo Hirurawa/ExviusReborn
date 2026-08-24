@@ -38,6 +38,7 @@ func _ready() -> void:
 		var mm: Node = preload("res://features/town/minimap.gd").new()
 		mm.name = "Minimap"
 		add_child(mm)
+		tile_map.call_deferred("_update_minimap")
 
 	_ui_layer = CanvasLayer.new()
 	_ui_layer.name = "TownMapUILayer"
@@ -135,4 +136,5 @@ func _load_town(town_id: String) -> void:
 		UIManager.pop()
 		return
 
+	tile_map.quest_town_id = town_id
 	tile_map.load_town(folder_id)

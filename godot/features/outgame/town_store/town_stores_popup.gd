@@ -29,6 +29,10 @@ func populate(town_id: String) -> void:
 	_stores = GameDatabase.get_town_stores(town_id)
 	_show_stores_list()
 
+func open_store(town_id: String, store_id: int) -> void:
+	populate(town_id)
+	_on_store_clicked(str(store_id))
+
 func _show_stores_list() -> void:
 	_viewing_items = false
 	back_button.hide()
@@ -93,7 +97,7 @@ func _on_store_clicked(store_id: String) -> void:
 				var price = int(item_data.get("priceBuy", 0))
 				price_label.text = str(price) + " Gil"
 				buy_button.disabled = false
-				buy_button.pressed.connect(_request_buy.bind(target_id, 1))
+				buy_button.pressed.connect(_request_buy.bind(target_id, 1, target_type))
 				var icon_id = item_data.get("iconFile", "")
 				if icon_id != "":
 					var icon_path = "res://assets/items/%s" % icon_id
@@ -109,7 +113,7 @@ func _on_store_clicked(store_id: String) -> void:
 				var price = int(eq_data.get("priceBuy", 0))
 				price_label.text = str(price) + " Gil"
 				buy_button.disabled = false
-				buy_button.pressed.connect(_request_buy.bind(target_id, 1))
+				buy_button.pressed.connect(_request_buy.bind(target_id, 1, target_type))
 				var icon_id = eq_data.get("iconFile", "")
 				if icon_id != "":
 					var icon_path = "res://assets/items/%s" % icon_id
@@ -119,8 +123,18 @@ func _on_store_clicked(store_id: String) -> void:
 				name_label.text = "Unknown Equipment (" + target_id + ")"
 				price_label.text = ""
 		elif target_type == 22: # Materia
-			name_label.text = "Materia (" + target_id + ")"
-			price_label.text = ""
+			var materia_data = GameDatabase.get_materia(int(target_id))
+			if not materia_data.is_empty():
+				name_label.text = str(materia_data.get("name", "Unknown Materia"))
+				price_label.text = str(int(materia_data.get("priceBuy", 0))) + " Gil"
+				buy_button.disabled = false
+				buy_button.pressed.connect(_request_buy.bind(target_id, 1, target_type))
+				var icon_file := str(materia_data.get("iconFile", ""))
+				var icon_path := "res://assets/items/%s" % icon_file
+				if icon_file != "" and ResourceLoader.exists(icon_path):
+					icon_rect.texture = load(icon_path)
+			else:
+				name_label.text = "Unknown Materia (" + target_id + ")"
 		elif target_type == 40: # Star quartz - medal exchange
 			name_label.text = "Star Quartz (" + target_id + ")"
 			price_label.text = ""
@@ -155,9 +169,9 @@ func _on_close_pressed() -> void:
 	queue_free()
 
 
-func _request_buy(item_id: String, quantity: int) -> void:
+func _request_buy(item_id: String, quantity: int, item_type: int) -> void:
 	feedback_label.text = ""
-	InventoryService.request_buy_item(item_id, quantity)
+	InventoryService.request_buy_item(item_id, quantity, item_type)
 
 func _on_purchase_successful() -> void:
 	feedback_label.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2))

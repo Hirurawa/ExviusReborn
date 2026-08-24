@@ -350,10 +350,6 @@ func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> A
 		if not normalized_skill_id.is_valid_int():
 			continue
 
-		# Esper board progression can contain multiple reward types; only surface
-		# skills that are represented in the shared magic/ability datasets.
-		# `dataset_has()` consults the lightweight keys index instead of forcing
-		# a 30+ MB Variant decode of skills_ability for a simple presence check.
 		if GameDatabase.has_magic(normalized_skill_id) or GameDatabase.has_ability(normalized_skill_id):
 			unlocked_skill_ids.append(int(normalized_skill_id))
 
@@ -441,15 +437,26 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var raw_skills = []
 	
 	# Harvest innate skills
-	var innate_skills = GameDatabase.get_unit_skills(unit_instance.get("unitSeries"), unit_instance.get("rare"), unit_instance.get("level"))
-	for skill in innate_skills:
-		var magic_id = skill.get("magicId")
-		var ability_id = skill.get("abilityId")
-		var magic_array: Array = magic_id.split(',') if not magic_id == null else []
-		var ability_array: Array = ability_id.split(',') if not ability_id == null else []
-		var combined = magic_array + ability_array
-		for id in combined:
-			raw_skills.append({"id": id, "source": "Trait"})
+	var temp = get_awakened_skills(int(unit_instance.get("unitSeries")), rarity, level, unit_instance.get("awakened_abilities"))
+	
+	for m in temp["magic"]:
+		var mag = m
+		mag.merge({"source": "Trait"})
+		final_profile["skills"]["magic"].append(mag)
+	for a in temp["ability"]:
+		var abi = a
+		abi.merge({"source": "Trait"})
+		raw_skills.append(abi)
+	
+	#var innate_skills = GameDatabase.get_unit_skills(unit_instance.get("unitSeries"), unit_instance.get("rare"), unit_instance.get("level"))
+	#for skill in innate_skills:
+	#	var magic_id = skill.get("magicId")
+	#	var magic_array: Array = magic_id.split(',') if not magic_id == null else []
+	#	var ability_id = skill.get("abilityId")
+	#	var ability_array: Array = ability_id.split(',') if not ability_id == null else []
+	#	var combined = magic_array + ability_array
+	#	for id in combined:
+	#		raw_skills.append({"id": id, "source": "Trait"})
 
 	var flat_mods = {
 		"HP": 0,
@@ -500,7 +507,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 				else:
 					magic_array = [magic_id]
 			for skill_id in magic_array:
-				raw_skills.append({"id": skill_id, "source": "Equip"})
+				final_profile["skills"]["magic"].append({"id": skill_id, "source": "Equip"})
 
 	var esper_flat_bonus: Dictionary = _compute_active_party_esper_flat_bonus(unit_instance)
 	for stat_name in CORE_STATS:
@@ -509,22 +516,20 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var esper_unlocked_skills: Array = _collect_active_party_esper_unlocked_skills(unit_instance)
 	for skill_id in esper_unlocked_skills:
 		raw_skills.append({"id": skill_id, "source": "Esper"})
-				
+
 	# Categorize skills
 	for raw_skill in raw_skills:
-		var skill_id_str = str(raw_skill["id"])
-		var skill_entry = {"id": int(raw_skill["id"]), "source": raw_skill["source"]}
 
-		var category: String = GameDatabase.classify_skill_id(skill_id_str)
+		var category: String = GameDatabase.classify_skill_id(raw_skill.get("id"))
 		if category == "magic":
-			final_profile["skills"]["magic"].append(skill_entry)
+			final_profile["skills"]["magic"].append(raw_skill)
 		elif category == "ability":
-			final_profile["skills"]["ability"].append(skill_entry)
+			final_profile["skills"]["ability"].append(raw_skill)
 		elif category == "passive":
-			final_profile["skills"]["passive"].append(skill_entry)
+			final_profile["skills"]["passive"].append(raw_skill)
 			# Passive parsing genuinely needs the record body, so this is the
 			# one site that intentionally pulls skills_passive into memory.
-			var skill_data = GameDatabase.get_passive(skill_id_str)
+			var skill_data = GameDatabase.get_passive(raw_skill.get("id"))
 			var parsed_passive = SkillResolver.parse_passive_effects(skill_data)
 			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
 			_apply_parsed_passive_effects(parsed_passive.get("effects", []), pct_mods, element_resists, status_resists)
@@ -542,8 +547,55 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			int(flat_mods.get(stat_name, 0))
 		)
 
-
 	final_profile["element_resist"] = element_resists
 	final_profile["status_resist"] = status_resists
 
 	return final_profile
+
+
+func get_awakened_skills(unit_series_id: int, rarity: int, level: int, unlocked_recipes: Array) -> Dictionary:
+	var final_skills = {"magic": [], "ability": []}
+	
+	# 1. Create the base mapping dictionary
+	var awakened_map = {}
+	if unlocked_recipes.size() > 0:
+		var recipe_results = GameDatabase.get_awakened_skill_info(unlocked_recipes)
+		
+		for row in recipe_results:
+			awakened_map[str(row["beforeSkillId"])] = str(row["afterSkillId"])
+
+	# 2. Query the base skills
+	var base_results = GameDatabase.get_unit_skills(unit_series_id, rarity, level)
+	
+	var resolve_skill_chain = func(base_skill_id: String) -> Dictionary:
+		var current_skill = base_skill_id
+		var awaken_steps = 0
+		
+		while awakened_map.has(current_skill) and awaken_steps < 5:
+			current_skill = awakened_map[current_skill]
+			awaken_steps += 1
+			
+		return {
+			"id": current_skill, # The final equipped skill ID
+			"base_id": base_skill_id, # Might not need. The original unawakened skill ID
+			"is_awakened": awaken_steps > 0, # Might not need. Boolean flag (true if awakened at least once)
+			"awaken_level": awaken_steps # Useful for displaying UI text like "Skill Name +2"
+		}
+
+	# 3. Process and replace using the while-loop logic
+	for row in base_results:
+		# Process Magic
+		if row["magicId"]:
+			var magics = row["magicId"].split(",")
+			for m in magics:
+				var m_clean = m.strip_edges()
+				final_skills["magic"].append(resolve_skill_chain.call(m_clean))
+				
+		# Process Abilities
+		if row["abilityId"]:
+			var abilities = row["abilityId"].split(",")
+			for a in abilities:
+				var a_clean = a.strip_edges()
+				final_skills["ability"].append(resolve_skill_chain.call(a_clean))
+				
+	return final_skills

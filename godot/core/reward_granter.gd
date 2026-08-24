@@ -21,7 +21,7 @@ extends RefCounted
 ## recipes, vision cards) — the entry is still described so the caller can tell
 ## the player what they found.
 static func grant(reward: Array) -> Dictionary:
-	if reward.is_empty():
+	if reward.is_empty() or reward[0] == "<null>":
 		return {"granted": false, "typeId": 0, "type": "", "id": "", "amount": 0, "name": "", "iconFile": ""}
 
 	var info: Dictionary = GameDatabase.describe_reward(reward)

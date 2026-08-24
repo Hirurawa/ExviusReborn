@@ -560,16 +560,15 @@ func get_exploration_folder(dungeon_id: String) -> String:
 
 
 ## Challenge list for a mission as { string, parsed, reward } entries (mirrors the
-## old missions.json `challenges` shape). Empty if the mission has none. The
-## reward column is challenge.rewardInfo, aliased to `rewards`.
+## old missions.json `challenges` shape). Empty if the mission has none..
 func get_mission_challenges(mission_id: String) -> Array:
 	var out: Array = []
 	for row in query(
-		"SELECT name, rewardInfo AS rewards, parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
+		"SELECT name, rewardInfo, parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
 		[mission_id]
 	):
 		var challenge_name: String = str(row.get("name", ""))
-		var reward: Array = row.get("rewards", "").split(':')
+		var reward: Array = row.get("rewardInfo", "").split(':')
 		var parameter: String = str(row.get("parameter"))
 		out.append({"string": challenge_name, "reward": reward, "parameter": parameter})
 	return out
@@ -1009,6 +1008,47 @@ func get_unit_class_up(unit_id: int) -> Dictionary:
 func get_unit_skills(unit_series_id: int, rarity: int, level: int) -> Array:
 	return query("SELECT * from unit_series_lv_acquire where unitSeriesId = ? AND (rarity < ? OR (rarity = ? AND level <= ?)) order by rarity, level", [unit_series_id, rarity, rarity, level])
 
+func get_unit_awakenable_skills(unit_series_id: int, rarity: int, level: int) -> Array:
+	#return query("select usla.*, sr.* from sublimation_recipe sr"
+	#+ " join unit_series_lv_acquire usla on (sr.beforeSkillId like \"%\" + usla.abilityId + \"%\" OR sr.beforeSkillId like \"%\" + usla.magicId + \"%\")"
+	#+ " where usla.unitSeriesId = ? and sr.unitId like concat(\"%\", ?, \"%\") AND (usla.rarity < ? OR (usla.rarity = ? AND usla.level <= ?))", [unit_series_id, unit_series_id, rarity, rarity, level])
+	return query("select * from sublimation_recipe "
+	+ " where unitId like concat(\"%\", ?, \"%\")", [unit_series_id])
+
+func get_skill_awakening_info(before_skill_id: int) -> Dictionary:
+	var rows: Array = query("select * from sublimation_recipe where beforeSkillId = ?", [before_skill_id])
+	return rows[0] if not rows.is_empty() else {}
+
+func get_awakened_skill_info(recipe_ids: Array) -> Array:
+	var placeholders = []
+	for i in range(recipe_ids.size()): placeholders.append("?")
+	var q = "SELECT beforeSkillId, afterSkillId FROM sublimation_recipe WHERE recipeId IN (%s)" % ",".join(placeholders)
+	return query(q, recipe_ids)
+
+func get_awakening_level(before_skill_id: int, unit_id: int) -> int:
+	var rows: Array = query("WITH RECURSIVE skill_chain AS ("
+	+ " SELECT "
+		+ " recipeId, "
+		+ " beforeSkillId, "
+		+ " afterSkillId, "
+		+ " unitId, "
+		+ " 1 AS awakening_level"
+	+ " FROM sublimation_recipe"
+	+ " WHERE beforeSkillId = ? AND unitId like concat(\"%\", ? , \"%\")"
+	+ " UNION ALL"
+	+ " SELECT "
+		+ " a.recipeId, "
+		+ " a.beforeSkillId, "
+		+ " a.afterSkillId, "
+		+ " a.unitId, "
+		+ " sc.awakening_level + 1"
+	+ " FROM sublimation_recipe a"
+	+ " JOIN skill_chain sc ON a.beforeSkillId = sc.afterSkillId"
++ " )"
++ " SELECT * FROM skill_chain;", [before_skill_id, unit_id])
+	return rows[0].get("awakening_level") if not rows.is_empty() else -1
+
+
 func get_unit_max_rarity(unit_series_id: int) -> int:
 	var rows: Array = query("select max(rare) from unit where unitSeries = ? limit 1", [unit_series_id])
 	return rows[0].get("max(rare)", 0)
@@ -1327,7 +1367,7 @@ func get_all_esper() -> Array:
 func get_esper_skill(esper_id: int, rank: int) -> Dictionary:
 	var rows: Array = query("select skill.* from beast_skill skill "
 		+ " join beast_status status on status.beastSkillId = skill.beastSkillId"
-		+ " where status.beastId = 1 and status.rare  = 2", [esper_id, rank])
+		+ " where status.beastId = ? and status.rare  = ?", [esper_id, rank])
 	return rows[0] if not rows.is_empty() else {}
 
 func get_esper_board(esper_id: int, rank: int) -> Array:

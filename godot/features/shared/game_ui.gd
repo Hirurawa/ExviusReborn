@@ -80,9 +80,9 @@ func _refresh_party_sprites() -> void:
 			continue
 
 		var combat_sprite: TextureRect = COMBAT_SPRITE_SCRIPT.new()
-		combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-		combat_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
+		#combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		#combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		#combat_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 		combat_sprite.setup(party_idx, unit_id)
 
 		player_sprites_container.get_child(grid_idx).add_child(combat_sprite)

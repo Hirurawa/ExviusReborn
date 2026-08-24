@@ -355,6 +355,94 @@ func awaken_unit(instance_id: String) -> Dictionary:
 
 	return {"success": true}
 
+func can_awaken_ability(skill_id: int) -> Dictionary:
+	var result: Dictionary = {
+		"ok": false,
+		"reason": "",
+		"unit_index": -1,
+		"gil_cost": 0,
+		"materials": {},
+	}
+
+	var awakening = GameDatabase.get_skill_awakening_info(skill_id)
+	
+	var gil_cost: int = int(awakening.get("gil", 0))
+	result["gil_cost"] = gil_cost
+	if PlayerProfile.gil < gil_cost:
+		result["reason"] = "Insufficient gil"
+		return result
+
+	var materials: Dictionary = {}
+	for item in str(awakening.get("material", "")).split(',', false):
+		var parts := item.split(":")
+		if parts.size() >= 3:
+			materials[parts[1]] = parts[2].to_int()
+	result["materials"] = materials
+
+	var stackables_var: Variant = InventoryService.owned_items.get("stackables", {})
+	var stackables: Dictionary = stackables_var as Dictionary if stackables_var is Dictionary else {}
+	for item_key in materials.keys():
+		var item_id: String = str(item_key)
+		var required: int = int(materials[item_key])
+		var owned: int = int(stackables.get(item_id, 0))
+		if owned < required:
+			result["reason"] = "Insufficient materials"
+			return result
+
+	result["ok"] = true
+	return result
+
+func awaken_ability(skill_id: int, instance_id: String) -> Dictionary:
+	
+	var eval = GameDatabase.get_skill_awakening_info(skill_id)
+
+	var gil_cost: int = int(eval.get("gil", 0))
+	var materials_var: Variant = eval.get("material", {})
+	
+	# Consume gil.
+	PlayerProfile.deduct_gil(gil_cost)
+
+	# Consume materials.
+	var materials: Dictionary = {}
+	for item in str(materials_var).split(',', false):
+		var parts := item.split(":")
+		if parts.size() >= 3:
+			materials[parts[1]] = parts[2].to_int()
+	
+	var items_to_consume = []
+	for item_key in materials.keys():
+		items_to_consume.append({
+			"id": str(item_key),
+			"amount": int(materials[item_key])
+		})
+	InventoryService.consume_stackables_and_save(items_to_consume)
+	
+	var unit_index: int = -1
+	for i in range(owned_units_ids.size()):
+		var candidate: Variant = owned_units_ids[i]
+		if candidate is Dictionary and str(candidate.get("instance_id", "")) == str(instance_id):
+			unit_index = i
+			break
+	if unit_index < 0:
+		push_warning("Unit not found")
+		return  {"success": false}
+
+	var unit: Dictionary = owned_units_ids[unit_index]
+	
+	var awakened_abilities: Array = unit.get("awakened_abilities", [])
+	awakened_abilities.append(eval.get("recipeId"))
+	owned_units_ids[unit_index] = unit
+
+	# Persist + signal
+	owned_units_ids = _hydrate_owned_units(owned_units_ids)
+	
+	emit_updated()
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "awaken_ability")
+
+	InventoryService.emit_updated()
+
+	return {"success": true}
+
 func _unit_template_id(unit: Dictionary) -> int:
 	return int(unit.get("unit_id", unit.get("unitId", 0)))
 
@@ -757,7 +845,8 @@ func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 		"limitburst_xp": int(hydrated_unit.get("limitburst_xp", 0)),
 		"limitburst_level": int(hydrated_unit.get("limitburst_level", 1)),
 		"current_rarity": int(hydrated_unit.get("current_rarity", 1)),
-		"current_accumulated_exp": int(hydrated_unit.get("current_accumulated_exp", 0))
+		"current_accumulated_exp": int(hydrated_unit.get("current_accumulated_exp", 0)),
+		"awakened_abilities": hydrated_unit.get("awakened_abilities", [])
 	}
 
 func _load_units_from_local() -> Array:

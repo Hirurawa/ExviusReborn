@@ -394,6 +394,7 @@ func _build_area_map_tiles(area_id: String) -> Vector2:
 		if tex:
 			var tex_size: Vector2 = Vector2(tex.get_size())
 			col_w[i % cols] = max(col_w[i % cols], tex_size.x)
+			@warning_ignore("integer_division")
 			row_h[i / cols] = max(row_h[i / cols], tex_size.y)
 
 	# Columns/rows whose tiles are all missing still need a size so the tiles that
@@ -426,6 +427,7 @@ func _build_area_map_tiles(area_id: String) -> Vector2:
 			continue
 		var tile: TextureRect = TextureRect.new()
 		tile.texture = tex2
+		@warning_ignore("integer_division")
 		tile.position = Vector2(x_off[i % cols], y_off[i / cols])
 		tile.size = Vector2(tex2.get_size())
 		tile.mouse_filter = Control.MOUSE_FILTER_IGNORE

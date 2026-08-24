@@ -40,14 +40,16 @@ func _ready() -> void:
 	_apply_skill_role_style(ROLE_STANDARD)
 	_apply_action_state(true, REASON_NONE)
 
-func setup_from_skill_data(skill_data: Dictionary, source: String = "", is_button: bool = false) -> void:
+func setup_from_skill_data(skill_data: Dictionary, source: String = "", awaken_level: int = 0, is_button: bool = false) -> void:
 	if not is_node_ready():
 		await ready
 
-	_apply_skill_role_style(ROLE_STANDARD)
+	_apply_skill_role_style(ROLE_STANDARD, awaken_level)
 	_apply_action_state(true, REASON_NONE)
 
 	name_label.text = str(skill_data.get("name", "Unknown Magic"))
+	if awaken_level > 0:
+		name_label.text += " + " + str(awaken_level)
 	
 	var icon_path = "res://assets/abilities/" + skill_data.get("iconFile", "ability_1.png")
 	var icon_tex = load(icon_path)
@@ -123,7 +125,7 @@ func set_action_availability(enabled: bool, disabled_reason: String = REASON_NON
 	_disabled_reason = disabled_reason if not enabled else REASON_NONE
 	_apply_action_state(enabled, _disabled_reason)
 
-func _apply_skill_role_style(role_type: String) -> void:
+func _apply_skill_role_style(role_type: String, awakening_level: int = 0) -> void:
 	if background_rect == null:
 		return
 	if role_type == ROLE_LIMITBURST:
@@ -132,6 +134,8 @@ func _apply_skill_role_style(role_type: String) -> void:
 		background_rect.texture = BUTTON_ESPER_BACKGROUND
 	else:
 		background_rect.texture = BUTTON_ITEM_BACKGROUND
+		if awakening_level > 0:
+			background_rect.texture = load("res://assets/ui/common/button_ability_rank" + str(awakening_level) + "_1.tres")
 
 func _apply_action_state(enabled: bool, disabled_reason: String) -> void:
 	if action_button != null:

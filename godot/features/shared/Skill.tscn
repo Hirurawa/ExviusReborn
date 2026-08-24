@@ -7,11 +7,11 @@
 [ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="6_66tcj"]
 
 [node name="Magic" type="Control" unique_id=174978603]
-custom_minimum_size = Vector2(320, 115)
+custom_minimum_size = Vector2(306, 108)
 layout_mode = 3
 anchors_preset = 0
-offset_right = 319.0
-offset_bottom = 115.0
+offset_right = 304.0
+offset_bottom = 106.0
 script = ExtResource("1_4y2sa")
 
 [node name="unit_magic_bg_1" type="TextureRect" parent="." unique_id=1906780704]
@@ -57,9 +57,9 @@ offset_right = 314.0
 offset_bottom = 35.0
 theme_override_font_sizes/font_size = 18
 text = "unit_magic_name_text_1"
+vertical_alignment = 1
 clip_text = true
 text_overrun_behavior = 3
-vertical_alignment = 1
 
 [node name="unit_magic_mp_1" type="TextureRect" parent="." unique_id=1557645553]
 layout_mode = 0
@@ -88,9 +88,9 @@ offset_right = 292.0
 offset_bottom = 95.0
 theme_override_font_sizes/font_size = 18
 text = "unit_magic_detail_text_1"
+autowrap_mode = 2
 clip_text = true
 text_overrun_behavior = 3
-autowrap_mode = 2
 
 [node name="unit_magic_icon" type="TextureRect" parent="." unique_id=526603598]
 layout_mode = 0
@@ -121,9 +121,10 @@ text = "unit_magic_lv_num"
 [node name="Button" type="Button" parent="." unique_id=1844393597]
 visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = -1
+anchor_right = 0.95000005
+anchor_bottom = 0.92200005
+offset_bottom = -0.030006409
 grow_horizontal = 2
 grow_vertical = 2
 focus_mode = 0

@@ -353,7 +353,8 @@ func _open_skill_menu(unit_index: int) -> void:
 						"skill_data": ability_data,
 						"level": rarity,
 						"source_type": SKILL_ROLE_ABILITY,
-						"source": str(sk.get("source", ""))
+						"source": str(sk.get("source", "")),
+						"awaken_level": sk.get("awaken_level", 0)
 					})
 
 	_populate_action_menu(options, battle_manager.CombatAction.SKILL, true)
@@ -477,8 +478,6 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 10)
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
 	scroll.add_child(grid)
 
 	for opt in options:
@@ -489,7 +488,7 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 			var skill_data: Dictionary = opt.get("skill_data", {})
 			var source_type: String = str(opt.get("source_type"))
 			var source_name: String = str(opt.get("source", ""))
-			var role_style: String = SKILL_ROLE_STANDARD
+			var role_style: String = ""
 			var source_unit: Dictionary = {}
 
 			if _menu_target_unit_index >= 0 and _menu_target_unit_index < battle_manager.party_data.size():
@@ -502,13 +501,14 @@ func _populate_action_menu(options: Array, action_type: int, is_skill: bool) -> 
 			var disabled_reason: String = _skill_disabled_reason(source_unit, source_type, skill_data)
 			var can_use_action: bool = disabled_reason == SKILL_DISABLE_REASON_NONE
 			
-			var btn = MagicScene.instantiate() #if skill_data.get("magic_type", "") != "" else SkillEntryButtonScene.instantiate()
+			var btn = MagicScene.instantiate()
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			grid.add_child(btn)
 			
-			btn.setup_from_skill_data(skill_data, source_name, true)
-			btn.set_skill_role_style(role_style)
+			btn.setup_from_skill_data(skill_data, source_name, opt.get("awaken_level", 0), true)
+			if role_style != "":
+				btn.set_skill_role_style(role_style)
 			btn.set_action_availability(can_use_action, disabled_reason)
 
 			btn.pressed.connect(func():

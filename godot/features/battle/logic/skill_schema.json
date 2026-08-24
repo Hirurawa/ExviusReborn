@@ -59,6 +59,10 @@
 		"type": "MAG_DAMAGE_REDUCE",
 		"keys": ["pct", "turn_count", "", ""]
 	},
+	"21": {
+		"type": "PHYSICAL_DAMAGE_IGNORE_COVER",
+		"keys": ["", "", "modifier", "ignore_def"]
+	},
 	"24": {
 		"type": "STAT_BREAK",
 		"keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""]

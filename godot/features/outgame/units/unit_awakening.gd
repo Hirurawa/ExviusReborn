@@ -222,9 +222,9 @@ func _load_cached_texture(path: String) -> Texture2D:
 	return tex
 
 func _refresh_button_state() -> void:
-	if base_unit_instance_id == "":
+	if base_unit_inst.get("instance_id") == "":
 		return
-	var status: Dictionary = UnitService.can_awaken_unit(base_unit_instance_id)
+	var status: Dictionary = UnitService.can_awaken_unit(base_unit_inst.get("instance_id"))
 	var can_awaken: bool = bool(status.get("can_awaken", false))
 	var reason: String = str(status.get("reason", ""))
 
@@ -236,12 +236,13 @@ func _refresh_button_state() -> void:
 			result_text_label.visible = false
 		else:
 			result_text_label.text = reason
+			result_text_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
 			result_text_label.visible = reason != ""
 
 func _on_awaken_pressed() -> void:
-	if base_unit_instance_id == "":
+	if base_unit_inst.get("instance_id") == "":
 		return
-	var response: Dictionary = UnitService.awaken_unit(base_unit_instance_id)
+	var response: Dictionary = UnitService.awaken_unit(base_unit_inst.get("instance_id"))
 	if bool(response.get("success", false)):
 		base_unit_inst = UnitService.owned_units_ids.filter(func(x): return x.instance_id == base_unit_inst.get("instance_id"))[0]
 		_populate_awakening_requirements()

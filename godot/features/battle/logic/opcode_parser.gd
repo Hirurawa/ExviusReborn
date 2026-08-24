@@ -13,7 +13,6 @@ static func _has_meaningful_payload_value(value: Variant) -> bool:
 	return value != 0
 
 static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) -> Dictionary:
-	
 	var parsed_action: Dictionary = {
 		"effects": []
 	}
@@ -48,7 +47,6 @@ static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) ->
 	return parsed_action
 
 static func parse_skill(skill_data: Dictionary, skill_schema: Dictionary) -> Dictionary:
-	
 	var parsed_action: Dictionary = {
 		"element_inflict": skill_data.get("element_inflict", []),
 		"effects": []

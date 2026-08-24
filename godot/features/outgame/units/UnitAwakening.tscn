@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dr806ftiwnelt" path="res://assets/ui/unit/unit_statusbg.tres" id="1_lxc8c"]
 [ext_resource type="Texture2D" uid="uid://005aq5cxxido" path="res://assets/ui/unit/unit_charastand_small.tres" id="1_qnsw0"]
 [ext_resource type="Texture2D" uid="uid://b7myipnh5svi" path="res://assets/ui/unit/unit_chara_label_have.tres" id="2_kdkmb"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_ofeit"]
 [ext_resource type="Texture2D" uid="uid://cqnaqr2hufdlq" path="res://assets/ui/unit/unit_statusbottomline.tres" id="2_w8v46"]
 [ext_resource type="Texture2D" uid="uid://cwptlgfvb03ad" path="res://assets/ui/unit/unit_evo_statusframe.tres" id="3_808hl"]
 [ext_resource type="Texture2D" uid="uid://s5a8e6gn4igi" path="res://assets/ui/common/item_search_mini_bg1.tres" id="3_r2k0i"]
@@ -35,6 +36,10 @@
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_40rqk")
+
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=631544207]
+position = Vector2(320, 448)
+texture = ExtResource("2_ofeit")
 
 [node name="Status" type="Control" parent="." unique_id=433092578]
 anchors_preset = 0

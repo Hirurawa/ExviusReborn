@@ -195,6 +195,8 @@ func _update_mode_ui() -> void:
 			title_label.text = "Select Base to Enhance"
 		"awaken_base_selection":
 			title_label.text = "Select Base to Awaken"
+		"awaken_ability_selection":
+			title_label.text = "Awaken Ability"
 		"enhance_material_selection":
 			title_label.text = "Select Material Units"
 		_:
@@ -849,6 +851,11 @@ func _on_unit_clicked(unit_inst: Dictionary) -> void:
 	elif mode == "awaken_base_selection":
 		if _is_at_max_rarity(unit_inst):
 			return
+		unit_selected.emit(unit_inst)
+		UIManager.pop()
+		if selection_callback.is_valid():
+			selection_callback.call(unit_inst)
+	elif mode == "awaken_ability_selection":
 		unit_selected.emit(unit_inst)
 		UIManager.pop()
 		if selection_callback.is_valid():

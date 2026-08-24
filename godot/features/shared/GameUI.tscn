@@ -81,6 +81,7 @@ offset_left = 403.0
 offset_top = 185.0
 offset_right = 505.0
 offset_bottom = 287.0
+scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot1" type="Control" parent="PlayerSpritesContainer" unique_id=445693788]
@@ -89,6 +90,7 @@ offset_left = 515.0
 offset_top = 206.0
 offset_right = 617.0
 offset_bottom = 308.0
+scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot2" type="Control" parent="PlayerSpritesContainer" unique_id=923894529]
@@ -97,6 +99,7 @@ offset_left = 364.0
 offset_top = 254.0
 offset_right = 466.0
 offset_bottom = 356.0
+scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot3" type="Control" parent="PlayerSpritesContainer" unique_id=714573509]
@@ -105,6 +108,7 @@ offset_left = 479.0
 offset_top = 273.0
 offset_right = 581.0
 offset_bottom = 375.0
+scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot4" type="Control" parent="PlayerSpritesContainer" unique_id=968568311]
@@ -113,6 +117,7 @@ offset_left = 398.0
 offset_top = 329.0
 offset_right = 500.0
 offset_bottom = 431.0
+scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot5" type="Control" parent="PlayerSpritesContainer" unique_id=1773989064]
@@ -121,6 +126,7 @@ offset_left = 511.0
 offset_top = 350.0
 offset_right = 613.0
 offset_bottom = 452.0
+scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="VortexDungeon" type="TextureButton" parent="." unique_id=1934497227]

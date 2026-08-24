@@ -17,6 +17,8 @@ var _scenes_map: Dictionary = {
 	"units_ui": "res://features/outgame/units/UnitsUI.tscn",
 	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
 	"awaken_ui": "res://features/outgame/units/UnitAwakening.tscn",
+	"awaken_ability_ui": "res://features/outgame/units/AbilityAwakening.tscn",
+	"awaken_ability_selector_ui": "res://features/outgame/units/AbilityAwakeningSelector.tscn",
 	"unit_selector_ui": "res://features/outgame/units/UnitSelectorUI.tscn",
 	"unit_stats_popup": "res://features/outgame/units/UnitStatsPopup.tscn",
 	"unit_detail_ui": "res://features/outgame/units/UnitDetail.tscn",

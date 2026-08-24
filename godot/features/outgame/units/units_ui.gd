@@ -103,6 +103,7 @@ func _ready() -> void:
 	next_party_btn.pressed.connect(_on_next_party)
 	view_units_btn.pressed.connect(_on_view_units)
 	enhance_units_btn.pressed.connect(_on_enhance_units)
+	awaken_abilities_btn.pressed.connect(_on_awaken_ability)
 	awaken_units_btn.pressed.connect(_on_awaken_units)
 	current_party_index = PartyService.get_selected_party_index()
 	_initialize_slot_click_data()
@@ -379,6 +380,12 @@ func _on_awaken_units() -> void:
 		"exclude_list": exclude_list
 	})
 
+func _on_awaken_ability() -> void:
+	UIManager.push("unit_selector_ui", {
+		"mode": "awaken_ability_selection",
+		"selection_callback": Callable(self, "_on_awaken_ability_selected")
+	})
+
 func _on_enhance_base_selected(unit_inst: Dictionary) -> void:
 	if unit_inst.is_empty():
 		return
@@ -398,6 +405,11 @@ func _on_awaken_base_selected(unit_inst: Dictionary) -> void:
 		return
 
 	call_deferred("_open_awaken_ui", base_instance_id, unit_inst)
+
+func _on_awaken_ability_selected(unit_inst: Dictionary) -> void:
+	UIManager.push("awaken_ability_selector_ui", {
+		"unit_inst": unit_inst
+	})
 
 func _open_enhance_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 	UIManager.push("enhance_ui", {

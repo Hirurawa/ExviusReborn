@@ -246,7 +246,8 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 func _grant_reward(reward: Array):
 	# Shared with town treasure chests -- see core/reward_granter.gd.
 	var info: Dictionary = RewardGranter.grant(reward)
-	print("GRANT %s: %s x%d" % [info.get("type", ""), info.get("name", ""), int(info.get("amount", 0))])
+	if info.get("granted", false) != false:
+		print("GRANT %s: %s x%d" % [info.get("type", ""), info.get("name", ""), int(info.get("amount", 0))])
 
 
 ## Instance ids of the party that ran the mission, in slot order (empty slots are

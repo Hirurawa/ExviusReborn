@@ -27,9 +27,11 @@
 [ext_resource type="Texture2D" uid="uid://b4ml1w7w53xee" path="res://assets/ui/quest/fellow_status_label_defense.tres" id="23_njfwy"]
 [ext_resource type="Texture2D" uid="uid://b8vfpt6h614tl" path="res://assets/ui/quest/fellow_status_label_mind.tres" id="24_5koxr"]
 [ext_resource type="Texture2D" uid="uid://bpwnd25hx5luo" path="res://assets/ui/unit/unit_exp_bg.tres" id="25_binhp"]
+[ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="26_1mpdy"]
 [ext_resource type="Texture2D" uid="uid://cyc1yl2d75bvy" path="res://assets/ui/unit/unit_exp_gauge.tres" id="27_5vsrt"]
 [ext_resource type="Texture2D" uid="uid://d2toxw8324o22" path="res://assets/ui/unit/unit_status_label_lv.tres" id="28_apkcm"]
 [ext_resource type="Texture2D" uid="uid://cix3i4u2s3dr7" path="res://assets/ui/unit/unit_lvup_info.tres" id="29_vuduu"]
+[ext_resource type="Texture2D" uid="uid://nkbw3vsua3ps" path="res://assets/ui/unit/unit_limit_exp_bar.tres" id="30_n6taw"]
 [ext_resource type="Texture2D" uid="uid://dklsrxl3a2sgn" path="res://assets/ui/unit/unit_bonds_icon_mini.tres" id="31_c7m5s"]
 [ext_resource type="Texture2D" uid="uid://dbw1yo6p5cqni" path="res://assets/ui/unit/unit_chara_label_job.tres" id="32_n567u"]
 [ext_resource type="Texture2D" uid="uid://bn10qsub3qsex" path="res://assets/ui/item/item_frame_1.tres" id="33_awhe3"]
@@ -376,6 +378,7 @@ offset_left = 3.0
 offset_top = 3.0
 offset_right = 349.0
 offset_bottom = 7.0
+texture_progress = ExtResource("26_1mpdy")
 
 [node name="UnitExpGauge" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg" unique_id=1837660943]
 layout_mode = 0
@@ -427,6 +430,7 @@ offset_left = 4.0
 offset_top = 3.0
 offset_right = 350.0
 offset_bottom = 7.0
+texture_progress = ExtResource("30_n6taw")
 
 [node name="UnitExpGauge2" type="TextureRect" parent="Unit/ResultBg/VBoxContainer/ResultUnit/UnitExpBg2" unique_id=892825229]
 layout_mode = 0
@@ -547,7 +551,6 @@ layout_mode = 2
 [node name="ItemFrame1" type="TextureRect" parent="Items/ResultBg/VBoxContainer/ItemRow" unique_id=630177667]
 layout_mode = 2
 texture = ExtResource("33_awhe3")
-stretch_mode = 2
 
 [node name="ItemTexture" type="TextureRect" parent="Items/ResultBg/VBoxContainer/ItemRow/ItemFrame1" unique_id=1605970672]
 custom_minimum_size = Vector2(100, 100)
@@ -563,6 +566,7 @@ offset_right = 50.0
 offset_bottom = 50.0
 grow_horizontal = 2
 grow_vertical = 2
+stretch_mode = 2
 
 [node name="ItemName" type="Label" parent="Items/ResultBg/VBoxContainer/ItemRow" unique_id=918536008]
 layout_mode = 2

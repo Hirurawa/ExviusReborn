@@ -51,6 +51,7 @@ var _equipment_cache: Dictionary = {}
 # npcId -> row (see get_npc). Town maps hit this once per NPC per chunk redraw,
 # and DialogueLoader once per <name_npc=N> tag, so misses are cached too ({}).
 var _npc_cache: Dictionary = {}
+var _npc_table_available: Variant = null
 
 # === Connection ===
 
@@ -243,8 +244,11 @@ func get_missions(dungeon_id: String) -> Array:
 	)
 
 func get_mission_bg(mission_id: String) -> String:
-	var rows = query("SELECT bg.fileInfo from battle_bg bg join mission m on m.battleBgId = bg.battleBgId where m.missionId = ? limit 1", [mission_id])
-	return str(rows[0].get("fileInfo", "")) if not rows.is_empty() else ""
+	var rows: Array = query("SELECT battleBgId FROM mission WHERE missionId = ? LIMIT 1", [mission_id])
+	var battle_bg_id: String = str(rows[0].get("battleBgId", "")) if not rows.is_empty() else ""
+	if battle_bg_id.length() != 6 or battle_bg_id == "0":
+		return ""
+	return "battle_bg_%s_0%s.jpg" % [battle_bg_id.substr(1, 4), battle_bg_id.right(1)]
 
 
 ## Display name of a dungeon (dungeon.name), or "" if the dungeon id is unknown.
@@ -273,6 +277,16 @@ func get_store_items(store_id: String) -> Array:
 		"SELECT * FROM store_item WHERE storeId = ? ORDER BY storeItemId",
 		[store_id]
 	)
+
+
+func get_town_store_greeting(store_id: int, comment_type: int = 1) -> Dictionary:
+	var rows := query(
+		"SELECT s.name, s.ownerName, s.storeType, c.comment FROM town_store s"
+		+ " LEFT JOIN town_store_comment c ON c.storeId = s.storeId AND c.\"5uDYV3nK\" = ?"
+		+ " WHERE s.storeId = ? LIMIT 1",
+		[comment_type, store_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
 
 
 func get_town(town_id: String) -> Dictionary:
@@ -324,7 +338,7 @@ func get_event_id_for_resource(resource_csv: String) -> String:
 
 func get_quests_for_town(town_id: String) -> Array:
 	return query(
-		"SELECT q.questId, q.name AS questName, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.targetType, qs.targetParam"
+		"SELECT q.questId, q.name AS questName, q.npcId, q.switchInfo, q.reward, q.openSwitch, qs.questSubId, qs.task, qs.detail, qs.targetType, qs.targetParam"
 		+ " FROM quest q"
 		+ " LEFT JOIN quest_sub qs ON q.questId = qs.questId"
 		+ " WHERE q.locationType = 2 AND q.locationId = ?"
@@ -352,6 +366,13 @@ func get_npc(npc_id: int) -> Dictionary:
 		return {}
 	if _npc_cache.has(npc_id):
 		return _npc_cache[npc_id]
+	if _npc_table_available == null:
+		_npc_table_available = not query(
+			"SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npc' LIMIT 1"
+		).is_empty()
+	if not _npc_table_available:
+		_npc_cache[npc_id] = {}
+		return {}
 	var rows: Array = query(
 		"SELECT npcId, name, COALESCE(textureFile, '') AS textureFile,"
 		+ " COALESCE(textureInfo, '') AS textureInfo"
@@ -565,7 +586,7 @@ func get_exploration_folder(dungeon_id: String) -> String:
 func get_mission_challenges(mission_id: String) -> Array:
 	var out: Array = []
 	for row in query(
-		"SELECT name, rewardInfo AS rewards, parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
+		"SELECT name, rewardInfo AS rewards, Pzn5h0Ga AS parameter FROM challenge WHERE missionId = ? ORDER BY challengeId",
 		[mission_id]
 	):
 		var challenge_name: String = str(row.get("name", ""))

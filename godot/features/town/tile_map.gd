@@ -27,6 +27,8 @@ var _active_chunk_data: Dictionary = {}
 		if town_id != "":
 			_apply_town_paths()
 
+var quest_town_id: String = ""
+
 @export_file("*.bin") var map_file_path: String = "res://map.bin"
 @export_file("*.json") var blueprint_path: String = "res://map_blueprint.json" :
 	set(v):
@@ -826,11 +828,10 @@ func _update_minimap() -> void:
 
 
 # Build the category markers for the active chunk and hand them to the
-# minimap. Whitelisted kinds: scripted entities (NPCs), warp doors (regular +
-# alt) and treasure chests. Unknown warp variants are intentionally skipped to
-# keep the minimap focused.
+# minimap. Whitelisted kinds: renderable NPCs, usable warp doors, and chests.
 func _push_minimap_markers(minimap_node: Node) -> void:
-	const ALLOWED := ["scripted_entity", "warp", "warp_alt", "warp_zone", "chest"]
+	const NPC_KINDS := ["scripted_entity", "shop_npc"]
+	const ALLOWED := ["scripted_entity", "shop_npc", "warp", "warp_alt", "warp_zone", "chest"]
 	var markers: Array = []
 	if _active_chunk_data.has("objects"):
 		var objs: Dictionary = _active_chunk_data["objects"]
@@ -838,6 +839,8 @@ func _push_minimap_markers(minimap_node: Node) -> void:
 		for e in entities:
 			var kind := String(e.get("kind", ""))
 			if not ALLOWED.has(kind):
+				continue
+			if NPC_KINDS.has(kind) and not bool(e.get("_npc_spawned", false)):
 				continue
 			if not (e.has("source_x_px") and e.has("source_y_px")):
 				continue
@@ -1054,8 +1057,8 @@ func _render_dynamic_entities(container: Node2D, entities: Array) -> void:
 # ============================================================================
 #  NPC SPRITES
 # ============================================================================
-# Spawns an AnimatedSprite2D for each scripted_entity in the chunk that
-# carries a `sprite_id`. Always rendered (not gated by debug toggles).
+# Spawns an AnimatedSprite2D for each NPC entity in the chunk that carries a
+# `sprite_id`. Always rendered (not gated by debug toggles).
 # Sprites are placed top-left at (source_x_px, source_y_px) to match the
 # existing placeholder anchoring, and parented under a single y-sorted
 # container so they interleave with the player by screen-Y.
@@ -1081,6 +1084,7 @@ func _spawn_npcs(chunk_data: Dictionary) -> void:
 	var container: Node2D = null
 	var spawned: int = 0
 	for e in entities:
+		e.erase("_npc_spawned")
 		var kind := String(e.get("kind", ""))
 		if kind != "scripted_entity" and kind != "shop_npc":
 			continue
@@ -1096,6 +1100,7 @@ func _spawn_npcs(chunk_data: Dictionary) -> void:
 		var sprite := NpcSpriteBuilder.build(npc_id)
 		if sprite == null:
 			continue
+		e["_npc_spawned"] = true
 
 		if container == null:
 			container = Node2D.new()
@@ -1130,6 +1135,11 @@ func _make_npc_interactable(entity: Dictionary, sprite: AnimatedSprite2D) -> Are
 	var area: Area2D = script.new()
 	area.dialogue_line_id = int(entity.get("dialogue_line_id", -1))
 	area.town_id = town_id
+	area.quest_town_id = quest_town_id
+	area.shop_id = int(entity.get("shop_id_raw", 0))
+	for key in ["sprite_id", "npc_instance_id"]:
+		if entity.has(key):
+			area.npc_ids.append(int(entity[key]))
 
 	# Hit rectangle: prefer the blueprint's declared width/height, fall
 	# back to the sprite's current animation frame size, then to a
@@ -1248,12 +1258,7 @@ func _build_warp_triggers(chunk_data: Dictionary) -> void:
 
 	var built := 0
 	for e in entities:
-		if String(e.get("record_type", "")) != "0x0F":
-			continue
-		var sub := int(e.get("sub_variant", -1))
-		# Skip the misaligned chunk-18 garbage records (sub=0x00) which
-		# decode to absurd target coordinates and would crash warp_to.
-		if sub == 0x00:
+		if String(e.get("kind", "")) not in ["warp", "warp_alt", "warp_zone", "warp_exit"]:
 			continue
 		if not (e.has("source_x_px") and e.has("source_y_px")):
 			continue

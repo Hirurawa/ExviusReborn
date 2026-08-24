@@ -86,6 +86,11 @@ Persistent overlays (header/bottom nav/home buttons) are loaded once and visibil
 
 ## Running the Project
 
+NPC phase-one note: instance-specific NPC names and sprites require an `npc`
+table that is absent from the currently shared `ffbe-data.db`. Generic NPCs,
+dialogue, quests, and town shops work; full instance resolution awaits an
+updated datamine database or NPC source dataset.
+
 From Godot Editor:
 
 1. Open this folder using [project.godot](project.godot).

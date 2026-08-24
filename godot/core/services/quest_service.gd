@@ -1,7 +1,7 @@
 extends Node
 ## QuestService handles fetching and processing quest data from GameDatabase.
 
-func get_quests_for_town(town_id: String) -> Array[Dictionary]:
+func get_quests_for_town(town_id: String, include_unaccepted: bool = false) -> Array[Dictionary]:
 	var raw_quests: Array = GameDatabase.get_quests_for_town(town_id)
 
 	# Dictionary to group tasks by questId
@@ -47,6 +47,7 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 			quests_dict[quest_id] = {
 				"id": quest_id,
 				"name": str(row.get("questName", "")),
+				"npc_id": int(row.get("npcId", 0)),
 				"tasks": [],
 				"rewards": parsed_rewards,
 				"raw_rewards": raw_rewards_array,
@@ -59,6 +60,7 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 			if task_str != "":
 				var task_dict: Dictionary = {
 					"text": task_str,
+					"detail": str(row.get("detail", "")),
 					"requirements": [],
 					"target_type": str(row.get("targetType", ""))
 				}
@@ -107,6 +109,31 @@ func get_quests_for_town(town_id: String) -> Array[Dictionary]:
 
 	var result: Array[Dictionary] = []
 	for key in quests_dict:
-		result.append(quests_dict[key])
+		var quest: Dictionary = quests_dict[key]
+		var start_switch: String = str(quest.get("openSwitch", "")).get_slice(",", 0).strip_edges()
+		if include_unaccepted or SwitchService.is_unlocked(start_switch):
+			result.append(quest)
 
 	return result
+
+
+func accept_quest_from_npc(town_id: String, npc_ids: Array) -> Dictionary:
+	var quest := find_current_quest_for_npc(town_id, npc_ids)
+	if quest.is_empty():
+		return {}
+	var start_switch: String = str(quest.get("openSwitch", "")).get_slice(",", 0).strip_edges()
+	if SwitchService.is_unlocked(start_switch):
+		return {}
+	SwitchService.unlock_switches(start_switch, "accept_quest_from_npc")
+	return quest
+
+
+func find_current_quest_for_npc(town_id: String, npc_ids: Array) -> Dictionary:
+	for quest in get_quests_for_town(town_id, true):
+		if not npc_ids.has(int(quest.get("npc_id", 0))):
+			continue
+		var switches: PackedStringArray = str(quest.get("openSwitch", "")).split(",")
+		var end_switch: String = switches[switches.size() - 1].strip_edges()
+		if not SwitchService.is_unlocked(end_switch):
+			return quest
+	return {}

@@ -25,3 +25,6 @@ mono_crash.*.json
 /godot/assets/
 
 /Builds/
+
+# Local agent instructions
+/AGENTS.md

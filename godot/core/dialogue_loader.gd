@@ -62,6 +62,14 @@ static func get_dialogue(town_id: String, dialogue_line_id) -> Array:
 	return _resolve_pages(String(text_by_id[line_id]), name_by_id)
 
 
+static func get_speaker_id(town_id: String, dialogue_line_id) -> int:
+	load_for_town(town_id)
+	if not _cache.has(town_id):
+		return -1
+	var raw: String = String(_cache[town_id]["text"].get(int(dialogue_line_id), ""))
+	return int(_extract_first_name_tag(raw).id)
+
+
 # --- internals --------------------------------------------------------
 
 static func _parse_csv_first_comma(path: String) -> Dictionary:
@@ -91,7 +99,8 @@ static func _parse_csv_first_comma(path: String) -> Dictionary:
 # Splits a raw markup string into pages and resolves <name…> + <br>.
 static func _resolve_pages(raw: String, name_by_id: Dictionary) -> Array:
 	# Normalise both page-break tokens to a single sentinel before splitting.
-	var s := raw.replace("<page>", "\u0001").replace("<keywait>", "\u0001")
+	var s := raw.replace("<keywait>>", "<keywait>").replace("，", ",").replace("\u001a", "")
+	s = s.replace("<page>", "\u0001").replace("<keywait>", "\u0001")
 	var pages_raw := s.split("\u0001", false)
 	var pages: Array = []
 	var last_speaker := ""
@@ -116,8 +125,9 @@ static func _resolve_pages(raw: String, name_by_id: Dictionary) -> Array:
 			last_speaker = speaker
 		# Resolve any remaining inline name tags (defensive -- usually none).
 		body = _resolve_inline_names(body, name_by_id)
-		# <br> -> newline.
-		body = body.replace("<br>", "\n")
+		# Source text is hard-wrapped for the original narrow dialogue box;
+		# RichTextLabel handles wrapping for the current viewport.
+		body = body.replace("<br>", " ")
 		# Strip any leftover unknown tags (e.g. <wait>, <color=…>) to avoid
 		# leaking raw markup to the UI.
 		body = _strip_unknown_tags(body)

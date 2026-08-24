@@ -156,17 +156,27 @@ func get_item_count(item_type: String, item_id: String) -> int:
 		return count
 	return 0
 
-func get_item_cost(item_id: String) -> int:
-	var item_data: Dictionary = GameDatabase.get_item(int(item_id))
-	if item_data.is_empty():
-		item_data = GameDatabase.get_equipment(item_id)
+func get_item_cost(item_id: String, item_type: int = 0) -> int:
+	var item_data: Dictionary
+	match item_type:
+		20: item_data = GameDatabase.get_item(int(item_id))
+		21: item_data = GameDatabase.get_equipment(item_id)
+		22: item_data = GameDatabase.get_materia(int(item_id))
+		_:
+			item_data = GameDatabase.get_item(int(item_id))
+			if item_data.is_empty(): item_data = GameDatabase.get_equipment(item_id)
+			if item_data.is_empty(): item_data = GameDatabase.get_materia(int(item_id))
 	return int(item_data.get("priceBuy", 0))
 
-func has_purchasable_template(item_id: String) -> bool:
-	return not GameDatabase.get_item(int(item_id)).is_empty() or not GameDatabase.get_equipment(int(item_id)).is_empty()
+func has_purchasable_template(item_id: String, item_type: int = 0) -> bool:
+	if item_type == 20: return not GameDatabase.get_item(int(item_id)).is_empty()
+	if item_type == 21: return not GameDatabase.get_equipment(item_id).is_empty()
+	if item_type == 22: return not GameDatabase.get_materia(int(item_id)).is_empty()
+	return not GameDatabase.get_item(int(item_id)).is_empty() or not GameDatabase.get_equipment(int(item_id)).is_empty() or not GameDatabase.get_materia(int(item_id)).is_empty()
 
-func is_equipment_template(item_id: String) -> bool:
-	return not GameDatabase.get_equipment(item_id).is_empty()
+func is_equipment_template(item_id: String, item_type: int = 0) -> bool:
+	if item_type != 0: return item_type == 21 or item_type == 22
+	return not GameDatabase.get_equipment(item_id).is_empty() or not GameDatabase.get_materia(int(item_id)).is_empty()
 
 func equipment_instance_exists(item_id: String) -> bool:
 	if not owned_items.has("equipment"):
@@ -278,19 +288,19 @@ func _normalize_payload(raw_payload: Variant) -> Dictionary:
 
 # === Shop purchase ===
 
-func request_buy_item(item_id: String, quantity: int) -> void:
-	if not has_purchasable_template(item_id):
+func request_buy_item(item_id: String, quantity: int, item_type: int = 0) -> void:
+	if not has_purchasable_template(item_id, item_type):
 		purchase_failed.emit("ERR_INSUFFICIENT_RESOURCES")
 		return
 
-	var total_cost: int = get_item_cost(item_id) * quantity
+	var total_cost: int = get_item_cost(item_id, item_type) * quantity
 	if PlayerProfile.gil < total_cost:
 		purchase_failed.emit("ERR_INSUFFICIENT_RESOURCES")
 		return
 
 	PlayerProfile.deduct_gil(total_cost)
 
-	if is_equipment_template(item_id):
+	if is_equipment_template(item_id, item_type):
 		add_equipment_instances(item_id, quantity)
 	else:
 		add_stackable(item_id, quantity)

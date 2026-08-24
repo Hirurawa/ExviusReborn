@@ -279,12 +279,12 @@ func get_store_items(store_id: String) -> Array:
 	)
 
 
-func get_town_store_greeting(store_id: int) -> Dictionary:
+func get_town_store_greeting(store_id: int, comment_type: int = 1) -> Dictionary:
 	var rows := query(
-		"SELECT s.name, s.ownerName, c.comment FROM town_store s"
-		+ " LEFT JOIN town_store_comment c ON c.storeId = s.storeId AND c.\"5uDYV3nK\" = 1"
+		"SELECT s.name, s.ownerName, s.storeType, c.comment FROM town_store s"
+		+ " LEFT JOIN town_store_comment c ON c.storeId = s.storeId AND c.\"5uDYV3nK\" = ?"
 		+ " WHERE s.storeId = ? LIMIT 1",
-		[store_id]
+		[comment_type, store_id]
 	)
 	return rows[0] if not rows.is_empty() else {}
 

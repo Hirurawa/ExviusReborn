@@ -15,6 +15,8 @@ extends Node
 signal items_updated(items: Dictionary)
 signal purchase_successful()
 signal purchase_failed(error_message: String)
+signal sale_successful()
+signal sale_failed(error_message: String)
 signal craft_failed(error_message: String)
 
 const SNAPSHOT_FILE: String = "items.json"
@@ -289,6 +291,9 @@ func _normalize_payload(raw_payload: Variant) -> Dictionary:
 # === Shop purchase ===
 
 func request_buy_item(item_id: String, quantity: int, item_type: int = 0) -> void:
+	if quantity <= 0:
+		purchase_failed.emit("ERR_INVALID_QUANTITY")
+		return
 	if not has_purchasable_template(item_id, item_type):
 		purchase_failed.emit("ERR_INSUFFICIENT_RESOURCES")
 		return
@@ -300,13 +305,57 @@ func request_buy_item(item_id: String, quantity: int, item_type: int = 0) -> voi
 
 	PlayerProfile.deduct_gil(total_cost)
 
-	if is_equipment_template(item_id, item_type):
+	if item_type == 22 or (item_type == 0 and not GameDatabase.get_materia(int(item_id)).is_empty()):
+		grant_instanced_items("MATERIA", item_id, quantity)
+	elif is_equipment_template(item_id, item_type):
 		add_equipment_instances(item_id, quantity)
 	else:
 		add_stackable(item_id, quantity)
 
 	emit_updated()
 	purchase_successful.emit()
+
+func request_sell_item(item_id: String, item_type: int, instance_id: String = "") -> void:
+	if item_type not in [20, 21, 22]:
+		sale_failed.emit("ERR_ITEM_NOT_SELLABLE")
+		return
+	var sale_price: int = 0
+	if item_type == 20:
+		var count: int = int(owned_items.get("stackables", {}).get(item_id, 0))
+		var item_data: Dictionary = GameDatabase.get_item(int(item_id))
+		if count <= 0 or item_data.is_empty():
+			sale_failed.emit("ERR_ITEM_NOT_OWNED")
+			return
+		sale_price = int(item_data.get("priceSell", 0))
+		if sale_price <= 0:
+			sale_failed.emit("ERR_ITEM_NOT_SELLABLE")
+			return
+		owned_items["stackables"][item_id] = count - 1
+	else:
+		var equipment: Array = owned_items.get("equipment", [])
+		var found_index: int = -1
+		for index in range(equipment.size()):
+			var entry: Variant = equipment[index]
+			if entry is Dictionary and str(entry.get("instance_id", "")) == instance_id and str(entry.get("template_id", "")) == item_id:
+				if entry.get("equipped_to") != null and str(entry.get("equipped_to", "")) != "":
+					sale_failed.emit("ERR_ITEM_EQUIPPED")
+					return
+				found_index = index
+				break
+		if found_index < 0:
+			sale_failed.emit("ERR_ITEM_NOT_OWNED")
+			return
+		var template: Dictionary = GameDatabase.get_materia(int(item_id)) if item_type == 22 else GameDatabase.get_equipment(item_id)
+		sale_price = int(template.get("priceSell", template.get("price_sell", 0)))
+		if sale_price <= 0:
+			sale_failed.emit("ERR_ITEM_NOT_SELLABLE")
+			return
+		equipment.remove_at(found_index)
+
+	Persistence.save_snapshot(SNAPSHOT_FILE, snapshot_payload(), "sell_item")
+	PlayerProfile.add_gil(sale_price)
+	emit_updated()
+	sale_successful.emit()
 
 func request_craft_item(recipe_id: String, quantity: int) -> void:
 	var recipe_inst = GameDatabase.get_recipe(int(recipe_id))

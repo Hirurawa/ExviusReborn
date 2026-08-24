@@ -77,9 +77,20 @@ func _on_dialogue_closed() -> void:
 	_popup_open = false
 	if shop_id <= 0 or quest_town_id == "":
 		return
+	if int(GameDatabase.get_town_store_greeting(shop_id).get("storeType", 0)) != 1:
+		return
 	var popup: Control = TownStoreScene.instantiate()
-	_find_ui_root().add_child(popup)
+	_find_ui_root(true).add_child(popup)
+	popup.farewell_requested.connect(_show_shop_farewell)
 	popup.open_store(quest_town_id, shop_id)
+
+
+func _show_shop_farewell(pages: Array) -> void:
+	if pages.is_empty():
+		return
+	var box := DialogueBoxScript.new()
+	_find_ui_root().add_child(box)
+	box.show_pages(pages)
 
 
 func get_pages() -> Array:
@@ -108,11 +119,19 @@ func _on_mouse_exited() -> void:
 # Prefer attaching the popup high in the tree so it isn't yanked away by
 # chunk redraws (which free the NpcSprites container). Fall back to the
 # current scene root if no other host is available.
-func _find_ui_root() -> Node:
+func _find_ui_root(use_town_layer: bool = false) -> Node:
 	var tree := get_tree()
 	if tree == null:
 		return self
 	var root := tree.current_scene
 	if root == null:
 		return self
+	if use_town_layer:
+		var active_ui: Node = UIManager.get_current_scene()
+		if active_ui != null:
+			var town_ui_root := active_ui.get_node_or_null("TownMapUILayer")
+			if town_ui_root != null:
+				return town_ui_root
+		if UIManager.canvas_layer != null:
+			return UIManager.canvas_layer
 	return root

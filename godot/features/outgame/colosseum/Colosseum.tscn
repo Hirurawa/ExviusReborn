@@ -1,0 +1,838 @@
+[gd_scene format=3 uid="uid://bqi7ywupa13uj"]
+
+[ext_resource type="Script" uid="uid://bj2w5eqtx2lug" path="res://features/outgame/colosseum/colosseum.gd" id="1_8b2q5"]
+[ext_resource type="Texture2D" uid="uid://ddep4qlvosuvx" path="res://assets/ui/colosseum/colosseum_btn_normal_off.tres" id="1_jnkoc"]
+[ext_resource type="Texture2D" uid="uid://jnc2mcnwetv6" path="res://assets/ui/colosseum/colosseum_btn_normal_on.tres" id="1_ns8pm"]
+[ext_resource type="Texture2D" uid="uid://c187wwku6rf54" path="res://assets/ui/quest/locationnamebg.tres" id="2_67sk6"]
+[ext_resource type="Texture2D" uid="uid://c64gxmlsictt7" path="res://assets/ui/colosseum/largebutton_label_colo_start.tres" id="2_jnkoc"]
+[ext_resource type="Texture2D" uid="uid://bgv1eg1eljg62" path="res://assets/ui/colosseum/colo_window_bg.tres" id="3_82fqq"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_q6ik1"]
+[ext_resource type="Texture2D" uid="uid://dryqgcoax822q" path="res://assets/ui/colosseum/colo_window_frame_top.tres" id="4_061tn"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_lge7r"]
+[ext_resource type="Texture2D" uid="uid://cvx5kayq4wh0u" path="res://assets/ui/quest/home_icon1.tres" id="5_e4bdl"]
+[ext_resource type="Texture2D" uid="uid://bjupf22dvq0yh" path="res://assets/ui/colosseum/colo_window_frame_bottom.tres" id="5_vn5jr"]
+[ext_resource type="Texture2D" uid="uid://crk68ux62a7lq" path="res://assets/ui/colosseum/colo_roundpoint.tres" id="6_o1dq3"]
+[ext_resource type="Texture2D" uid="uid://c5vsvyv1ih3h3" path="res://assets/ui/quest/home_icon2.tres" id="6_r1s5u"]
+[ext_resource type="Texture2D" uid="uid://d16jg27si6s2r" path="res://assets/ui/colosseum/colo_rank_mini.tres" id="7_p1072"]
+[ext_resource type="Texture2D" uid="uid://b8lysyi08a6dp" path="res://assets/ui/colosseum/colo_hyphen.tres" id="8_pmj4f"]
+[ext_resource type="Texture2D" uid="uid://bkljqdgpkcff0" path="res://assets/ui/colosseum/colo_round_mini.tres" id="9_4pxn3"]
+[ext_resource type="Texture2D" uid="uid://ux5586kitejv" path="res://assets/ui/colosseum/colo_pt_big.tres" id="10_y8w57"]
+[ext_resource type="Texture2D" uid="uid://ebt6v83qxn04" path="res://assets/ui/colosseum/colo_nextpoint.tres" id="11_bgt5r"]
+[ext_resource type="Texture2D" uid="uid://mxfvjwwtn6ac" path="res://assets/ui/colosseum/colo_pt_small.tres" id="12_ihaup"]
+[ext_resource type="Texture2D" uid="uid://cmnmgh1gwpf7l" path="res://assets/ui/colosseum/colo_boss_appear.tres" id="13_27kax"]
+[ext_resource type="Texture2D" uid="uid://0dakprw4au0u" path="res://assets/ui/colosseum/colo_rpgauge_big_bg.tres" id="14_60tuk"]
+[ext_resource type="Texture2D" uid="uid://c02ductjeeges" path="res://assets/ui/colosseum/colo_rpgauge_big_bar.tres" id="15_t0gwt"]
+[ext_resource type="Texture2D" uid="uid://bjgc6mwm1ew7i" path="res://assets/ui/colosseum/colo_rpgauge_big_frame.tres" id="16_yh8qd"]
+[ext_resource type="Texture2D" uid="uid://bxjqfeoqa5ake" path="res://assets/ui/colosseum/colo_rank_big.tres" id="18_p1072"]
+[ext_resource type="Texture2D" uid="uid://deimcsj4t2xml" path="res://assets/ui/colosseum/colo_rank_frame1.tres" id="18_pmj4f"]
+[ext_resource type="Texture2D" uid="uid://d4a3sftvs8u2d" path="res://assets/ui/colosseum/colo_round_big.tres" id="19_pmj4f"]
+[ext_resource type="Texture2D" uid="uid://dinokpe4itbk8" path="res://assets/ui/colosseum/colo_round_deco_l.tres" id="20_4pxn3"]
+[ext_resource type="Texture2D" uid="uid://cpsunotvp0aue" path="res://assets/ui/colosseum/colo_round_deco_r.tres" id="21_y8w57"]
+[ext_resource type="Texture2D" uid="uid://cbigxvi2o11v4" path="res://assets/ui/colosseum/colo_clear.tres" id="22_bgt5r"]
+[ext_resource type="Texture2D" uid="uid://byj6fp4jdgms1" path="res://assets/ui/colosseum/colo_round_frame1.tres" id="24_yh8qd"]
+[ext_resource type="Texture2D" uid="uid://dscusr2potx6i" path="res://assets/ui/colosseum/colo_rpgauge_slender_bg.tres" id="25_8b2q5"]
+[ext_resource type="Texture2D" uid="uid://cbunblvn1cral" path="res://assets/ui/colosseum/colo_rank_frame2.tres" id="25_lge7r"]
+[ext_resource type="Texture2D" uid="uid://cy871fh7tcd22" path="res://assets/ui/colosseum/colo_rpgauge_slender_frame.tres" id="27_vmuph"]
+[ext_resource type="Texture2D" uid="uid://buu05m5ukwaue" path="res://assets/ui/colosseum/colo_button_large_red1.tres" id="28_na0fx"]
+[ext_resource type="Texture2D" uid="uid://dwxsusmbhpqbk" path="res://assets/ui/colosseum/colo_button_large_red2.tres" id="29_dedo0"]
+[ext_resource type="Texture2D" uid="uid://cv7gjr60fdclj" path="res://assets/ui/colosseum/colo_grade_big.tres" id="29_e4bdl"]
+[ext_resource type="Texture2D" uid="uid://ch7hrefpdpg5c" path="res://assets/ui/colosseum/largebutton_label_colo_battle.tres" id="30_67sk6"]
+[ext_resource type="Texture2D" uid="uid://dbv5ohcaxrw00" path="res://assets/ui/colosseum/colo_battle_roundbg.tres" id="31_q6ik1"]
+[ext_resource type="Texture2D" uid="uid://ccubm04noqbj7" path="res://assets/ui/colosseum/colo_round_frame2.tres" id="33_e4bdl"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_yh8qd"]
+font_size = 72
+
+[sub_resource type="LabelSettings" id="LabelSettings_8b2q5"]
+font_size = 32
+
+[node name="Colosseum" type="Control" unique_id=1415250585]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_8b2q5")
+
+[node name="TopBar" type="HBoxContainer" parent="." unique_id=627734895]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 424.0
+offset_bottom = 192.0
+
+[node name="UnitNamebgChara" type="TextureRect" parent="TopBar" unique_id=320233816]
+layout_mode = 2
+texture = ExtResource("2_67sk6")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="TopBar/UnitNamebgChara" unique_id=1648254911]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "Colosseum"
+
+[node name="BackButton" type="TextureButton" parent="TopBar/UnitNamebgChara" unique_id=1500632127]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("3_q6ik1")
+texture_pressed = ExtResource("4_lge7r")
+
+[node name="Back" type="Label" parent="TopBar/UnitNamebgChara/BackButton" unique_id=2104033906]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HomeButton" type="TextureButton" parent="TopBar/UnitNamebgChara" unique_id=2103573892]
+visible = false
+z_index = 2
+clip_contents = true
+layout_mode = 0
+offset_left = 536.0
+offset_top = -19.0
+offset_right = 640.0
+offset_bottom = 85.0
+texture_normal = ExtResource("5_e4bdl")
+texture_pressed = ExtResource("6_r1s5u")
+
+[node name="EntryWindow" type="Control" parent="." unique_id=1202936031]
+anchors_preset = 0
+offset_top = 192.0
+offset_right = 40.0
+offset_bottom = 232.0
+
+[node name="clsmVsCpu_window_bg" type="TextureRect" parent="EntryWindow" unique_id=2045415361]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 21.0
+offset_right = 592.0
+offset_bottom = 377.0
+texture = ExtResource("3_82fqq")
+expand_mode = 1
+
+[node name="clsmVsCpu_window_top" type="TextureRect" parent="EntryWindow" unique_id=2129726239]
+layout_mode = 0
+offset_left = 15.0
+offset_top = -9.0
+offset_right = 623.0
+offset_bottom = 103.0
+texture = ExtResource("4_061tn")
+expand_mode = 1
+
+[node name="clsmVsCpu_window_bottom" type="TextureRect" parent="EntryWindow" unique_id=1334106634]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 295.0
+offset_right = 623.0
+offset_bottom = 407.0
+texture = ExtResource("5_vn5jr")
+expand_mode = 1
+
+[node name="clsmVsCpu_window_txt" type="Label" parent="EntryWindow" unique_id=304235888]
+visible = false
+layout_mode = 0
+offset_left = 35.0
+offset_top = 26.0
+offset_right = 515.0
+offset_bottom = 326.0
+theme_override_font_sizes/font_size = 20
+text = "clsmVsCpu_window_txt"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="clsmVsCpu_roundclearpoint_txt" type="Label" parent="EntryWindow" unique_id=848590262]
+visible = false
+layout_mode = 0
+offset_left = 389.0
+offset_top = 297.0
+offset_right = 634.0
+offset_bottom = 320.0
+theme_override_font_sizes/font_size = 20
+text = "clsmVsCpu_roundclearpoint_txt"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="clsmVsCpu_rank" type="TextureRect" parent="EntryWindow" unique_id=515724290]
+layout_mode = 0
+offset_left = 198.0
+offset_top = 123.0
+offset_right = 286.0
+offset_bottom = 211.0
+expand_mode = 1
+
+[node name="Label" type="Label" parent="EntryWindow/clsmVsCpu_rank" unique_id=2003545381]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "S"
+label_settings = SubResource("LabelSettings_yh8qd")
+
+[node name="clsmVsCpu_rank_label" type="TextureRect" parent="EntryWindow" unique_id=1454943504]
+layout_mode = 0
+offset_left = 212.0
+offset_top = 95.0
+offset_right = 268.0
+offset_bottom = 119.0
+texture = ExtResource("7_p1072")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_label_small" type="TextureRect" parent="EntryWindow" unique_id=1356330778]
+layout_mode = 0
+offset_left = 359.0
+offset_top = 95.0
+offset_right = 431.0
+offset_bottom = 119.0
+texture = ExtResource("9_4pxn3")
+expand_mode = 1
+
+[node name="clsmVsCpu_hyphen" type="TextureRect" parent="EntryWindow" unique_id=1815411599]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 157.0
+offset_right = 340.0
+offset_bottom = 173.0
+texture = ExtResource("8_pmj4f")
+expand_mode = 1
+
+[node name="clsmVsCpu_round" type="TextureRect" parent="EntryWindow" unique_id=2080039231]
+layout_mode = 0
+offset_left = 351.0
+offset_top = 123.0
+offset_right = 439.0
+offset_bottom = 211.0
+expand_mode = 1
+
+[node name="Label" type="Label" parent="EntryWindow/clsmVsCpu_round" unique_id=306615470]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "1"
+label_settings = SubResource("LabelSettings_yh8qd")
+
+[node name="clsmVsCpu_grade" type="TextureRect" parent="EntryWindow" unique_id=2083684038]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 46.0
+offset_right = 149.0
+offset_bottom = 150.0
+expand_mode = 1
+
+[node name="Label" type="Label" parent="EntryWindow/clsmVsCpu_grade" unique_id=2141439718]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "bgn"
+label_settings = SubResource("LabelSettings_yh8qd")
+
+[node name="clsmVsCpu_roundpoint_label" type="TextureRect" parent="EntryWindow" unique_id=1883552264]
+layout_mode = 0
+offset_left = 165.0
+offset_top = 253.0
+offset_right = 325.0
+offset_bottom = 281.0
+texture = ExtResource("6_o1dq3")
+expand_mode = 1
+
+[node name="clsmVsCpu_roundpoint_txt" type="Label" parent="EntryWindow" unique_id=1249029468]
+visible = false
+layout_mode = 0
+offset_left = 280.0
+offset_top = 253.0
+offset_right = 538.0
+offset_bottom = 281.0
+theme_override_font_sizes/font_size = 20
+text = "clsmVsCpu_roundpoint_txt"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="clsmVsCpu_pt_label_1" type="TextureRect" parent="EntryWindow" unique_id=320591718]
+layout_mode = 0
+offset_left = 395.0
+offset_top = 252.0
+offset_right = 423.0
+offset_bottom = 280.0
+texture = ExtResource("10_y8w57")
+expand_mode = 1
+
+[node name="clsmVsCpu_roundclear_label" type="TextureRect" parent="EntryWindow" unique_id=1922996603]
+layout_mode = 0
+offset_left = 279.0
+offset_top = 317.0
+offset_right = 475.0
+offset_bottom = 341.0
+texture = ExtResource("11_bgt5r")
+expand_mode = 1
+
+[node name="clsmVsCpu_pt_label_2" type="TextureRect" parent="EntryWindow" unique_id=161946353]
+layout_mode = 0
+offset_left = 476.0
+offset_top = 319.0
+offset_right = 498.0
+offset_bottom = 341.0
+texture = ExtResource("12_ihaup")
+expand_mode = 1
+
+[node name="clsmVsCpu_boss_encounter" type="TextureRect" parent="EntryWindow" unique_id=776896431]
+visible = false
+layout_mode = 0
+offset_left = 112.0
+offset_top = 284.0
+offset_right = 432.0
+offset_bottom = 340.0
+texture = ExtResource("13_27kax")
+expand_mode = 1
+
+[node name="clsmVsCpu_rpgauge_bg" type="TextureRect" parent="EntryWindow" unique_id=1926669496]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 283.0
+offset_right = 536.0
+offset_bottom = 315.0
+texture = ExtResource("14_60tuk")
+expand_mode = 1
+
+[node name="clsmVsCpu_rpgauge_bar" type="TextureProgressBar" parent="EntryWindow/clsmVsCpu_rpgauge_bg" unique_id=794043109]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 7.0
+offset_right = 423.0
+offset_bottom = 23.0
+texture_progress = ExtResource("15_t0gwt")
+
+[node name="clsmVsCpu_rpgauge_frame" type="TextureRect" parent="EntryWindow/clsmVsCpu_rpgauge_bg" unique_id=2054074344]
+layout_mode = 0
+offset_left = -8.0
+offset_top = -1.0
+offset_right = 440.0
+offset_bottom = 39.0
+texture = ExtResource("16_yh8qd")
+expand_mode = 1
+
+[node name="clsmVsCpu_entry_button" type="TextureButton" parent="EntryWindow" unique_id=1277085555]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 424.0
+offset_right = 600.0
+offset_bottom = 584.0
+texture_normal = ExtResource("1_jnkoc")
+texture_pressed = ExtResource("1_ns8pm")
+
+[node name="clsmVsCpu_entry_label" type="TextureRect" parent="EntryWindow/clsmVsCpu_entry_button" unique_id=256230878]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -152.0
+offset_top = -32.0
+offset_right = 152.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_jnkoc")
+expand_mode = 1
+
+[node name="GradeSelector" type="Control" parent="." unique_id=68996857]
+visible = false
+anchors_preset = 0
+offset_top = 200.0
+offset_right = 40.0
+offset_bottom = 240.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="GradeSelector" unique_id=929857033]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 688.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GradeSelector/ScrollContainer" unique_id=1291642991]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="ItemTemplate" type="TextureButton" parent="GradeSelector" unique_id=1536121321]
+visible = false
+layout_mode = 0
+offset_left = 16.0
+offset_right = 624.0
+offset_bottom = 112.0
+size_flags_horizontal = 4
+texture_normal = ExtResource("18_pmj4f")
+texture_pressed = ExtResource("25_lge7r")
+
+[node name="clsmVsCpu_grade_button" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=1516703448]
+visible = false
+layout_mode = 0
+offset_right = 608.0
+offset_bottom = 112.0
+texture = ExtResource("18_pmj4f")
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_button_on" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=374984138]
+visible = false
+layout_mode = 0
+offset_right = 608.0
+offset_bottom = 112.0
+texture = ExtResource("25_lge7r")
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_emblem" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=1603178243]
+layout_mode = 0
+offset_left = 123.0
+offset_top = 4.0
+offset_right = 227.0
+offset_bottom = 108.0
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_rank_label_big" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=690198417]
+layout_mode = 0
+offset_left = 335.0
+offset_top = 39.0
+offset_right = 411.0
+offset_bottom = 71.0
+texture = ExtResource("18_p1072")
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_deco_l" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=392181437]
+layout_mode = 0
+offset_left = 284.0
+offset_top = 39.0
+offset_right = 324.0
+offset_bottom = 71.0
+texture = ExtResource("20_4pxn3")
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_deco_r" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=688936678]
+layout_mode = 0
+offset_left = 462.0
+offset_top = 38.0
+offset_right = 502.0
+offset_bottom = 70.0
+texture = ExtResource("21_y8w57")
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_rank_num" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=1292677118]
+layout_mode = 0
+offset_left = 416.0
+offset_top = 32.0
+offset_right = 456.0
+offset_bottom = 80.0
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_label" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=299159020]
+layout_mode = 0
+offset_left = 33.0
+offset_top = 40.0
+offset_right = 129.0
+offset_bottom = 72.0
+texture = ExtResource("29_e4bdl")
+expand_mode = 1
+
+[node name="clsmVsCpu_grade_clear_label" type="TextureRect" parent="GradeSelector/ItemTemplate" unique_id=1069381566]
+visible = false
+layout_mode = 0
+offset_left = 268.0
+offset_top = 31.0
+offset_right = 476.0
+offset_bottom = 81.0
+texture = ExtResource("22_bgt5r")
+expand_mode = 1
+
+[node name="RankSelector" type="Control" parent="." unique_id=426634393]
+visible = false
+anchors_preset = 0
+offset_top = 200.0
+offset_right = 40.0
+offset_bottom = 240.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RankSelector" unique_id=511620998]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 688.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RankSelector/ScrollContainer" unique_id=2135237804]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="ItemTemplate" type="TextureButton" parent="RankSelector" unique_id=955516744]
+visible = false
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 120.0
+texture_normal = ExtResource("18_pmj4f")
+texture_pressed = ExtResource("25_lge7r")
+
+[node name="clsmVsCpu_rank_button_offset" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=2038146356]
+visible = false
+layout_mode = 0
+offset_top = 10.0
+offset_right = 608.0
+offset_bottom = 122.0
+texture = ExtResource("18_pmj4f")
+expand_mode = 1
+
+[node name="clsmVsCpu_rank_emblem" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=681166325]
+layout_mode = 0
+offset_left = 103.0
+offset_right = 239.0
+offset_bottom = 128.0
+expand_mode = 1
+
+[node name="RankLabel" type="Label" parent="RankSelector/ItemTemplate/clsmVsCpu_rank_emblem" unique_id=1833219175]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "S"
+label_settings = SubResource("LabelSettings_yh8qd")
+
+[node name="clsmVsCpu_rank_label" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=291639282]
+layout_mode = 0
+offset_left = 34.0
+offset_top = 47.0
+offset_right = 110.0
+offset_bottom = 79.0
+texture = ExtResource("18_p1072")
+expand_mode = 1
+
+[node name="clsmVaCpu_round_label" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=44033280]
+layout_mode = 0
+offset_left = 322.0
+offset_top = 46.0
+offset_right = 418.0
+offset_bottom = 78.0
+texture = ExtResource("19_pmj4f")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_deco_l" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=281208456]
+layout_mode = 0
+offset_left = 283.0
+offset_top = 47.0
+offset_right = 323.0
+offset_bottom = 79.0
+texture = ExtResource("20_4pxn3")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_deco_r" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=695965631]
+layout_mode = 0
+offset_left = 452.0
+offset_top = 47.0
+offset_right = 492.0
+offset_bottom = 79.0
+texture = ExtResource("21_y8w57")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_num_1" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=676747632]
+layout_mode = 0
+offset_left = 415.0
+offset_top = 41.0
+offset_right = 455.0
+offset_bottom = 89.0
+expand_mode = 1
+
+[node name="clsmVsCpu_clear_label" type="TextureRect" parent="RankSelector/ItemTemplate" unique_id=171199810]
+visible = false
+layout_mode = 0
+offset_left = 269.0
+offset_top = 40.0
+offset_right = 477.0
+offset_bottom = 90.0
+texture = ExtResource("22_bgt5r")
+expand_mode = 1
+
+[node name="RoundSelector" type="Control" parent="." unique_id=577665429]
+visible = false
+anchors_preset = 0
+offset_top = 200.0
+offset_right = 40.0
+offset_bottom = 240.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RoundSelector" unique_id=1247109469]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 688.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RoundSelector/ScrollContainer" unique_id=244326523]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="ItemTemplate" type="TextureButton" parent="RoundSelector" unique_id=1890235320]
+visible = false
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 120.0
+texture_normal = ExtResource("24_yh8qd")
+texture_pressed = ExtResource("33_e4bdl")
+
+[node name="clsmVsCpu_round_button_offset" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1855015792]
+visible = false
+layout_mode = 0
+offset_left = 16.0
+offset_right = 624.0
+offset_bottom = 112.0
+texture = ExtResource("24_yh8qd")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_label" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=675477275]
+layout_mode = 0
+offset_left = 75.0
+offset_top = 20.0
+offset_right = 171.0
+offset_bottom = 52.0
+texture = ExtResource("19_pmj4f")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_deco_l" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=438002874]
+layout_mode = 0
+offset_left = 35.0
+offset_top = 20.0
+offset_right = 75.0
+offset_bottom = 52.0
+texture = ExtResource("20_4pxn3")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_deco_r" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1602117069]
+layout_mode = 0
+offset_left = 204.0
+offset_top = 19.0
+offset_right = 244.0
+offset_bottom = 51.0
+texture = ExtResource("21_y8w57")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_num" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1648953716]
+layout_mode = 0
+offset_left = 168.0
+offset_top = 12.0
+offset_right = 208.0
+offset_bottom = 60.0
+expand_mode = 1
+
+[node name="RoundLabel" type="Label" parent="RoundSelector/ItemTemplate/clsmVsCpu_round_num" unique_id=1890276943]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "1"
+label_settings = SubResource("LabelSettings_8b2q5")
+
+[node name="clsmVsCpu_rpgauge_bg" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1333967388]
+layout_mode = 1
+offset_left = 19.0
+offset_top = 64.0
+offset_right = 587.0
+offset_bottom = 80.0
+texture = ExtResource("25_8b2q5")
+expand_mode = 1
+
+[node name="clsmVsCpu_rpgauge_bar" type="TextureProgressBar" parent="RoundSelector/ItemTemplate/clsmVsCpu_rpgauge_bg" unique_id=1077266494]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 566.0
+offset_bottom = 12.0
+
+[node name="clsmVsCpu_rpgauge_frame" type="TextureRect" parent="RoundSelector/ItemTemplate/clsmVsCpu_rpgauge_bg" unique_id=651326309]
+layout_mode = 0
+offset_left = -8.0
+offset_top = -1.0
+offset_right = 576.0
+offset_bottom = 19.0
+texture = ExtResource("27_vmuph")
+expand_mode = 1
+
+[node name="clsmVsCpu_pt_label_1" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1038905571]
+layout_mode = 0
+offset_left = 562.0
+offset_top = 25.0
+offset_right = 590.0
+offset_bottom = 53.0
+texture = ExtResource("10_y8w57")
+expand_mode = 1
+
+[node name="clsmVsCpu_roundclear_label" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1915239476]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 81.0
+offset_right = 359.0
+offset_bottom = 105.0
+texture = ExtResource("11_bgt5r")
+expand_mode = 1
+
+[node name="clsmVsCpu_pt_label_2" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=1538554548]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 84.0
+offset_right = 448.0
+offset_bottom = 106.0
+texture = ExtResource("12_ihaup")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_pt_txt" type="Label" parent="RoundSelector/ItemTemplate" unique_id=518295510]
+layout_mode = 0
+offset_left = 441.0
+offset_top = 24.0
+offset_right = 555.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 26
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="clsmVsCpu_roundclear_pt_txt" type="Label" parent="RoundSelector/ItemTemplate" unique_id=545620930]
+layout_mode = 0
+offset_left = 357.0
+offset_top = 83.0
+offset_right = 425.0
+offset_bottom = 111.0
+theme_override_font_sizes/font_size = 20
+text = "1000"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="clsmVsCpu_boss_appear" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=179281812]
+visible = false
+layout_mode = 0
+offset_left = 195.0
+offset_top = 57.0
+offset_right = 459.0
+offset_bottom = 113.0
+texture = ExtResource("13_27kax")
+expand_mode = 1
+
+[node name="clsmVsCpu_clear_label" type="TextureRect" parent="RoundSelector/ItemTemplate" unique_id=597159122]
+visible = false
+layout_mode = 0
+offset_left = 231.0
+offset_top = 9.0
+offset_right = 439.0
+offset_bottom = 59.0
+texture = ExtResource("22_bgt5r")
+expand_mode = 1
+
+[node name="StartWindow" type="Control" parent="." unique_id=2102805247]
+visible = false
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Header" type="Control" parent="StartWindow" unique_id=2049531284]
+anchors_preset = 0
+offset_top = 192.0
+offset_right = 40.0
+offset_bottom = 232.0
+
+[node name="background" type="TextureRect" parent="StartWindow/Header" unique_id=317399417]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 88.0
+texture = ExtResource("31_q6ik1")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_deco_l" type="TextureRect" parent="StartWindow/Header" unique_id=408811625]
+layout_mode = 0
+offset_left = 215.0
+offset_top = 14.0
+offset_right = 255.0
+offset_bottom = 46.0
+texture = ExtResource("20_4pxn3")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_deco_r" type="TextureRect" parent="StartWindow/Header" unique_id=298923168]
+layout_mode = 0
+offset_left = 382.0
+offset_top = 14.0
+offset_right = 422.0
+offset_bottom = 46.0
+texture = ExtResource("21_y8w57")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_label" type="TextureRect" parent="StartWindow/Header" unique_id=1362600301]
+layout_mode = 0
+offset_left = 258.0
+offset_top = 14.0
+offset_right = 354.0
+offset_bottom = 46.0
+texture = ExtResource("19_pmj4f")
+expand_mode = 1
+
+[node name="clsmVsCpu_round_num_1" type="TextureRect" parent="StartWindow/Header" unique_id=452672388]
+layout_mode = 0
+offset_left = 350.0
+offset_top = 6.0
+offset_right = 390.0
+offset_bottom = 54.0
+expand_mode = 1
+
+[node name="clsmVsCpu_name_player_txt" type="Label" parent="StartWindow/Header" unique_id=187194491]
+layout_mode = 0
+offset_left = 433.0
+offset_top = 60.0
+offset_right = 651.0
+offset_bottom = 83.0
+theme_override_font_sizes/font_size = 20
+text = "clsmVsCpu_name_player_txt"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="clsmVsCpu_vs_label" type="TextureRect" parent="StartWindow/Header" unique_id=294456656]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 46.0
+offset_right = 468.0
+offset_bottom = 151.0
+expand_mode = 1
+
+[node name="clsmVsCpu_name_enemy_txt" type="Label" parent="StartWindow/Header" unique_id=1314110433]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 60.0
+offset_right = 229.0
+offset_bottom = 83.0
+theme_override_font_sizes/font_size = 20
+text = "clsmVsCpu_name_enemy_txt"
+vertical_alignment = 1
+
+[node name="clsmVsCpu_start_button" type="TextureButton" parent="StartWindow" unique_id=897267945]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 680.0
+offset_right = 600.0
+offset_bottom = 864.0
+texture_normal = ExtResource("28_na0fx")
+texture_pressed = ExtResource("29_dedo0")
+
+[node name="clsmVsCpu_start_button_label" type="TextureRect" parent="StartWindow/clsmVsCpu_start_button" unique_id=1277697490]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -152.0
+offset_top = -32.0
+offset_right = 152.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("30_67sk6")
+expand_mode = 1
+
+[node name="MonsterNames" type="Label" parent="StartWindow" unique_id=1351193682]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 344.0
+offset_right = 256.0
+offset_bottom = 568.0

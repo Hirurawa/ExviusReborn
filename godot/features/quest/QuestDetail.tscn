@@ -1,0 +1,503 @@
+[gd_scene format=3 uid="uid://cfnfot2rd7ksu"]
+
+[ext_resource type="Texture2D" uid="uid://byv4anbu7hm01" path="res://assets/ui/subquest/sq_window_center.tres" id="1_yrhvd"]
+[ext_resource type="Texture2D" uid="uid://busthecmrvhr7" path="res://assets/ui/subquest/sq_window_line_left.tres" id="2_0ypwx"]
+[ext_resource type="Texture2D" uid="uid://bi4qxldk6hb1b" path="res://assets/ui/subquest/sq_window_line_right.tres" id="3_s2gru"]
+[ext_resource type="Texture2D" uid="uid://ydaqay4ow3jp" path="res://assets/ui/subquest/sq_window_line_bottom.tres" id="4_1aq2m"]
+[ext_resource type="Texture2D" uid="uid://3qcurt1qlq8x" path="res://assets/ui/subquest/sq_window_corner_lb.tres" id="5_sfe6p"]
+[ext_resource type="Texture2D" uid="uid://d271q8h04uue0" path="res://assets/ui/subquest/sq_window_corner_rt.tres" id="6_qmsia"]
+[ext_resource type="Texture2D" uid="uid://cc5cmdef8o3e" path="res://assets/ui/subquest/sq_window_corner_rb.tres" id="7_1eb4a"]
+[ext_resource type="Texture2D" uid="uid://bug8w75nwlujq" path="res://assets/ui/subquest/sq_npc_bg.tres" id="8_erix0"]
+[ext_resource type="Texture2D" uid="uid://d3l246mbjjf2r" path="res://assets/ui/subquest/sq_npc_icon.tres" id="9_v7gko"]
+[ext_resource type="Texture2D" uid="uid://dsj2tx84dpnq2" path="res://assets/ui/subquest/sq_window_line_top.tres" id="10_5fs30"]
+[ext_resource type="Texture2D" uid="uid://dg6rwkla6s24v" path="res://assets/ui/subquest/sq_window_type.tres" id="11_gpwmv"]
+[ext_resource type="Texture2D" uid="uid://bywfet3uww5ij" path="res://assets/ui/subquest/sq_quest_type1.tres" id="12_5yr1o"]
+[ext_resource type="Texture2D" uid="uid://bwkvawajhd7xm" path="res://assets/ui/subquest/sq_purpose_cap.tres" id="13_8i8gd"]
+[ext_resource type="Texture2D" uid="uid://dsnpuk7r8mqn" path="res://assets/ui/subquest/sq_current.tres" id="14_fbb88"]
+[ext_resource type="Texture2D" uid="uid://dw0pythcfunev" path="res://assets/ui/subquest/sq_new.tres" id="15_o16ue"]
+[ext_resource type="Texture2D" uid="uid://3cwwdl4mgo6j" path="res://assets/ui/subquest/sq_purpose_list.tres" id="16_w4ymu"]
+[ext_resource type="Texture2D" uid="uid://dng0ai0irs7mk" path="res://assets/ui/subquest/sq_check.tres" id="17_mcxj6"]
+[ext_resource type="Texture2D" uid="uid://qb8s3251kafb" path="res://assets/ui/common/sq_arrow_r.tres" id="18_ohqh1"]
+[ext_resource type="Texture2D" uid="uid://chtg0ig5psyyh" path="res://assets/ui/common/positionmark_off.tres" id="19_fgj4l"]
+[ext_resource type="Texture2D" uid="uid://baxkxaxum3ant" path="res://assets/ui/common/positionmark_on.tres" id="20_fecrs"]
+[ext_resource type="Texture2D" uid="uid://dan4ogokjsfii" path="res://assets/ui/common/mini_arrow_l.tres" id="21_vdl78"]
+[ext_resource type="Texture2D" uid="uid://cupn218skk1vc" path="res://assets/ui/common/mini_arrow_r.tres" id="22_a47pu"]
+[ext_resource type="Texture2D" uid="uid://clia3hoduy1gk" path="res://assets/ui/subquest/sq_reward_cap.tres" id="23_hx345"]
+[ext_resource type="Texture2D" uid="uid://b57kkldkl58t4" path="res://assets/ui/subquest/sq_reward_list.tres" id="24_svpkv"]
+[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="25_yta0o"]
+[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="26_e0avl"]
+[ext_resource type="Texture2D" uid="uid://dfwbgybeyeoix" path="res://assets/ui/common/minibutton_label_close.tres" id="27_66yda"]
+[ext_resource type="Texture2D" uid="uid://w2uxym7qq71r" path="res://assets/ui/common/button_mini_long1.tres" id="28_8u7f8"]
+[ext_resource type="Texture2D" uid="uid://cor65d50a6byy" path="res://assets/ui/common/button_mini_long2.tres" id="29_g6oay"]
+[ext_resource type="Texture2D" uid="uid://cdiocvnocwkqk" path="res://assets/ui/subquest/minibutton_label_gotoreport.tres" id="30_cc8mr"]
+
+[node name="QuestDetail" type="Control" unique_id=1207597597]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="sub_quest_detail_center" type="TextureRect" parent="." unique_id=1391255915]
+layout_mode = 0
+offset_left = 63.0
+offset_right = 575.0
+offset_bottom = 746.0
+texture = ExtResource("1_yrhvd")
+expand_mode = 1
+
+[node name="sub_quest_detail_left" type="TextureRect" parent="." unique_id=757745032]
+layout_mode = 0
+offset_left = 32.0
+offset_right = 64.0
+offset_bottom = 746.0
+texture = ExtResource("2_0ypwx")
+expand_mode = 1
+
+[node name="sub_quest_detail_right" type="TextureRect" parent="." unique_id=851571725]
+layout_mode = 0
+offset_left = 575.0
+offset_right = 607.0
+offset_bottom = 746.0
+texture = ExtResource("3_s2gru")
+expand_mode = 1
+
+[node name="sub_quest_detail_bottom" type="TextureRect" parent="." unique_id=591630884]
+layout_mode = 0
+offset_left = 63.0
+offset_top = 744.0
+offset_right = 575.0
+offset_bottom = 776.0
+texture = ExtResource("4_1aq2m")
+expand_mode = 1
+
+[node name="sub_quest_detail_lb" type="TextureRect" parent="." unique_id=1930603494]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 744.0
+offset_right = 64.0
+offset_bottom = 776.0
+texture = ExtResource("5_sfe6p")
+expand_mode = 1
+
+[node name="sub_quest_detail_rt" type="TextureRect" parent="." unique_id=1412480225]
+layout_mode = 0
+offset_left = 575.0
+offset_top = -55.0
+offset_right = 607.0
+offset_bottom = 1.0
+texture = ExtResource("6_qmsia")
+expand_mode = 1
+
+[node name="sub_quest_detail_rb" type="TextureRect" parent="." unique_id=1881544821]
+layout_mode = 0
+offset_left = 575.0
+offset_top = 744.0
+offset_right = 607.0
+offset_bottom = 776.0
+texture = ExtResource("7_1eb4a")
+expand_mode = 1
+
+[node name="sub_quest_detail_npc_bg" type="TextureRect" parent="." unique_id=174009154]
+layout_mode = 0
+offset_left = 49.0
+offset_right = 589.0
+offset_bottom = 136.0
+texture = ExtResource("8_erix0")
+expand_mode = 1
+
+[node name="sub_quest_detail_npc_image" type="Label" parent="." unique_id=1749267210]
+layout_mode = 0
+offset_left = 106.0
+offset_top = 122.0
+offset_right = 324.0
+offset_bottom = 145.0
+text = "sub_quest_detail_npc_image"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_description" type="Label" parent="." unique_id=891727335]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 4.0
+offset_right = 566.0
+offset_bottom = 94.0
+theme_override_font_sizes/font_size = 18
+text = "sub_quest_detail_description"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_npc_name" type="Label" parent="." unique_id=925272474]
+layout_mode = 0
+offset_left = 255.0
+offset_top = 106.0
+offset_right = 562.0
+offset_bottom = 129.0
+theme_override_font_sizes/font_size = 20
+text = "sub_quest_detail_npc_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_npc_icon" type="TextureRect" parent="." unique_id=1418770633]
+layout_mode = 0
+offset_left = 235.0
+offset_top = 104.0
+offset_right = 251.0
+offset_bottom = 128.0
+texture = ExtResource("9_v7gko")
+expand_mode = 1
+
+[node name="sub_quest_detail_top" type="TextureRect" parent="." unique_id=1573053597]
+layout_mode = 0
+offset_left = 63.0
+offset_top = -55.0
+offset_right = 575.0
+offset_bottom = 1.0
+texture = ExtResource("10_5fs30")
+expand_mode = 1
+
+[node name="sub_quest_detail_category_bg" type="TextureRect" parent="." unique_id=828459545]
+layout_mode = 0
+offset_left = 47.0
+offset_top = -39.0
+offset_right = 95.0
+offset_bottom = 9.0
+texture = ExtResource("11_gpwmv")
+expand_mode = 1
+
+[node name="sub_quest_detail_category_icon" type="TextureRect" parent="." unique_id=728104645]
+layout_mode = 0
+offset_left = 51.0
+offset_top = -35.0
+offset_right = 91.0
+offset_bottom = 5.0
+texture = ExtResource("12_5yr1o")
+expand_mode = 1
+
+[node name="sub_quest_detail_title" type="Label" parent="." unique_id=871963579]
+layout_mode = 0
+offset_left = 104.0
+offset_top = -31.0
+offset_right = 421.0
+offset_bottom = -7.0
+theme_override_font_sizes/font_size = 24
+text = "sub_quest_detail_title"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo" type="TextureRect" parent="." unique_id=932426718]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 152.0
+offset_right = 590.0
+offset_bottom = 184.0
+texture = ExtResource("13_8i8gd")
+expand_mode = 1
+
+[node name="sub_quest_detail_todo_title" type="Label" parent="." unique_id=1282736931]
+layout_mode = 0
+offset_left = 148.0
+offset_top = 156.0
+offset_right = 469.0
+offset_bottom = 179.0
+theme_override_font_sizes/font_size = 22
+text = "sub_quest_detail_todo_title"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_status" type="TextureRect" parent="." unique_id=350455876]
+layout_mode = 0
+offset_left = 478.0
+offset_top = 148.0
+offset_right = 590.0
+offset_bottom = 190.0
+texture = ExtResource("14_fbb88")
+expand_mode = 1
+
+[node name="sub_quest_detail_new_icon" type="TextureRect" parent="." unique_id=1468258476]
+layout_mode = 0
+offset_left = 490.0
+offset_top = 125.0
+offset_right = 578.0
+offset_bottom = 173.0
+texture = ExtResource("15_o16ue")
+expand_mode = 1
+
+[node name="sub_quest_detail_todo_list" type="TextureRect" parent="." unique_id=1183138215]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 200.0
+offset_right = 558.0
+offset_bottom = 232.0
+texture = ExtResource("16_w4ymu")
+expand_mode = 1
+
+[node name="sub_quest_detail_todo_item_icon" type="Label" parent="." unique_id=514545481]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 196.0
+offset_right = 349.0
+offset_bottom = 236.0
+text = "sub_quest_detail_todo_item_icon"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_item_name" type="Label" parent="." unique_id=1424900985]
+layout_mode = 0
+offset_left = 147.0
+offset_top = 206.0
+offset_right = 412.0
+offset_bottom = 229.0
+theme_override_font_sizes/font_size = 20
+text = "sub_quest_detail_todo_item_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_message" type="Label" parent="." unique_id=2128937438]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 205.0
+offset_right = 363.0
+offset_bottom = 228.0
+theme_override_font_sizes/font_size = 20
+text = "sub_quest_detail_todo_message"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_progress" type="Label" parent="." unique_id=1891973765]
+layout_mode = 0
+offset_left = 431.0
+offset_top = 204.0
+offset_right = 677.0
+offset_bottom = 228.0
+theme_override_font_sizes/font_size = 24
+text = "sub_quest_detail_todo_progress"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_per" type="Label" parent="." unique_id=2010038763]
+layout_mode = 0
+offset_left = 482.0
+offset_top = 204.0
+offset_right = 687.0
+offset_bottom = 228.0
+theme_override_font_sizes/font_size = 24
+text = "sub_quest_detail_todo_per"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_norma" type="Label" parent="." unique_id=878948680]
+layout_mode = 0
+offset_left = 496.0
+offset_top = 214.0
+offset_right = 726.0
+offset_bottom = 237.0
+theme_override_font_sizes/font_size = 14
+text = "sub_quest_detail_todo_norma"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_check" type="TextureRect" parent="." unique_id=927723368]
+layout_mode = 0
+offset_left = 518.0
+offset_top = 196.0
+offset_right = 558.0
+offset_bottom = 236.0
+texture = ExtResource("17_mcxj6")
+expand_mode = 1
+
+[node name="sub_quest_detail_todo_comp_mes" type="Label" parent="." unique_id=2125452936]
+layout_mode = 0
+offset_left = 193.0
+offset_top = 368.0
+offset_right = 454.0
+offset_bottom = 392.0
+theme_override_font_sizes/font_size = 24
+text = "sub_quest_detail_todo_comp_mes"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_todo_comp_arrow" type="TextureRect" parent="." unique_id=543643411]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 363.0
+offset_right = 194.0
+offset_bottom = 397.0
+texture = ExtResource("18_ohqh1")
+expand_mode = 1
+
+[node name="sub_quest_detail_pos_mark_off" type="TextureRect" parent="." unique_id=478521851]
+layout_mode = 0
+offset_left = 309.0
+offset_top = 410.0
+offset_right = 329.0
+offset_bottom = 430.0
+texture = ExtResource("19_fgj4l")
+expand_mode = 1
+
+[node name="sub_quest_detail_pos_mark_on" type="TextureRect" parent="." unique_id=569632436]
+layout_mode = 0
+offset_left = 309.0
+offset_top = 410.0
+offset_right = 329.0
+offset_bottom = 430.0
+texture = ExtResource("20_fecrs")
+expand_mode = 1
+
+[node name="sub_quest_detail_page_num" type="Label" parent="." unique_id=1963359216]
+layout_mode = 0
+offset_left = 286.0
+offset_top = 436.0
+offset_right = 502.0
+offset_bottom = 459.0
+theme_override_font_sizes/font_size = 18
+text = "sub_quest_detail_page_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_arrow_l" type="TextureRect" parent="." unique_id=343288469]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 257.0
+offset_right = 79.0
+offset_bottom = 295.0
+texture = ExtResource("21_vdl78")
+expand_mode = 1
+
+[node name="sub_quest_detail_arrow_r" type="TextureRect" parent="." unique_id=1969604073]
+layout_mode = 0
+offset_left = 560.0
+offset_top = 257.0
+offset_right = 584.0
+offset_bottom = 295.0
+texture = ExtResource("22_a47pu")
+expand_mode = 1
+
+[node name="sub_quest_detail_reward" type="TextureRect" parent="." unique_id=910981720]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 460.0
+offset_right = 590.0
+offset_bottom = 492.0
+texture = ExtResource("23_hx345")
+expand_mode = 1
+
+[node name="sub_quest_detail_reward_list" type="TextureRect" parent="." unique_id=318007372]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 508.0
+offset_right = 558.0
+offset_bottom = 540.0
+texture = ExtResource("24_svpkv")
+expand_mode = 1
+
+[node name="sub_quest_detail_reward_icon" type="Label" parent="." unique_id=86637414]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 504.0
+offset_right = 327.0
+offset_bottom = 544.0
+text = "sub_quest_detail_reward_icon"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_reward_item_name" type="Label" parent="." unique_id=1266271961]
+layout_mode = 0
+offset_left = 147.0
+offset_top = 514.0
+offset_right = 431.0
+offset_bottom = 537.0
+theme_override_font_sizes/font_size = 20
+text = "sub_quest_detail_reward_item_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="sub_quest_detail_btn_close_off" type="TextureRect" parent="." unique_id=1204011655]
+layout_mode = 0
+offset_left = 243.0
+offset_top = 678.0
+offset_right = 395.0
+offset_bottom = 742.0
+texture = ExtResource("25_yta0o")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_close_on" type="TextureRect" parent="." unique_id=919793592]
+layout_mode = 0
+offset_left = 243.0
+offset_top = 678.0
+offset_right = 395.0
+offset_bottom = 742.0
+texture = ExtResource("26_e0avl")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_close_label" type="TextureRect" parent="." unique_id=838448223]
+layout_mode = 0
+offset_left = 253.0
+offset_top = 698.0
+offset_right = 385.0
+offset_bottom = 722.0
+texture = ExtResource("27_66yda")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_close_off_clear" type="TextureRect" parent="." unique_id=1210338815]
+layout_mode = 0
+offset_left = 147.0
+offset_top = 677.0
+offset_right = 299.0
+offset_bottom = 741.0
+texture = ExtResource("25_yta0o")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_close_on_clear" type="TextureRect" parent="." unique_id=2079438526]
+layout_mode = 0
+offset_left = 147.0
+offset_top = 677.0
+offset_right = 299.0
+offset_bottom = 741.0
+texture = ExtResource("26_e0avl")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_close_label_clear" type="TextureRect" parent="." unique_id=744012923]
+layout_mode = 0
+offset_left = 157.0
+offset_top = 697.0
+offset_right = 289.0
+offset_bottom = 721.0
+texture = ExtResource("27_66yda")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_warp_off" type="TextureRect" parent="." unique_id=714370304]
+layout_mode = 0
+offset_left = 339.0
+offset_top = 677.0
+offset_right = 491.0
+offset_bottom = 741.0
+texture = ExtResource("28_8u7f8")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_warp_on" type="TextureRect" parent="." unique_id=153006567]
+layout_mode = 0
+offset_left = 339.0
+offset_top = 677.0
+offset_right = 491.0
+offset_bottom = 741.0
+texture = ExtResource("29_g6oay")
+expand_mode = 1
+
+[node name="sub_quest_detail_btn_warp_label" type="TextureRect" parent="." unique_id=2015472966]
+layout_mode = 0
+offset_left = 349.0
+offset_top = 697.0
+offset_right = 481.0
+offset_bottom = 721.0
+texture = ExtResource("30_cc8mr")
+expand_mode = 1
+
+[node name="sub_quest_animation" type="TextureRect" parent="." unique_id=4785184]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 358.0
+offset_right = 621.0
+offset_bottom = 447.0
+expand_mode = 1

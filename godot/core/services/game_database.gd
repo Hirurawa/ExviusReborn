@@ -602,6 +602,25 @@ func get_mission_location(mission_id: String) -> Dictionary:
 	return rows[0] if not rows.is_empty() else {}
 
 
+# === Colosseum ===
+func get_clsm_grade() -> Array:
+	return query("select * from clsm_grade")
+
+
+func get_clsm_rank() -> Array:
+	return query("select * from clsm_rank")
+
+func get_clsm_round(grade_id: int, rank_id: int) -> Array:
+	return query("select r.* from clsm_round r"
+		+ " join clsm_progress p on p.roundId = r.roundId"
+		+ " where p.gradeId = ? and p.rankId = ?", [grade_id, rank_id])
+
+func get_clsm_monster_group(round_id: int, is_boss: bool = false) -> Array:
+	var boss_filter = "not" if not is_boss else ""
+	return query("select * from clsm_monster_group where roundId = ? and name "
+	 + boss_filter
+	 + " like \"%Boss%\"", [round_id])
+
 # === Combat / encounters ===
 # Per-mission encounter resolution. Each query reads only the handful of rows a
 # single mission/formation needs (all four tables are indexed on these keys), so
@@ -765,7 +784,7 @@ func get_battle_group(battle_group_id: String) -> Array:
 func get_monster_parts(monster_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT p.hp, p.mp, p.atk, p.def, p.mag, p.spr, p.level, p.exp, p.gil,"
-		+ " m.dictionaryId AS dictionaryId, p.monsterName AS name,"
+		+ " m.dictionaryId AS dictionaryId, m.name,"
 		+ " p.elemResistValue, p.ailmentResistValue, p.dropInfo"
 		+ " FROM monster_parts p LEFT JOIN monster m ON m.monsterId = p.monsterId"
 		+ " WHERE p.monsterId = ? ORDER BY p.partsNum LIMIT 1",

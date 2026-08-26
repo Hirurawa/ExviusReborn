@@ -38,7 +38,8 @@ var _scenes_map: Dictionary = {
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn",
 	"town_map_ui": "res://features/town/Map.tscn",
 	"settings_ui": "res://features/outgame/profile/SettingsUI.tscn",
-	"vortex_dungeon_ui": "res://features/outgame/vortex/vortex_dungeon.tscn"
+	"vortex_dungeon_ui": "res://features/outgame/vortex/vortex_dungeon.tscn",
+	"colosseum_ui": "res://features/outgame/colosseum/Colosseum.tscn"
 }
 
 # === BGM routing ===
@@ -91,6 +92,7 @@ func _load_persistent_overlays() -> void:
 		home_buttons.world_map_pressed.connect(_on_world_map_pressed)
 		home_buttons.espers_pressed.connect(_on_espers_pressed)
 		home_buttons.craft_pressed.connect(_on_craft_pressed)
+		home_buttons.colosseum_pressed.connect(_on_colosseum_pressed)
 		canvas_layer.add_child(home_buttons)
 
 func _on_world_map_pressed() -> void:
@@ -102,6 +104,9 @@ func _on_espers_pressed() -> void:
 func _on_craft_pressed() -> void:
 	push("craft_ui")
 
+func _on_colosseum_pressed() -> void:
+	push("colosseum_ui")
+	
 func _update_overlays() -> void:
 	if _menu_stack.is_empty():
 		return

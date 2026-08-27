@@ -437,7 +437,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	var raw_skills = []
 	
 	# Harvest innate skills
-	var temp = get_awakened_skills(int(unit_instance.get("unitSeries")), rarity, level, unit_instance.get("awakened_abilities"))
+	var temp = get_awakened_skills(int(unit_instance.get("unitSeries")), rarity, level, unit_instance.get("awakened_abilities", []))
 	
 	for m in temp["magic"]:
 		var mag = m

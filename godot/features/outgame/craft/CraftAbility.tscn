@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dn5ikad3sia4y" path="res://assets/ui/create/cre_btn4_2.tres" id="1_wmagf"]
 [ext_resource type="Texture2D" uid="uid://b4dtpxneo667j" path="res://assets/ui/create/cre_label_magic_black_1.tres" id="2_bpxc3"]
 [ext_resource type="Texture2D" uid="uid://dmunqh6phrvfg" path="res://assets/ui/create/cre_btn4_1.tres" id="2_jjmrh"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_wxeyj"]
 [ext_resource type="Texture2D" uid="uid://bwynx8ycnvl5y" path="res://assets/ui/create/cre_label_magic_white_1.tres" id="3_hrxm4"]
 [ext_resource type="Texture2D" uid="uid://b2lk0cyregdvv" path="res://assets/ui/create/cre_label_magic_green_1.tres" id="4_esong"]
 [ext_resource type="Texture2D" uid="uid://dafwo7wt1ktoh" path="res://assets/ui/create/cre_label_other_1.tres" id="5_bbr5a"]
@@ -20,6 +21,10 @@ offset_bottom = 0.3199463
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=232973378]
+position = Vector2(320, 448)
+texture = ExtResource("2_wxeyj")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=683552831]
 layout_mode = 0

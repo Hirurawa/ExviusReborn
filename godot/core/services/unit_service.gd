@@ -66,7 +66,17 @@ func snapshot_payload() -> Dictionary:
 	return {"owned_units": lean_units}
 
 func load_from_local() -> void:
-	owned_units_ids = _load_units_from_local()
+	var envelope: Dictionary = Persistence.load_snapshot(SNAPSHOT_FILE)
+	if envelope.is_empty():
+		owned_units_ids =  []
+
+	var data: Variant = envelope.get("data", {})
+	if not (data is Dictionary):
+		owned_units_ids =  []
+
+	var payload: Array = data.get("owned_units", [])
+	
+	owned_units_ids = _hydrate_owned_units(payload)
 
 func reset_to_starter() -> bool:
 	var rain_unit: Dictionary = build_starter_unit(STARTER_RAIN_UNIT_ID, STARTER_RAIN_INSTANCE_ID)
@@ -848,19 +858,6 @@ func _extract_unit_lean_record(hydrated_unit: Dictionary) -> Dictionary:
 		"current_accumulated_exp": int(hydrated_unit.get("current_accumulated_exp", 0)),
 		"awakened_abilities": hydrated_unit.get("awakened_abilities", [])
 	}
-
-func _load_units_from_local() -> Array:
-	var envelope: Dictionary = Persistence.load_snapshot(SNAPSHOT_FILE)
-	if envelope.is_empty():
-		return []
-
-	var data: Variant = envelope.get("data", {})
-	if not (data is Dictionary):
-		return []
-
-	var payload: Array = data.get("owned_units", [])
-	
-	return _hydrate_owned_units(payload)
 
 func _get_unit_type(unit_data: Dictionary) -> String:
 	if unit_data.is_empty():

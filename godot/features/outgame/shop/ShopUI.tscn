@@ -89,21 +89,22 @@ texture_focused = ExtResource("3_1fev2")
 
 [node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/Equipments" unique_id=660663503]
 layout_mode = 0
-offset_left = 33.0
-offset_top = 21.0
-offset_right = 126.0
-offset_bottom = 44.0
-text = "Equipments"
+offset_left = 28.0
+offset_top = 12.0
+offset_right = 121.0
+offset_bottom = 61.0
+text = "Ability Awakening"
 horizontal_alignment = 1
+autowrap_mode = 2
 
-[node name="SearchBar" type="Control" parent="VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 0)
+[node name="SearchBar" type="Control" parent="VBoxContainer" unique_id=524237702]
 clip_contents = true
+layout_mode = 2
 mouse_filter = 1
 
-[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchBar"]
+[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchBar" unique_id=52629828]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_left = 16.0
 offset_top = 8.0
@@ -112,8 +113,9 @@ offset_bottom = 48.0
 placeholder_text = "Filter by name"
 caret_blink = true
 
-[node name="ClearButton" type="Button" parent="VBoxContainer/SearchBar"]
+[node name="ClearButton" type="Button" parent="VBoxContainer/SearchBar" unique_id=1419529159]
 layout_mode = 1
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -112.0

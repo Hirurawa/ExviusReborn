@@ -21,23 +21,6 @@ offset_bottom = 108.0
 texture = ExtResource("2_vnha4")
 expand_mode = 1
 
-[node name="unit_magic_category_1" type="TextureRect" parent="." unique_id=523265709]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 10.0
-offset_right = 67.0
-offset_bottom = 28.0
-expand_mode = 1
-
-[node name="unit_magic_icon_1" type="TextureRect" parent="." unique_id=740905204]
-layout_mode = 0
-offset_left = 17.0
-offset_top = 20.0
-offset_right = 89.0
-offset_bottom = 92.0
-expand_mode = 1
-stretch_mode = 5
-
 [node name="unit_magic_unavailable_reason_1" type="TextureRect" parent="." unique_id=1656987001]
 visible = false
 layout_mode = 0
@@ -47,6 +30,20 @@ offset_right = 90.0
 offset_bottom = 92.0
 mouse_filter = 2
 texture = ExtResource("4_0n4r2")
+expand_mode = 1
+
+[node name="unit_magic_icon_1" type="TextureRect" parent="." unique_id=740905204]
+layout_mode = 0
+offset_left = -3.0
+offset_right = 69.0
+offset_bottom = 72.0
+
+[node name="unit_magic_category_1" type="TextureRect" parent="." unique_id=523265709]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 10.0
+offset_right = 67.0
+offset_bottom = 28.0
 expand_mode = 1
 
 [node name="unit_magic_name_text_1" type="Label" parent="." unique_id=1087739549]

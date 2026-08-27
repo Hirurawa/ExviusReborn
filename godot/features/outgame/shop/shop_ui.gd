@@ -7,7 +7,7 @@ enum Tab { ITEMS, AWAKENING, PRISMS, EQUIPMENTS }
 @export var tab_items_ids: Array[String] = ["101000100", "101001100"]
 @export var tab_awakening_ids: Array[String] = ["106301900", "106302000", "106302100", "106302200", "106302300", "106302600", "290010000", "290010100", "290010200", "290020000", "290020100", "290020200", "290020300", "290020400", "290020500", "290020600", "290020700", "290020800", "290020900", "290030000", "290030100", "290030200", "290030300", "290030400", "290030500", "290030600", "290030700", "290030800", "290030900", "290031000", "290040000", "290040100", "290040200", "290040300", "290040400", "290050100", "290050200", "290050300", "290050400", "290050500", "290060000", "290060100", "290060200", "290060300", "290060400", "291000100", "291000200", "291000300", "291000400", "291000500", "291100100", "291100200", "291100300", "292000100", "292000200", "292000300", "292000400", "292000500", "292000600", "293000100", "293000200", "1209000845", "1209002041"]
 @export var tab_prism_ids: Array[String] = []
-@export var tab_equipment_ids: Array[String] = ["301000200", "403043300", "405000200"]
+@export var tab_cryst_ids: Array[String] = []
 
 @onready var shop_feedback_label: Label = $VBoxContainer/ShopFeedbackLabel
 @onready var list_container: VBoxContainer = $VBoxContainer/ScrollContainer/VBoxContainer/ListContainer
@@ -39,6 +39,7 @@ var _search_reveal_tween: Tween = null
 
 func _ready() -> void:
 	tab_prism_ids = GameDatabase.get_all_prism()
+	tab_cryst_ids = GameDatabase.get_all_cryst()
 	InventoryService.purchase_successful.connect(_on_purchase_successful)
 	InventoryService.purchase_failed.connect(_on_purchase_failed)
 	items_tab_button.pressed.connect(_select_tab.bind(Tab.ITEMS))
@@ -76,15 +77,15 @@ func _active_tab_button() -> TextureButton:
 func _populate_for_current_tab() -> void:
 	match _current_tab:
 		Tab.ITEMS:
-			_populate_shop(tab_items_ids, list_container, "items")
+			_populate_shop(tab_items_ids, list_container)
 		Tab.AWAKENING:
-			_populate_shop(tab_awakening_ids, list_container, "items")
+			_populate_shop(tab_awakening_ids, list_container)
 		Tab.PRISMS:
-			_populate_shop(tab_prism_ids, list_container, "items")
+			_populate_shop(tab_prism_ids, list_container)
 		Tab.EQUIPMENTS:
-			_populate_shop(tab_equipment_ids, list_container, "equipments")
+			_populate_shop(tab_cryst_ids, list_container)
 
-func _populate_shop(ids: Array, container: Control, type: String) -> void:
+func _populate_shop(ids: Array, container: Control) -> void:
 	for child in container.get_children():
 		child.queue_free()
 
@@ -101,7 +102,7 @@ func _populate_shop(ids: Array, container: Control, type: String) -> void:
 
 		var row = item_row_template.instantiate()
 		container.add_child(row)
-		row.setup(id, data, type)
+		row.setup(id, data)
 		row.buy_requested.connect(_on_buy_requested)
 		matched_count += 1
 

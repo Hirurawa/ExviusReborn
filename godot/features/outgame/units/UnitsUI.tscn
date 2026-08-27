@@ -2,14 +2,21 @@
 
 [ext_resource type="Script" uid="uid://dugxed36vqf78" path="res://features/outgame/units/units_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://005aq5cxxido" path="res://assets/ui/unit/unit_charastand_small.tres" id="2_4fc4h"]
-[ext_resource type="Texture2D" uid="uid://utgca2gftny6" path="res://assets/ui/unit/unit_awakening_icon1.tres" id="3_e30sy"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_hr44s"]
 [ext_resource type="Texture2D" uid="uid://bv3j2jibruv3g" path="res://assets/ui/unit/unit_partybg_top.tres" id="4_e7oih"]
 [ext_resource type="Texture2D" uid="uid://c0uxhq5ki4wpy" path="res://assets/ui/unit/unit_summon_line.tres" id="5_ymc44"]
 [ext_resource type="Texture2D" uid="uid://c1anumws64r7v" path="res://assets/ui/beast/summon_frame.tres" id="6_2pfev"]
 [ext_resource type="Texture2D" uid="uid://bfmn57g3vdqo" path="res://assets/ui/unit/unit_partybg_bottom.tres" id="7_blgtl"]
 [ext_resource type="Texture2D" uid="uid://cjoi8tguwp0nq" path="res://assets/ui/unit/unit_partyname_edit1.tres" id="8_ata6j"]
+[ext_resource type="Texture2D" uid="uid://bakriuqc0bw6c" path="res://assets/ui/unit/largebutton_label_list.tres" id="8_e8wcf"]
+[ext_resource type="Texture2D" uid="uid://cb6bcra3ju6tu" path="res://assets/ui/common/button_large_icon1.tres" id="8_m81u8"]
 [ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="9_2pfev"]
+[ext_resource type="Texture2D" uid="uid://dp5nutg27qlbq" path="res://assets/ui/common/button_large_icon2.tres" id="9_hr44s"]
+[ext_resource type="Texture2D" uid="uid://3y3jf5mrrgt8" path="res://assets/ui/unit/largebutton_label_ability_powerup.tres" id="9_p7dju"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="10_blgtl"]
+[ext_resource type="Texture2D" uid="uid://d27305rl2ujhg" path="res://assets/ui/common/button_large_icon_off.tres" id="10_iapsm"]
+[ext_resource type="Texture2D" uid="uid://h0imoh72ghoq" path="res://assets/ui/unit/largebutton_label_powerup.tres" id="10_j0ir5"]
+[ext_resource type="Texture2D" uid="uid://bjdpvs03lpimd" path="res://assets/ui/unit/largebutton_label_evo.tres" id="11_m81u8"]
 
 [node name="UnitsUI" type="Control" unique_id=1141370021]
 layout_mode = 3
@@ -21,6 +28,10 @@ offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=109487915]
+position = Vector2(320, 448)
+texture = ExtResource("2_hr44s")
 
 [node name="bg_top" type="TextureRect" parent="." unique_id=961151574]
 layout_mode = 0
@@ -310,36 +321,66 @@ text = ">"
 
 [node name="BottomButtonsGrid" type="GridContainer" parent="." unique_id=172463873]
 layout_mode = 0
-offset_top = 530.0
+offset_top = 510.0
 offset_right = 640.0
-offset_bottom = 694.0
+offset_bottom = 722.0
 columns = 2
 
-[node name="ViewUnitsButton" type="Button" parent="BottomButtonsGrid" unique_id=244551799]
+[node name="ViewUnitsButton" type="TextureButton" parent="BottomButtonsGrid" unique_id=1272984712]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "View Units"
+texture_normal = ExtResource("8_m81u8")
+texture_pressed = ExtResource("9_hr44s")
+texture_disabled = ExtResource("10_iapsm")
 
-[node name="AwakenAbilitiesButton" type="Button" parent="BottomButtonsGrid" unique_id=741166952]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Awaken Abilities (Placeholder)"
+[node name="LargebuttonLabelList" type="TextureRect" parent="BottomButtonsGrid/ViewUnitsButton" unique_id=1253789870]
+layout_mode = 0
+offset_right = 318.0
+offset_bottom = 104.0
+texture = ExtResource("8_e8wcf")
 
-[node name="EnhanceUnitsButton" type="Button" parent="BottomButtonsGrid" unique_id=521087587]
+[node name="AwakenAbilitiesButton" type="TextureButton" parent="BottomButtonsGrid" unique_id=1610464269]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Enhance Units"
+texture_normal = ExtResource("8_m81u8")
+texture_pressed = ExtResource("9_hr44s")
+texture_disabled = ExtResource("10_iapsm")
 
-[node name="AwakenUnitsButton" type="Button" parent="BottomButtonsGrid" unique_id=2142814035]
+[node name="LargebuttonLabelAbilityPowerup" type="TextureRect" parent="BottomButtonsGrid/AwakenAbilitiesButton" unique_id=655117510]
+layout_mode = 0
+offset_right = 318.0
+offset_bottom = 104.0
+texture = ExtResource("9_p7dju")
+
+[node name="EnhanceUnitsButton" type="TextureButton" parent="BottomButtonsGrid" unique_id=961511179]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Awaken Units"
-icon = ExtResource("3_e30sy")
-expand_icon = true
+texture_normal = ExtResource("8_m81u8")
+texture_pressed = ExtResource("9_hr44s")
+texture_disabled = ExtResource("10_iapsm")
+
+[node name="LargebuttonLabelPowerup" type="TextureRect" parent="BottomButtonsGrid/EnhanceUnitsButton" unique_id=1876672594]
+layout_mode = 0
+offset_right = 318.0
+offset_bottom = 104.0
+texture = ExtResource("10_j0ir5")
+
+[node name="AwakenUnitsButton" type="TextureButton" parent="BottomButtonsGrid" unique_id=1783409559]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+texture_normal = ExtResource("8_m81u8")
+texture_pressed = ExtResource("9_hr44s")
+texture_disabled = ExtResource("10_iapsm")
+
+[node name="LargebuttonLabelEvo" type="TextureRect" parent="BottomButtonsGrid/AwakenUnitsButton" unique_id=1418478846]
+layout_mode = 0
+offset_right = 318.0
+offset_bottom = 104.0
+texture = ExtResource("11_m81u8")
 
 [node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=1599766870]
 visible = false

@@ -34,18 +34,23 @@ static func grant(reward: Array) -> Dictionary:
 			if amount > 0:
 				PlayerProfile.add_lapis(amount)
 				info["granted"] = true
+				print("Granted %s Lapis" % amount)
 		Types.Category_types.UNIT:
 			UnitService._summon_fixed_units(target_id, 1, "Reward")
 			info["granted"] = true
+			print("Granted unit: " + target_id)
 		Types.Category_types.ITEM:
 			InventoryService.add_stackable(target_id, amount)
 			info["granted"] = true
+			print("Granted item: " + target_id)
 		Types.Category_types.EQUIP:
 			InventoryService.add_equipment_instances(target_id, amount)
 			info["granted"] = true
+			print("Granted equipment: " + target_id)
 		Types.Category_types.MATERIA:
 			InventoryService.grant_instanced_items("MATERIA", target_id, amount)
 			info["granted"] = true
+			print("Granted materia: " + target_id)
 		_:
 			push_warning("RewardGranter: unsupported reward type %s (%s x%d)" % [
 				info.get("type", ""), info.get("name", target_id), amount

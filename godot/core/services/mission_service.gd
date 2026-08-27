@@ -114,7 +114,6 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		objectives[index] = previously_completed or completed_now
 		if not previously_completed and completed_now:
 			_grant_reward(challenges[index].get("reward"))
-			pass
 	progress_entry["objectives"] = objectives
 	cleared_missions[mission_key] = progress_entry
 	latest_cleared_mission_id = _get_latest_cleared_mission_id_from_progress(cleared_missions)

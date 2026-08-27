@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dtaou5udxf6p2" path="res://assets/ui/create/cre_btn5_2.tres" id="1_rddch"]
 [ext_resource type="Script" uid="uid://da1ouau6aqwcb" path="res://features/outgame/craft/craft_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bva2dfvd775at" path="res://assets/ui/create/cre_btn5_1.tres" id="2_005mf"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_8cb82"]
 [ext_resource type="Texture2D" uid="uid://b6jx2ybi2213w" path="res://assets/ui/create/cre_prepare_title.tres" id="2_chraj"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_wdfox"]
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="4_005mf"]
@@ -22,6 +23,10 @@ offset_bottom = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=328001083]
+position = Vector2(320, 448)
+texture = ExtResource("2_8cb82")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=631220167]
 layout_mode = 0

@@ -8,7 +8,7 @@ const MagicScene: PackedScene = preload("res://features/shared/Skill.tscn")
 @onready var before_skill_texture: Control = $Control/sublimation_frame_1/Control
 @onready var before_desc: Label = $Control/sublimation_frame_detail_1
 @onready var after_skill_texture: Control = $Control/sublimation_frame_2/Control
-@onready var after_desc: Label = $Control/sublimation_frame_detail_2
+@onready var after_desc: RichTextLabel = $Control/sublimation_frame_detail_2
 @onready var result_text_label: Label = $Button/unit_classup_check_result_text
 
 @onready var material_nodes: Array[Control] = [

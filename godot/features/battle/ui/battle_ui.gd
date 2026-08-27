@@ -631,8 +631,7 @@ func _on_battle_state_ready() -> void:
 		wrapper.mouse_filter = Control.MOUSE_FILTER_PASS
 		# Position the wrapper from the monster's authored dispPos (BATTLE_GROUP),
 		# falling back to an even vertical stagger when no position is available.
-		wrapper.position = _compute_enemy_wrapper_position(
-			i, battle_manager.enemy_units.size(), enemy_data.get("disp_pos", Vector2.ZERO))
+		wrapper.position = _compute_enemy_wrapper_position(enemy_data.get("disp_pos", Vector2.ZERO))
 		enemies_container.add_child(wrapper)
 
 		var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
@@ -745,7 +744,7 @@ func _on_battle_state_ready() -> void:
 ## When `disp_pos` is set (data-driven spawn), it is mapped proportionally from
 ## DISP_REFERENCE space into the region and centered on the wrapper. Otherwise an
 ## even vertical distribution with a horizontal stagger reproduces the legacy look.
-func _compute_enemy_wrapper_position(i: int, count: int, disp_pos: Vector2) -> Vector2:
+func _compute_enemy_wrapper_position(disp_pos: Vector2) -> Vector2:
 	var region_size: Vector2 = enemies_container.size
 	if region_size.x <= 1.0 or region_size.y <= 1.0:
 		region_size = enemy_region.size
@@ -759,12 +758,7 @@ func _compute_enemy_wrapper_position(i: int, count: int, disp_pos: Vector2) -> V
 		var ny: float = clampf(disp_pos.y / DISP_REFERENCE.y, 0.0, 1.0)
 		return Vector2(nx * region_size.x, ny * region_size.y) - half
 
-	# Legacy fallback: even vertical slots, centered, odd indices nudged right.
-	var slot_h: float = region_size.y / float(max(count, 1))
-	var pos: Vector2 = Vector2(region_size.x * 0.5, slot_h * (float(i) + 0.5)) - half
-	if i % 2 != 0:
-		pos.x += 30.0
-	return pos
+	return Vector2.ZERO
 
 func _create_slot_placeholder() -> TextureRect:
 	var placeholder := TextureRect.new()

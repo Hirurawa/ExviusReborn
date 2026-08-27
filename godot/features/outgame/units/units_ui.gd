@@ -15,10 +15,10 @@ const SLOT_PEDESTAL_BOTTOM_MARGIN: float = 2.0
 @onready var pagination_indicators: HBoxContainer = $PartyHeaderHBox/PaginationHBox
 @onready var slots_container: HBoxContainer = $HBoxContainer
 
-@onready var view_units_btn: Button = $BottomButtonsGrid/ViewUnitsButton
-@onready var awaken_abilities_btn: Button = $BottomButtonsGrid/AwakenAbilitiesButton
-@onready var enhance_units_btn: Button = $BottomButtonsGrid/EnhanceUnitsButton
-@onready var awaken_units_btn: Button = $BottomButtonsGrid/AwakenUnitsButton
+@onready var view_units_btn: TextureButton = $BottomButtonsGrid/ViewUnitsButton
+@onready var awaken_abilities_btn: TextureButton = $BottomButtonsGrid/AwakenAbilitiesButton
+@onready var enhance_units_btn: TextureButton = $BottomButtonsGrid/EnhanceUnitsButton
+@onready var awaken_units_btn: TextureButton = $BottomButtonsGrid/AwakenUnitsButton
 
 var current_party_index: int = 0
 var max_parties: int = 5

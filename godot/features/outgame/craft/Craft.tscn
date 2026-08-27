@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://66fiy0g6n7x2" path="res://features/outgame/craft/Craft.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cxg5jifom8axo" path="res://assets/ui/create/largebutton_label_createequip.tres" id="2_taytf"]
 [ext_resource type="Texture2D" uid="uid://dp5nutg27qlbq" path="res://assets/ui/common/button_large_icon2.tres" id="2_tnnae"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_v48ai"]
 [ext_resource type="Texture2D" uid="uid://cp7bcf30h8qaq" path="res://assets/ui/create/largebutton_label_strengthen.tres" id="3_tnnae"]
 [ext_resource type="Texture2D" uid="uid://bqv8w5wpw4gep" path="res://assets/ui/create/largebutton_label_createitem.tres" id="4_63qtt"]
 [ext_resource type="Texture2D" uid="uid://c7p2td10syxjl" path="res://assets/ui/create/largebutton_label_createability.tres" id="5_lb3is"]
@@ -20,6 +21,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=218186365]
+position = Vector2(320, 448)
+texture = ExtResource("2_v48ai")
 
 [node name="craft_top_btn1" type="TextureButton" parent="." unique_id=1125754155]
 layout_mode = 0
@@ -91,17 +96,17 @@ position = Vector2(212, 156)
 texture = ExtResource("7_1nqbr")
 
 [node name="Title" type="Label" parent="CreCraftTitle" unique_id=1910604180]
-offset_left = 12.0
-offset_top = -3.0
-offset_right = 123.0
-offset_bottom = 20.0
+offset_left = -103.0
+offset_top = 4.0
+offset_right = 8.0
+offset_bottom = 27.0
 text = "Craft"
 
 [node name="BackButton" type="TextureButton" parent="CreCraftTitle" unique_id=688394631]
-offset_left = -166.0
-offset_top = -46.0
-offset_right = -70.0
-offset_bottom = 14.0
+offset_left = -204.0
+offset_top = -26.0
+offset_right = -108.0
+offset_bottom = 34.0
 texture_normal = ExtResource("10_lb3is")
 texture_pressed = ExtResource("11_v48ai")
 

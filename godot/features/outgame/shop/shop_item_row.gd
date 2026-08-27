@@ -25,9 +25,8 @@ func _ready() -> void:
 	buy_button.pressed.connect(_on_buy_pressed)
 	buy_ten_button.pressed.connect(_on_buy_ten_pressed)
 
-func setup(id: String, data: Dictionary, type: String) -> void:
+func setup(id: String, data: Dictionary) -> void:
 	_item_id = id
-	_type = type
 	
 	name_label.text = data.get("name", "Unknown")
 	price_label.text = str(int(data.get("priceBuy", 0))) + " Gil"

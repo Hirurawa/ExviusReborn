@@ -200,6 +200,8 @@ func load_initial_data(email: String) -> void:
 	UnitService.load_from_local()
 	UnitService.emit_updated()
 
+	ColosseumService.load_progress()
+
 	EsperService.load_from_local()
 	EsperService.emit_updated()
 

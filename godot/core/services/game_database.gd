@@ -603,23 +603,49 @@ func get_mission_location(mission_id: String) -> Dictionary:
 
 
 # === Colosseum ===
+func get_clsm_progress(progress_id: int) -> Dictionary:
+	var rows: Array = query("select p.roundId, p.nextRoundId, p.rankId, g.name as grade, r.name as rank, ro.name as round from clsm_progress p"
+	+ " join clsm_grade g on p.gradeId = g.gradeId"
+	+ " join clsm_rank r on p.rankId = r.rankId"
+	+ " join clsm_round ro on p.roundId = ro.roundId"
+	+ " where progressId = ?", [progress_id])
+	return rows[0] if not rows.is_empty() else {}
+
 func get_clsm_grade() -> Array:
 	return query("select * from clsm_grade")
-
 
 func get_clsm_rank() -> Array:
 	return query("select * from clsm_rank")
 
-func get_clsm_round(grade_id: int, rank_id: int) -> Array:
-	return query("select r.* from clsm_round r"
-		+ " join clsm_progress p on p.roundId = r.roundId"
-		+ " where p.gradeId = ? and p.rankId = ?", [grade_id, rank_id])
+func get_clsm_round(round_id: int) -> Dictionary:
+	var rows =  query("select * from clsm_round"
+		+ " where roundId = ?", [round_id])
+	return rows[0] if not rows.is_empty() else {}
 
 func get_clsm_monster_group(round_id: int, is_boss: bool = false) -> Array:
 	var boss_filter = "not" if not is_boss else ""
 	return query("select * from clsm_monster_group where roundId = ? and name "
 	 + boss_filter
 	 + " like \"%Boss%\"", [round_id])
+
+func get_clsm_available_grade(progress_id: int) -> Array:
+	return query("select g.gradeId, g.name from clsm_progress p"
+		+ " join clsm_grade g on p.gradeId >= g.gradeId"
+		+ " where progressId =  ?", [progress_id])
+
+func get_clsm_available_rank(progress_id: int) -> Array:
+	return query("select r.rankId, p.roundId, r.name from clsm_progress p"
+		+ " join clsm_rank r on p.rankId >= r.rankId"
+		+ " where progressId = ?", [progress_id])
+
+func get_clsm_available_round(progress_id: int) -> Array:
+	return query("SELECT r.*, substr(r.roundId, 5) as roundNumber"
+		+ " FROM clsm_progress p"
+		+ " JOIN clsm_progress p_all ON p.rankId = p_all.rankId and p.gradeId = p_all.gradeId"
+		+ " JOIN clsm_round r ON p_all.roundId = r.roundId"
+		+ " WHERE p.progressId = ? "
+		+ " AND r.roundId <= p.roundId", [progress_id])
+
 
 # === Combat / encounters ===
 # Per-mission encounter resolution. Each query reads only the handful of rows a
@@ -1500,6 +1526,20 @@ func get_all_prism() -> Array[String]:
 	var values: Array[String] = []
 	values.assign(rows.map(func(dict): return str(dict["itemId"])))
 	return values
+
+func get_all_cryst() -> Array:
+	var rows = query("select * from item"
+		+ " where itemId <= 270005000"
+		+ " and itemId >= 270000100"
+		+ " and (name like \"% Alcryst\""
+		+ " or name like \"% Milcryst\""
+		+ " or name like \"% Heavicryst\""
+		+ " or name like \"% Giancryst\""
+		+ " or name like \"% Purecryst\")")
+	var values: Array[String] = []
+	values.assign(rows.map(func(dict): return str(dict["itemId"])))
+	return values
+
 
 # === Recipe ===
 

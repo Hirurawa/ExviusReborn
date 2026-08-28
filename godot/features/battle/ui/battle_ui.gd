@@ -3,7 +3,6 @@ extends Control
 const UnitSlotTexture: Texture2D = preload("res://assets/ui/battle/battle_unit_wait.tres")
 const TargetArrowTexture: Texture2D = preload("res://assets/ui/common/mini_arrow_b.tres")
 const MagicScene = preload("res://features/shared/Skill.tscn")
-const LIMIT_CRYSTAL_TEXTURE: Texture2D = preload("res://assets/ui/battle/battle_limit_crystal.png")
 const LIMIT_CRYSTAL_ANIM_DURATION: float = 0.7
 const GRID_TO_PARTY_MAP: Array[int] = [0, 3, 1, 4, 2, -1]
 const SKILL_DISABLE_REASON_NONE: String = ""
@@ -17,6 +16,8 @@ const SKILL_ROLE_ABILITY: String = "ability"
 
 var current_mission_id: String = ""
 var UnitPanelScene: PackedScene = preload("res://features/battle/ui/UnitPanel.tscn")
+
+@onready var limit_crystal: AnimatedSprite2D = $BattleLimitCrystal
 
 @onready var battle_manager: Node = %BattleManager
 @onready var finish_button: Button = %FinishButton
@@ -146,6 +147,8 @@ func _ready() -> void:
 	_setup_cancel_target_button()
 	_damage_numbers = DamageNumberSpawner.new(self)
 	_init_combat_inventory()
+	
+	#init_scene({}) # Uncomment for individual testing.
 
 func _enter_ally_selection_state(action_type: int, action_name: String, action_id: String, action_payload: Dictionary = {}) -> void:
 	_is_ally_targeting_mode = true
@@ -590,8 +593,8 @@ func _skill_disabled_reason(unit_data: Dictionary, source_type: String, skill_da
 	return SKILL_DISABLE_REASON_NONE
 
 
-func _apply_battle_background() -> void:
-	var bg_file_name = GameDatabase.get_mission_bg(current_mission_id)
+func _apply_battle_background(is_colosseum: bool = false) -> void:
+	var bg_file_name = "Colosseum.jpg" if is_colosseum else GameDatabase.get_mission_bg(current_mission_id)
 
 	var bg_path = "res://assets/battle_bg/%s" % bg_file_name
 	if ResourceLoader.exists(bg_path):
@@ -604,11 +607,17 @@ func init_scene(params: Dictionary) -> void:
 	# start synchronous data work (dataset eviction, mission lookup, sprite
 	# allocation). This keeps the UI responsive on battle entry.
 	await get_tree().process_frame
-	current_mission_id = params.get("mission_id", "")
-
-	_apply_battle_background()
-
-	battle_manager.initialize_battle(current_mission_id)
+	if params.has("mission_id"):
+		current_mission_id = params.get("mission_id", "")
+		_apply_battle_background()
+		battle_manager.initialize_battle(current_mission_id)
+	if params.has("battle_group"):
+		var bg = params.get("battle_group")
+		_apply_battle_background(true)
+		battle_manager.initialize_bg(bg)
+	if params.is_empty():
+		battle_manager.initialize_test_battle(111050313)
+		_apply_battle_background(true)
 
 func _on_battle_state_ready() -> void:
 	if battle_manager.current_wave == 1:
@@ -728,6 +737,7 @@ func _on_battle_state_ready() -> void:
 			var combat_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
 			combat_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			combat_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			combat_sprite.scale *= int(unit_data.get("spriteOffset").split(':')[2]) / 100.0
 			combat_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 			combat_sprite.setup(party_idx, template_id, false, battle_manager)
 			combat_sprite.long_pressed.connect(_on_unit_info_tapped)
@@ -1170,24 +1180,20 @@ func _on_limit_crystal_dropped(enemy_index: int, target_unit_index: int) -> void
 	if target_sprite == null:
 		return
 
-	var crystal_sprite := TextureRect.new()
-	crystal_sprite.texture = LIMIT_CRYSTAL_TEXTURE
-	crystal_sprite.custom_minimum_size = Vector2(28, 28)
-	crystal_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	crystal_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	crystal_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var crystal_sprite := limit_crystal.duplicate()
+	crystal_sprite.visible = true
+	crystal_sprite.play()
 
 	add_child(crystal_sprite)
 
 	var start_pos: Vector2 = enemy_sprite.global_position + Vector2(36, -14)
-	var end_pos: Vector2 = target_sprite.global_position + Vector2(22, 14)
+	var end_pos: Vector2 = target_sprite.global_position + Vector2(40, 40)
 	crystal_sprite.global_position = start_pos
 
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tween.parallel().tween_property(crystal_sprite, "global_position", end_pos, LIMIT_CRYSTAL_ANIM_DURATION)
-	tween.parallel().tween_property(crystal_sprite, "scale", Vector2(0.85, 0.85), LIMIT_CRYSTAL_ANIM_DURATION)
-	tween.tween_property(crystal_sprite, "modulate:a", 0.0, 0.15)
+
 	tween.tween_callback(crystal_sprite.queue_free)
 
 func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: int) -> void:
@@ -1229,8 +1235,8 @@ func _on_wave_transition_started(curr_wave: int, next_wave: int, total_waves: in
 	tween.tween_callback(transition_ui.hide)
 
 func _on_finish_pressed() -> void:
-	if current_mission_id == "":
-		return
+	#if current_mission_id == "":
+	#	return
 
 	finish_button.disabled = true
 	battle_manager._trigger_mission_complete()

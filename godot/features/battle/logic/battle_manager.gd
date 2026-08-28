@@ -265,7 +265,6 @@ func _try_drop_limit_crystal(enemy_index: int, attacker_team: String, hit: Dicti
 ## Entry point for a new battle. Loads mission data, builds the party / first wave,
 ## resets per-battle state, then emits battle_state_ready and starts the player turn.
 func initialize_battle(mission_id: String) -> void:
-	
 	current_mission_id = mission_id
 	var mission_data = MissionService.get_mission_data(str(current_mission_id))
 
@@ -290,6 +289,99 @@ func initialize_battle(mission_id: String) -> void:
 
 	initialize_challenges(mission_challenges)
 
+	party_data = []
+
+	var active_party: Dictionary = PartyService.get_active_party()
+	var party_instance_ids: Array = []
+	if not active_party.is_empty():
+		party_instance_ids = active_party.get("units", [])
+	else:
+		var fallback_party: Variant = PartyService.parties[0]
+		if typeof(fallback_party) == TYPE_DICTIONARY:
+			party_instance_ids = fallback_party.get("units", [])
+		elif typeof(fallback_party) == TYPE_ARRAY:
+			party_instance_ids = fallback_party
+
+	for instance_id in party_instance_ids:
+		if instance_id == "":
+			party_data.append({})
+			continue
+
+		var owned_unit = null
+		for u in UnitService.owned_units_ids:
+			if typeof(u) == TYPE_DICTIONARY and u.get("instance_id") == instance_id:
+				owned_unit = u
+				break
+
+		if owned_unit != null:
+			var battle_unit = owned_unit.duplicate()
+
+			# Use StatCalculator to get accurate max HP and MP. Compute once and
+			# store on battle_unit["final_stats"] so all consumers (battle UI, skill
+			# menu, action processor) read from a single source of truth.
+			battle_unit["final_stats"] = StatCalculator.calculate_final_stats(battle_unit)
+			var final_stats: Dictionary = battle_unit["final_stats"].get("stats", {})
+
+			var max_hp = final_stats.get("HP")
+			var max_mp = final_stats.get("MP")
+
+			battle_unit["max_hp"] = max_hp
+			battle_unit["current_hp"] = max_hp
+			battle_unit["max_mp"] = max_mp
+			battle_unit["current_mp"] = max_mp
+			var limitburst_id: String = str(battle_unit.get("limitBurstId", ""))
+			battle_unit["limitburst_id"] = limitburst_id
+			var max_limit_gauge: int = SkillResolver.get_limitburst_max_gauge(limitburst_id)
+			battle_unit["limit_gauge"] = 0
+			battle_unit["max_limit"] = max_limit_gauge
+			_reset_unit_queued_action(battle_unit)
+
+			battle_unit["chain_count"] = 0
+			battle_unit["last_hit_frame"] = -100
+			battle_unit["last_attacker_index"] = -1
+
+			battle_unit["team"] = "player"
+			battle_unit["index"] = party_data.size()
+
+			party_data.append(battle_unit)
+		else:
+			party_data.append({})
+
+	player_units.clear()
+	for unit in party_data:
+		if not unit.is_empty():
+			player_units.append(unit)
+
+	# Load enemy data for the first wave.
+	_spawn_wave(1, mission_data)
+
+	current_state = BattleState.PLAYER_TURN
+	player_units_acted_this_turn.clear()
+	current_battle_frame = 0
+	pending_hits.clear()
+	pending_announcements.clear()
+
+	turn_count = 1
+	is_transitioning = false
+	battle_state_ready.emit()
+
+	# Intro cutscenes (placeholder), then the first wave's intro dialogue.
+	await _play_cutscenes_for_slot(0)
+	await play_dialogue(wave_dialogue_lines(1, 1))
+
+
+func initialize_bg(battle_group_id: int) -> void:
+	wave_plan = [{"target_id": battle_group_id}]
+	if wave_plan.size() > 0:
+		total_waves = wave_plan.size()
+	else:
+		total_waves = 1
+	current_wave = 1
+	mission_drops.clear()
+	mission_unit_exp = 0
+	mission_gil = 0
+	used_items.clear()
+	
 	party_data = []
 
 	if PartyService.parties.size() > 0:
@@ -355,7 +447,7 @@ func initialize_battle(mission_id: String) -> void:
 			player_units.append(unit)
 
 	# Load enemy data for the first wave.
-	_spawn_wave(1, mission_data)
+	_spawn_wave(1)
 
 	current_state = BattleState.PLAYER_TURN
 	player_units_acted_this_turn.clear()
@@ -367,9 +459,86 @@ func initialize_battle(mission_id: String) -> void:
 	is_transitioning = false
 	battle_state_ready.emit()
 
-	# Intro cutscenes (placeholder), then the first wave's intro dialogue.
-	await _play_cutscenes_for_slot(0)
-	await play_dialogue(wave_dialogue_lines(1, 1))
+
+func initialize_test_battle(battle_group_id: int) -> void:
+	AccountService.start_new_local_game("TEST")
+	SkillResolver.load_schemas()
+	wave_plan = [{"target_id": battle_group_id}]
+	if wave_plan.size() > 0:
+		total_waves = wave_plan.size()
+	else:
+		total_waves = 1
+	current_wave = 1
+	mission_drops.clear()
+	mission_unit_exp = 0
+	mission_gil = 0
+	used_items.clear()
+	
+	party_data = []
+
+	var party_instance_ids: Array = ["starter_100000202","starter_100000102","","",""]
+
+	for instance_id in party_instance_ids:
+		if instance_id == "":
+			party_data.append({})
+			continue
+
+		var owned_unit = null
+		for u in UnitService.owned_units_ids:
+			if typeof(u) == TYPE_DICTIONARY and u.get("instance_id") == instance_id:
+				owned_unit = u
+				break
+
+		if owned_unit != null:
+			var battle_unit = owned_unit.duplicate()
+
+			#battle_unit["final_stats"] = StatCalculator.calculate_final_stats(battle_unit)
+			battle_unit["final_stats"]["stats"] = {"HP": 100000, "MP": 500000, "ATK": 1000, "DEF": 1000, "MAG": 1000, "SPR": 1000}
+			var final_stats: Dictionary = battle_unit["final_stats"].get("stats", {})
+
+			var max_hp = final_stats.get("HP")
+			var max_mp = final_stats.get("MP")
+
+			battle_unit["max_hp"] = max_hp
+			battle_unit["current_hp"] = max_hp
+			battle_unit["max_mp"] = max_mp
+			battle_unit["current_mp"] = max_mp
+			var limitburst_id: String = str(battle_unit.get("limitBurstId", ""))
+			battle_unit["limitburst_id"] = limitburst_id
+			var max_limit_gauge: int = SkillResolver.get_limitburst_max_gauge(limitburst_id)
+			battle_unit["limit_gauge"] = 0
+			battle_unit["max_limit"] = max_limit_gauge
+			_reset_unit_queued_action(battle_unit)
+
+			battle_unit["chain_count"] = 0
+			battle_unit["last_hit_frame"] = -100
+			battle_unit["last_attacker_index"] = -1
+
+			battle_unit["team"] = "player"
+			battle_unit["index"] = party_data.size()
+
+			party_data.append(battle_unit)
+		else:
+			party_data.append({})
+
+	player_units.clear()
+	for unit in party_data:
+		if not unit.is_empty():
+			player_units.append(unit)
+
+	# Load enemy data for the first wave.
+	_spawn_wave(1)
+
+	current_state = BattleState.PLAYER_TURN
+	player_units_acted_this_turn.clear()
+	current_battle_frame = 0
+	pending_hits.clear()
+	pending_announcements.clear()
+
+	turn_count = 1
+	is_transitioning = false
+	battle_state_ready.emit()
+
 
 func initialize_challenges(mission_challenge_data: Array):
 	for data in mission_challenge_data:
@@ -1164,7 +1333,7 @@ func _trigger_mission_complete() -> void:
 
 	MissionService.request_finish_mission(true, current_mission_id, used_items, challenge_results, mission_drops, mission_unit_exp, mission_gil)
 
-	
+
 func _spawn_next_wave() -> void:
 	current_wave += 1
 	if OS.is_debug_build():
@@ -1228,7 +1397,7 @@ func _accumulate_enemy_rewards(enemy_data: Dictionary) -> void:
 ## exploration missions (type 2) are expected to be empty here (their encounters
 ## are random while traversing the map); any other type is a content gap and is
 ## logged as an error.
-func _spawn_wave(wave_no: int, mission_data: Dictionary) -> void:
+func _spawn_wave(wave_no: int, mission_data: Dictionary = {}) -> void:
 	enemy_units.clear()
 	# AI state is keyed by enemy index, and both the indices and the monsters behind
 	# them change with the formation. Flag banks and limited_act counters belong to one

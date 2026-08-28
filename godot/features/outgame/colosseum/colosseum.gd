@@ -22,6 +22,7 @@ extends Control
 
 @onready var start_window: Control = $StartWindow
 @onready var enemy_label: Label = $StartWindow/Header/clsmVsCpu_name_enemy_txt
+@onready var party_label: Label = $StartWindow/Header/clsmVsCpu_name_player_txt
 @onready var start_button: TextureButton = $StartWindow/clsmVsCpu_start_button
 @onready var monster_names: Label = $StartWindow/MonsterNames
 @onready var start_round_label: Label = $StartWindow/Header/clsmVsCpu_round_num_1/RoundLabel
@@ -88,6 +89,9 @@ func _refresh_list() -> void:
 			start_round_label.text = str(progress.get("roundId"))[4]
 			var battle_data = ColosseumService.get_battle_info(selected_round)
 			enemy_label.text = battle_data.get("name")
+			var party_data = PartyService.get_active_party()
+			party_label.text = party_data.get("name", "?")
+			monster_names.text = ""
 			for data in battle_data.get("battle_data"):
 				var monster_data = GameDatabase.get_monster_parts(str(data.get("monsterId")))
 				monster_names.text += monster_data.get("name") + "\n"
@@ -96,17 +100,19 @@ func _refresh_list() -> void:
 			round_selector.visible = false
 			start_window.visible = true
 			
+			
+			for child in enemies_container.get_children():
+				child.queue_free()
+			
 			# Enemy formation data
 			var rows: Array = GameDatabase.get_battle_group(str(battle_data.get("battle_group_id")))
 
-			var i = 0
 			for row in rows:
 				var monster_id: String = str(row.get("monsterId", ""))
 				if monster_id == "":
 					continue
 				
 				var wrapper = Control.new()
-				wrapper.name = "EnemyWrapper_" + str(i)
 				wrapper.custom_minimum_size = Vector2(140, 140)
 				wrapper.size = Vector2(140, 140)
 				wrapper.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -126,14 +132,12 @@ func _refresh_list() -> void:
 				enemies_container.add_child(wrapper)
 
 				var enemy_sprite = load("res://features/battle/ui/combat_sprite.gd").new()
-				enemy_sprite.name = "EnemyCombatSprite_" + str(i)
 				enemy_sprite.expand_mode = TextureRect.EXPAND_KEEP_SIZE
 				enemy_sprite.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 				enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 				wrapper.add_child(enemy_sprite)
-				enemy_sprite.setup(i, monster_id.left(-2), true, null)
-				i += 1
+				enemy_sprite.setup(0, monster_id.left(-2), true, null)
 
 
 func _populate_list(items: Array) -> void:
@@ -207,8 +211,15 @@ func _on_round_selected(round: int) -> void:
 
 
 func _on_start_pressed() -> void:
-	ColosseumService.start_colosseum(selected_round)
+	var battle_data = ColosseumService.start_colosseum(selected_round)
 	progress = ColosseumService.get_colosseum_progress()
+	UIManager.push("combat_ui", {"battle_group": battle_data.get("battle_group_id")})
+	BattleEvents.mission_completed.connect(
+		func(_a, _b):
+			ColosseumService._on_colosseum_battle_finished(selected_round)
+			progress = ColosseumService.get_colosseum_progress()
+			_refresh_list()
+			)
 
 
 func _on_back_button_pressed() -> void:
@@ -227,9 +238,6 @@ func _on_back_button_pressed() -> void:
 			_refresh_list()
 		Depth.START:
 			current_depth = Depth.ROUND
-			monster_names.text = ""
-			for child in enemies_container.get_children():
-				child.queue_free()
 			_refresh_list()
 
 

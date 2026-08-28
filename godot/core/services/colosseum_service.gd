@@ -7,9 +7,9 @@ var points: int = 0
 var next_battle: int = 0
 
 
-func start_colosseum(selected_round: int) -> void:
+func start_colosseum(selected_round: int) -> Dictionary:
 	var battle_data = get_battle_info(selected_round)
-	_on_colosseum_battle_finished(selected_round)
+	return battle_data
 
 
 func _on_colosseum_battle_finished(selected_round: int) -> void:

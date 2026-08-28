@@ -1311,7 +1311,8 @@ func get_limitburst(limitburst_id) -> Dictionary:
 	var key: String = str(limitburst_id)
 	if _limitburst_cache.has(key):
 		return _limitburst_cache[key]
-	var rows: Array = query("SELECT * FROM limitburst WHERE limitBurstId = ? LIMIT 1", [key])
+	var rows: Array = query("SELECT lb.*, i.iconFile FROM limitburst lb"
+		+ " LEFT JOIN icon i ON i.iconId = lb.iconId WHERE limitBurstId = ? LIMIT 1", [key])
 	if rows.is_empty():
 		return {}
 	var lv_rows: Array = query(
@@ -1354,6 +1355,7 @@ func _build_limitburst_record(row: Dictionary, lv_rows: Array) -> Dictionary:
 		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"levels": levels,
 		"effects_raw": levels[0][1] if not levels.is_empty() else [],
+		"iconFile": row.get("iconFile", ""),
 		"description": str(row.get("description", "")),
 	}
 

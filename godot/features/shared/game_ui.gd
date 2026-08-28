@@ -35,7 +35,7 @@ func _exit_tree() -> void:
 	if UnitService.units_updated.is_connected(_on_units_updated):
 		UnitService.units_updated.disconnect(_on_units_updated)
 
-func _on_parties_updated(_parties: Array) -> void:
+func _on_parties_updated(_parties: Array = []) -> void:
 	_refresh_party_sprites()
 
 func _on_active_party_changed(_party_index: int) -> void:

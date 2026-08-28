@@ -74,7 +74,7 @@ func _apply_physical_damage(parsed_effect: Dictionary, caster: Dictionary, targe
 		var target_final_stats = target.get("final_stats", target)
 		var target_stats = target_final_stats.get("stats", target_final_stats)
 		
-		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
+		# Assume element_resists is the Dictionary[Types.Element, int]
 		var target_resists = target_final_stats.get("element_resists", {}) 
 
 		var ATK = _get_stat_safe(caster_stats, "ATK", 10)
@@ -123,7 +123,6 @@ func _apply_physical_damage_ignore_cover(parsed_effect: Dictionary, caster: Dict
 		var target_final_stats = target.get("final_stats", target)
 		var target_stats = target_final_stats.get("stats", target_final_stats)
 		
-		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
 		var target_resists = target_final_stats.get("element_resists", {}) 
 
 		var ATK = _get_stat_safe(caster_stats, "ATK", 10)
@@ -143,9 +142,6 @@ func _apply_physical_damage_ignore_cover(parsed_effect: Dictionary, caster: Dict
 				
 			# Average the resistances
 			var average_resist = total_resist / attack_elements.size()
-			
-			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
-			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
 			element_modifier = 1.0 - (average_resist / 100.0)
 
 		# 3. Apply modifier and prevent negative damage
@@ -153,6 +149,21 @@ func _apply_physical_damage_ignore_cover(parsed_effect: Dictionary, caster: Dict
 
 		var hit_payloads = generate_effect_payloads("DAMAGE", final_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
 		
+		all_hit_payloads.append_array(hit_payloads)
+
+	return all_hit_payloads
+
+func _apply_pct_damage(parsed_effect: Dictionary, caster: Dictionary, targets: Array) -> Array[Dictionary]:
+	var all_attack_damage = parsed_effect.get("attack_damage", [[100]])
+	var all_attack_frames = parsed_effect.get("attack_frames", [[0]])
+	var percent = 100 - parsed_effect.get("effect", {}).get("pct", 0)
+	var attack_elements: Array = parsed_effect.get("element", [])
+
+	var all_hit_payloads: Array[Dictionary] = []
+
+	for target in targets:
+		var raw_damage = target.get("current_hp") * (percent / 100.0)
+		var hit_payloads = generate_effect_payloads("DAMAGE", raw_damage, all_attack_damage, all_attack_frames, caster, target, 0, {}, attack_elements)
 		all_hit_payloads.append_array(hit_payloads)
 
 	return all_hit_payloads
@@ -171,7 +182,6 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 		var target_final_stats = target.get("final_stats", target)
 		var target_stats = target_final_stats.get("stats", target_final_stats)
 		
-		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
 		var target_resists = target_final_stats.get("element_resists", {}) 
 
 		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
@@ -190,9 +200,6 @@ func _apply_magic_damage(parsed_effect: Dictionary, caster: Dictionary, targets:
 				
 			# Average the resistances
 			var average_resist = total_resist / attack_elements.size()
-			
-			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
-			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
 			element_modifier = 1.0 - (average_resist / 100.0)
 
 		# 3. Apply modifier and prevent negative damage
@@ -219,7 +226,6 @@ func _apply_magic_damage_ignore_spr(parsed_effect: Dictionary, caster: Dictionar
 		var target_final_stats = target.get("final_stats", target)
 		var target_stats = target_final_stats.get("stats", target_final_stats)
 		
-		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
 		var target_resists = target_final_stats.get("element_resists", {})
 
 		var MAG = _get_stat_safe(caster_stats, "MAG", 10)
@@ -238,9 +244,6 @@ func _apply_magic_damage_ignore_spr(parsed_effect: Dictionary, caster: Dictionar
 				
 			# Average the resistances
 			var average_resist = total_resist / attack_elements.size()
-			
-			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
-			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
 			element_modifier = 1.0 - (average_resist / 100.0)
 
 		# 3. Apply modifier and prevent negative damage
@@ -267,7 +270,6 @@ func _apply_hybrid_damage(parsed_effect: Dictionary, caster: Dictionary, targets
 		var target_final_stats = target.get("final_stats", target)
 		var target_stats = target_final_stats.get("stats", target_final_stats)
 		
-		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
 		var target_resists = target_final_stats.get("element_resists", {}) 
 
 		var ATK = _get_stat_safe(caster_stats, "ATK", 10)
@@ -291,9 +293,6 @@ func _apply_hybrid_damage(parsed_effect: Dictionary, caster: Dictionary, targets
 				
 			# Average the resistances
 			var average_resist = total_resist / attack_elements.size()
-			
-			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
-			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
 			element_modifier = 1.0 - (average_resist / 100.0)
 
 		# 3. Apply modifier and prevent negative damage
@@ -319,7 +318,6 @@ func _apply_spr_damage(parsed_effect: Dictionary, caster: Dictionary, targets: A
 		var target_final_stats = target.get("final_stats", target)
 		var target_stats = target_final_stats.get("stats", target_final_stats)
 		
-		# Assume element_resists is the Dictionary[Types.Element, int] we built earlier
 		var target_resists = target_final_stats.get("element_resists", {}) 
 
 		var caster_SPR = _get_stat_safe(caster_stats, "SPR", 10)
@@ -338,9 +336,6 @@ func _apply_spr_damage(parsed_effect: Dictionary, caster: Dictionary, targets: A
 				
 			# Average the resistances
 			var average_resist = total_resist / attack_elements.size()
-			
-			# Convert percentage (e.g., 50) to a damage multiplier (e.g., 1.0 - 0.5 = 0.5x damage)
-			# A negative resist (e.g., -50) becomes 1.0 - (-0.5) = 1.5x damage
 			element_modifier = 1.0 - (average_resist / 100.0)
 
 		# 3. Apply modifier and prevent negative damage

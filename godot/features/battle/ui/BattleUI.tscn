@@ -21,6 +21,73 @@
 [ext_resource type="Texture2D" uid="uid://cdpixjjnnbkjw" path="res://assets/ui/battle/battle_enemy_hp_bar1.tres" id="14_ebndp"]
 [ext_resource type="Texture2D" uid="uid://cyifnjpf1mkx5" path="res://assets/ui/battle/battle_enemy_hp_gauge.tres" id="14_snfla"]
 [ext_resource type="Texture2D" uid="uid://cr4r1rijeygpb" path="res://assets/ui/battle/battle_com_menu_btn2.tres" id="16_3l5rm"]
+[ext_resource type="Texture2D" uid="uid://4bfa70rdxe1s" path="res://assets/ui/battle/battle_summon_sphere.png" id="22_6bcbl"]
+[ext_resource type="Texture2D" uid="uid://bsjc40i1j80oi" path="res://assets/ui/battle/battle_limit_crystal.png" id="23_277vc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_76qdh"]
+atlas = ExtResource("22_6bcbl")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uf1qa"]
+atlas = ExtResource("22_6bcbl")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mfkp8"]
+atlas = ExtResource("22_6bcbl")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_umyu7"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_76qdh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uf1qa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mfkp8")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bxisw"]
+atlas = ExtResource("23_277vc")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j1bp6"]
+atlas = ExtResource("23_277vc")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sd3wt"]
+atlas = ExtResource("23_277vc")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wktxq"]
+atlas = ExtResource("23_277vc")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_qu2ee"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bxisw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j1bp6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sd3wt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wktxq")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
 
 [node name="BattleUI" type="Control" unique_id=993553313]
 layout_mode = 3
@@ -360,7 +427,6 @@ offset_left = 403.0
 offset_top = 185.0
 offset_right = 505.0
 offset_bottom = 287.0
-scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot1" type="Control" parent="PlayerSpritesContainer" unique_id=110000002]
@@ -369,7 +435,6 @@ offset_left = 515.0
 offset_top = 206.0
 offset_right = 617.0
 offset_bottom = 308.0
-scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot2" type="Control" parent="PlayerSpritesContainer" unique_id=110000003]
@@ -378,7 +443,6 @@ offset_left = 364.0
 offset_top = 254.0
 offset_right = 466.0
 offset_bottom = 356.0
-scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot3" type="Control" parent="PlayerSpritesContainer" unique_id=110000004]
@@ -387,7 +451,6 @@ offset_left = 479.0
 offset_top = 273.0
 offset_right = 581.0
 offset_bottom = 375.0
-scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot4" type="Control" parent="PlayerSpritesContainer" unique_id=110000005]
@@ -396,7 +459,6 @@ offset_left = 398.0
 offset_top = 329.0
 offset_right = 500.0
 offset_bottom = 431.0
-scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="UnitDot5" type="Control" parent="PlayerSpritesContainer" unique_id=110000006]
@@ -405,7 +467,6 @@ offset_left = 511.0
 offset_top = 350.0
 offset_right = 613.0
 offset_bottom = 452.0
-scale = Vector2(1.5, 1.5)
 mouse_filter = 2
 
 [node name="RewardsPopup" type="AcceptDialog" parent="." unique_id=461772511]
@@ -518,3 +579,19 @@ offset_right = 419.0
 offset_bottom = 505.0
 texture = ExtResource("14_snfla")
 expand_mode = 1
+
+[node name="BattleSummonSphere" type="AnimatedSprite2D" parent="." unique_id=1967757936]
+visible = false
+position = Vector2(-494, 482)
+scale = Vector2(0.5, 0.5)
+sprite_frames = SubResource("SpriteFrames_umyu7")
+frame = 1
+frame_progress = 0.6911009
+
+[node name="BattleLimitCrystal" type="AnimatedSprite2D" parent="." unique_id=794346810]
+visible = false
+position = Vector2(-247, 241)
+scale = Vector2(0.5, 0.5)
+sprite_frames = SubResource("SpriteFrames_qu2ee")
+frame = 1
+frame_progress = 0.02665819

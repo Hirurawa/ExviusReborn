@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://jnc2mcnwetv6" path="res://assets/ui/colosseum/colosseum_btn_normal_on.tres" id="1_ns8pm"]
 [ext_resource type="Texture2D" uid="uid://c187wwku6rf54" path="res://assets/ui/quest/locationnamebg.tres" id="2_67sk6"]
 [ext_resource type="Texture2D" uid="uid://c64gxmlsictt7" path="res://assets/ui/colosseum/largebutton_label_colo_start.tres" id="2_jnkoc"]
+[ext_resource type="Texture2D" uid="uid://c0rdsnq354no8" path="res://assets/battle_bg/Colosseum.jpg" id="2_r1s5u"]
 [ext_resource type="Texture2D" uid="uid://bgv1eg1eljg62" path="res://assets/ui/colosseum/colo_window_bg.tres" id="3_82fqq"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="3_q6ik1"]
 [ext_resource type="Texture2D" uid="uid://dryqgcoax822q" path="res://assets/ui/colosseum/colo_window_frame_top.tres" id="4_061tn"]
@@ -62,6 +63,21 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_8b2q5")
 
+[node name="ColosseumBG" type="TextureRect" parent="." unique_id=58991755]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -480.0
+offset_top = -512.0
+offset_right = 480.0
+offset_bottom = 512.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_r1s5u")
+
 [node name="TopBar" type="HBoxContainer" parent="." unique_id=627734895]
 layout_mode = 0
 offset_top = 120.0
@@ -113,7 +129,6 @@ texture_normal = ExtResource("5_e4bdl")
 texture_pressed = ExtResource("6_r1s5u")
 
 [node name="EntryWindow" type="Control" parent="." unique_id=1202936031]
-visible = false
 anchors_preset = 0
 offset_top = 192.0
 offset_right = 40.0
@@ -756,6 +771,7 @@ texture = ExtResource("22_bgt5r")
 expand_mode = 1
 
 [node name="StartWindow" type="Control" parent="." unique_id=2102805247]
+visible = false
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0

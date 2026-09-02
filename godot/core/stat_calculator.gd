@@ -286,21 +286,6 @@ func _resolve_rank_skill_data_for_summon(summon_id: String, summon_data: Diction
 
 	return {}
 
-func _get_esper_skill_text(skill_data: Dictionary, text_key: String) -> String:
-	var strings_value: Variant = skill_data.get("strings", {})
-	if not (strings_value is Dictionary):
-		return ""
-
-	var strings: Dictionary = strings_value
-	var text_value: Variant = strings.get(text_key, [])
-	if not (text_value is Array):
-		return ""
-
-	var localized_values: Array = text_value
-	if localized_values.is_empty():
-		return ""
-
-	return str(localized_values[0])
 
 func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
 	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
@@ -331,8 +316,8 @@ func get_active_party_esper_rank_skill(unit_instance: Dictionary) -> Dictionary:
 		"skill_data": skill_data
 	}
 
-func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> Array:
-	var unlocked_skill_ids: Array = []
+func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> Dictionary:
+	var unlocked_skill_ids: Dictionary = {"magic": [], "ability": []}
 
 	var summon_id: String = _resolve_active_party_esper_id_for_unit(unit_instance)
 	if summon_id == "":
@@ -350,9 +335,11 @@ func _collect_active_party_esper_unlocked_skills(unit_instance: Dictionary) -> A
 		if not normalized_skill_id.is_valid_int():
 			continue
 
-		if GameDatabase.has_magic(normalized_skill_id) or GameDatabase.has_ability(normalized_skill_id):
-			unlocked_skill_ids.append(int(normalized_skill_id))
-
+		if GameDatabase.has_magic(normalized_skill_id):
+			unlocked_skill_ids["magic"].append(int(normalized_skill_id))
+		if GameDatabase.has_ability(normalized_skill_id):
+			unlocked_skill_ids["ability"].append(int(normalized_skill_id))
+	
 	return unlocked_skill_ids
 
 func _compute_active_party_esper_flat_bonus(unit_instance: Dictionary) -> Dictionary:
@@ -448,16 +435,6 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 		abi.merge({"source": "Trait"})
 		raw_skills.append(abi)
 	
-	#var innate_skills = GameDatabase.get_unit_skills(unit_instance.get("unitSeries"), unit_instance.get("rare"), unit_instance.get("level"))
-	#for skill in innate_skills:
-	#	var magic_id = skill.get("magicId")
-	#	var magic_array: Array = magic_id.split(',') if not magic_id == null else []
-	#	var ability_id = skill.get("abilityId")
-	#	var ability_array: Array = ability_id.split(',') if not ability_id == null else []
-	#	var combined = magic_array + ability_array
-	#	for id in combined:
-	#		raw_skills.append({"id": id, "source": "Trait"})
-
 	var flat_mods = {
 		"HP": 0,
 		"MP": 0,
@@ -491,7 +468,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 
 			var ability_id = str(item_data.get("abilityId"))
 			var ability_array: Array
-			if ability_id != null:
+			if not ability_id.is_empty():
 				if ability_id.contains(','):
 					ability_array = ability_id.split(',')
 				else:
@@ -501,7 +478,7 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 
 			var magic_id = str(item_data.get("magicId"))
 			var magic_array: Array
-			if magic_id != null:
+			if not magic_id.is_empty():
 				if magic_id.contains(','):
 					magic_array = magic_id.split(',')
 				else:
@@ -513,14 +490,15 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 	for stat_name in CORE_STATS:
 		flat_mods[stat_name] += int(esper_flat_bonus.get(stat_name, 0))
 
-	var esper_unlocked_skills: Array = _collect_active_party_esper_unlocked_skills(unit_instance)
-	for skill_id in esper_unlocked_skills:
+	var esper_unlocked_skills: Dictionary = _collect_active_party_esper_unlocked_skills(unit_instance)
+	for skill_id in esper_unlocked_skills["magic"]:
+		final_profile["skills"]["magic"].append({"id": skill_id, "source": "Esper"})
+	for skill_id in esper_unlocked_skills["ability"]:
 		raw_skills.append({"id": skill_id, "source": "Esper"})
 
 	# Categorize skills
 	for raw_skill in raw_skills:
-
-		var category: String = GameDatabase.classify_skill_id(raw_skill.get("id"))
+		var category: String = GameDatabase.classify_skill_id(str(raw_skill.get("id")))
 		if category == "magic":
 			final_profile["skills"]["magic"].append(raw_skill)
 		elif category == "ability":
@@ -533,9 +511,8 @@ func calculate_final_stats(unit_instance: Dictionary) -> Dictionary:
 			var parsed_passive = SkillResolver.parse_passive_effects(skill_data)
 			final_profile["passive_effects"].append_array(parsed_passive.get("effects", []))
 			_apply_parsed_passive_effects(parsed_passive.get("effects", []), pct_mods, element_resists, status_resists)
-			
-	# TODO: Parse effects_raw for pct_mods here
-
+	
+	
 	apply_active_modifiers(
 		collect_active_modifiers(unit_instance), pct_mods, element_resists, status_resists
 	)

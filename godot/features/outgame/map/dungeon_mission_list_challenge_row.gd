@@ -46,7 +46,7 @@ func configure(task_text: String, reward: Array, completed: bool) -> void:
 		Types.Category_types.VISIONCARD:
 			data["name"] = "Vision Card"
 		Types.Category_types.RECIPE:
-			data = GameDatabase.get_recipe(reward[1])
+			data = GameDatabase.get_recipe_book(reward[1])
 		_:
 			push_warning("Unsupported mission first-clear reward type: %s" % reward_type)
 	

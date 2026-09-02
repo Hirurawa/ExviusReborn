@@ -347,11 +347,11 @@ func _display_unit_stats(unit_inst: Dictionary) -> void:
 		var tmr_id = str(int(tmr_data[1]))
 		var tmr_name = "Unknown Reward"
 
-		if tmr_type == "21":
+		if tmr_type == "21": # Types.Category_types.EQUIP
 			var eq_data = GameDatabase.get_equipment(tmr_id)
 			if not eq_data.is_empty():
 				tmr_name = eq_data.get("name", tmr_name)
-		elif tmr_type == "22":
+		elif tmr_type == "22": # Types.Category_types.MATERIA
 			var mat_data = GameDatabase.get_materia(int(tmr_id))
 			if not mat_data.is_empty():
 				tmr_name = mat_data.get("name", tmr_name)

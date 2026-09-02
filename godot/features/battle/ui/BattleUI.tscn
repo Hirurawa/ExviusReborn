@@ -220,9 +220,13 @@ offset_bottom = 531.0
 texture = ExtResource("11_summon_bg")
 expand_mode = 1
 
-[node name="BattleSummonBar" type="Sprite2D" parent="VisualLayer/SummonGaugeBg" unique_id=1440777645]
-position = Vector2(151, 28)
-texture = ExtResource("8_ebndp")
+[node name="BattleSummonBar" type="TextureProgressBar" parent="VisualLayer/SummonGaugeBg" unique_id=81346037]
+layout_mode = 0
+offset_left = 67.0
+offset_top = 20.0
+offset_right = 233.0
+offset_bottom = 36.0
+texture_progress = ExtResource("8_ebndp")
 
 [node name="SummonGaugeFill" type="TextureRect" parent="VisualLayer/SummonGaugeBg" unique_id=1973607915]
 layout_mode = 1
@@ -418,7 +422,7 @@ columns = 2
 unique_name_in_owner = true
 anchors_preset = 0
 offset_right = 640.0
-offset_bottom = 960.0
+offset_bottom = 525.0
 mouse_filter = 2
 
 [node name="UnitDot0" type="Control" parent="PlayerSpritesContainer" unique_id=110000001]

@@ -58,7 +58,7 @@ window/handheld/orientation=1
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot-sqlite/plugin.cfg")
+enabled=PackedStringArray("res://addons/effekseer/plugin.cfg", "res://addons/godot-sqlite/plugin.cfg")
 
 [importer_defaults]
 

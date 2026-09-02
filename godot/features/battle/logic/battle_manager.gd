@@ -659,7 +659,6 @@ func execute_queued_action(attacker_index: int) -> void:
 
 	if action == CombatAction.DEFEND:
 		attacker_data["is_defending"] = true
-		attacker_data["challenge_kill_method"] = ""
 		_check_turn_progression()
 		return
 	elif action == CombatAction.SKILL or action == CombatAction.ITEM:
@@ -724,7 +723,6 @@ func execute_queued_action(attacker_index: int) -> void:
 	elif action == CombatAction.ATTACK:
 		# Keep accepting inputs for other units by not changing state here
 		unit_action_started.emit(attacker_index, CombatAction.ATTACK)
-		attacker_data["challenge_kill_method"] = ""
 		
 		# Build a dummy effect so it goes through our standard pipeline
 		var dummy_effect = {

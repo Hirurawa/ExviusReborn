@@ -33,6 +33,7 @@ func _on_colosseum_battle_finished(selected_round: int) -> void:
 func get_colosseum_progress() -> Dictionary:
 	var progress = GameDatabase.get_clsm_progress(round)
 	return {
+		"grade_id": progress.get("gradeId", 0),
 		"grade": progress.get("grade", "?"),
 		"rankId": progress.get("rankId", 0),
 		"rank": progress.get("rank", "?"),

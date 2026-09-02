@@ -357,6 +357,7 @@ func _populate_lb_and_tmr(unit_inst: Dictionary) -> void:
 	else:
 		tm_icon_rect.texture = null
 
+# TODO: Performance of this function is really bad. Review needed.
 func _populate_skills(final_stats_profile: Dictionary) -> void:
 	for child in unit_detail_magic_grid.get_children():
 		child.queue_free()

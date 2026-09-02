@@ -86,7 +86,7 @@ func _on_store_clicked(store_id: String) -> void:
 		buy_button.custom_minimum_size = Vector2(60, 0)
 		buy_button.disabled = true
 
-		if target_type == 20: # Item
+		if target_type == Types.Category_types.ITEM: # Item
 			var item_data = GameDatabase.get_item(int(target_id))
 			if typeof(item_data) == TYPE_DICTIONARY and not item_data.is_empty():
 				name_label.text = item_data.get("name", "Unknown Item (" + target_id + ")")
@@ -102,7 +102,7 @@ func _on_store_clicked(store_id: String) -> void:
 			else:
 				name_label.text = "Unknown Item (" + target_id + ")"
 				price_label.text = ""
-		elif target_type == 21: # Equipment
+		elif target_type == Types.Category_types.EQUIP: # Equipment
 			var eq_data = GameDatabase.get_equipment(target_id)
 			if typeof(eq_data) == TYPE_DICTIONARY and not eq_data.is_empty():
 				name_label.text = eq_data.get("name", "Unknown Equipment (" + target_id + ")")
@@ -118,7 +118,7 @@ func _on_store_clicked(store_id: String) -> void:
 			else:
 				name_label.text = "Unknown Equipment (" + target_id + ")"
 				price_label.text = ""
-		elif target_type == 22: # Materia
+		elif target_type == Types.Category_types.MATERIA: # Materia
 			name_label.text = "Materia (" + target_id + ")"
 			price_label.text = ""
 		elif target_type == 40: # Star quartz - medal exchange
@@ -128,8 +128,21 @@ func _on_store_clicked(store_id: String) -> void:
 			name_label.text = "Vault Item (" + target_id + ")"
 			price_label.text = ""
 		elif target_type == 60: # Recipe
-			name_label.text = "Recipe (" + target_id + ")"
-			price_label.text = ""
+			var rec_data = GameDatabase.get_recipe_book(int(target_id))
+			if typeof(rec_data) == TYPE_DICTIONARY and not rec_data.is_empty():
+				name_label.text = "Recipe for " + rec_data.get("name", "Unknown Recipe (" + target_id + ")")
+				var price = int(rec_data.get("priceBuy", 0))
+				price_label.text = str(price) + " Gil"
+				buy_button.disabled = true
+				#buy_button.pressed.connect(_request_buy.bind(target_id, 1))
+				var icon_id = rec_data.get("iconFile", "")
+				if icon_id != "":
+					var icon_path = "res://assets/items/%s" % icon_id
+					if ResourceLoader.exists(icon_path):
+						icon_rect.texture = load(icon_path)
+			else:
+				name_label.text = "Unknown Recipe (" + target_id + ")"
+				price_label.text = ""
 
 		else:
 			name_label.text = "Unknown Type %d (%s)" % [target_type, target_id]

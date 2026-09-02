@@ -173,10 +173,10 @@ func _finish_quest(end_switch: String, quest: Dictionary) -> void:
 		var id = reward.get("id")
 		var amount = reward.get("amount", 0)
 
-		if type == "20":
+		if type == "20": # Types.Category_types.ITEM
 			InventoryService.add_stackable(id, amount)
 			items_granted = true
-		elif type == "21":
+		elif type == "21": # Types.Category_types.EQUIP
 			InventoryService.add_equipment_instances(id, amount)
 			items_granted = true
 

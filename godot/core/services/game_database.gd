@@ -79,6 +79,21 @@ func _ensure_open() -> bool:
 		push_error("GameDatabase: could not open %s (%s)" % [db_path, db.error_message])
 		return false
 
+	# 1. Enforce read-only locks at the engine level
+	db.query("PRAGMA query_only = ON;")
+
+	# 2. Turn off logging entirely (no data will ever change)
+	db.query("PRAGMA journal_mode = OFF;")
+
+	# 3. Skip disk-sync safety checks to maximize speed
+	db.query("PRAGMA synchronous = OFF;")
+
+	# 4. Allocate ~75MB of RAM cache
+	db.query("PRAGMA cache_size = -75000;")
+
+	# 5. Tell the OS to memory-map the 75MB file for instant access
+	db.query("PRAGMA mmap_size = 75000000;")
+
 	_db = db
 	return true
 
@@ -257,10 +272,6 @@ func get_dungeon_name(dungeon_id: String) -> String:
 	return str(rows[0].get("name", "")) if not rows.is_empty() else ""
 
 
-## A single town row (townName, iconFile) for the town scene, or {} if unknown.
-## `townName` is the display name; `iconFile` ("map_icon_<digits>.png", in
-## assets/map_icons, resolved via town.iconId -> icon.iconFile) also encodes the
-## on-disk town-data folder id.
 func get_town_stores(town_id: String) -> Array:
 	return query(
 		"SELECT * FROM town_store WHERE townId = ? AND storeType = 1 ORDER BY storeId",
@@ -270,11 +281,15 @@ func get_town_stores(town_id: String) -> Array:
 
 func get_store_items(store_id: String) -> Array:
 	return query(
-		"SELECT * FROM store_item WHERE storeId = ? ORDER BY storeItemId",
+		"SELECT storeItemId, storeId, targetType, targetId FROM store_item WHERE storeId = ? ORDER BY storeItemId",
 		[store_id]
 	)
 
 
+## A single town row (townName, iconFile) for the town scene, or {} if unknown.
+## `townName` is the display name; `iconFile` ("map_icon_<digits>.png", in
+## assets/map_icons, resolved via town.iconId -> icon.iconFile) also encodes the
+## on-disk town-data folder id.
 func get_town(town_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile, COALESCE(t.openSwitch, '') AS openSwitch FROM town t"
@@ -285,11 +300,11 @@ func get_town(town_id: String) -> Dictionary:
 	return rows[0] if not rows.is_empty() else {}
 
 func get_story_sub(town_id: String) -> Array:
-	return query("SELECT * FROM story_sub WHERE targetId = ?", [town_id])
+	return query("SELECT storySubId, storyId, storyNo, locationType, targetId, switchInfo, openSwitch FROM story_sub WHERE targetId = ?", [town_id])
 
 
 func get_map_event_switch_unlock(target_id: int, switch_info: int) -> Variant:
-	var rows = query("select * from map_event where targetId = ? and switchInfo = ?", [target_id, switch_info])
+	var rows = query("select locationType, targetId, resourceId, storyEventId, switchInfo, openSwitch from map_event where targetId = ? and switchInfo = ?", [target_id, switch_info])
 	return rows[0].get("openSwitch") if not rows.is_empty() else {}
 
 
@@ -334,7 +349,7 @@ func get_quests_for_town(town_id: String) -> Array:
 
 
 func get_vortex_areas() -> Array:
-	return query("select a.*, i.* from area a join icon i on a.iconId = i.iconId where a.worldId = 2")
+	return query("select a.areaId, a.name, a.worldId, a.landId, a.iconId, a.switchInfo, i.iconFile from area a join icon i on a.iconId = i.iconId where a.worldId = 2")
 
 # === NPCs ===
 
@@ -604,7 +619,7 @@ func get_mission_location(mission_id: String) -> Dictionary:
 
 # === Colosseum ===
 func get_clsm_progress(progress_id: int) -> Dictionary:
-	var rows: Array = query("select p.roundId, p.nextRoundId, p.rankId, g.name as grade, r.name as rank, ro.name as round from clsm_progress p"
+	var rows: Array = query("select p.roundId, p.nextRoundId, p.rankId, g.gradeId, g.name as grade, r.name as rank, ro.name as round from clsm_progress p"
 	+ " join clsm_grade g on p.gradeId = g.gradeId"
 	+ " join clsm_rank r on p.rankId = r.rankId"
 	+ " join clsm_round ro on p.roundId = ro.roundId"
@@ -639,7 +654,7 @@ func get_clsm_available_rank(progress_id: int) -> Array:
 		+ " where progressId = ?", [progress_id])
 
 func get_clsm_available_round(progress_id: int) -> Array:
-	return query("SELECT r.*, substr(r.roundId, 5) as roundNumber"
+	return query("SELECT r.roundId, r.name, r.reward, r.repeatReward, r.bigIconId ,r.miniIconId, substr(r.roundId, 5) as roundNumber"
 		+ " FROM clsm_progress p"
 		+ " JOIN clsm_progress p_all ON p.rankId = p_all.rankId and p.gradeId = p_all.gradeId"
 		+ " JOIN clsm_round r ON p_all.roundId = r.roundId"
@@ -933,14 +948,12 @@ func get_monster_skill_record(monster_skill_id: String) -> Dictionary:
 	var row: Dictionary = rows[0]
 	var attack_frames: Array = []
 	var attack_damage: Array = []
-	var attack_count: Array = []
-	_decode_attack_frames(_str_col(row, "attackFrames"), attack_frames, attack_damage, attack_count)
+	_decode_attack_frames(_str_col(row, "attackFrames"), attack_frames, attack_damage)
 	var cost_val: int = int(row.get("cost", 0))
 	var built: Dictionary = {
 		"name": _str_col(row, "name"),
 		"skill_id": key,
 		"cost": {"MP": cost_val} if cost_val > 0 else {},
-		"attack_count": attack_count,
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(_str_col(row, "effectFrames")),
@@ -1012,7 +1025,7 @@ func get_summonable_units(is_nv: bool = false) -> Array:
 	return val
 
 func get_all_units() -> Array:
-	var val: Array = query("SELECT * FROM unit")
+	var val: Array = query("SELECT unitId, unitName, rare, sex, tribe, unitSeries, gameTitleId, dispOrder, maxLv, expPatternId, growthType, equipCategories, joinParty, useType, isSummonable, materiaCnt, hp, mp, atk, def, mag, spr, elemResistValue, ailmentResistValue, magicAffinity, limitBurstId, maxLimitBurstLv, trustMasterReward, superTrustMasterReward, nvSeriesId, attackMoveType, moveSpeed, attackFrames, effectFrames, dropCheckCnt, unitCharacterId, subCategoryId, jobId, roleId, spriteOffset, touchRect, overHeadPos, amountSell, isNv FROM unit")
 		# "SELECT u.*, j.name as jobName, lb.name as limitButstName, r.name as roleName, gt.name as gameTitleName FROM unit u"
 		# + " join job j on u.jobId = j.jobId"
 		# + " join unit_role r on u.roleId = r.roleId"
@@ -1053,15 +1066,16 @@ func get_unit_class_up(unit_id: int) -> Dictionary:
 func get_unit_skills(unit_series_id: int, rarity: int, level: int) -> Array:
 	return query("SELECT * from unit_series_lv_acquire where unitSeriesId = ? AND (rarity < ? OR (rarity = ? AND level <= ?)) order by rarity, level", [unit_series_id, rarity, rarity, level])
 
-func get_unit_awakenable_skills(unit_series_id: int, rarity: int, level: int) -> Array:
+func get_unit_awakenable_skills(unit_series_id: int) -> Array:
 	#return query("select usla.*, sr.* from sublimation_recipe sr"
 	#+ " join unit_series_lv_acquire usla on (sr.beforeSkillId like \"%\" + usla.abilityId + \"%\" OR sr.beforeSkillId like \"%\" + usla.magicId + \"%\")"
 	#+ " where usla.unitSeriesId = ? and sr.unitId like concat(\"%\", ?, \"%\") AND (usla.rarity < ? OR (usla.rarity = ? AND usla.level <= ?))", [unit_series_id, unit_series_id, rarity, rarity, level])
-	return query("select * from sublimation_recipe "
+	return query("select recipeId, beforeSkillId, afterSkillId, unitId from sublimation_recipe "
 	+ " where unitId like concat(\"%\", ?, \"%\")", [unit_series_id])
 
 func get_skill_awakening_info(before_skill_id: int) -> Dictionary:
-	var rows: Array = query("select * from sublimation_recipe where beforeSkillId = ?", [before_skill_id])
+	var rows: Array = query("select recipeId, beforeSkillId, afterSkillId, unitId, gil, material, beforeExplain, afterExplain"
+	+ " from sublimation_recipe where beforeSkillId = ?", [before_skill_id])
 	return rows[0] if not rows.is_empty() else {}
 
 func get_awakened_skill_info(recipe_ids: Array) -> Array:
@@ -1142,7 +1156,7 @@ func get_magic(magic_id) -> Dictionary:
 	if _magic_cache.has(key):
 		return _magic_cache[key]
 	var rows: Array = query(
-		"SELECT m.*, COALESCE(i.iconFile, '') AS iconFile, COALESCE(e.explainShort, '') AS explainShort"
+		"SELECT m.name, m.rarity, m.cost, m.magicType, m.element, m.effectFrames, m.attackFrames, m.J35nicFV, m.target, m.targetRange, m.processId, m.processParam, i.iconFile, e.explainShort"
 		+ " FROM magic m"
 		+ " LEFT JOIN icon i ON i.iconId = m.iconId"
 		+ " LEFT JOIN magic_explain e ON e.magicId = m.magicId"
@@ -1163,17 +1177,14 @@ func get_magic(magic_id) -> Dictionary:
 func _build_magic_record(row: Dictionary) -> Dictionary:
 	var attack_frames: Array = []
 	var attack_damage: Array = []
-	var attack_count: Array = []
-	_decode_attack_frames(str(row.get("attackFrames", "")), attack_frames, attack_damage, attack_count)
+	_decode_attack_frames(str(row.get("attackFrames", "")), attack_frames, attack_damage)
 	var cost_val: int = int(row.get("cost", 0))
 	return {
 		"name": str(row.get("name", "")),
 		"iconFile": str(row.get("iconFile", "")),
-		"compendium_id": int(row.get("dispOrder", 0)),
 		"rarity": int(row.get("rarity", 0)),
 		"cost": {"MP": cost_val} if cost_val > 0 else {},
 		"magic_type": _MAGIC_TYPE_NAMES.get(str(row.get("magicType", "")), ""),
-		"attack_count": attack_count,
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
@@ -1223,7 +1234,7 @@ func get_ability(ability_id) -> Dictionary:
 	if _ability_cache.has(key):
 		return _ability_cache[key]
 	var rows: Array = query(
-		"SELECT a.*, COALESCE(i.iconFile, '') AS iconFile, COALESCE(e.explainShort, '') AS explainShort"
+		"SELECT a.name, a.rarity, a.cost, a.element, a.moveType, a.motionType, a.effectFrames, a.attackFrames, a.J35nicFV, a.target, a.targetRange, a.processId, a.processParam, i.iconFile, e.explainShort"
 		+ " FROM ability a"
 		+ " LEFT JOIN icon i ON i.iconId = a.iconId"
 		+ " LEFT JOIN ability_explain e ON e.abilityId = a.abilityId"
@@ -1245,7 +1256,7 @@ func get_passive(ability_id) -> Dictionary:
 	if _passive_cache.has(key):
 		return _passive_cache[key]
 	var rows: Array = query(
-		"SELECT a.*, COALESCE(i.iconFile, '') AS iconFile, COALESCE(e.explainShort, '') AS explainShort"
+		"SELECT a.name, a.rarity, i.iconFile, e.explainShort"
 		+ " FROM ability a"
 		+ " LEFT JOIN icon i ON i.iconId = a.iconId"
 		+ " LEFT JOIN ability_explain e ON e.abilityId = a.abilityId"
@@ -1254,7 +1265,7 @@ func get_passive(ability_id) -> Dictionary:
 	)
 	if rows.is_empty():
 		return {}
-	var built: Dictionary = _build_passive_record(rows[0])
+	var built: Dictionary = rows[0]
 	_passive_cache[key] = built
 	return built
 
@@ -1264,16 +1275,13 @@ func get_passive(ability_id) -> Dictionary:
 func _build_ability_record(row: Dictionary) -> Dictionary:
 	var attack_frames: Array = []
 	var attack_damage: Array = []
-	var attack_count: Array = []
-	_decode_attack_frames(str(row.get("attackFrames", "")), attack_frames, attack_damage, attack_count)
+	_decode_attack_frames(str(row.get("attackFrames", "")), attack_frames, attack_damage)
 	var cost_val: int = int(row.get("cost", 0))
 	return {
 		"name": str(row.get("name", "")),
 		"iconFile": str(row.get("iconFile", "")),
-		"compendium_id": int(row.get("dispOrder", 0)),
 		"rarity": int(row.get("rarity", 0)),
 		"cost": {"MP": cost_val} if cost_val > 0 else {},
-		"attack_count": attack_count,
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
@@ -1286,18 +1294,19 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 	}
 
 
-## Reconstructs the skills_passive.json record (passive) from a joined row.
-func _build_passive_record(row: Dictionary) -> Dictionary:
-	return {
-		"name": str(row.get("name", "")),
-		"iconFile": str(row.get("iconFile", "")),
-		"compendium_id": int(row.get("dispOrder", 0)),
-		"rarity": int(row.get("rarity", 0)),
-		"element_inflict": _decode_boolean(str(row.get("element", ""))),
-		"effects_raw": _decode_effects_raw(row),
-		"explainShort": str(row.get("explainShort", "")),
-	}
-
+func get_effect_data(effect_group_id: int) -> Array:
+	var rows: Array = query("select eg.effectGroupId, eg.name, eg.effectData from effect_group eg"
+		+ " where effectGroupId = ? limit 1", [effect_group_id])
+	var effect_data = rows[0].get("effectData") if not rows.is_empty() else {}
+	var effect_ids = effect_data.split(',') if effect_data != null and effect_data.contains(',') else [effect_data]
+	if effect_ids[0] == null:
+		return []
+	var retval = []
+	for id in effect_ids:
+		var temp = query("select eff.effectId, eff.name, eff.effectType, eff.fileInfo from effect eff"
+		+ " where effectId = ?", [id.split(':')[1]])
+		retval.append(temp[0].get("fileInfo"))
+	return retval
 
 # === Skills: limit bursts ===
 
@@ -1311,7 +1320,7 @@ func get_limitburst(limitburst_id) -> Dictionary:
 	var key: String = str(limitburst_id)
 	if _limitburst_cache.has(key):
 		return _limitburst_cache[key]
-	var rows: Array = query("SELECT lb.*, i.iconFile FROM limitburst lb"
+	var rows: Array = query("SELECT lb.limitBurstId, lb.name, lb.limitBurstType, lb.target, lb.targetRange, lb.element, lb.skillType, lb.processId, lb.processParam, lb.fileInfo, lb.effectFrame, lb.attackFrames, lb.iconId, lb.description, i.iconFile FROM limitburst lb"
 		+ " LEFT JOIN icon i ON i.iconId = lb.iconId WHERE limitBurstId = ? LIMIT 1", [key])
 	if rows.is_empty():
 		return {}
@@ -1323,12 +1332,10 @@ func get_limitburst(limitburst_id) -> Dictionary:
 	_limitburst_cache[key] = built
 	return built
 
-
 func _build_limitburst_record(row: Dictionary, lv_rows: Array) -> Dictionary:
 	var attack_frames: Array = []
 	var attack_damage: Array = []
-	var attack_count: Array = []
-	_decode_attack_frames(str(row.get("attackFrames", "")), attack_frames, attack_damage, attack_count)
+	_decode_attack_frames(str(row.get("attackFrames", "")), attack_frames, attack_damage)
 
 	var target_raw: String = str(row.get("target", ""))
 	var range_raw: String = str(row.get("targetRange", ""))
@@ -1348,7 +1355,6 @@ func _build_limitburst_record(row: Dictionary, lv_rows: Array) -> Dictionary:
 	return {
 		"name": str(row.get("name", "")),
 		"cost": 0,
-		"attack_count": attack_count,
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrame", ""))),
@@ -1412,7 +1418,7 @@ func get_all_esper() -> Array:
 	)
 
 func get_esper_skill(esper_id: int, rank: int) -> Dictionary:
-	var rows: Array = query("select skill.* from beast_skill skill "
+	var rows: Array = query("select skill.beastSkillId, skill.name, skill.target, skill.targetRange, skill.element, skill.processId, skill.processParam, skill.effectFrames, skill.attackFrames, skill.iconId, skill.description from beast_skill skill "
 		+ " join beast_status status on status.beastSkillId = skill.beastSkillId"
 		+ " where status.beastId = ? and status.rare  = ?", [esper_id, rank])
 	return rows[0] if not rows.is_empty() else {}
@@ -1501,7 +1507,7 @@ const _EQUIP_TYPE_ICONS: Dictionary = {
 ## Full item record reconstructed from the item (+ icon + item_explain) tables.
 func get_item(item_id: int) -> Dictionary:
 	var rows: Array = query(
-		"SELECT i.*, COALESCE(ic.iconFile, '') AS iconFile,"
+		"SELECT i.itemId, i.name, i.rarity, i.category, i.useType, i.useWay, i.target, i.targetRange, i.processId, i.processParam, i.battleEffect, i.fieldEffect, i.possessionLimit, i.carryMaxNum, i.useCase, i.priceBuy, i.priceSell, i.iconId, COALESCE(ic.iconFile, '') AS iconFile,"
 		+ " COALESCE(e.explainShort, '') AS explainShort, COALESCE(e.explainLong, '') AS explainLong"
 		+ " FROM item i"
 		+ " LEFT JOIN icon ic ON ic.iconId = i.iconId"
@@ -1513,7 +1519,7 @@ func get_item(item_id: int) -> Dictionary:
 
 func get_important_item(item_id: int) -> Dictionary:
 	var rows: Array = query(
-		"SELECT i.*, COALESCE(ic.iconFile, '') AS iconFile,"
+		"SELECT i.itemId, i.name, i.dispOrder, i.carryMaxNum, i.posessionLimit, i.iconId, COALESCE(ic.iconFile, '') AS iconFile,"
 		+ " COALESCE(e.explainShort, '') AS explainShort, COALESCE(e.explainLong, '') AS explainLong"
 		+ " FROM important_item i"
 		+ " LEFT JOIN icon ic ON ic.iconId = i.iconId"
@@ -1530,7 +1536,7 @@ func get_all_prism() -> Array[String]:
 	return values
 
 func get_all_cryst() -> Array:
-	var rows = query("select * from item"
+	var rows = query("select itemId from item"
 		+ " where itemId <= 270005000"
 		+ " and itemId >= 270000100"
 		+ " and (name like \"% Alcryst\""
@@ -1547,8 +1553,15 @@ func get_all_cryst() -> Array:
 
 func get_recipe(recipe_id: int) -> Dictionary:
 	var rows: Array = query(
-		"select * from recipe where recipeId = ? limit 1",
+		"select recipeId, targetType, dispOrder, targetId, posessionLimit, time, material, gil, baseMaterial from recipe where recipeId = ? limit 1",
 		[recipe_id]
+	)
+	return rows[0] if not rows.is_empty() else {}
+
+func get_recipe_book(recipe_book_id: int) -> Dictionary:
+	var rows: Array = query(
+		"select recipeBookId, name, recipeId, priceBuy from recipe_book where recipeBookId = ? limit 1",
+		[recipe_book_id]
 	)
 	return rows[0] if not rows.is_empty() else {}
 
@@ -1556,26 +1569,26 @@ func get_item_recipes(type_id: int) -> Array:
 	return query("select r.recipeId, r.targetId, r.gil, r.material, i.name, i.useType, ic.iconFile from recipe r"
 		+" join item i on i.itemId = r.targetId"
 		+" join icon ic on i.iconId = ic.iconId"
-		+" where r.targetType = ? and i.useType = ?", [20, type_id])
+		+" where r.targetType = ? and i.useType = ?", [Types.Category_types.ITEM, type_id])
 
 func get_equipment_recipes(type_id: int) -> Array:
 	return query("select r.recipeId, r.targetId, r.gil, r.material, i.name, ic.iconFile from recipe r"
 		+" join equip_item i on i.equipId = r.targetId"
 		+" join icon ic on i.iconId = ic.iconId"
-		+" where r.targetType = ? and i.equipType = ?", [21, type_id])
+		+" where r.targetType = ? and i.equipType = ?", [Types.Category_types.EQUIP, type_id])
 
 func get_materia_recipes(type_id: int) -> Array:
 	return query("select m.name, r.recipeId, r.targetId, r.gil, r.material, i.name, ic.iconFile from recipe r"
 		+" join materia i on i.materiaId = r.targetId"
 		+" join magic m on i.magicId = m.magicId"
 		+" join icon ic on i.iconId = ic.iconId"
-		+" where r.targetType = ? and m.magicType = ?", [22, type_id])
+		+" where r.targetType = ? and m.magicType = ?", [Types.Category_types.MATERIA, type_id])
 
 # === Materia ===
 
 func get_materia(materia_id: int) -> Dictionary:
 	var rows: Array = query(
-		"SELECT m.*, COALESCE(ic.iconFile, '') AS iconFile,"
+		"SELECT m.materiaId, m.name, m.dispOrder, m.magicId, m.abilityId, m.possessionLimit, m.priceBuy, m.priceSell, m.iconId, m.equipSlotType, COALESCE(ic.iconFile, '') AS iconFile,"
 		+ " COALESCE(x.explainShort, '') AS explainShort, COALESCE(x.explainLong, '') AS explainLong"
 		+ " FROM materia m"
 		+ " LEFT JOIN icon ic ON ic.iconId = m.iconId"
@@ -1594,7 +1607,7 @@ func get_equipment(equipment_id) -> Dictionary:
 	if _equipment_cache.has(key):
 		return _equipment_cache[key]
 	var rows: Array = query(
-		"SELECT e.*, COALESCE(i.iconFile, '') AS iconFile,"
+		"SELECT e.equipId, e.name, e.rarity, e.dispOrder, e.equipType, e.equipCategory, e.equipFeature, e.equipCondition, e.hp, e.mp, e.atk, e.def, e.mag, e.spr, e.accuracy, e.elementInflict, e.ailmentInflict, e.elemResistValue, e.ailmentResistValue, e.physicsDmgCut, e.magicDmgCut, e.spResist, e.spResistReverse, e.dmgVariance, e.magicId, e.abilityId, e.possessionLimit, e.priceBuy, e.priceSell, e.iconId, COALESCE(i.iconFile, '') AS iconFile,"
 		+ " COALESCE(x.explainShort, '') AS explainShort, COALESCE(x.explainLong, '') AS explainLong"
 		+ " FROM equip_item e"
 		+ " LEFT JOIN icon i ON i.iconId = e.iconId"
@@ -1633,42 +1646,18 @@ func _build_equipment_record(row: Dictionary) -> Dictionary:
 		"slot": _EQUIP_SLOT_NAMES.get(str(slot_id), str(slot_id)),
 		"type_icon": _EQUIP_TYPE_ICONS.get(str(type_id), ""),
 		"is_twohanded": int(row.get("equipFeature", 0)) == 1,
-		"compendium_id": int(row.get("QLfe23bu", 0)),
-		"compendium_shown": int(row.get("dispDict", 0)) != 0,
-		"rarity": int(row.get("52KBR9qV", 0)),
-		"accuracy": int(row.get("ECbv61DK", 0)),
-		"dmg_variance": null,
+		"rarity": int(row.get("rarity", 0)),
+		"accuracy": int(row.get("accuracy", 0)),
+		"dmgVariance": row.get("dmgVariance", ""),
 		"priceBuy": int(row.get("priceBuy", 0)),
 		"price_sell": int(row.get("priceSell", 0)),
-		"skills": _decode_equipment_skill_ids(_str_col(row, "magicId"), _str_col(row, "abilityId")),
+		"magicId": _str_col(row, "magicId"),
+		"abilityId": _str_col(row, "abilityId"),
 		"requirements": _decode_equipment_requirements(_str_col(row, "equipCondition")),
-		"effects": [],
 		"stats": stats,
 		"explainShort": _str_col(row, "explainShort"),
-		"explainLong": _str_col(row, "explainLong"),
-		"strings": {
-			"name": [_str_col(row, "name")],
-			"desc_short": [_str_col(row, "explainShort")],
-			"desc_long": [_str_col(row, "explainLong")],
-		},
+		"explainLong": _str_col(row, "explainLong")
 	}
-
-
-## equipment.magicId and equipment.abilityId both carry passive ids in CSV form.
-## Keep the original order, preserve 0 when present, and drop duplicates.
-func _decode_equipment_skill_ids(skill_id_raw: String, bonus_raw: String) -> Array:
-	var out: Array = []
-	for raw in [skill_id_raw, bonus_raw]:
-		if raw == "":
-			continue
-		for part in raw.split(","):
-			var token: String = str(part).strip_edges()
-			if token == "" or not token.is_valid_int():
-				continue
-			var value: int = int(token)
-			if not out.has(value):
-				out.append(value)
-	return out
 
 
 ## equipCondition grammar used by equipment restrictions. Current IDs map as:
@@ -1754,19 +1743,15 @@ func _build_effects_raw(n: int, target_raw: String, range_raw: String, proc_raw:
 
 ## attackFrames grammar: '@' separates action groups, '-' separates hits within a
 ## group, each hit is 'frame:damage:x:y'. Fills attack_frames / attack_damage (one
-## inner array per group) and attack_count (hit count per group).
-func _decode_attack_frames(raw: String, out_frames: Array, out_damage: Array, out_count: Array) -> void:
+## inner array per group).
+func _decode_attack_frames(raw: String, out_frames: Array, out_damage: Array) -> void:
 	if raw == "":
-		# No attack data still maps to one empty group ([[]] / [[]] / [0]), matching
-		# the shape the old JSON carried for non-attacking spells.
 		out_frames.append([])
 		out_damage.append([])
-		out_count.append(0)
 		return
 	for group in raw.split("@"):
 		var frames: Array = []
 		var damage: Array = []
-		var hits: int = 0
 		for hit in str(group).split("-"):
 			var parts: PackedStringArray = str(hit).split(":")
 			var fr: String = str(parts[0]).strip_edges() if parts.size() >= 1 else ""
@@ -1775,10 +1760,8 @@ func _decode_attack_frames(raw: String, out_frames: Array, out_damage: Array, ou
 			var dm: String = str(parts[1]).strip_edges() if parts.size() >= 2 else ""
 			if dm.is_valid_int():
 				damage.append(int(dm))
-			hits += 1
 		out_frames.append(frames)
 		out_damage.append(damage)
-		out_count.append(hits)
 
 
 ## effectFrames grammar: '@' separates groups, '&' separates sub-effects, each is
@@ -1792,8 +1775,8 @@ func _decode_effect_frames(raw: String) -> Array:
 		var frames: Array = []
 		for sub in str(group).split("&"):
 			var parts: PackedStringArray = str(sub).split(":")
-			if parts.size() >= 1 and str(parts[0]).is_valid_int():
-				frames.append(int(parts[0]))
+			if parts.size() >= 1 and str(parts[0]).is_valid_int() and str(parts[1]).is_valid_int():
+				frames.append({"frame_offset": int(parts[0]), "effect_id": int(parts[1])})
 		out.append(frames)
 	return out
 

@@ -3,6 +3,7 @@ extends Control
 @onready var back_button: TextureButton = $TopBar/UnitNamebgChara/BackButton
 
 @onready var entry_window: Control = $EntryWindow
+@onready var grade_texture: TextureRect = $EntryWindow/clsmVsCpu_grade
 @onready var grade_label: Label = $EntryWindow/clsmVsCpu_grade/Label
 @onready var rank_label: Label = $EntryWindow/clsmVsCpu_rank/Label
 @onready var round_label: Label = $EntryWindow/clsmVsCpu_round/Label
@@ -60,6 +61,9 @@ func _refresh_list() -> void:
 		Depth.ENTRY:
 			progress_bar.value = int(progress.get("points", 0))
 			grade_label.text = progress.get("grade", "?")
+			if ResourceLoader.exists("res://assets/ui/colosseum/colo_grade_%s.png" % progress.get("grade_id")):
+				grade_texture.texture = ResourceLoader.load("res://assets/ui/colosseum/colo_grade_%s.png" % progress.get("grade_id")) as Texture2D
+				grade_label.visible = false
 			rank_label.text = progress.get("rank", "?")
 			round_label.text = str(progress.get("roundId", "?"))[4]
 			point_label.text = str(progress.get("points", "???"))

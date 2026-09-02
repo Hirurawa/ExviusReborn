@@ -24,8 +24,7 @@ var unit_inst: Dictionary = {}
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	var temp_unit_inst = GameDatabase.get_unit(253000807)
-	#init_scene({"unit_inst": temp_unit_inst})
+	#init_scene({"unit_inst": GameDatabase.get_unit(253000807)})
 
 
 func init_scene(params: Dictionary) -> void:
@@ -37,7 +36,7 @@ func init_scene(params: Dictionary) -> void:
 
 
 func _populate_skill_list() -> void:
-	var skills = GameDatabase.get_unit_awakenable_skills(unit_inst.get("unitSeries"), unit_inst.get("current_rarity"), unit_inst.get("level"))
+	var skills = GameDatabase.get_unit_awakenable_skills(unit_inst.get("unitSeries"))
 	for skill in skills:
 		var skill_data = GameDatabase.get_magic(skill.get("beforeSkillId"))
 		var button: Button = Button.new()

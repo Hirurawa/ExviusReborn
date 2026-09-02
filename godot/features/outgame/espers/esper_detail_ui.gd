@@ -126,21 +126,6 @@ func _get_summon_image_texture(summon_data: Dictionary) -> Texture2D:
 
 	return ResourceLoader.load(image_path) as Texture2D
 
-func _get_skill_text_by_key(skill_data: Dictionary, text_key: String) -> String:
-	var strings_value: Variant = skill_data.get("strings", {})
-	if not (strings_value is Dictionary):
-		return ""
-
-	var strings: Dictionary = strings_value
-	var text_value: Variant = strings.get(text_key, [])
-	if not (text_value is Array):
-		return ""
-
-	var localized_values: Array = text_value
-	if localized_values.is_empty():
-		return ""
-
-	return str(localized_values[0])
 
 func _on_espers_updated(_espers: Array) -> void:
 	if _summon_id == "":

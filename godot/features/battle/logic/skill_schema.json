@@ -154,5 +154,10 @@
 	"127": {
 		"type": "SHIELD",
 		"keys": ["HP", "turn_count", ""]
+	},
+	"1020":
+	{
+		"type": "RESTORE_CHARGE",
+		"keys": ["ability_id", "restore_amount", ""]
 	}
 }

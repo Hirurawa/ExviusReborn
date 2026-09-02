@@ -75,6 +75,7 @@ var _menu_drag_start_position: Vector2
 
 var combat_inventory: CombatInventory = CombatInventory.new()
 var _damage_numbers: DamageNumberSpawner
+var _effects: EffectSpawner
 
 var _is_ally_targeting_mode: bool = false
 var _pending_skill_action_id: String = ""
@@ -146,6 +147,7 @@ func _ready() -> void:
 	_setup_action_menu()
 	_setup_cancel_target_button()
 	_damage_numbers = DamageNumberSpawner.new(self)
+	_effects = EffectSpawner.new(self)
 	_init_combat_inventory()
 	
 	#init_scene({}) # Uncomment for individual testing.
@@ -1309,6 +1311,10 @@ func _on_unit_action_started_feedback(unit_index: int, action: int) -> void:
 			if unit_index >= 0 and unit_index < battle_manager.party_data.size():
 				var unit: Dictionary = battle_manager.party_data[unit_index]
 				text = str(unit.get("queued_action_name", ""))
+				
+				var damage_container: Control = _find_player_damage_container(unit_index)
+				_effects.spawn(unit.get("queued_payload", {}).get("resolved_action_data", {}).get("effect_frames", []), damage_container)
+				
 			if text == "":
 				text = "Skill" if action == battle_manager.CombatAction.SKILL else "Item"
 	if text != "":

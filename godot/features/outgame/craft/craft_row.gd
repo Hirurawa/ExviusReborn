@@ -39,11 +39,11 @@ func setup(data: Dictionary) -> void:
 	var mat_text: Array[String] = []
 	for mat in material_array:
 		var mat_data = mat.split(':')
-		if mat_data[0] == "20":
+		if mat_data[0] == "20": # Types.Category_types.ITEM
 			mat_text.append(str(mat_data[2]) + "x " + GameDatabase.get_item(int(mat_data[1])).get("name"))
-		if mat_data[0] == "21":
+		if mat_data[0] == "21": # Types.Category_types.EQUIP
 			mat_text.append(str(mat_data[2]) + "x " + GameDatabase.get_equipment(int(mat_data[1])).get("name"))
-		if mat_data[0] == "22":
+		if mat_data[0] == "22": # Types.Category_types.MATERIA
 			mat_text.append(str(mat_data[2]) + "x " + GameDatabase.get_materia(int(mat_data[1])).get("name"))
 		
 	material_label.text = " - ".join(mat_text)

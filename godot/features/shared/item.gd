@@ -312,12 +312,9 @@ func _build_detail_text(item_data: Dictionary, display_options: Dictionary) -> S
 	if override_text != "":
 		return override_text
 
-	var strings_value: Variant = item_data.get("strings", {})
-	if strings_value is Dictionary:
-		var strings: Dictionary = strings_value as Dictionary
-		var short_desc_value: Variant = strings.get("desc_short", [])
-		if short_desc_value is Array and not short_desc_value.is_empty():
-			return str(short_desc_value[0])
+	var short_desc_value: String = item_data.get("explainShort", "")
+	if not short_desc_value.is_empty():
+		return str(short_desc_value)
 
 	var summary_parts: PackedStringArray = []
 	var type_text: String = str(item_data.get("type", ""))

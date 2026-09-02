@@ -42,7 +42,8 @@ static func parse_passive(skill_data: Dictionary, passive_schema: Dictionary) ->
 					
 			parsed_action.get("effects").append(parsed_effect)
 		else:
-			push_warning("OpcodeParser: Unknown passive opcode: " + str(opcode))
+			#push_warning("OpcodeParser: Unknown passive opcode: " + str(opcode))
+			pass
 			
 	return parsed_action
 

@@ -13,34 +13,65 @@
 [ext_resource type="Texture2D" uid="uid://cnghxd85vwxfl" path="res://assets/ui/unit/middlebutton_label_equip.tres" id="8_yv0r3"]
 [ext_resource type="Texture2D" uid="uid://ci4kqab26x4u8" path="res://assets/ui/unit/middlebutton_label_status.tres" id="9_gdnlu"]
 [ext_resource type="Texture2D" uid="uid://cqnaqr2hufdlq" path="res://assets/ui/unit/unit_statusbottomline.tres" id="12_obk0j"]
+[ext_resource type="Texture2D" uid="uid://cl8jmbv2l7sfy" path="res://assets/ui/unit/unit_status_up_mini.tres" id="13_evqkv"]
 [ext_resource type="Texture2D" uid="uid://bgh4m64l2vetk" path="res://assets/ui/unit/unit_statusframe.tres" id="13_ldnwr"]
+[ext_resource type="Texture2D" uid="uid://cc5atfv17jc6q" path="res://assets/icons/equipments/dagger.png" id="14_m5k68"]
 [ext_resource type="Texture2D" uid="uid://csl1y13mp5fhe" path="res://assets/ui/unit/ability_awake_unitstatus.tres" id="14_rwkqv"]
+[ext_resource type="Texture2D" uid="uid://bflepcdloj4rq" path="res://assets/icons/equipments/sword.png" id="15_evqkv"]
+[ext_resource type="Texture2D" uid="uid://0yinc0lo84j2" path="res://assets/icons/equipments/greatSword.png" id="16_33b0j"]
 [ext_resource type="Texture2D" uid="uid://dwnw3ino0c44t" path="res://assets/ui/unit/unit_raritystar.tres" id="16_x61d2"]
 [ext_resource type="Texture2D" uid="uid://cn17nnxfuux75" path="res://assets/ui/common/arrow_large_r.tres" id="17_esevs"]
+[ext_resource type="Texture2D" uid="uid://bod4x4ey4sxj2" path="res://assets/icons/equipments/katana.png" id="17_mpf5g"]
 [ext_resource type="Texture2D" uid="uid://dpu4dd00w0s7y" path="res://assets/ui/common/arrow_large_l.tres" id="18_606v4"]
+[ext_resource type="Texture2D" uid="uid://cqxjhw43d7l4o" path="res://assets/icons/equipments/staff.png" id="18_yqfo7"]
+[ext_resource type="Texture2D" uid="uid://djmlssncrg4gl" path="res://assets/icons/equipments/rod.png" id="19_daq2h"]
 [ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="19_x24et"]
 [ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="20_6gmev"]
+[ext_resource type="Texture2D" uid="uid://u7slhruda0ka" path="res://assets/icons/equipments/bow.png" id="20_ekm1e"]
 [ext_resource type="Texture2D" uid="uid://c503r22ujhw2e" path="res://assets/ui/unit/favorite_star_off.tres" id="20_ey0j1"]
+[ext_resource type="Texture2D" uid="uid://d26vspqq2bn2n" path="res://assets/ui/unit/unit_magic_icon_white.tres" id="20_srexv"]
 [ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="21_5xpj8"]
+[ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="21_71mbk"]
 [ext_resource type="Texture2D" uid="uid://b3d71nxlj0yk4" path="res://assets/ui/unit/favorite_star_on.tres" id="21_k6tdj"]
+[ext_resource type="Texture2D" uid="uid://b14n6olcjvm3l" path="res://assets/icons/equipments/axe.png" id="21_tkfog"]
+[ext_resource type="Texture2D" uid="uid://c5vr8xkgh3daj" path="res://assets/ui/unit/unit_magic_-.tres" id="22_0b4ee"]
 [ext_resource type="Texture2D" uid="uid://bsiigg0cayqgs" path="res://assets/ui/unit/unit_status_button_big.tres" id="22_luk7k"]
 [ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="22_oxtnf"]
+[ext_resource type="Texture2D" uid="uid://bh34lhrfsagbt" path="res://assets/icons/equipments/lightShield.png" id="22_srexv"]
 [ext_resource type="Texture2D" uid="uid://bhyakuhsw5xbq" path="res://assets/ui/unit/unit_equip_button_label_equipment.tres" id="23_0e10s"]
 [ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="23_71bb5"]
+[ext_resource type="Texture2D" uid="uid://cksgh0dpjprj1" path="res://assets/icons/equipments/heavyShield.png" id="23_71mbk"]
+[ext_resource type="Texture2D" uid="uid://d2qos4w28d1uj" path="res://assets/ui/unit/unit_magic_icon_black.tres" id="23_mfl8e"]
+[ext_resource type="Texture2D" uid="uid://n6kcmh8wqaxb" path="res://assets/icons/equipments/hat.png" id="24_0b4ee"]
 [ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="24_2jgiv"]
+[ext_resource type="Texture2D" uid="uid://coi5oppwj0l0j" path="res://assets/ui/unit/unit_magic_icon_green.tres" id="24_o2ocf"]
 [ext_resource type="Texture2D" uid="uid://cxk2jgr8frw67" path="res://assets/ui/unit/unit_equip_button_label_ability.tres" id="24_yv0r3"]
 [ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="25_ib8ma"]
+[ext_resource type="Texture2D" uid="uid://dojknnmh2xfxt" path="res://assets/icons/equipments/helm.png" id="25_mfl8e"]
+[ext_resource type="Texture2D" uid="uid://dx4esnhwrumh8" path="res://assets/ui/unit/unit_magic_icon_blue.tres" id="25_yfwst"]
 [ext_resource type="Texture2D" uid="uid://cd6y3wnksn01j" path="res://assets/ui/unit/unit_status_button.tres" id="26_gdnlu"]
+[ext_resource type="Texture2D" uid="uid://dq5s8mqs5g3ys" path="res://assets/icons/equipments/hammer.png" id="26_o2ocf"]
 [ext_resource type="Texture2D" uid="uid://oy6058mmexot" path="res://assets/ui/unit/unit_status_button_label_chara.tres" id="27_5b2x4"]
+[ext_resource type="Texture2D" uid="uid://bxedgb04hyl6n" path="res://assets/icons/equipments/spear.png" id="27_yfwst"]
+[ext_resource type="Texture2D" uid="uid://b4yoc0auauhl8" path="res://assets/icons/equipments/harp.png" id="28_4pmyw"]
 [ext_resource type="Texture2D" uid="uid://csg2ugoueahrv" path="res://assets/ui/unit/unit_status_button_label_magic.tres" id="28_6mfme"]
 [ext_resource type="Texture2D" uid="uid://t03iwxat6tw5" path="res://assets/ui/unit/unit_status_button_label_special.tres" id="29_obk0j"]
+[ext_resource type="Texture2D" uid="uid://ce68xavl65107" path="res://assets/icons/equipments/whip.png" id="29_qi40m"]
 [ext_resource type="Texture2D" uid="uid://cu6tsmub5fkak" path="res://assets/ui/unit/unit_skillbg.tres" id="30_0e10s"]
+[ext_resource type="Texture2D" uid="uid://wj8e0xs3628p" path="res://assets/icons/equipments/throwing.png" id="30_s7bbp"]
 [ext_resource type="Texture2D" uid="uid://da1rs1lu6ecg" path="res://assets/ui/unit/unit_bondsbg.tres" id="31_5b2x4"]
+[ext_resource type="Texture2D" uid="uid://1njt25m0eq4s" path="res://assets/icons/equipments/gun.png" id="31_8cxrh"]
 [ext_resource type="Texture2D" uid="uid://dbys00uemtltk" path="res://assets/ui/unit/unit_bonds_icon.tres" id="32_6mfme"]
+[ext_resource type="Texture2D" uid="uid://bedxxugiwkt2a" path="res://assets/icons/equipments/mace.png" id="32_uebqn"]
 [ext_resource type="Texture2D" uid="uid://cd0ytoi8pg642" path="res://assets/ui/unit/unit_bondsname_bg.tres" id="33_obk0j"]
+[ext_resource type="Texture2D" uid="uid://c1fje2yig6w5y" path="res://assets/icons/equipments/fist.png" id="33_pisc4"]
+[ext_resource type="Texture2D" uid="uid://dcrigp0kkmwbi" path="res://assets/icons/equipments/clothes.png" id="34_cwenc"]
+[ext_resource type="Texture2D" uid="uid://cjyo6abhsct0" path="res://assets/icons/equipments/lightArmor.png" id="35_0sxf6"]
 [ext_resource type="Texture2D" uid="uid://dyiho55xvnyrw" path="res://assets/ui/unit/unit_resistbg.tres" id="35_rwkqv"]
 [ext_resource type="Texture2D" uid="uid://b10y2c8a1kyd0" path="res://assets/icons/elements/fire.png" id="36_gjsom"]
+[ext_resource type="Texture2D" uid="uid://omah5tk1v4ce" path="res://assets/icons/equipments/heavyArmor.png" id="36_gm1to"]
 [ext_resource type="Texture2D" uid="uid://u05tt0vqot87" path="res://assets/ui/unit/unit_skillbg_mini.tres" id="36_vd0he"]
+[ext_resource type="Texture2D" uid="uid://dhlwxuhhlrwfx" path="res://assets/icons/equipments/robe.png" id="37_mcfi1"]
 [ext_resource type="Texture2D" uid="uid://ppinh51yrjs6" path="res://assets/icons/elements/ice.png" id="37_omn6i"]
 [ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="37_rwkqv"]
 [ext_resource type="Texture2D" uid="uid://47hsvty7has4" path="res://assets/icons/elements/lightning.png" id="38_o4c08"]
@@ -67,6 +98,8 @@
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="56_s8d6h"]
 [ext_resource type="Texture2D" uid="uid://co3g5nt7ryh6u" path="res://assets/ui/item/item_frame_bg.png" id="60_rbglj"]
 [ext_resource type="Texture2D" uid="uid://b3dde5w10l2r7" path="res://assets/ui/item/item_frame_4.tres" id="61_ib8ma"]
+[ext_resource type="Texture2D" uid="uid://b0okm6p7migfg" path="res://assets/ui/unit/unit_resist_label_-.tres" id="69_4pmyw"]
+[ext_resource type="Texture2D" uid="uid://coo6oa523qlwt" path="res://assets/ui/unit/minibutton_label_unitdetail.tres" id="100_71mbk"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tp4qt"]
 bg_color = Color(0, 0, 0, 0)
@@ -141,171 +174,528 @@ offset_bottom = 269.0
 texture = ExtResource("13_ldnwr")
 expand_mode = 1
 
-[node name="unit_status_label_hp" type="TextureRect" parent="unit_statusbg" unique_id=2112762728]
+[node name="UnitStatusLabelLv" type="TextureRect" parent="unit_statusbg" unique_id=1880307194]
 layout_mode = 0
 offset_left = 214.0
-offset_top = 189.0
+offset_top = 146.0
 offset_right = 256.0
-offset_bottom = 209.0
+offset_bottom = 166.0
+texture = ExtResource("54_k6tdj")
+
+[node name="UnitLevel" type="Label" parent="unit_statusbg/UnitStatusLabelLv" unique_id=1690732899]
+layout_mode = 0
+offset_left = 40.0
+offset_top = -3.0
+offset_right = 80.0
+offset_bottom = 20.0
+vertical_alignment = 1
+
+[node name="UnitLvupInfo2" type="TextureRect" parent="unit_statusbg" unique_id=331190936]
+layout_mode = 0
+offset_left = 512.0
+offset_top = 148.0
+offset_right = 538.0
+offset_bottom = 164.0
+texture = ExtResource("55_rbglj")
+
+[node name="NextExpLabel" type="Label" parent="unit_statusbg/UnitLvupInfo2" unique_id=1447779644]
+layout_mode = 0
+offset_left = 45.0
+offset_top = -3.0
+offset_right = 85.0
+offset_bottom = 20.0
+vertical_alignment = 1
+
+[node name="UnitExpBg" type="TextureRect" parent="unit_statusbg" unique_id=1417263868]
+layout_mode = 0
+offset_left = 230.0
+offset_top = 167.0
+offset_right = 584.0
+offset_bottom = 177.0
+texture = ExtResource("52_g4fmp")
+
+[node name="UnitExpBar" type="TextureProgressBar" parent="unit_statusbg/UnitExpBg" unique_id=1205123294]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 349.0
+offset_bottom = 7.0
+texture_progress = ExtResource("25_ib8ma")
+
+[node name="UnitExpGauge" type="TextureRect" parent="unit_statusbg/UnitExpBg" unique_id=167478747]
+layout_mode = 0
+texture = ExtResource("53_ey0j1")
+
+[node name="Stats" type="GridContainer" parent="unit_statusbg" unique_id=2041236550]
+layout_mode = 0
+offset_left = 205.0
+offset_top = 185.0
+offset_right = 629.0
+offset_bottom = 271.0
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="HP" type="HBoxContainer" parent="unit_statusbg/Stats" unique_id=1806833002]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_hp" type="TextureRect" parent="unit_statusbg/Stats/HP" unique_id=1428495528]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 texture = ExtResource("19_x24et")
-expand_mode = 1
+stretch_mode = 2
 
-[node name="unit_status_ext_hp_now_number" type="Label" parent="unit_statusbg/unit_status_label_hp" unique_id=112261658]
-layout_mode = 0
-offset_left = 71.0
-offset_top = 1.0
-offset_right = 355.0
-offset_bottom = 27.0
+[node name="unit_status_hp_now_number" type="Label" parent="unit_statusbg/Stats/HP" unique_id=199420820]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 18
-text = "unit_status_ext_hp_now_number"
+text = "hp"
+vertical_alignment = 1
 
-[node name="unit_status_ext_hp_max_number" type="Label" parent="unit_statusbg/unit_status_label_hp" unique_id=835907600]
-layout_mode = 0
-offset_left = 122.0
-offset_top = 5.0
-offset_right = 375.0
-offset_bottom = 28.0
+[node name="unit_status_hp_max_number" type="Label" parent="unit_statusbg/Stats/HP" unique_id=802439997]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
 
-[node name="unit_status_label_mp" type="TextureRect" parent="unit_statusbg" unique_id=1488598542]
-layout_mode = 0
-offset_left = 417.0
-offset_top = 189.0
-offset_right = 459.0
-offset_bottom = 209.0
+[node name="UnitStatusArrow" type="TextureRect" parent="unit_statusbg/Stats/HP" unique_id=1259531788]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_evqkv")
+stretch_mode = 2
+
+[node name="MP" type="HBoxContainer" parent="unit_statusbg/Stats" unique_id=863827871]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_mp" type="TextureRect" parent="unit_statusbg/Stats/MP" unique_id=1044225784]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 texture = ExtResource("20_6gmev")
-expand_mode = 1
+stretch_mode = 2
 
-[node name="unit_status_ext_mp_now_number" type="Label" parent="unit_statusbg/unit_status_label_mp" unique_id=445335189]
-layout_mode = 0
-offset_left = 81.0
-offset_top = 1.0
-offset_right = 371.0
-offset_bottom = 27.0
+[node name="unit_status_mp_now_number" type="Label" parent="unit_statusbg/Stats/MP" unique_id=2104073799]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 18
-text = "unit_status_ext_mp_now_number"
+text = "mp"
+vertical_alignment = 1
 
-[node name="unit_status_ext_mp_max_number" type="Label" parent="unit_statusbg/unit_status_label_mp" unique_id=791863446]
-layout_mode = 0
-offset_left = 132.0
-offset_top = 5.0
-offset_right = 390.0
-offset_bottom = 28.0
+[node name="unit_status_mp_max_number" type="Label" parent="unit_statusbg/Stats/MP" unique_id=1723557959]
+layout_mode = 2
 theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
 
-[node name="unit_status_label_attack" type="TextureRect" parent="unit_statusbg" unique_id=1928331601]
-layout_mode = 0
-offset_left = 214.0
-offset_top = 217.0
-offset_right = 256.0
-offset_bottom = 237.0
+[node name="UnitStatusArrow" type="TextureRect" parent="unit_statusbg/Stats/MP" unique_id=1260032539]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_evqkv")
+stretch_mode = 2
+
+[node name="ATK" type="HBoxContainer" parent="unit_statusbg/Stats" unique_id=592458579]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_attack" type="TextureRect" parent="unit_statusbg/Stats/ATK" unique_id=862391286]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 texture = ExtResource("21_5xpj8")
-expand_mode = 1
+stretch_mode = 2
 
-[node name="unit_status_ext_attack_now_number" type="Label" parent="unit_statusbg/unit_status_label_attack" unique_id=1197203793]
-layout_mode = 0
-offset_left = 71.0
-offset_top = 1.0
-offset_right = 387.0
-offset_bottom = 27.0
+[node name="unit_status_attack_now_number" type="Label" parent="unit_statusbg/Stats/ATK" unique_id=816000870]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 18
-text = "unit_status_ext_attack_now_number"
+text = "atk"
+vertical_alignment = 1
 
-[node name="unit_status_ext_attack_max_number" type="Label" parent="unit_statusbg/unit_status_label_attack" unique_id=1763007102]
-layout_mode = 0
-offset_left = 122.0
-offset_top = 5.0
-offset_right = 403.0
-offset_bottom = 28.0
+[node name="unit_status_attack_max_number" type="Label" parent="unit_statusbg/Stats/ATK" unique_id=1802537029]
+layout_mode = 2
 theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
 
-[node name="unit_status_label_defense" type="TextureRect" parent="unit_statusbg" unique_id=1984750841]
-layout_mode = 0
-offset_left = 417.0
-offset_top = 217.0
-offset_right = 459.0
-offset_bottom = 237.0
+[node name="UnitStatusArrow" type="TextureRect" parent="unit_statusbg/Stats/ATK" unique_id=697999047]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_evqkv")
+stretch_mode = 2
+
+[node name="DEF" type="HBoxContainer" parent="unit_statusbg/Stats" unique_id=1702715350]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_defense" type="TextureRect" parent="unit_statusbg/Stats/DEF" unique_id=118297744]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 texture = ExtResource("22_oxtnf")
-expand_mode = 1
+stretch_mode = 2
 
-[node name="unit_status_ext_defense_now_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=349594812]
-layout_mode = 0
-offset_left = 81.0
-offset_top = 1.0
-offset_right = 411.0
-offset_bottom = 27.0
+[node name="unit_status_defense_now_number" type="Label" parent="unit_statusbg/Stats/DEF" unique_id=45082667]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 18
-text = "unit_status_ext_defense_now_number"
+text = "def"
+vertical_alignment = 1
 
-[node name="unit_status_ext_defense_max_number" type="Label" parent="unit_statusbg/unit_status_label_defense" unique_id=2047240319]
-layout_mode = 0
-offset_left = 132.0
-offset_top = 5.0
-offset_right = 426.0
-offset_bottom = 28.0
+[node name="unit_status_defense_max_number" type="Label" parent="unit_statusbg/Stats/DEF" unique_id=917659736]
+layout_mode = 2
 theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
 
-[node name="unit_status_label_magic" type="TextureRect" parent="unit_statusbg" unique_id=1727977697]
-layout_mode = 0
-offset_left = 214.0
-offset_top = 245.0
-offset_right = 256.0
-offset_bottom = 265.0
+[node name="UnitStatusArrow" type="TextureRect" parent="unit_statusbg/Stats/DEF" unique_id=150502974]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_evqkv")
+stretch_mode = 2
+
+[node name="MAG" type="HBoxContainer" parent="unit_statusbg/Stats" unique_id=1054338586]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_magic" type="TextureRect" parent="unit_statusbg/Stats/MAG" unique_id=210922027]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 texture = ExtResource("23_71bb5")
-expand_mode = 1
+stretch_mode = 2
 
-[node name="unit_status_ext_magic_now_number" type="Label" parent="unit_statusbg/unit_status_label_magic" unique_id=1545109940]
-layout_mode = 0
-offset_left = 71.0
-offset_top = 1.0
-offset_right = 384.0
-offset_bottom = 27.0
+[node name="unit_status_magic_now_number" type="Label" parent="unit_statusbg/Stats/MAG" unique_id=730452048]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 18
-text = "unit_status_ext_magic_now_number"
+text = "mag"
+vertical_alignment = 1
 
-[node name="unit_status_ext_magic_max_number" type="Label" parent="unit_statusbg/unit_status_label_magic" unique_id=511524872]
-layout_mode = 0
-offset_left = 122.0
-offset_top = 5.0
-offset_right = 401.0
-offset_bottom = 28.0
+[node name="unit_status_magic_max_number" type="Label" parent="unit_statusbg/Stats/MAG" unique_id=965668809]
+layout_mode = 2
 theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
 
-[node name="unit_status_label_mnd" type="TextureRect" parent="unit_statusbg" unique_id=1835200245]
-layout_mode = 0
-offset_left = 417.0
-offset_top = 245.0
-offset_right = 459.0
-offset_bottom = 265.0
+[node name="UnitStatusArrow" type="TextureRect" parent="unit_statusbg/Stats/MAG" unique_id=1561127226]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_evqkv")
+stretch_mode = 2
+
+[node name="SPR" type="HBoxContainer" parent="unit_statusbg/Stats" unique_id=1494968021]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_mnd" type="TextureRect" parent="unit_statusbg/Stats/SPR" unique_id=1835200245]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 texture = ExtResource("24_2jgiv")
-expand_mode = 1
+stretch_mode = 2
 
-[node name="unit_status_ext_mnd_now_number" type="Label" parent="unit_statusbg/unit_status_label_mnd" unique_id=867600528]
-layout_mode = 0
-offset_left = 81.0
-offset_top = 1.0
-offset_right = 382.0
-offset_bottom = 27.0
+[node name="unit_status_mnd_now_number" type="Label" parent="unit_statusbg/Stats/SPR" unique_id=867600528]
+layout_mode = 2
+size_flags_horizontal = 5
 theme_override_font_sizes/font_size = 18
-text = "unit_status_ext_mnd_now_number"
+text = "spr"
+vertical_alignment = 1
 
-[node name="unit_status_ext_mnd_max_number" type="Label" parent="unit_statusbg/unit_status_label_mnd" unique_id=1276767763]
-layout_mode = 0
-offset_left = 132.0
-offset_top = 5.0
-offset_right = 400.0
-offset_bottom = 28.0
+[node name="unit_status_mnd_max_number" type="Label" parent="unit_statusbg/Stats/SPR" unique_id=1276767763]
+layout_mode = 2
 theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="unit_statusbg/Stats/SPR" unique_id=538009776]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_evqkv")
+stretch_mode = 2
+
+[node name="MagicAffinity" type="HBoxContainer" parent="unit_statusbg" unique_id=2041898820]
+visible = false
+layout_mode = 0
+offset_left = 432.0
+offset_top = 264.0
+offset_right = 636.0
+offset_bottom = 284.0
+
+[node name="White" type="HBoxContainer" parent="unit_statusbg/MagicAffinity" unique_id=1849421504]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="UnitMagicIconWhite" type="TextureRect" parent="unit_statusbg/MagicAffinity/White" unique_id=1039601483]
+layout_mode = 2
+texture = ExtResource("20_srexv")
+stretch_mode = 2
+
+[node name="UnitMagicLv" type="TextureRect" parent="unit_statusbg/MagicAffinity/White" unique_id=1914967119]
+layout_mode = 2
+texture = ExtResource("21_71mbk")
+stretch_mode = 2
+
+[node name="UnitMagic" type="TextureRect" parent="unit_statusbg/MagicAffinity/White" unique_id=288829322]
+layout_mode = 2
+texture = ExtResource("22_0b4ee")
+
+[node name="Black" type="HBoxContainer" parent="unit_statusbg/MagicAffinity" unique_id=1152581298]
+layout_mode = 2
+
+[node name="UnitMagicIconBlack" type="TextureRect" parent="unit_statusbg/MagicAffinity/Black" unique_id=75241032]
+layout_mode = 2
+texture = ExtResource("23_mfl8e")
+stretch_mode = 2
+
+[node name="UnitMagicLv" type="TextureRect" parent="unit_statusbg/MagicAffinity/Black" unique_id=580091625]
+layout_mode = 2
+texture = ExtResource("21_71mbk")
+stretch_mode = 2
+
+[node name="Green" type="HBoxContainer" parent="unit_statusbg/MagicAffinity" unique_id=1930527817]
+layout_mode = 2
+
+[node name="UnitMagicIconGreen" type="TextureRect" parent="unit_statusbg/MagicAffinity/Green" unique_id=128508195]
+layout_mode = 2
+texture = ExtResource("24_o2ocf")
+stretch_mode = 2
+
+[node name="UnitMagicLv" type="TextureRect" parent="unit_statusbg/MagicAffinity/Green" unique_id=1190343237]
+layout_mode = 2
+texture = ExtResource("21_71mbk")
+stretch_mode = 2
+
+[node name="Blue" type="HBoxContainer" parent="unit_statusbg/MagicAffinity" unique_id=479730816]
+layout_mode = 2
+
+[node name="UnitMagicIconBlue" type="TextureRect" parent="unit_statusbg/MagicAffinity/Blue" unique_id=10685479]
+layout_mode = 2
+texture = ExtResource("25_yfwst")
+stretch_mode = 2
+
+[node name="UnitMagicLv" type="TextureRect" parent="unit_statusbg/MagicAffinity/Blue" unique_id=206662980]
+layout_mode = 2
+texture = ExtResource("21_71mbk")
+stretch_mode = 2
 
 [node name="EquipIconsGrid" type="GridContainer" parent="unit_statusbg" unique_id=1860803113]
+custom_minimum_size = Vector2(440, 0)
 layout_mode = 0
-offset_left = 206.0
+offset_left = 200.0
 offset_top = 268.0
-offset_right = 632.0
-offset_bottom = 315.0
+offset_right = 640.0
+offset_bottom = 320.0
 theme_override_constants/h_separation = 2
 theme_override_constants/v_separation = 2
 columns = 12
+
+[node name="Dagger" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1562019092]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("14_m5k68")
+expand_mode = 1
+
+[node name="Sword" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1097000875]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("15_evqkv")
+expand_mode = 1
+
+[node name="GreatSword" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=580511457]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("16_33b0j")
+expand_mode = 1
+
+[node name="Katana" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=75740612]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("17_mpf5g")
+expand_mode = 1
+
+[node name="Staff" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=89461192]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("18_yqfo7")
+expand_mode = 1
+
+[node name="Rod" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1189949783]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("19_daq2h")
+expand_mode = 1
+
+[node name="Bow" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=168576351]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("20_ekm1e")
+expand_mode = 1
+
+[node name="Axe" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1966532497]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("21_tkfog")
+expand_mode = 1
+
+[node name="LightShield" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=2419350]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("22_srexv")
+expand_mode = 1
+
+[node name="HeavyShield" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=64614563]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("23_71mbk")
+expand_mode = 1
+
+[node name="Hat" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=145587461]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("24_0b4ee")
+expand_mode = 1
+
+[node name="Helm" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1795238683]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("25_mfl8e")
+expand_mode = 1
+
+[node name="Hammer" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=304347456]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("26_o2ocf")
+expand_mode = 1
+
+[node name="Spear" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=2049108660]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("27_yfwst")
+expand_mode = 1
+
+[node name="Harp" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1551815171]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("28_4pmyw")
+expand_mode = 1
+
+[node name="Whip" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=113334767]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("29_qi40m")
+expand_mode = 1
+
+[node name="Throwing" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=989970657]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("30_s7bbp")
+expand_mode = 1
+
+[node name="Gun" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=674048040]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("31_8cxrh")
+expand_mode = 1
+
+[node name="Mace" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=251637148]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("32_uebqn")
+expand_mode = 1
+
+[node name="Fist" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1677029014]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("33_pisc4")
+expand_mode = 1
+
+[node name="Clothes" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=2027576680]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("34_cwenc")
+expand_mode = 1
+
+[node name="LightArmor" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=202029373]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("35_0sxf6")
+expand_mode = 1
+
+[node name="HeavyArmor" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=799612257]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("36_gm1to")
+expand_mode = 1
+
+[node name="Robe" type="TextureRect" parent="unit_statusbg/EquipIconsGrid" unique_id=1660406397]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+texture = ExtResource("37_mcfi1")
+expand_mode = 1
 
 [node name="UnitIllustration" type="Control" parent="." unique_id=1577639349]
 visible = false
@@ -472,58 +862,6 @@ text = "unit_sublimation_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="UnitExpBg" type="TextureRect" parent="." unique_id=1417263868]
-layout_mode = 0
-offset_left = 230.0
-offset_top = 167.0
-offset_right = 584.0
-offset_bottom = 177.0
-texture = ExtResource("52_g4fmp")
-
-[node name="UnitExpBar" type="TextureProgressBar" parent="UnitExpBg" unique_id=1205123294]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 3.0
-offset_right = 349.0
-offset_bottom = 7.0
-texture_progress = ExtResource("25_ib8ma")
-
-[node name="UnitExpGauge" type="TextureRect" parent="UnitExpBg" unique_id=167478747]
-layout_mode = 0
-texture = ExtResource("53_ey0j1")
-
-[node name="UnitStatusLabelLv" type="TextureRect" parent="." unique_id=1880307194]
-layout_mode = 0
-offset_left = 214.0
-offset_top = 146.0
-offset_right = 256.0
-offset_bottom = 166.0
-texture = ExtResource("54_k6tdj")
-
-[node name="UnitLevel" type="Label" parent="UnitStatusLabelLv" unique_id=1690732899]
-layout_mode = 0
-offset_left = 40.0
-offset_top = -3.0
-offset_right = 80.0
-offset_bottom = 20.0
-vertical_alignment = 1
-
-[node name="UnitLvupInfo2" type="TextureRect" parent="." unique_id=331190936]
-layout_mode = 0
-offset_left = 512.0
-offset_top = 148.0
-offset_right = 538.0
-offset_bottom = 164.0
-texture = ExtResource("55_rbglj")
-
-[node name="NextExpLabel" type="Label" parent="UnitLvupInfo2" unique_id=1447779644]
-layout_mode = 0
-offset_left = 45.0
-offset_top = -3.0
-offset_right = 85.0
-offset_bottom = 20.0
-vertical_alignment = 1
-
 [node name="unit_sublimation_number" type="Label" parent="." unique_id=1592278817]
 visible = false
 layout_mode = 0
@@ -688,6 +1026,13 @@ theme_override_constants/separation = -10
 [node name="UnitResistbg" type="TextureRect" parent="VBoxContainer/TraitContent" unique_id=1307708448]
 layout_mode = 2
 texture = ExtResource("35_rwkqv")
+
+[node name="UnitResistDash" type="TextureRect" parent="VBoxContainer/TraitContent/UnitResistbg" unique_id=524262759]
+visible = false
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 20.0
+texture = ExtResource("69_4pmyw")
 
 [node name="ElementResistGrid" type="HBoxContainer" parent="VBoxContainer/TraitContent/UnitResistbg" unique_id=1273559230]
 layout_mode = 0
@@ -1483,11 +1828,42 @@ texture_normal = ExtResource("55_845m6")
 texture_pressed = ExtResource("56_s8d6h")
 
 [node name="Back" type="Label" parent="UnitNamebgChara2/BackButton" unique_id=1733208999]
-layout_mode = 0
-offset_left = 29.0
-offset_top = 17.0
-offset_right = 69.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
 text = "Back"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="DetailButton" type="TextureButton" parent="." unique_id=1285976044]
+layout_mode = 0
+offset_left = 544.0
+offset_top = 74.0
+offset_right = 640.0
+offset_bottom = 134.0
+texture_normal = ExtResource("55_845m6")
+texture_pressed = ExtResource("56_s8d6h")
+
+[node name="MinibuttonLabelUnitdetail" type="TextureRect" parent="DetailButton" unique_id=1693637078]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -38.0
+offset_top = -12.0
+offset_right = 38.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("100_71mbk")

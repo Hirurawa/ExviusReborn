@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://dydavexv4m5q5"]
+
+[ext_resource type="Script" uid="uid://b7p3woiyf1rqi" path="res://features/outgame/units/components/unit_portrait.gd" id="1_5p0d5"]
+[ext_resource type="PackedScene" uid="uid://baq2silquhrr6" path="res://features/shared/Unit.tscn" id="1_44cvr"]
+[ext_resource type="Texture2D" uid="uid://dn5x1o1rf2tl2" path="res://assets/ui/common/badge.tres" id="2_6qbmj"]
+
+[node name="UnitPortrait" type="Control" unique_id=1259003845]
+custom_minimum_size = Vector2(0, 168)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 160.0
+offset_bottom = 168.0
+pivot_offset_ratio = Vector2(0.5, 0.5)
+size_flags_horizontal = 3
+script = ExtResource("1_5p0d5")
+
+[node name="Button" type="Button" parent="." unique_id=234419454]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="Node2D" parent="Button" unique_id=425515258 instance=ExtResource("1_44cvr")]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -84.0
+offset_right = 80.0
+offset_bottom = 84.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Badge" type="TextureRect" parent="Button/Node2D" unique_id=1120011429]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -64.0
+offset_right = -16.0
+offset_bottom = 36.0
+grow_horizontal = 0
+texture = ExtResource("2_6qbmj")
+
+[node name="Label" type="Label" parent="Button/Node2D/Badge" unique_id=1021862871]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CheckBox" type="CheckBox" parent="Button/Node2D" unique_id=1321295618]
+visible = false
+layout_mode = 0
+offset_right = 24.0
+offset_bottom = 24.0

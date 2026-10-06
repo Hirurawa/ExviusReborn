@@ -3,9 +3,10 @@
 [ext_resource type="Texture2D" uid="uid://dv3a2baao2odf" path="res://assets/ui/common/button_item1.tres" id="1_jo15x"]
 [ext_resource type="Script" uid="uid://bo5iacbbw27t6" path="res://features/shared/item.gd" id="1_kacut"]
 [ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="2_5uywn"]
-[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="3_vd32c"]
 [ext_resource type="Texture2D" uid="uid://cstx4mwpt4wv8" path="res://assets/ui/unit/unit_equip_category_accessory1.tres" id="4_vd32c"]
 [ext_resource type="Texture2D" uid="uid://b5a16m8hv325b" path="res://assets/ui/unit/equip_category_accessory.tres" id="5_kacut"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_kacut"]
 
 [node name="Item" type="Control" unique_id=1955217114]
 custom_minimum_size = Vector2(306, 108)
@@ -22,12 +23,10 @@ expand_mode = 1
 
 [node name="unit_equip_list_item" type="TextureRect" parent="." unique_id=647051409]
 layout_mode = 0
-offset_left = 18.0
-offset_top = 18.0
-offset_right = 91.0
-offset_bottom = 90.0
-expand_mode = 1
-stretch_mode = 4
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 71.0
+offset_bottom = 70.0
 
 [node name="unit_equip_list_item_count" type="Label" parent="." unique_id=1322872352]
 layout_mode = 0
@@ -40,62 +39,12 @@ text = "unit_equip_list_item_count"
 
 [node name="unit_equip_list_name_text" type="Label" parent="." unique_id=2104829644]
 layout_mode = 0
-offset_left = 102.0
-offset_top = 15.0
-offset_right = 327.0
-offset_bottom = 41.0
+offset_left = 101.0
+offset_top = 11.0
+offset_right = 326.0
+offset_bottom = 37.0
 theme_override_font_sizes/font_size = 18
 text = "unit_equip_list_name_text"
-clip_text = true
-text_overrun_behavior = 3
-
-[node name="unit_equip_list_property1_label" type="TextureRect" parent="." unique_id=2134609707]
-layout_mode = 0
-offset_left = 102.0
-offset_top = 45.0
-offset_right = 144.0
-offset_bottom = 65.0
-texture = ExtResource("2_5uywn")
-expand_mode = 1
-
-[node name="unit_equip_list_property1_number" type="Label" parent="." unique_id=1284387515]
-layout_mode = 0
-offset_left = 145.0
-offset_top = 47.0
-offset_right = 442.0
-offset_bottom = 73.0
-theme_override_font_sizes/font_size = 18
-text = "unit_equip_list_property1_number"
-
-[node name="unit_equip_list_property2_label" type="TextureRect" parent="." unique_id=740497157]
-layout_mode = 0
-offset_left = 196.0
-offset_top = 45.0
-offset_right = 238.0
-offset_bottom = 65.0
-texture = ExtResource("3_vd32c")
-expand_mode = 1
-
-[node name="unit_equip_list_property2_number" type="Label" parent="." unique_id=968103393]
-layout_mode = 0
-offset_left = 239.0
-offset_top = 47.0
-offset_right = 536.0
-offset_bottom = 73.0
-theme_override_font_sizes/font_size = 18
-text = "unit_equip_list_property2_number"
-
-[node name="unit_equip_list_property3_text" type="Label" parent="." unique_id=1153212208]
-layout_mode = 0
-offset_left = 103.0
-offset_top = 72.0
-offset_right = 365.0
-offset_bottom = 98.0
-theme_override_font_sizes/font_size = 18
-text = "unit_equip_list_property3_text"
-clip_text = true
-text_overrun_behavior = 3
-autowrap_mode = 2
 
 [node name="UnitEquipCategory" type="TextureRect" parent="." unique_id=1391968888]
 layout_mode = 0
@@ -123,6 +72,41 @@ offset_right = 262.0
 offset_bottom = 40.0
 expand_mode = 1
 stretch_mode = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1460294463]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 38.0
+offset_right = 296.0
+offset_bottom = 101.0
+
+[node name="Stats" type="GridContainer" parent="VBoxContainer" unique_id=1206601945]
+layout_mode = 2
+columns = 2
+
+[node name="Template" type="HBoxContainer" parent="VBoxContainer/Stats" unique_id=274344464]
+visible = false
+layout_mode = 2
+
+[node name="stat_label_texture" type="TextureRect" parent="VBoxContainer/Stats/Template" unique_id=696737817]
+layout_mode = 2
+texture = ExtResource("2_5uywn")
+stretch_mode = 5
+
+[node name="statNumber" type="Label" parent="VBoxContainer/Stats/Template" unique_id=946225893]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "50"
+
+[node name="DetailText" type="Label" parent="VBoxContainer" unique_id=1498733616]
+custom_minimum_size = Vector2(200, 10)
+layout_mode = 2
+size_flags_vertical = 3
+text = "PlaceholderDetailText"
+label_settings = SubResource("LabelSettings_kacut")
+autowrap_mode = 2
+clip_text = true
+text_overrun_behavior = 3
 
 [node name="ClickArea" type="Button" parent="." unique_id=1647311002]
 layout_mode = 0

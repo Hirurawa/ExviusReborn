@@ -1,0 +1,655 @@
+[gd_scene format=3 uid="uid://dtyvmhngpup08"]
+
+[ext_resource type="Texture2D" uid="uid://c1aies4623vhy" path="res://assets/ui/unit/unit_top_submenutarget.tres" id="1_41g4g"]
+[ext_resource type="Script" uid="uid://beltsuvxyttti" path="res://features/outgame/units/components/unit_submenu_popup.gd" id="1_vohpw"]
+[ext_resource type="Texture2D" uid="uid://b1ox0p7615iwf" path="res://assets/ui/unit/unit_top_submenubg.tres" id="2_qi3h8"]
+[ext_resource type="Texture2D" uid="uid://b5ijfw3ktu11p" path="res://assets/ui/common/button_middle_mediumlong1.tres" id="3_ymdno"]
+[ext_resource type="Texture2D" uid="uid://cnghxd85vwxfl" path="res://assets/ui/unit/middlebutton_label_equip.tres" id="4_vohpw"]
+[ext_resource type="Texture2D" uid="uid://b083lif1t03cr" path="res://assets/ui/common/button_middle_mediumlong2.tres" id="4_ymdno"]
+[ext_resource type="Texture2D" uid="uid://bma2pauxnp0sr" path="res://assets/ui/unit/middlebutton_label_change.tres" id="5_jbitn"]
+[ext_resource type="Texture2D" uid="uid://h0353hpnqvhp" path="res://assets/ui/unit/middlebutton_label_powerup.tres" id="6_jcatr"]
+[ext_resource type="Texture2D" uid="uid://cuj528owt34mq" path="res://assets/ui/unit/middlebutton_label_evo.tres" id="7_q6sx5"]
+[ext_resource type="Texture2D" uid="uid://w2uxym7qq71r" path="res://assets/ui/common/button_mini_long1.tres" id="8_adtqj"]
+[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="9_4c86y"]
+[ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="10_8j705"]
+[ext_resource type="Texture2D" uid="uid://bgh4m64l2vetk" path="res://assets/ui/unit/unit_statusframe.tres" id="10_t57wr"]
+[ext_resource type="Texture2D" uid="uid://dwnw3ino0c44t" path="res://assets/ui/unit/unit_raritystar.tres" id="11_8j705"]
+[ext_resource type="Texture2D" uid="uid://cl8jmbv2l7sfy" path="res://assets/ui/unit/unit_status_up_mini.tres" id="11_nimgk"]
+[ext_resource type="Texture2D" uid="uid://dm3hnyf28he5m" path="res://assets/ui/unit/minibutton_label_leaderchange.tres" id="11_rnc2g"]
+[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="11_vohpw"]
+[ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="12_rnc2g"]
+[ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="13_8u64c"]
+[ext_resource type="Texture2D" uid="uid://xn8f7b7mj2bt" path="res://assets/ui/common/middlebutton_label_close.tres" id="14_8u64c"]
+[ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="14_g3al6"]
+[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="15_stimx"]
+[ext_resource type="Texture2D" uid="uid://d2toxw8324o22" path="res://assets/ui/unit/unit_status_label_lv.tres" id="16_5as4h"]
+[ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="16_14dgs"]
+[ext_resource type="Texture2D" uid="uid://cix3i4u2s3dr7" path="res://assets/ui/unit/unit_lvup_info.tres" id="17_nqbee"]
+[ext_resource type="Texture2D" uid="uid://bpwnd25hx5luo" path="res://assets/ui/unit/unit_exp_bg.tres" id="18_vacc6"]
+[ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="19_fokde"]
+[ext_resource type="Texture2D" uid="uid://cyc1yl2d75bvy" path="res://assets/ui/unit/unit_exp_gauge.tres" id="20_mdqo7"]
+
+[node name="UnitSubmenuPopup" type="Control" unique_id=1449610426]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vohpw")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=522712496]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6862745)
+
+[node name="menu_arrow" type="TextureRect" parent="." unique_id=255130430]
+layout_mode = 0
+offset_top = 328.0
+offset_right = 80.0
+offset_bottom = 356.0
+texture = ExtResource("1_41g4g")
+expand_mode = 1
+
+[node name="menu_bg" type="TextureRect" parent="." unique_id=2047842325]
+layout_mode = 0
+offset_top = 356.0
+offset_right = 640.0
+offset_bottom = 714.0
+texture = ExtResource("2_qi3h8")
+expand_mode = 1
+
+[node name="Buttons" type="HBoxContainer" parent="." unique_id=1828516091]
+layout_mode = 0
+offset_top = 359.0
+offset_right = 640.0
+offset_bottom = 461.0
+alignment = 1
+
+[node name="btn_equip" type="TextureButton" parent="Buttons" unique_id=929828658]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+texture_normal = ExtResource("3_ymdno")
+texture_pressed = ExtResource("4_ymdno")
+
+[node name="Image_10" type="TextureRect" parent="Buttons/btn_equip" unique_id=63399824]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -83.0
+offset_top = -26.0
+offset_right = 83.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_vohpw")
+
+[node name="btn_change" type="TextureButton" parent="Buttons" unique_id=1120446280]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+texture_normal = ExtResource("3_ymdno")
+texture_pressed = ExtResource("4_ymdno")
+
+[node name="Image_9" type="TextureRect" parent="Buttons/btn_change" unique_id=1980362944]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -26.0
+offset_right = 59.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_jbitn")
+
+[node name="btn_powerup" type="TextureButton" parent="Buttons" unique_id=113859813]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+texture_normal = ExtResource("3_ymdno")
+texture_pressed = ExtResource("4_ymdno")
+
+[node name="Image_11" type="TextureRect" parent="Buttons/btn_powerup" unique_id=36196185]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -26.0
+offset_right = 59.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("6_jcatr")
+
+[node name="btn_classup" type="TextureButton" parent="Buttons" unique_id=1855383676]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+texture_normal = ExtResource("3_ymdno")
+texture_pressed = ExtResource("4_ymdno")
+
+[node name="Image_12" type="TextureRect" parent="Buttons/btn_classup" unique_id=1833693392]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -26.0
+offset_right = 59.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_q6sx5")
+
+[node name="btn_nv_menu" type="TextureRect" parent="." unique_id=161001242]
+visible = false
+layout_mode = 0
+offset_left = 482.0
+offset_top = 44.0
+offset_right = 626.0
+offset_bottom = 124.0
+texture = ExtResource("3_ymdno")
+expand_mode = 1
+
+[node name="btn_nv_menu_label" type="TextureRect" parent="btn_nv_menu" unique_id=423518211]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 11.0
+offset_right = 131.0
+offset_bottom = 63.0
+texture = ExtResource("7_q6sx5")
+expand_mode = 1
+
+[node name="btn_nv_menu_ex_classup" type="TextureRect" parent="." unique_id=713785905]
+visible = false
+layout_mode = 0
+offset_left = 14.0
+offset_top = 45.0
+offset_right = 158.0
+offset_bottom = 125.0
+texture = ExtResource("3_ymdno")
+expand_mode = 1
+
+[node name="btn_nv_menu_ex_classup_label" type="TextureRect" parent="btn_nv_menu_ex_classup" unique_id=482591915]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -26.0
+offset_right = 59.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_jbitn")
+
+[node name="btn_nv_menu_sublimation" type="TextureRect" parent="." unique_id=3559435]
+visible = false
+layout_mode = 0
+offset_left = 169.0
+offset_top = 45.0
+offset_right = 313.0
+offset_bottom = 125.0
+texture = ExtResource("3_ymdno")
+expand_mode = 1
+
+[node name="btn_nv_menu_sublimation_label" type="TextureRect" parent="btn_nv_menu_sublimation" unique_id=140764562]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -83.0
+offset_top = -26.0
+offset_right = 83.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_vohpw")
+
+[node name="btn_nv_menu_ex_classup_transform" type="TextureRect" parent="." unique_id=1659936585]
+visible = false
+layout_mode = 0
+offset_left = 326.0
+offset_top = 44.0
+offset_right = 470.0
+offset_bottom = 124.0
+texture = ExtResource("3_ymdno")
+expand_mode = 1
+
+[node name="btn_nv_menu_ex_classup_transform_label" type="TextureRect" parent="btn_nv_menu_ex_classup_transform" unique_id=556615072]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -26.0
+offset_right = 59.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("6_jcatr")
+
+[node name="btn_nv_menu_return" type="TextureRect" parent="." unique_id=1838102148]
+visible = false
+layout_mode = 0
+offset_left = 482.0
+offset_top = 44.0
+offset_right = 626.0
+offset_bottom = 124.0
+texture = ExtResource("3_ymdno")
+expand_mode = 1
+
+[node name="btn_nv_menu_return_label" type="TextureRect" parent="btn_nv_menu_return" unique_id=452312227]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -26.0
+offset_right = 59.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_q6sx5")
+
+[node name="btn_leader" type="TextureRect" parent="." unique_id=1756986942]
+layout_mode = 0
+offset_left = 466.0
+offset_top = 484.0
+offset_right = 618.0
+offset_bottom = 548.0
+texture = ExtResource("8_adtqj")
+expand_mode = 1
+
+[node name="MinibuttonLabelLeaderchange" type="TextureRect" parent="btn_leader" unique_id=357673113]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -66.0
+offset_top = -12.0
+offset_right = 66.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("11_rnc2g")
+
+[node name="btn_slb_buff" type="TextureRect" parent="." unique_id=325407292]
+layout_mode = 0
+offset_left = 466.0
+offset_top = 559.0
+offset_right = 618.0
+offset_bottom = 623.0
+texture = ExtResource("8_adtqj")
+expand_mode = 1
+
+[node name="btn_close" type="TextureButton" parent="." unique_id=1704778284]
+layout_mode = 0
+offset_left = 466.0
+offset_top = 634.0
+offset_right = 618.0
+offset_bottom = 698.0
+texture_normal = ExtResource("9_4c86y")
+texture_pressed = ExtResource("11_vohpw")
+
+[node name="MiddlebuttonLabelClose" type="TextureRect" parent="btn_close" unique_id=125013396]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -83.0
+offset_top = -26.0
+offset_right = 83.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("14_8u64c")
+
+[node name="unit_menu_status_frame" type="TextureRect" parent="." unique_id=1482584153]
+layout_mode = 0
+offset_top = 489.0
+offset_right = 440.0
+offset_bottom = 623.0
+texture = ExtResource("10_t57wr")
+expand_mode = 1
+
+[node name="UnitStatusLabelLv" type="TextureRect" parent="." unique_id=1314655788]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 498.0
+offset_right = 64.0
+offset_bottom = 518.0
+texture = ExtResource("16_5as4h")
+
+[node name="UnitLevel" type="Label" parent="UnitStatusLabelLv" unique_id=435959709]
+layout_mode = 0
+offset_left = 40.0
+offset_top = -3.0
+offset_right = 80.0
+offset_bottom = 20.0
+vertical_alignment = 1
+
+[node name="UnitLvupInfo2" type="TextureRect" parent="." unique_id=960176416]
+layout_mode = 0
+offset_left = 320.0
+offset_top = 500.0
+offset_right = 346.0
+offset_bottom = 516.0
+texture = ExtResource("17_nqbee")
+
+[node name="NextExpLabel" type="Label" parent="UnitLvupInfo2" unique_id=1132957267]
+layout_mode = 0
+offset_left = 45.0
+offset_top = -3.0
+offset_right = 85.0
+offset_bottom = 20.0
+vertical_alignment = 1
+
+[node name="UnitExpBg" type="TextureRect" parent="." unique_id=468477369]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 519.0
+offset_right = 392.0
+offset_bottom = 529.0
+texture = ExtResource("18_vacc6")
+
+[node name="UnitExpBar" type="TextureProgressBar" parent="UnitExpBg" unique_id=91792503]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 349.0
+offset_bottom = 7.0
+texture_progress = ExtResource("19_fokde")
+
+[node name="UnitExpGauge" type="TextureRect" parent="UnitExpBg" unique_id=139762387]
+layout_mode = 0
+texture = ExtResource("20_mdqo7")
+
+[node name="Stats" type="GridContainer" parent="." unique_id=132193279]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 538.0
+offset_right = 435.0
+offset_bottom = 624.0
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="HP" type="HBoxContainer" parent="Stats" unique_id=247113082]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_hp" type="TextureRect" parent="Stats/HP" unique_id=1495496042]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("10_8j705")
+stretch_mode = 2
+
+[node name="unit_status_hp_now_number" type="Label" parent="Stats/HP" unique_id=1103010345]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 18
+text = "hp"
+vertical_alignment = 1
+
+[node name="unit_status_hp_max_number" type="Label" parent="Stats/HP" unique_id=1086530071]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="Stats/HP" unique_id=1327571984]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("11_nimgk")
+stretch_mode = 2
+
+[node name="MP" type="HBoxContainer" parent="Stats" unique_id=1841257157]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_mp" type="TextureRect" parent="Stats/MP" unique_id=894537926]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("12_rnc2g")
+stretch_mode = 2
+
+[node name="unit_status_mp_now_number" type="Label" parent="Stats/MP" unique_id=1790351502]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 18
+text = "mp"
+vertical_alignment = 1
+
+[node name="unit_status_mp_max_number" type="Label" parent="Stats/MP" unique_id=1971339984]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="Stats/MP" unique_id=1562249807]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("11_nimgk")
+stretch_mode = 2
+
+[node name="ATK" type="HBoxContainer" parent="Stats" unique_id=1526371204]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_attack" type="TextureRect" parent="Stats/ATK" unique_id=1204907663]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("13_8u64c")
+stretch_mode = 2
+
+[node name="unit_status_attack_now_number" type="Label" parent="Stats/ATK" unique_id=609763304]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 18
+text = "atk"
+vertical_alignment = 1
+
+[node name="unit_status_attack_max_number" type="Label" parent="Stats/ATK" unique_id=1563849250]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="Stats/ATK" unique_id=165806643]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("11_nimgk")
+stretch_mode = 2
+
+[node name="DEF" type="HBoxContainer" parent="Stats" unique_id=1120620051]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_defense" type="TextureRect" parent="Stats/DEF" unique_id=1612118922]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("14_g3al6")
+stretch_mode = 2
+
+[node name="unit_status_defense_now_number" type="Label" parent="Stats/DEF" unique_id=1483814394]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 18
+text = "def"
+vertical_alignment = 1
+
+[node name="unit_status_defense_max_number" type="Label" parent="Stats/DEF" unique_id=49279048]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="Stats/DEF" unique_id=1699096004]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("11_nimgk")
+stretch_mode = 2
+
+[node name="MAG" type="HBoxContainer" parent="Stats" unique_id=303704460]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_magic" type="TextureRect" parent="Stats/MAG" unique_id=2017396168]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("15_stimx")
+stretch_mode = 2
+
+[node name="unit_status_magic_now_number" type="Label" parent="Stats/MAG" unique_id=629728711]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 18
+text = "mag"
+vertical_alignment = 1
+
+[node name="unit_status_magic_max_number" type="Label" parent="Stats/MAG" unique_id=2107313354]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="Stats/MAG" unique_id=1992366642]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("11_nimgk")
+stretch_mode = 2
+
+[node name="SPR" type="HBoxContainer" parent="Stats" unique_id=472911986]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="unit_status_label_mnd" type="TextureRect" parent="Stats/SPR" unique_id=911911223]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("16_14dgs")
+stretch_mode = 2
+
+[node name="unit_status_mnd_now_number" type="Label" parent="Stats/SPR" unique_id=528818145]
+layout_mode = 2
+size_flags_horizontal = 5
+theme_override_font_sizes/font_size = 18
+text = "spr"
+vertical_alignment = 1
+
+[node name="unit_status_mnd_max_number" type="Label" parent="Stats/SPR" unique_id=788276759]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "??"
+vertical_alignment = 1
+
+[node name="UnitStatusArrow" type="TextureRect" parent="Stats/SPR" unique_id=1983110527]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("11_nimgk")
+stretch_mode = 2
+
+[node name="unit_menu_unit_name" type="Label" parent="." unique_id=806960960]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 456.0
+offset_right = 217.0
+offset_bottom = 490.0
+theme_override_font_sizes/font_size = 24
+text = "unit_name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RarityStars" type="HBoxContainer" parent="." unique_id=2040697928]
+layout_mode = 0
+offset_left = 233.0
+offset_top = 460.0
+offset_right = 249.0
+offset_bottom = 476.0
+
+[node name="rarity_star" type="TextureRect" parent="RarityStars" unique_id=449843095]
+layout_mode = 2
+texture = ExtResource("11_8j705")
+
+[node name="unit_menu_braveshift_btn" type="Label" parent="." unique_id=1559972563]
+visible = false
+layout_mode = 0
+offset_left = 40.0
+offset_top = 306.0
+offset_right = 396.0
+offset_bottom = 358.0
+text = "unit_menu_braveshift_btn"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_menu_braveshift_release_type" type="Label" parent="." unique_id=1922749169]
+visible = false
+layout_mode = 0
+offset_left = 32.0
+offset_top = 360.0
+offset_right = 304.0
+offset_bottom = 383.0
+theme_override_font_sizes/font_size = 16
+text = "unit_menu_braveshift_release_type"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_menu_braveshift_cool_time" type="Label" parent="." unique_id=88626682]
+visible = false
+layout_mode = 0
+offset_left = 214.0
+offset_top = 360.0
+offset_right = 463.0
+offset_bottom = 383.0
+theme_override_font_sizes/font_size = 16
+text = "unit_menu_braveshift_cool_time"
+horizontal_alignment = 1
+vertical_alignment = 1

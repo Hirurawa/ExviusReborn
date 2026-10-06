@@ -607,6 +607,7 @@ offset_right = 640.0
 offset_bottom = 16.0
 
 [node name="BaseUnitIdLabel" type="Label" parent="EnhanceFlowRoot" unique_id=111200002]
+visible = false
 layout_mode = 0
 offset_left = 198.0
 offset_top = 40.0

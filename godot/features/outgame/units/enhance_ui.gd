@@ -37,10 +37,13 @@ var _pedestal_slots: Array[Control] = []
 const ENHANCE_GIL_COST_PER_MATERIAL: int = 1000
 
 func init_scene(params: Dictionary) -> void:
+	if not is_node_ready():
+		await ready
 	if params.has("base_unit_instance_id"):
 		base_unit_instance_id = str(params.get("base_unit_instance_id", ""))
-	if params.has("base_unit_inst") and params.get("base_unit_inst") is Dictionary:
-		base_unit_inst = params.get("base_unit_inst", {}).duplicate(true)
+	if params.has("base_unit") and params.get("base_unit") is Dictionary:
+		base_unit_inst = params.get("base_unit", {}).duplicate(true)
+		base_unit_instance_id = base_unit_inst.get("instance_id")
 	if params.has("material_units_array") and params.get("material_units_array") is Array:
 		material_units_array = params.get("material_units_array", []).duplicate(true)
 	
@@ -65,8 +68,7 @@ func _connect_buttons() -> void:
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	clear_button.pressed.connect(_on_clear_pressed)
 	confirm_button.pressed.connect(_on_confirm_pressed)
-	if classup_button != null:
-		classup_button.pressed.connect(_on_classup_pressed)
+	classup_button.pressed.connect(_on_classup_pressed)
 
 	for slot in _pedestal_slots:
 		var hit_button: Button = slot.get_node_or_null("HitButton") as Button
@@ -80,18 +82,9 @@ func _refresh_base_unit_ui() -> void:
 	if unit_visual:
 		unit_visual.scene_size = "large"
 		unit_visual.unit_data_to_load = base_unit_inst
-		unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		#unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 		base_unit_sprite.add_child(unit_visual)
 	_display_unit_stats(base_unit_inst)
-	_refresh_classup_button_state()
-
-func _refresh_classup_button_state() -> void:
-	if classup_button == null:
-		return
-	var current_rarity: int = int(base_unit_inst.get("current_rarity"))
-	var unit_data: Dictionary = base_unit_inst
-	var max_rarity: int = int(unit_data.get("rarity_max", 5))
-	classup_button.disabled = current_rarity >= max_rarity
 
 func _redraw_material_slots() -> void:
 	for slot in _pedestal_slots:
@@ -160,11 +153,9 @@ func _on_any_pedestal_pressed() -> void:
 		filtered_preselected.append(entry)
 
 	UIManager.push("unit_selector_ui", {
-		"mode": "enhance_material_selection",
-		"exclude_list": [base_unit_instance_id],
-		"pre_selected_units": filtered_preselected,
-		"selection_callback": Callable(self, "_on_material_units_selected")
+		"mode": ModeEnhanceMaterials.new(base_unit_inst, Callable(self, "_on_material_units_selected"))
 	})
+
 
 func _on_material_units_selected(selected_units: Array) -> void:
 	material_units_array.clear()
@@ -289,10 +280,7 @@ func _on_classup_pressed() -> void:
 	if base_unit_instance_id == "":
 		return
 	UIManager.pop()
-	UIManager.push("awaken_ui", {
-		"base_unit_instance_id": base_unit_instance_id,
-		"base_unit_inst": base_unit_inst,
-	})
+	UIManager.push("awaken_ui", {"base_unit": base_unit_inst})
 
 func _get_unit_texture(unit_inst: Dictionary) -> Texture2D:
 	if unit_inst.is_empty():

@@ -40,8 +40,9 @@ var _texture_cache: Dictionary = {}
 func init_scene(params: Dictionary) -> void:
 	if params.has("base_unit_instance_id"):
 		base_unit_instance_id = str(params.get("base_unit_instance_id", ""))
-	if params.has("base_unit_inst") and params.get("base_unit_inst") is Dictionary:
-		base_unit_inst = (params.get("base_unit_inst", {}) as Dictionary).duplicate(true)
+	if params.has("base_unit") and params.get("base_unit") is Dictionary:
+		base_unit_inst = (params.get("base_unit", {}) as Dictionary).duplicate(true)
+		base_unit_instance_id = base_unit_inst.get("instance_id")
 	call_deferred("_refresh_before_visual")
 
 func _ready() -> void:
@@ -56,7 +57,7 @@ func _refresh_before_visual() -> void:
 	if unit_visual:
 		unit_visual.scene_size = "large"
 		unit_visual.unit_data_to_load = base_unit_inst
-		unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		#unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 		before_unit.add_child(unit_visual)
 		
 		var unit_visual_after: Control = UNIT_SCENE.instantiate() as Control
@@ -64,7 +65,7 @@ func _refresh_before_visual() -> void:
 			var next_rarity_unit_inst = GameDatabase.get_unit_class_up(_base_unit_id())
 			unit_visual_after.scene_size = "large"
 			unit_visual_after.unit_data_to_load = next_rarity_unit_inst
-			unit_visual_after.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			#unit_visual_after.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			after_unit.add_child(unit_visual_after)
 	
 	_populate_awakening_requirements()
@@ -257,10 +258,7 @@ func _on_enhance_pressed() -> void:
 	if base_unit_instance_id == "":
 		return
 	UIManager.pop()
-	UIManager.push("enhance_ui", {
-		"base_unit_instance_id": base_unit_instance_id,
-		"base_unit_inst": base_unit_inst,
-	})
+	UIManager.push("enhance_ui", {"base_unit": base_unit_inst})
 
 func _show_result_popup(message: String) -> void:
 	var dialog: AcceptDialog = AcceptDialog.new()

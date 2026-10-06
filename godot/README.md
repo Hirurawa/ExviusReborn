@@ -98,6 +98,33 @@ godot --path godot --editor
 godot --path godot --play
 ```
 
+## Battle Sandbox
+
+`features/battle/sandbox/BattleSandbox.tscn` is a debug scene for the new battle engine:
+pick units (rarity, level, stat overrides) and monsters (by id or battle group), then
+give commands and watch hits, chains and statuses on cards, a frame ruler and the event
+log, with pause, frame stepping, speed, live stat edits and seeded restarts. Run it with
+F6 in the editor, or:
+
+```powershell
+godot --path <absolute path>/godot res://features/battle/sandbox/BattleSandbox.tscn
+```
+
+## Headless Tests
+
+`tests/run_tests.gd` runs every `tests/**/test_*.gd` (each `test_*` method, on a fresh
+instance) and exits with 1 on any failure. Tests extend `tests/test_case.gd`.
+
+```powershell
+godot --headless --path godot --import                              # after adding a class_name script
+godot --headless --path godot --script res://tests/run_tests.gd     # all tests
+godot --headless --path godot --script res://tests/run_tests.gd -- --filter=chain
+```
+
+Redirect stdout to a file; output read through a pipe only appears when the process
+exits. The runner must not name any autoload or `class_name` script: it compiles before
+the autoloads exist, so it loads the test files with `load()` on the first frame.
+
 ## Naming Conventions
 
 - Script and directory names: `snake_case`

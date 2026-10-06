@@ -4,11 +4,11 @@ extends CanvasLayer
 ## Minimal in-battle dialogue overlay: a text panel pinned to the top of the
 ## screen plus a full-screen click-catcher. Because the catcher sits on a high
 ## CanvasLayer and consumes clicks, it also blocks the battle UI beneath while a
-## line is showing (BattleManager pauses the turn engine in parallel).
+## line is showing (BattleDirector pauses the battle in parallel).
 ##
-## Wiring (done in battle_ui.gd):
-##   battle_manager.dialogue_requested.connect(overlay.play)
-##   overlay.finished.connect(battle_manager.close_dialogue)
+## Wiring (done in battle_screen.gd):
+##   director.dialogue_requested.connect(overlay.play)
+##   overlay.finished -> director.dialogue_finished()
 
 signal finished
 

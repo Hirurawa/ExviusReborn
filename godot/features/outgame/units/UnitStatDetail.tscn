@@ -1,0 +1,105 @@
+[gd_scene format=3 uid="uid://bpxvysdtgy04b"]
+
+[ext_resource type="Texture2D" uid="uid://btoabeyxietl1" path="res://assets/ui/unit/unit_unitdetailbg.tres" id="1_da7gp"]
+[ext_resource type="Script" uid="uid://cryns1ypj2jmd" path="res://features/outgame/units/unit_stat_detail.gd" id="1_skbga"]
+[ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="2_skbga"]
+[ext_resource type="Texture2D" uid="uid://cl8jmbv2l7sfy" path="res://assets/ui/unit/unit_status_up_mini.tres" id="3_53l6r"]
+[ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="4_y4dcg"]
+[ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="5_eb1ku"]
+[ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="6_3vq41"]
+[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="7_qfpk4"]
+[ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="8_bt21s"]
+[ext_resource type="Texture2D" uid="uid://biy2m7pb7bi3c" path="res://assets/ui/common/button_mini_short1.tres" id="14_7ukqa"]
+
+[node name="UnitStatDetail" type="Control" unique_id=564729503]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_skbga")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=29206363]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 960.0
+color = Color(0, 0, 0, 0.6862745)
+
+[node name="min_friend_arrow" type="TextureRect" parent="." unique_id=706873609]
+visible = false
+layout_mode = 0
+offset_left = 450.0
+offset_top = 189.0
+offset_right = 466.0
+offset_bottom = 205.0
+texture = ExtResource("3_53l6r")
+expand_mode = 1
+
+[node name="detail_icon" type="TextureRect" parent="." unique_id=2074164186]
+visible = false
+layout_mode = 0
+offset_right = 41.0
+offset_bottom = 44.0
+texture = ExtResource("14_7ukqa")
+expand_mode = 1
+
+[node name="unit_detail_statusbg2" type="TextureRect" parent="." unique_id=1505334782]
+layout_mode = 0
+offset_top = 144.0
+offset_right = 640.0
+offset_bottom = 368.0
+texture = ExtResource("1_da7gp")
+expand_mode = 1
+
+[node name="Header" type="HBoxContainer" parent="." unique_id=1559802263]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 152.0
+offset_right = 640.0
+offset_bottom = 192.0
+
+[node name="Stats" type="HBoxContainer" parent="." unique_id=1281918261]
+layout_mode = 0
+offset_top = 190.0
+offset_right = 640.0
+offset_bottom = 354.0
+
+[node name="StatTextures" type="VBoxContainer" parent="Stats" unique_id=18032228]
+layout_mode = 2
+
+[node name="detail_icon" type="TextureRect" parent="Stats/StatTextures" unique_id=2100285166]
+visible = false
+layout_mode = 2
+texture = ExtResource("14_7ukqa")
+expand_mode = 1
+
+[node name="hp_label" type="TextureRect" parent="Stats/StatTextures" unique_id=1434749491]
+layout_mode = 2
+size_flags_vertical = 2
+texture = ExtResource("2_skbga")
+
+[node name="mp_label" type="TextureRect" parent="Stats/StatTextures" unique_id=1568514737]
+layout_mode = 2
+size_flags_vertical = 2
+texture = ExtResource("4_y4dcg")
+
+[node name="atk_label" type="TextureRect" parent="Stats/StatTextures" unique_id=777015679]
+layout_mode = 2
+size_flags_vertical = 2
+texture = ExtResource("5_eb1ku")
+
+[node name="def_label" type="TextureRect" parent="Stats/StatTextures" unique_id=832862601]
+layout_mode = 2
+size_flags_vertical = 2
+texture = ExtResource("6_3vq41")
+
+[node name="mag_label" type="TextureRect" parent="Stats/StatTextures" unique_id=1288079944]
+layout_mode = 2
+size_flags_vertical = 2
+texture = ExtResource("7_qfpk4")
+
+[node name="min_label" type="TextureRect" parent="Stats/StatTextures" unique_id=1245485288]
+layout_mode = 2
+size_flags_vertical = 2
+texture = ExtResource("8_bt21s")

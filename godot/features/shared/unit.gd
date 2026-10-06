@@ -3,6 +3,9 @@ extends Control
 @onready var unit: TextureRect = $Pedestal/Unit
 @onready var pedestal: TextureRect = $Pedestal
 @onready var unit_name: Label = $UnitName
+#@onready var debug_dot: ColorRect = $Pedestal/ColorRect
+
+const COMBAT_SPRITE_SCRIPT: GDScript = preload("res://features/battle/ui/combat_sprite.gd")
 
 var unit_data_to_load = null
 var scene_size = "small"
@@ -13,15 +16,18 @@ func _ready() -> void:
 	#var unit_data: Dictionary
 	#unit_data = {"unitId": "100002204", "spriteOffset": "-11:21:150", "rare": "3"} # anzelm
 	#unit_data = {"unitId": "100006805", "spriteOffset": "-5:15:150", "rare": "6"} # fohlen
-	#unit_data = {"unitId": "201000203", "spriteOffset": "5:12:150", "rare": "6"} # garland
+	#unit_data = {"unitId": "201000205", "spriteOffset": "14:17:150", "rare": "5"} # garland
 	#unit_data = {"unitId": "302000706", "spriteOffset": "-6:84:150", "rare": "6"} # w k noel
 	#unit_data = {"unitId": "401006006", "spriteOffset": "0:52:150", "rare": "6"} # lucius
 	#unit_data = {"unitId": "206000113", "spriteOffset": "-3:21:125", "rare": "3"} # magitek armor terra
 	#unit_data = {"unitId": "206000504", "spriteOffset": "-4:18:150", "rare": "4"} # shadow
 	#unit_data = {"unitId": "212000204", "spriteOffset": "-15:18:150", "rare": "4"} # ashe
+	#unit_data = GameDatabase.get_unit(401006006)
 	#setup(unit_data, "large")
 
 func setup(unit_data: Dictionary, unit_size: String = "small") -> void:
+	if not is_node_ready():
+		await ready
 	var offset_data = unit_data.get("spriteOffset").split(':')
 	var x_offset: float = float(offset_data[0])
 	var y_offset: float = float(offset_data[1])
@@ -32,10 +38,18 @@ func setup(unit_data: Dictionary, unit_size: String = "small") -> void:
 	pedestal.texture = pedestal_texture
 	
 	var unit_texture_path = "res://assets/unit_illustrations/unit_ills_%s.png" % unit_data.get("unitId")
+	
+	#var combat_sprite: TextureRect = COMBAT_SPRITE_SCRIPT.new()
+	#combat_sprite.setup(0, str(unit_data.get("unitId")))
+	#combat_sprite.pivot_offset_ratio.x = 0.5
+	#combat_sprite.pivot_offset_ratio.y = 1
+	#combat_sprite.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	#combat_sprite.position.x += int(unit_data.get("spriteOffset").split(':')[0])
+	#pedestal.add_child(combat_sprite)
+	
 	if ResourceLoader.exists(unit_texture_path):
 		unit.texture = ResourceLoader.load(unit_texture_path) as Texture2D
 		unit.size = unit.texture.get_size()
-	
 	if unit_size == "small":
 		unit.scale.x = sprite_scale
 		unit.scale.y = sprite_scale
@@ -46,13 +60,16 @@ func setup(unit_data: Dictionary, unit_size: String = "small") -> void:
 	# 1. Calculate the exact center of the Pedestal (The Target Destination)
 	# For a 160x168 pedestal, this will be (80, 84)
 	var pedestal_center = pedestal.size / 2.0
+	var pedestal_anchor = pedestal_center - Vector2(0, -45)
 
 	# 2. Calculate the Unit's anchor point (The point we want to put on the destination)
 	var unit_bottom_center = Vector2(unit.size.x / 2.0, unit.size.y)
-	var final_offset = Vector2(-x_offset, -y_offset-40)
+	var final_offset = Vector2(-x_offset, -y_offset)
 	var local_anchor_point = unit_bottom_center + final_offset
-
+	
+	#debug_dot.position = pedestal_anchor
+	
 	# 3. Move the Unit
 	# We subtract the anchor point from the center so that the anchor point 
 	# lands exactly on the pedestal's center coordinate.
-	unit.position = pedestal_center - local_anchor_point
+	unit.position = pedestal_anchor - local_anchor_point

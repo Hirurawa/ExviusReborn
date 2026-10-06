@@ -1,12 +1,14 @@
 [gd_scene format=3 uid="uid://cx6m01qlyp86v"]
 
-[ext_resource type="Script" uid="uid://mqlys6vct5rg" path="res://features/battle/ui/battle_ui.gd" id="1_f7b2x"]
-[ext_resource type="Script" uid="uid://dmuyor6t8mv5f" path="res://features/battle/logic/battle_manager.gd" id="2_battle"]
-[ext_resource type="Script" uid="uid://cdmljv4icmom5" path="res://features/battle/logic/action_processor.gd" id="3_yiesy"]
+[ext_resource type="Script" uid="uid://dyyvjlftsuuao" path="res://features/battle/ui/battle_screen.gd" id="1_screen"]
+[ext_resource type="Script" uid="uid://b5ox1ei4e5kwc" path="res://features/battle/session/battle_session.gd" id="2_session"]
+[ext_resource type="Script" uid="uid://blh48msimt1v7" path="res://features/battle/session/battle_director.gd" id="3_director"]
+[ext_resource type="Script" uid="uid://broo6sqmyl0c4" path="res://features/battle/ui/enemy_field.gd" id="26_enemy_field"]
+[ext_resource type="Script" uid="uid://dj2nw852vsili" path="res://features/battle/ui/party_field.gd" id="27_party_field"]
+[ext_resource type="Script" uid="uid://c1ohe05rkmu3y" path="res://features/battle/ui/battle_menus.gd" id="28_menus"]
 [ext_resource type="PackedScene" uid="uid://eupai3x1p8wt" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
 [ext_resource type="Texture2D" uid="uid://cnhfbhvsnu0ar" path="res://assets/ui/battle/battle_bg_ally.tres" id="5_party_bg"]
 [ext_resource type="Texture2D" uid="uid://4iruksxhhilr" path="res://assets/ui/battle/battle_com_bg.tres" id="6_bottom_bar"]
-[ext_resource type="Texture2D" uid="uid://b1xc44d0e5jkg" path="res://assets/ui/battle/battle_unit_wait.tres" id="7_unit_slot"]
 [ext_resource type="Texture2D" uid="uid://djig3iii4odtj" path="res://assets/ui/battle/battle_com_auto_btn1.tres" id="8_auto_btn"]
 [ext_resource type="Texture2D" uid="uid://dbxly1tkl57rt" path="res://assets/ui/battle/battle_summon_bar.tres" id="8_ebndp"]
 [ext_resource type="Texture2D" uid="uid://758l4gko0axu" path="res://assets/ui/battle/battle_com_memory_btn1.tres" id="9_memory_btn"]
@@ -96,23 +98,25 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_f7b2x")
+script = ExtResource("1_screen")
 
-[node name="BattleManager" type="Node" parent="." unique_id=1042845394]
+[node name="BattleSession" type="Node" parent="." unique_id=1042845401]
 unique_name_in_owner = true
-script = ExtResource("2_battle")
+process_priority = -1
+script = ExtResource("2_session")
 
-[node name="ActionProcessor" type="Node" parent="." unique_id=1023631385]
-script = ExtResource("3_yiesy")
+[node name="BattleDirector" type="Node" parent="." node_paths=PackedStringArray("session") unique_id=1042845402]
+unique_name_in_owner = true
+script = ExtResource("3_director")
+session = NodePath("../BattleSession")
 
 [node name="Background" type="TextureRect" parent="." unique_id=533043043]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 540.0
 expand_mode = 1
+stretch_mode = 3
 
 [node name="VisualLayer" type="Control" parent="." unique_id=1226300491]
 layout_mode = 1
@@ -148,68 +152,6 @@ grow_vertical = 0
 texture = ExtResource("6_bottom_bar")
 expand_mode = 1
 stretch_mode = 6
-
-[node name="UnitSlotDecor" type="Control" parent="VisualLayer" unique_id=547385631]
-visible = false
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -433.0
-grow_horizontal = 2
-grow_vertical = 0
-mouse_filter = 2
-
-[node name="Slot1" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=1148825228]
-layout_mode = 0
-offset_left = 2.0
-offset_right = 322.0
-offset_bottom = 116.0
-texture = ExtResource("7_unit_slot")
-expand_mode = 1
-
-[node name="Slot2" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=1605436309]
-layout_mode = 0
-offset_top = 115.0
-offset_right = 320.0
-offset_bottom = 231.0
-texture = ExtResource("7_unit_slot")
-expand_mode = 1
-
-[node name="Slot3" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=1737810476]
-layout_mode = 0
-offset_top = 230.0
-offset_right = 320.0
-offset_bottom = 346.0
-texture = ExtResource("7_unit_slot")
-expand_mode = 1
-
-[node name="Slot4" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=119550910]
-layout_mode = 0
-offset_left = 317.0
-offset_right = 637.0
-offset_bottom = 116.0
-texture = ExtResource("7_unit_slot")
-expand_mode = 1
-
-[node name="Slot5" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=867006919]
-layout_mode = 0
-offset_left = 317.0
-offset_top = 115.0
-offset_right = 637.0
-offset_bottom = 231.0
-texture = ExtResource("7_unit_slot")
-expand_mode = 1
-
-[node name="Slot6" type="TextureRect" parent="VisualLayer/UnitSlotDecor" unique_id=961152692]
-layout_mode = 0
-offset_left = 318.0
-offset_top = 230.0
-offset_right = 638.0
-offset_bottom = 346.0
-texture = ExtResource("7_unit_slot")
-expand_mode = 1
 
 [node name="SummonGaugeBg" type="TextureRect" parent="VisualLayer" unique_id=1438414906]
 layout_mode = 0
@@ -314,6 +256,7 @@ text = "Chain: 0"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+script = ExtResource("26_enemy_field")
 
 [node name="EnemiesContainer" type="Control" parent="MainLayout/TopSection/EnemyArea/EnemyRegion" unique_id=1535255836]
 unique_name_in_owner = true
@@ -370,19 +313,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "100%"
 
-[node name="EsperInfo" type="VBoxContainer" parent="MainLayout/InfoBar/HBoxContainer" unique_id=183465724]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Label" type="Label" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=2081814433]
-layout_mode = 2
-text = "Esper Gauge"
-
-[node name="EsperBar" type="ProgressBar" parent="MainLayout/InfoBar/HBoxContainer/EsperInfo" unique_id=891301653]
-layout_mode = 2
-size_flags_vertical = 4
-
 [node name="ActionFeedbackLabel" type="Label" parent="." unique_id=1730845001]
 unique_name_in_owner = true
 visible = false
@@ -405,6 +335,7 @@ anchors_preset = 0
 offset_top = 527.0
 offset_right = 637.0
 offset_bottom = 873.0
+script = ExtResource("28_menus")
 
 [node name="BottomSection" type="GridContainer" parent="BottomUIWrapper" unique_id=745081744]
 unique_name_in_owner = true
@@ -424,6 +355,7 @@ anchors_preset = 0
 offset_right = 640.0
 offset_bottom = 525.0
 mouse_filter = 2
+script = ExtResource("27_party_field")
 
 [node name="UnitDot0" type="Control" parent="PlayerSpritesContainer" unique_id=110000001]
 anchors_preset = 0

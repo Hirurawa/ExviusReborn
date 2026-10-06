@@ -246,7 +246,7 @@ func _register_unit_exp_row(unit_data: Dictionary, instance_id: String, bar: Tex
 	var award: Dictionary = _exp_award_for(instance_id)
 	var xp_after: int = int(award.get("xp_after", unit_data.get("xp", 0)))
 	var xp_before: int = int(award.get("xp_before", xp_after))
-	var start: Dictionary = UnitService.level_progress_at_xp(unit_data, xp_before)
+	var begin: Dictionary = UnitService.level_progress_at_xp(unit_data, xp_before)
 
 	# Early levels span as little as a handful of EXP, so Range's default step of
 	# 1 would make the fill jump in visible chunks. Disable snapping.
@@ -258,11 +258,11 @@ func _register_unit_exp_row(unit_data: Dictionary, instance_id: String, bar: Tex
 		"next_exp_label": next_exp_label,
 		"xp_before": xp_before,
 		"xp_after": xp_after,
-		"level": int(start.get("level", 1)),
+		"level": int(begin.get("level", 1)),
 	}
 	_draw_unit_row(row, float(xp_before))
 
-	if xp_after > xp_before and not bool(start.get("at_max_level", false)):
+	if xp_after > xp_before and not bool(begin.get("at_max_level", false)):
 		_unit_exp_rows.append(row)
 
 ## The mission's EXP award for a party member, or {} when the unit earned none

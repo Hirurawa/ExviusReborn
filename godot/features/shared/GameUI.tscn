@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://ditkrev5tgerl"]
 
 [ext_resource type="Script" uid="uid://bxxc7pktal8rf" path="res://features/shared/game_ui.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://bgswfcmv7h7ck" path="res://assets/ui/home/home_spdungeon3.tres" id="2_nbm5i"]
+[ext_resource type="Texture2D" uid="uid://d0k3g1thqyrou" path="res://assets/ui/quest/sp_dungeon_icon1.tres" id="2_v1lnm"]
+[ext_resource type="Texture2D" uid="uid://d1sd573ltwvtc" path="res://assets/ui/quest/sp_dungeon_icon2.tres" id="3_p7jj7"]
 
 [node name="GameUI" type="Control" unique_id=323836925]
 layout_mode = 3
@@ -22,12 +23,10 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Background" type="TextureRect" parent="." unique_id=2075915510]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 540.0
 expand_mode = 1
 stretch_mode = 3
 
@@ -135,5 +134,6 @@ offset_left = 64.0
 offset_top = 168.0
 offset_right = 184.0
 offset_bottom = 314.0
-texture_normal = ExtResource("2_nbm5i")
+texture_normal = ExtResource("2_v1lnm")
+texture_pressed = ExtResource("3_p7jj7")
 stretch_mode = 5

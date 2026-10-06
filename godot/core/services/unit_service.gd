@@ -708,32 +708,34 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 		if item_template.is_empty():
 			item_template = GameDatabase.get_materia(int(template_id))
 
-		var validation: Dictionary = EquipmentValidator.can_equip(target_unit_inst, slot_id, item_template, owned_units_ids, item_id)
-		if not bool(validation.get("ok", false)):
-			var reason: String = str(validation.get("reason", ""))
-			if reason == EquipmentValidator.ERR_EQUIPMENT_ALREADY_EQUIPPED:
-				if not allow_transfer:
-					equip_conflict.emit(instance_id, slot_id, item_id, str(validation.get("conflicting_unit_id", "")))
-					return
-				# Caller approved transfer: clear the conflicting unit's slot here so
-				# the equip below succeeds. Inventory `equipped_to` is rewritten by
-				# the shared cleanup loop further down.
-				_clear_item_from_unit(str(validation.get("conflicting_unit_id", "")), item_id)
-			else:
-				equip_failed.emit(reason)
-				return
-
 	var owned_items: Dictionary = InventoryService.owned_items
 	var removed_item_ids: Array[String] = []
 
-	if item_id != "" and bool(item_template.get("is_twohanded", false)):
-		var other_hand: String = "l_hand" if slot_id == "r_hand" else "r_hand"
-		var current_equipment_th: Dictionary = _normalize_unit_equipment(target_unit_inst.get("equipment", {}))
-		var removed_other_hand_item_id: String = str(current_equipment_th.get(other_hand, ""))
-		current_equipment_th.erase(other_hand)
-		if removed_other_hand_item_id != "":
-			removed_item_ids.append(removed_other_hand_item_id)
-		target_unit_inst["equipment"] = current_equipment_th
+	# Unequips are validated too: taking off a dual-wield permit takes a weapon with it.
+	var validation: Dictionary = EquipmentValidator.can_equip(target_unit_inst, slot_id, item_template, owned_units_ids, item_id)
+	if not bool(validation.get("ok", false)):
+		var reason: String = str(validation.get("reason", ""))
+		if reason == EquipmentValidator.ERR_EQUIPMENT_ALREADY_EQUIPPED:
+			if not allow_transfer:
+				equip_conflict.emit(instance_id, slot_id, item_id, str(validation.get("conflicting_unit_id", "")))
+				return
+			# Caller approved transfer: clear the conflicting unit's slot here so
+			# the equip below succeeds. Inventory `equipped_to` is rewritten by
+			# the shared cleanup loop further down.
+			removed_item_ids.append_array(_clear_item_from_unit(str(validation.get("conflicting_unit_id", "")), item_id))
+		else:
+			equip_failed.emit(reason)
+			return
+
+	# What the change takes off with it: the other hand for a two-handed weapon, a weapon
+	# the unit can no longer dual wield.
+	for unequip_slot in validation.get("unequip", []):
+		var current_equipment_off: Dictionary = _normalize_unit_equipment(target_unit_inst.get("equipment", {}))
+		var removed_off_item_id: String = str(current_equipment_off.get(unequip_slot, ""))
+		current_equipment_off.erase(unequip_slot)
+		if removed_off_item_id != "":
+			removed_item_ids.append(removed_off_item_id)
+		target_unit_inst["equipment"] = current_equipment_off
 
 	var current_equipment: Dictionary = _normalize_unit_equipment(target_unit_inst.get("equipment", {}))
 	if item_id != "":
@@ -772,21 +774,32 @@ func request_equip_item(instance_id: String, slot_id: String, item_id: String, a
 	InventoryService.emit_updated()
 	equip_successful.emit()
 
-func _clear_item_from_unit(unit_instance_id: String, item_id: String) -> void:
+## Takes `item_id` off the unit and returns the ids of the items that came off with it:
+## a weapon the unit can no longer dual wield once the item is gone.
+func _clear_item_from_unit(unit_instance_id: String, item_id: String) -> Array[String]:
+	var also_removed: Array[String] = []
 	if unit_instance_id == "" or item_id == "":
-		return
+		return also_removed
 	for unit in owned_units_ids:
 		if not (unit is Dictionary) or str(unit.get("instance_id", "")) != unit_instance_id:
 			continue
 		var equipment: Dictionary = _normalize_unit_equipment(unit.get("equipment", {}))
 		var changed: bool = false
 		for existing_slot_id in equipment.keys():
-			if str(equipment.get(existing_slot_id, "")) == item_id:
-				equipment.erase(existing_slot_id)
-				changed = true
+			if str(equipment.get(existing_slot_id, "")) != item_id:
+				continue
+			var validation: Dictionary = EquipmentValidator.can_equip(unit, str(existing_slot_id), {}, owned_units_ids)
+			for unequip_slot in validation.get("unequip", []):
+				var off_item_id: String = str(equipment.get(unequip_slot, ""))
+				if off_item_id != "" and off_item_id != item_id:
+					also_removed.append(off_item_id)
+				equipment.erase(unequip_slot)
+			equipment.erase(existing_slot_id)
+			changed = true
 		if changed:
 			unit["equipment"] = equipment
-		return
+		return also_removed
+	return also_removed
 
 func is_material_unit(unit_inst: Dictionary) -> bool:
 	"""Check if a unit is a material unit (non-playable) based on job_id."""

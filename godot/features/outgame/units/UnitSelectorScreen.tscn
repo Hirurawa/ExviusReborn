@@ -1,0 +1,222 @@
+[gd_scene format=3 uid="uid://7cpaqa2sankk"]
+
+[ext_resource type="Script" uid="uid://cob12uvgfv48g" path="res://features/outgame/units/unit_selector_screen.gd" id="1_h0poa"]
+[ext_resource type="Texture2D" uid="uid://dntla4oacfeg8" path="res://assets/ui/common/common_bg.png" id="2_t1bo2"]
+[ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="3_t5x8n"]
+[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="4_jak4q"]
+[ext_resource type="PackedScene" uid="uid://dydavexv4m5q5" path="res://features/outgame/units/components/UnitPortrait.tscn" id="4_t1bo2"]
+[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="5_t1bo2"]
+[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="6_ecge4"]
+[ext_resource type="Texture2D" uid="uid://ch4n0l6ei51rg" path="res://assets/ui/common/minibutton_label_selectclear.tres" id="7_jak4q"]
+[ext_resource type="Texture2D" uid="uid://dyk2312wm3mas" path="res://assets/ui/common/search_bar.tres" id="7_quke6"]
+[ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="7_wwfcu"]
+[ext_resource type="Texture2D" uid="uid://d2tw36ct1c5td" path="res://assets/ui/common/button_middle_long_off.tres" id="8_bbjpj"]
+[ext_resource type="Texture2D" uid="uid://5s3qsb0gvgv0" path="res://assets/ui/common/middlebutton_label_ok.tres" id="9_g5ulf"]
+[ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="12_wwfcu"]
+[ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="13_bbjpj"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="14_g5ulf"]
+[ext_resource type="Texture2D" uid="uid://vv15efbd70ga" path="res://assets/ui/sort/sort_btn9_1.tres" id="15_gv3fr"]
+[ext_resource type="Texture2D" uid="uid://broq5mmiivsj5" path="res://assets/ui/sort/sort_btn9_2.tres" id="16_quke6"]
+[ext_resource type="Texture2D" uid="uid://doif2t728b3x8" path="res://assets/ui/common/minibutton_label_sortfilter.tres" id="17_b1f5q"]
+
+[node name="UnitSelectorScreen" type="Control" unique_id=936743998]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_h0poa")
+unit_portrait_scene = ExtResource("4_t1bo2")
+
+[node name="CommonBg2" type="Sprite2D" parent="." unique_id=573314518]
+position = Vector2(320, 448)
+texture = ExtResource("2_t1bo2")
+
+[node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=1563937469]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 560.0
+offset_bottom = 192.0
+texture = ExtResource("12_wwfcu")
+stretch_mode = 2
+
+[node name="Title" type="Label" parent="UnitNamebgChara" unique_id=238854351]
+layout_mode = 0
+offset_left = 224.0
+offset_top = 25.0
+offset_right = 335.0
+offset_bottom = 48.0
+text = "View Units"
+
+[node name="BackButton" type="TextureButton" parent="UnitNamebgChara" unique_id=2028332836]
+layout_mode = 0
+offset_left = 46.0
+offset_top = -18.0
+offset_right = 142.0
+offset_bottom = 42.0
+texture_normal = ExtResource("13_bbjpj")
+texture_pressed = ExtResource("14_g5ulf")
+
+[node name="Back" type="Label" parent="UnitNamebgChara/BackButton" unique_id=1984806512]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 17.0
+offset_right = 69.0
+offset_bottom = 40.0
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1532846835]
+layout_mode = 1
+offset_top = 206.0
+offset_right = 640.0
+offset_bottom = 851.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1020956404]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=299518853]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SearchInput" type="LineEdit" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=409209912]
+layout_mode = 2
+placeholder_text = "Filter by name"
+caret_blink = true
+
+[node name="SearchBar" type="TextureRect" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=783110445]
+layout_mode = 2
+texture = ExtResource("7_quke6")
+stretch_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=464091326]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 5
+
+[node name="BottomBar" type="Control" parent="VBoxContainer" unique_id=20453781]
+custom_minimum_size = Vector2(640, 106)
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="unit_mix_ui_bg_0" type="TextureRect" parent="VBoxContainer/BottomBar" unique_id=1380032367]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 106.0
+texture = ExtResource("3_t5x8n")
+stretch_mode = 2
+
+[node name="ClearButton" type="TextureButton" parent="VBoxContainer/BottomBar" unique_id=920176140]
+layout_mode = 0
+offset_left = 449.0
+offset_top = 19.0
+offset_right = 601.0
+offset_bottom = 83.0
+texture_normal = ExtResource("4_jak4q")
+texture_pressed = ExtResource("5_t1bo2")
+
+[node name="MinibuttonLabelSelectclear" type="TextureRect" parent="VBoxContainer/BottomBar/ClearButton" unique_id=1278679920]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -66.0
+offset_top = -12.0
+offset_right = 66.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_jak4q")
+
+[node name="OkButton" type="TextureButton" parent="VBoxContainer/BottomBar" unique_id=1175773432]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -96.0
+offset_top = -40.0
+offset_right = 96.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("6_ecge4")
+texture_pressed = ExtResource("7_wwfcu")
+texture_disabled = ExtResource("8_bbjpj")
+
+[node name="MiddlebuttonLabelOk" type="TextureRect" parent="VBoxContainer/BottomBar/OkButton" unique_id=1370218580]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -83.0
+offset_top = -26.0
+offset_right = 83.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("9_g5ulf")
+
+[node name="SortDropdown" type="OptionButton" parent="." unique_id=108353019]
+layout_mode = 0
+offset_left = 553.0
+offset_top = 169.0
+offset_right = 585.0
+offset_bottom = 189.0
+
+[node name="SortDirectionButton" type="Button" parent="." unique_id=1417168514]
+layout_mode = 0
+offset_left = 530.0
+offset_top = 169.0
+offset_right = 546.0
+offset_bottom = 200.0
+text = "↓"
+
+[node name="ToggleModeButton" type="Button" parent="." unique_id=1009598979]
+layout_mode = 0
+offset_left = 510.0
+offset_top = 132.0
+offset_right = 635.0
+offset_bottom = 172.0
+
+[node name="SortFilter" type="Button" parent="." unique_id=1608048068]
+visible = false
+layout_mode = 0
+offset_left = 543.0
+offset_top = 110.0
+offset_right = 629.0
+offset_bottom = 141.0
+text = "Sort/Filter"
+
+[node name="SortBtn91" type="TextureButton" parent="." unique_id=36532383]
+visible = false
+layout_mode = 0
+offset_left = 542.0
+offset_top = 112.0
+offset_right = 640.0
+offset_bottom = 188.0
+texture_normal = ExtResource("15_gv3fr")
+texture_pressed = ExtResource("16_quke6")
+
+[node name="MinibuttonLabelSortfilter" type="TextureRect" parent="SortBtn91" unique_id=1122132996]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -46.0
+offset_top = -24.0
+offset_right = 46.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("17_b1f5q")

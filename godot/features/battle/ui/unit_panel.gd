@@ -2,9 +2,29 @@ extends TextureRect
 
 class_name UnitPanel
 
-signal open_skill_menu(unit_index: int)
-signal open_item_menu(unit_index: int)
-signal panel_tapped(unit_index: int)
+## One party member's panel in the battle screen's bottom area: portrait, name, HP, MP
+## and limit gauges, the queued command's icon, and the gestures (swipe up: attack,
+## down: defend, right: skills, left: items, tap: act or, while an ally is being picked,
+## pick this one). It knows nothing about the battle: the screen pushes values in and
+## acts on the signals.
+
+## Swipe up or down: `command` is ATTACK or DEFEND.
+signal command_chosen(slot: int, command: StringName)
+signal open_skill_menu(slot: int)
+signal open_item_menu(slot: int)
+signal panel_tapped(slot: int)
+
+const ATTACK: StringName = &"attack"
+const DEFEND: StringName = &"defend"
+
+## Command icons (assets/ui/battle/battle_com_icon_<name>.tres).
+const ICON_ATTACK: String = "attack"
+const ICON_DEFEND: String = "defense"
+
+const SWIPE_THRESHOLD: float = 20.0
+const TAP_MAX_DISTANCE: float = 8.0
+const ACTED_COLOR := Color(0.5, 0.5, 0.5, 1.0)
+const VALID_TARGET_COLOR := Color(0.5, 1.0, 0.5, 1.0)
 
 @onready var unit_thum: TextureRect = $UnitThum
 @onready var unit_name: Label = $UnitName
@@ -22,55 +42,64 @@ signal panel_tapped(unit_index: int)
 @onready var limit_bar: Sprite2D = $BattleUnitLimitBar
 @onready var barrier_bar: Sprite2D = $BattleUnitBarrierBar
 
-var _my_index: int = -1
-var _is_dragging: bool = false
-var _drag_start_position: Vector2 = Vector2.ZERO
-var _current_queued_action: int = 0
-var _current_queued_action_id: String = ""
-var _battle_manager: Node = null
-var _has_acted: bool = false
 var is_ally_targeting_mode: bool = false
 var is_valid_target: bool = false
+
+var _slot: int = -1
+var _is_dragging: bool = false
+var _drag_start_position: Vector2 = Vector2.ZERO
+## Greyed: the member has acted, or cannot take commands this turn.
+var _acted: bool = false
+## KO'd (HP 0): no gestures, except as an ally pick.
+var _down: bool = false
+var _shown_icon: String = ICON_ATTACK
+
+
+## `slot` names the panel in its signals; `template_id` (the unit id) picks the portrait.
+func setup(slot: int, template_id: String = "") -> void:
+	_slot = slot
+	if template_id != "":
+		var texture_path: String = "res://assets/unit_icons/unit_icon_%s.png" % template_id
+		if ResourceLoader.exists(texture_path):
+			unit_thum.texture = ResourceLoader.load(texture_path)
+	_update_visual_state()
+
+
+func show_stats(member_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_lb: int, max_lb: int) -> void:
+	unit_name.text = member_name
+	hp_now.text = str(cur_hp)
+	hp_max.text = str(max_hp)
+	mp_now.text = str(cur_mp)
+	_down = cur_hp <= 0
+	set_hp_display(cur_hp, max_hp)
+	set_mp_display(cur_mp, max_mp)
+	set_limit_gauge(cur_lb, max_lb)
+
+
+## The queued command's icon: attack, defense, magic, special, limit, summon or item.
+func show_command(icon: String) -> void:
+	_shown_icon = icon
+	var icon_path: String = "res://assets/ui/battle/battle_com_icon_%s.tres" % icon
+	if ResourceLoader.exists(icon_path):
+		cmd_baloon.texture = ResourceLoader.load(icon_path)
+
+
+## Greys the panel and stops its gestures (it has acted, or cannot take commands).
+func set_acted(acted: bool) -> void:
+	_acted = acted
+	_update_visual_state()
+
 
 func set_ally_targeting_mode(active: bool, valid: bool = false) -> void:
 	is_ally_targeting_mode = active
 	is_valid_target = valid
 	_update_visual_state()
 
-func _ready() -> void:
-	_battle_manager = get_tree().root.find_child("BattleManager", true, false)
-	if _battle_manager:
-		if not _battle_manager.unit_stats_updated.is_connected(_on_unit_stats_updated):
-			_battle_manager.unit_stats_updated.connect(_on_unit_stats_updated)
-		if not _battle_manager.unit_acted.is_connected(_on_unit_acted):
-			_battle_manager.unit_acted.connect(_on_unit_acted)
-		if not _battle_manager.turn_changed.is_connected(_on_turn_changed):
-			_battle_manager.turn_changed.connect(_on_turn_changed)
-
-func _exit_tree() -> void:
-	if not is_instance_valid(_battle_manager):
-		return
-	if _battle_manager.unit_stats_updated.is_connected(_on_unit_stats_updated):
-		_battle_manager.unit_stats_updated.disconnect(_on_unit_stats_updated)
-	if _battle_manager.unit_acted.is_connected(_on_unit_acted):
-		_battle_manager.unit_acted.disconnect(_on_unit_acted)
-	if _battle_manager.turn_changed.is_connected(_on_turn_changed):
-		_battle_manager.turn_changed.disconnect(_on_turn_changed)
 
 func _gui_input(event: InputEvent) -> void:
-	if not _battle_manager:
+	if _slot < 0:
 		return
-	if _my_index < 0 or _my_index >= _battle_manager.party_data.size():
-		return
-
-	var is_dead: bool = _battle_manager.party_data[_my_index].get("current_hp", 0) <= 0
-	var has_acted: bool = _my_index in _battle_manager.player_units_acted_this_turn
-
-	if has_acted and not is_ally_targeting_mode:
-		return
-
-	if is_dead and not is_ally_targeting_mode:
-		_on_unit_acted(_my_index)
+	if (_acted or _down) and not is_ally_targeting_mode:
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -78,160 +107,54 @@ func _gui_input(event: InputEvent) -> void:
 			_is_dragging = false
 			_drag_start_position = event.position
 		else:
-			if not _is_dragging and _is_within_tap_distance(event.position):
-				panel_tapped.emit(_my_index)
+			if not _is_dragging and (event.position - _drag_start_position).length() <= TAP_MAX_DISTANCE:
+				panel_tapped.emit(_slot)
 			_is_dragging = false
 
 	elif (event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or event is InputEventScreenDrag:
-		if has_acted or is_dead:
+		if _acted or _down or _is_dragging:
 			return
-
 		var diff: Vector2 = event.position - _drag_start_position
-		if not _is_dragging:
-			if abs(diff.y) > 20 and abs(diff.y) > abs(diff.x):
-				_is_dragging = true
-				if diff.y > 20:
-					if _current_queued_action != _battle_manager.CombatAction.DEFEND:
-						_current_queued_action = _battle_manager.CombatAction.DEFEND
-						_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.DEFEND)
-						_update_command_icon("defense")
-						_update_visual_state()
-				elif diff.y < -20:
-					if _current_queued_action != _battle_manager.CombatAction.ATTACK:
-						_current_queued_action = _battle_manager.CombatAction.ATTACK
-						_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)
-						_update_command_icon("attack")
-						_update_visual_state()
-			elif abs(diff.x) > 20 and abs(diff.x) > abs(diff.y):
-				_is_dragging = true
-				if diff.x > 20:
-					open_skill_menu.emit(_my_index)
-				elif diff.x < -20:
-					open_item_menu.emit(_my_index)
+		if abs(diff.y) > SWIPE_THRESHOLD and abs(diff.y) > abs(diff.x):
+			_is_dragging = true
+			if diff.y > 0.0 and _shown_icon != ICON_DEFEND:
+				command_chosen.emit(_slot, DEFEND)
+			elif diff.y < 0.0 and _shown_icon != ICON_ATTACK:
+				command_chosen.emit(_slot, ATTACK)
+		elif abs(diff.x) > SWIPE_THRESHOLD and abs(diff.x) > abs(diff.y):
+			_is_dragging = true
+			if diff.x > 0.0:
+				open_skill_menu.emit(_slot)
+			else:
+				open_item_menu.emit(_slot)
 
-func setup(unit_index: int) -> void:
-	_my_index = unit_index
-	_update_visual_state()
-	if _battle_manager:
-		_battle_manager.request_unit_stats(_my_index)
-
-const _TAP_MAX_DISTANCE: float = 8.0
-
-func _is_within_tap_distance(release_position: Vector2) -> bool:
-	return (release_position - _drag_start_position).length() <= _TAP_MAX_DISTANCE
-
-func _on_unit_acted(index: int) -> void:
-	if index == _my_index:
-		_has_acted = true
-		modulate = Color(0.5, 0.5, 0.5, 1.0)
-
-func _on_turn_changed(_new_turn: int) -> void:
-	if not _battle_manager or _my_index < 0 or _my_index >= _battle_manager.party_data.size():
-		return
-	if _battle_manager.party_data[_my_index].get("current_hp", 0) <= 0:
-		_has_acted = true
-	else:
-		_has_acted = false
-	_current_queued_action = 0
-	_current_queued_action_id = ""
-	if _battle_manager:
-		_battle_manager.set_queued_action(_my_index, _battle_manager.CombatAction.ATTACK)
-	_update_command_icon("attack")
-	_update_visual_state()
-
-func _on_unit_stats_updated(index: int, _unit_name: String, cur_hp: int, max_hp: int, cur_mp: int, max_mp: int, cur_limit: int, max_limit: int) -> void:
-	if index != _my_index:
-		return
-	_update_stats_display(_unit_name, cur_hp, max_hp, cur_mp)
-	set_hp_display(cur_hp, max_hp)
-	set_mp_display(cur_mp, max_mp)
-	set_limit_gauge(cur_limit, max_limit)
-
-func update_action_visuals() -> void:
-	if not _battle_manager:
-		return
-	if _my_index < 0 or _my_index >= _battle_manager.party_data.size():
-		return
-	var unit_data: Dictionary = _battle_manager.party_data[_my_index]
-	_current_queued_action = unit_data.get("queued_action", _battle_manager.CombatAction.ATTACK)
-	_current_queued_action_id = str(unit_data.get("queued_action_id", ""))
-	_update_visual_state()
 
 func _update_visual_state() -> void:
-	if not _battle_manager:
-		return
-
 	if is_ally_targeting_mode:
-		if is_valid_target:
-			modulate = Color(0.5, 1.0, 0.5, 1.0) # Green highlight
-		else:
-			modulate = Color(0.5, 0.5, 0.5, 1.0) # Grayed out
-		return
+		modulate = VALID_TARGET_COLOR if is_valid_target else ACTED_COLOR
+	elif _acted:
+		modulate = ACTED_COLOR
+	else:
+		modulate = Color.WHITE
 
-	if _has_acted:
-		modulate = Color(0.5, 0.5, 0.5, 1.0)
-		return
-	modulate = Color(1.0, 1.0, 1.0, 1.0)
-
-	if _current_queued_action == _battle_manager.CombatAction.ATTACK:
-		#modulate = Color(1.0, 1.0, 1.0, 1.0)
-		_update_command_icon("attack")
-	elif _current_queued_action == _battle_manager.CombatAction.DEFEND:
-		#modulate = Color(0.5, 0.8, 1.0, 1.0)
-		_update_command_icon("defense")
-	elif _current_queued_action == _battle_manager.CombatAction.SKILL:
-		#modulate = Color(1.0, 0.6, 0.6, 1.0)
-		_update_command_icon(_resolve_skill_command_icon())
-	elif _current_queued_action == _battle_manager.CombatAction.ITEM:
-		#modulate = Color(0.6, 1.0, 0.6, 1.0)
-		_update_command_icon("item")
-
-func _resolve_skill_command_icon() -> String:
-	if _current_queued_action_id == "":
-		return "magic"
-	if GameDatabase.has_magic(_current_queued_action_id):
-		return "magic"
-	if GameDatabase.has_ability(_current_queued_action_id):
-		return "special"
-	return "magic"
 
 func set_hp_display(current_hp: int, max_hp: int) -> void:
 	if max_hp <= 0:
 		return
-	var fill_ratio: float = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
-	hp_bar.scale.x = fill_ratio
+	hp_bar.scale.x = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
+
 
 func set_mp_display(current_mp: int, max_mp: int) -> void:
 	if max_mp <= 0:
 		return
-	var fill_ratio: float = clampf(float(current_mp) / float(max_mp), 0.0, 1.0)
-	mp_bar.scale.x = fill_ratio
+	mp_bar.scale.x = clampf(float(current_mp) / float(max_mp), 0.0, 1.0)
+
 
 func set_limit_gauge(current_limit: int, max_limit: int) -> void:
 	if max_limit <= 0:
 		return
-	var fill_ratio: float = clampf(float(current_limit) / float(max_limit), 0.0, 1.0)
-	limit_bar.scale.x = fill_ratio
+	limit_bar.scale.x = clampf(float(current_limit) / float(max_limit), 0.0, 1.0)
 
-func _update_command_icon(command: String) -> void:
-	var icon_path: String = "res://assets/ui/battle/battle_com_icon_%s.tres" % command
-	if ResourceLoader.exists(icon_path):
-		cmd_baloon.texture = ResourceLoader.load(icon_path)
-
-func _update_stats_display(unit_name_str: String, cur_hp: int, max_hp: int, cur_mp: int) -> void:
-	unit_name.text = unit_name_str
-	hp_now.text = str(cur_hp)
-	hp_max.text = str(max_hp)
-	mp_now.text = str(cur_mp)
-	
-	# Load and display unit thumbnail
-	if _battle_manager and _my_index >= 0 and _my_index < _battle_manager.party_data.size():
-		var unit_data: Dictionary = _battle_manager.party_data[_my_index]
-		var unit_static_id: String = str(unit_data.get("unitId"))
-		if unit_static_id != "":
-			var texture_path: String = "res://assets/unit_icons/unit_icon_%s.png" % unit_static_id
-			if ResourceLoader.exists(texture_path):
-				unit_thum.texture = ResourceLoader.load(texture_path)
 
 func set_barrier_gauge(current_barrier: float) -> void:
 	var is_active: bool = current_barrier > 0.0

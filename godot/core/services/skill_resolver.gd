@@ -271,7 +271,7 @@ func _build_targeting_metadata(parsed_data: Dictionary) -> Dictionary:
 			metadata["targets_self"] = true
 		elif target_type == 1:
 			metadata["targets_enemies"] = true
-		elif target_type  in [2, 6]:
+		elif target_type  in [2, 5, 6]:
 			if t_type == 7:
 				metadata["targets_dead"] = true
 			else:

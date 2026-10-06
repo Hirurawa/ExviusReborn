@@ -5,22 +5,38 @@
 [ext_resource type="Script" uid="uid://ls8penmma0g0" path="res://features/outgame/units/ability_awakening.gd" id="1_s46q2"]
 [ext_resource type="Texture2D" uid="uid://dv3a2baao2odf" path="res://assets/ui/common/button_item1.tres" id="2_15toj"]
 [ext_resource type="Texture2D" uid="uid://bhw8dbll1bcks" path="res://assets/ui/unit/ability_awake_statusbg.tres" id="3_2cxqm"]
+[ext_resource type="Texture2D" uid="uid://bgh4m64l2vetk" path="res://assets/ui/unit/unit_statusframe.tres" id="4_pm7ck"]
 [ext_resource type="Texture2D" uid="uid://cqnaqr2hufdlq" path="res://assets/ui/unit/unit_statusbottomline.tres" id="4_ue5vi"]
 [ext_resource type="Texture2D" uid="uid://6v67586nrg56" path="res://assets/ui/unit/unit_evo_statusarrow.tres" id="5_0vxls"]
+[ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="5_iehgf"]
 [ext_resource type="Texture2D" uid="uid://005aq5cxxido" path="res://assets/ui/unit/unit_charastand_small.tres" id="6_4nh5r"]
+[ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="6_abok8"]
+[ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="7_6g7hq"]
 [ext_resource type="Texture2D" uid="uid://b7myipnh5svi" path="res://assets/ui/unit/unit_chara_label_have.tres" id="7_tdaa3"]
+[ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="8_s03nr"]
 [ext_resource type="Texture2D" uid="uid://s5a8e6gn4igi" path="res://assets/ui/common/item_search_mini_bg1.tres" id="8_xii1g"]
+[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="9_dipgp"]
 [ext_resource type="Texture2D" uid="uid://b4x5hyy74ejcu" path="res://assets/ui/common/item_search_mini_bg2.tres" id="9_l2lxy"]
+[ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="10_puyuq"]
 [ext_resource type="Texture2D" uid="uid://d2c46n1qnf6ju" path="res://assets/ui/common/nameplate_item.tres" id="10_s46q2"]
+[ext_resource type="Texture2D" uid="uid://bfrilw2hm3w8v" path="res://assets/ui/unit/unit_charastand_large.tres" id="11_105ka"]
 [ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="11_djd65"]
 [ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="12_ieqss"]
+[ext_resource type="Texture2D" uid="uid://csl1y13mp5fhe" path="res://assets/ui/unit/ability_awake_unitstatus.tres" id="12_su2kh"]
 [ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="13_7b64o"]
+[ext_resource type="Texture2D" uid="uid://bwujdwgtx83cb" path="res://assets/ui/unit/unit_magic_lv.tres" id="13_ji6js"]
 [ext_resource type="Texture2D" uid="uid://cuj528owt34mq" path="res://assets/ui/unit/middlebutton_label_evo.tres" id="14_4pytr"]
+[ext_resource type="Texture2D" uid="uid://cix3i4u2s3dr7" path="res://assets/ui/unit/unit_lvup_info.tres" id="14_vgsui"]
+[ext_resource type="Texture2D" uid="uid://bpwnd25hx5luo" path="res://assets/ui/unit/unit_exp_bg.tres" id="15_40tqp"]
 [ext_resource type="Texture2D" uid="uid://b30vj2xdiepw8" path="res://assets/ui/common/pagebottom_plateinfo.tres" id="15_hvgnr"]
+[ext_resource type="Texture2D" uid="uid://dh0pauhp4hul7" path="res://assets/ui/unit/unit_exp_bar.tres" id="16_2a7ok"]
 [ext_resource type="Texture2D" uid="uid://c0kimka5uneid" path="res://assets/ui/common/icon_coin.tres" id="16_rnje6"]
+[ext_resource type="Texture2D" uid="uid://cyc1yl2d75bvy" path="res://assets/ui/unit/unit_exp_gauge.tres" id="17_3v3ch"]
 [ext_resource type="Texture2D" uid="uid://dqyoxye41actf" path="res://assets/ui/unit/unit_namebg_chara.tres" id="17_xii1g"]
 [ext_resource type="Texture2D" uid="uid://d2tw36ct1c5td" path="res://assets/ui/common/button_middle_long_off.tres" id="18_djd65"]
+[ext_resource type="Texture2D" uid="uid://cxi6byllf8vao" path="res://assets/ui/unit/favorite_star_mini.tres" id="18_jl8sw"]
 [ext_resource type="Texture2D" uid="uid://bkqrudjegcb8s" path="res://assets/ui/unit/unit_minibutton1.tres" id="18_l2lxy"]
+[ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="37_iehgf"]
 
 [node name="AbilityAwakening" type="Control" unique_id=1935544331]
 layout_mode = 3
@@ -31,20 +47,338 @@ script = ExtResource("1_s46q2")
 position = Vector2(320, 448)
 texture = ExtResource("1_l2lxy")
 
-[node name="Control" type="Control" parent="." unique_id=1932453139]
+[node name="AbilityAwakeningSelector" type="VBoxContainer" parent="." unique_id=1042314852]
+layout_mode = 0
+offset_top = 109.0
+offset_right = 640.0
+offset_bottom = 851.0
+
+[node name="unit_statusbg" type="TextureRect" parent="AbilityAwakeningSelector" unique_id=918291631]
+layout_mode = 2
+texture = ExtResource("1_llv73")
+
+[node name="unit_sublimation_statusframe_offset" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=181860850]
+layout_mode = 0
+offset_left = 199.0
+offset_top = 135.0
+offset_right = 639.0
+offset_bottom = 269.0
+texture = ExtResource("4_pm7ck")
+expand_mode = 1
+
+[node name="unit_status_label_hp" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=1070859668]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 190.0
+offset_right = 256.0
+offset_bottom = 210.0
+texture = ExtResource("5_iehgf")
+expand_mode = 1
+
+[node name="unit_status_ext_hp_now_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_hp" unique_id=643516893]
+layout_mode = 0
+offset_left = 71.0
+offset_top = 1.0
+offset_right = 355.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_hp_now_number"
+
+[node name="unit_status_ext_hp_max_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_hp" unique_id=1874064288]
+visible = false
+layout_mode = 0
+offset_left = 122.0
+offset_top = 5.0
+offset_right = 375.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_hp_max_number"
+
+[node name="unit_status_label_mp" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=1694576318]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 190.0
+offset_right = 459.0
+offset_bottom = 210.0
+texture = ExtResource("6_abok8")
+expand_mode = 1
+
+[node name="unit_status_ext_mp_now_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_mp" unique_id=727904612]
+layout_mode = 0
+offset_left = 81.0
+offset_top = 1.0
+offset_right = 371.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_mp_now_number"
+
+[node name="unit_status_ext_mp_max_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_mp" unique_id=921742759]
+visible = false
+layout_mode = 0
+offset_left = 132.0
+offset_top = 5.0
+offset_right = 390.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_mp_max_number"
+
+[node name="unit_status_label_attack" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=2004023205]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 218.0
+offset_right = 256.0
+offset_bottom = 238.0
+texture = ExtResource("7_6g7hq")
+expand_mode = 1
+
+[node name="unit_status_ext_attack_now_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_attack" unique_id=1442615544]
+layout_mode = 0
+offset_left = 71.0
+offset_top = 1.0
+offset_right = 387.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_attack_now_number"
+
+[node name="unit_status_ext_attack_max_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_attack" unique_id=1667700651]
+visible = false
+layout_mode = 0
+offset_left = 122.0
+offset_top = 5.0
+offset_right = 403.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_attack_max_number"
+
+[node name="unit_status_label_defense" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=2050305877]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 218.0
+offset_right = 459.0
+offset_bottom = 238.0
+texture = ExtResource("8_s03nr")
+expand_mode = 1
+
+[node name="unit_status_ext_defense_now_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_defense" unique_id=561185679]
+layout_mode = 0
+offset_left = 81.0
+offset_top = 1.0
+offset_right = 411.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_defense_now_number"
+
+[node name="unit_status_ext_defense_max_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_defense" unique_id=1973965636]
+visible = false
+layout_mode = 0
+offset_left = 132.0
+offset_top = 5.0
+offset_right = 426.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_defense_max_number"
+
+[node name="unit_status_label_magic" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=1550516912]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 246.0
+offset_right = 256.0
+offset_bottom = 266.0
+texture = ExtResource("9_dipgp")
+expand_mode = 1
+
+[node name="unit_status_ext_magic_now_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_magic" unique_id=1003441782]
+layout_mode = 0
+offset_left = 71.0
+offset_top = 1.0
+offset_right = 384.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_magic_now_number"
+
+[node name="unit_status_ext_magic_max_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_magic" unique_id=613567134]
+visible = false
+layout_mode = 0
+offset_left = 122.0
+offset_top = 5.0
+offset_right = 401.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_magic_max_number"
+
+[node name="unit_status_label_mnd" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=915002212]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 246.0
+offset_right = 459.0
+offset_bottom = 266.0
+texture = ExtResource("10_puyuq")
+expand_mode = 1
+
+[node name="unit_status_ext_mnd_now_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_mnd" unique_id=1043138659]
+layout_mode = 0
+offset_left = 81.0
+offset_top = 1.0
+offset_right = 382.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_ext_mnd_now_number"
+
+[node name="unit_status_ext_mnd_max_number" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/unit_status_label_mnd" unique_id=414242373]
+visible = false
+layout_mode = 0
+offset_left = 132.0
+offset_top = 5.0
+offset_right = 400.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_ext_mnd_max_number"
+
+[node name="unit_charastand_large" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=1728638895]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 116.0
+offset_right = 182.0
+offset_bottom = 284.0
+texture = ExtResource("11_105ka")
+expand_mode = 1
+
+[node name="unit_chara" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg/unit_charastand_large" unique_id=937946190]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 48.0
+offset_right = 122.0
+offset_bottom = 128.0
+
+[node name="unit_sublimation_name_bg" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=941364036]
+layout_mode = 0
+offset_left = 152.0
+offset_top = 94.0
+offset_right = 640.0
+offset_bottom = 142.0
+texture = ExtResource("12_su2kh")
+expand_mode = 1
+
+[node name="UnitLevel" type="Control" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=402493437]
+anchors_preset = 0
+offset_top = 61.0
+offset_right = 40.0
+offset_bottom = 101.0
+
+[node name="UnitMagicLv" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel" unique_id=1444779118]
+layout_mode = 0
+offset_left = 216.0
+offset_top = 88.0
+offset_right = 244.0
+offset_bottom = 108.0
+texture = ExtResource("13_ji6js")
+
+[node name="UnitLevel" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel" unique_id=802209159]
+layout_mode = 0
+offset_left = 247.0
+offset_top = 85.0
+offset_right = 318.0
+offset_bottom = 108.0
+text = "???/???"
+
+[node name="UnitLvupInfo2" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel" unique_id=710819150]
+layout_mode = 0
+offset_left = 511.0
+offset_top = 88.0
+offset_right = 537.0
+offset_bottom = 104.0
+texture = ExtResource("14_vgsui")
+
+[node name="NextExpLabel" type="Label" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel/UnitLvupInfo2" unique_id=1898989599]
+layout_mode = 0
+offset_left = 45.0
+offset_top = -3.0
+offset_right = 85.0
+offset_bottom = 20.0
+text = "---"
+vertical_alignment = 1
+
+[node name="UnitExpBg" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel" unique_id=164240873]
+layout_mode = 0
+offset_left = 242.0
+offset_top = 105.0
+offset_right = 596.0
+offset_bottom = 115.0
+texture = ExtResource("15_40tqp")
+
+[node name="UnitExpBar" type="TextureProgressBar" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel/UnitExpBg" unique_id=1670307779]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 349.0
+offset_bottom = 7.0
+texture_progress = ExtResource("16_2a7ok")
+
+[node name="UnitExpGauge" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg/UnitLevel/UnitExpBg" unique_id=1216766831]
+layout_mode = 0
+offset_right = 354.0
+offset_bottom = 10.0
+texture = ExtResource("17_3v3ch")
+
+[node name="UnitName" type="Label" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=45960684]
+layout_mode = 0
+offset_left = 217.0
+offset_top = 108.0
+offset_right = 297.0
+offset_bottom = 131.0
+text = "UnitName"
+
+[node name="UnitNumber" type="Label" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=1989276559]
+layout_mode = 0
+offset_left = 208.0
+offset_top = 80.0
+offset_right = 270.0
+offset_bottom = 103.0
+text = "No.xxxx"
+
+[node name="RarityStarsLabel" type="Label" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=955557636]
+z_index = 10
+layout_mode = 0
+offset_left = 526.0
+offset_top = 105.0
+offset_right = 624.0
+offset_bottom = 131.0
+theme_override_font_sizes/font_size = 18
+text = "★★★★★"
+vertical_alignment = 1
+
+[node name="FavoriteStarMini" type="TextureRect" parent="AbilityAwakeningSelector/unit_statusbg" unique_id=1816016420]
+layout_mode = 0
+offset_left = 430.0
+offset_top = 102.0
+offset_right = 462.0
+offset_bottom = 134.0
+texture = ExtResource("18_jl8sw")
+
+[node name="SkillList" type="GridContainer" parent="AbilityAwakeningSelector" unique_id=1057248798]
+layout_mode = 2
+columns = 2
+
+[node name="AbilityAwakening" type="Control" parent="." unique_id=759160652]
+visible = false
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SkillInfo" type="Control" parent="AbilityAwakening" unique_id=1932453139]
 anchors_preset = 0
 offset_top = 110.0
 offset_right = 40.0
 offset_bottom = 150.0
 
-[node name="sublimation_main_status_bg" type="TextureRect" parent="Control" unique_id=553689967]
+[node name="sublimation_main_status_bg" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=553689967]
 layout_mode = 0
 offset_right = 640.0
 offset_bottom = 332.0
 texture = ExtResource("1_llv73")
 expand_mode = 1
 
-[node name="sublimation_frame_1" type="TextureRect" parent="Control" unique_id=521009779]
+[node name="sublimation_frame_1" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=521009779]
 layout_mode = 0
 offset_left = 6.0
 offset_top = 132.0
@@ -53,12 +387,12 @@ offset_bottom = 240.0
 texture = ExtResource("2_15toj")
 expand_mode = 1
 
-[node name="Control" type="Control" parent="Control/sublimation_frame_1" unique_id=926689658]
+[node name="Control" type="Control" parent="AbilityAwakening/SkillInfo/sublimation_frame_1" unique_id=926689658]
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="sublimation_frame_detail_bg_1" type="TextureRect" parent="Control" unique_id=1331460758]
+[node name="sublimation_frame_detail_bg_1" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=1331460758]
 layout_mode = 0
 offset_top = 241.0
 offset_right = 320.0
@@ -66,7 +400,7 @@ offset_bottom = 327.0
 texture = ExtResource("3_2cxqm")
 expand_mode = 1
 
-[node name="sublimation_frame_detail_1" type="Label" parent="Control" unique_id=1099038126]
+[node name="sublimation_frame_detail_1" type="Label" parent="AbilityAwakening/SkillInfo" unique_id=1099038126]
 layout_mode = 0
 offset_left = 9.0
 offset_top = 243.0
@@ -78,7 +412,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="sublimation_main_status_bottom_line" type="TextureRect" parent="Control" unique_id=1707880321]
+[node name="sublimation_main_status_bottom_line" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=1707880321]
 layout_mode = 0
 offset_top = 257.0
 offset_right = 640.0
@@ -86,7 +420,7 @@ offset_bottom = 337.0
 texture = ExtResource("4_ue5vi")
 expand_mode = 1
 
-[node name="sublimation_frame_2" type="TextureRect" parent="Control" unique_id=1628905756]
+[node name="sublimation_frame_2" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=1628905756]
 layout_mode = 0
 offset_left = 326.0
 offset_top = 131.0
@@ -95,12 +429,12 @@ offset_bottom = 239.0
 texture = ExtResource("2_15toj")
 expand_mode = 1
 
-[node name="Control" type="Control" parent="Control/sublimation_frame_2" unique_id=33556286]
+[node name="Control" type="Control" parent="AbilityAwakening/SkillInfo/sublimation_frame_2" unique_id=33556286]
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="sublimation_frame_detail_bg_2" type="TextureRect" parent="Control" unique_id=1354743270]
+[node name="sublimation_frame_detail_bg_2" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=1354743270]
 layout_mode = 0
 offset_left = 320.0
 offset_top = 240.0
@@ -109,7 +443,7 @@ offset_bottom = 326.0
 texture = ExtResource("3_2cxqm")
 expand_mode = 1
 
-[node name="sublimation_frame_detail_2" type="RichTextLabel" parent="Control" unique_id=2088669818]
+[node name="sublimation_frame_detail_2" type="RichTextLabel" parent="AbilityAwakening/SkillInfo" unique_id=2088669818]
 layout_mode = 0
 offset_left = 358.0
 offset_top = 242.0
@@ -120,7 +454,7 @@ autowrap_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="sublimation_main_arrow" type="TextureRect" parent="Control" unique_id=492228585]
+[node name="sublimation_main_arrow" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=492228585]
 layout_mode = 0
 offset_left = 275.0
 offset_top = 249.0
@@ -129,7 +463,7 @@ offset_bottom = 327.0
 texture = ExtResource("5_0vxls")
 expand_mode = 1
 
-[node name="sublimation_frame_learn_only" type="TextureRect" parent="Control" unique_id=86583559]
+[node name="sublimation_frame_learn_only" type="TextureRect" parent="AbilityAwakening/SkillInfo" unique_id=86583559]
 visible = false
 layout_mode = 0
 offset_left = 167.0
@@ -139,20 +473,25 @@ offset_bottom = 240.0
 texture = ExtResource("2_15toj")
 expand_mode = 1
 
-[node name="Material1" type="Control" parent="." unique_id=1993245300]
+[node name="Materials" type="Control" parent="AbilityAwakening" unique_id=1290999471]
 anchors_preset = 0
 offset_top = 520.0
-offset_right = 139.0
-offset_bottom = 750.0
+offset_right = 40.0
+offset_bottom = 560.0
 
-[node name="unit_classup_material_stand" type="TextureRect" parent="Material1" unique_id=1042666904]
+[node name="Material1" type="Control" parent="AbilityAwakening/Materials" unique_id=1993245300]
+anchors_preset = 0
+offset_right = 139.0
+offset_bottom = 230.0
+
+[node name="unit_classup_material_stand" type="TextureRect" parent="AbilityAwakening/Materials/Material1" unique_id=1042666904]
 layout_mode = 0
 offset_right = 148.0
 offset_bottom = 168.0
 texture = ExtResource("6_4nh5r")
 expand_mode = 1
 
-[node name="unit_classup_item_icon" type="TextureRect" parent="Material1" unique_id=1286684418]
+[node name="unit_classup_item_icon" type="TextureRect" parent="AbilityAwakening/Materials/Material1" unique_id=1286684418]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 41.0
@@ -160,7 +499,7 @@ offset_right = 130.0
 offset_bottom = 153.0
 expand_mode = 1
 
-[node name="unit_classup_item_num" type="Label" parent="Material1" unique_id=1289793381]
+[node name="unit_classup_item_num" type="Label" parent="AbilityAwakening/Materials/Material1" unique_id=1289793381]
 layout_mode = 0
 offset_left = 82.0
 offset_top = 111.0
@@ -170,7 +509,7 @@ theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
 vertical_alignment = 1
 
-[node name="unit_classup_have" type="TextureRect" parent="Material1" unique_id=884040994]
+[node name="unit_classup_have" type="TextureRect" parent="AbilityAwakening/Materials/Material1" unique_id=884040994]
 layout_mode = 0
 offset_left = 75.0
 offset_top = 133.0
@@ -179,7 +518,7 @@ offset_bottom = 155.0
 texture = ExtResource("7_tdaa3")
 expand_mode = 1
 
-[node name="unit_classup_item_have" type="Label" parent="Material1" unique_id=2134077715]
+[node name="unit_classup_item_have" type="Label" parent="AbilityAwakening/Materials/Material1" unique_id=2134077715]
 layout_mode = 0
 offset_left = -25.0
 offset_top = 130.0
@@ -190,7 +529,7 @@ text = "item_have"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="unit_classup_item_search_off" type="TextureRect" parent="Material1" unique_id=1206517916]
+[node name="unit_classup_item_search_off" type="TextureRect" parent="AbilityAwakening/Materials/Material1" unique_id=1206517916]
 layout_mode = 0
 offset_left = 48.0
 offset_top = 184.0
@@ -199,7 +538,7 @@ offset_bottom = 216.0
 texture = ExtResource("8_xii1g")
 expand_mode = 1
 
-[node name="unit_classup_item_search_on" type="TextureButton" parent="Material1" unique_id=531512069]
+[node name="unit_classup_item_search_on" type="TextureButton" parent="AbilityAwakening/Materials/Material1" unique_id=531512069]
 visible = false
 layout_mode = 0
 offset_left = 48.0
@@ -209,7 +548,7 @@ offset_bottom = 216.0
 texture_normal = ExtResource("9_l2lxy")
 texture_disabled = ExtResource("8_xii1g")
 
-[node name="unit_classup_item_frame" type="TextureRect" parent="Material1" unique_id=1371254614]
+[node name="unit_classup_item_frame" type="TextureRect" parent="AbilityAwakening/Materials/Material1" unique_id=1371254614]
 layout_mode = 0
 offset_left = 8.0
 offset_top = 156.0
@@ -218,7 +557,7 @@ offset_bottom = 186.0
 texture = ExtResource("10_s46q2")
 expand_mode = 1
 
-[node name="unit_classup_item_name" type="Label" parent="Material1" unique_id=1795332838]
+[node name="unit_classup_item_name" type="Label" parent="AbilityAwakening/Materials/Material1" unique_id=1795332838]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 155.0
@@ -229,21 +568,20 @@ text = "item_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Material2" type="Control" parent="." unique_id=1534426206]
+[node name="Material2" type="Control" parent="AbilityAwakening/Materials" unique_id=1534426206]
 anchors_preset = 0
 offset_left = 127.0
-offset_top = 520.0
 offset_right = 266.0
-offset_bottom = 750.0
+offset_bottom = 230.0
 
-[node name="unit_classup_material_stand" type="TextureRect" parent="Material2" unique_id=184185277]
+[node name="unit_classup_material_stand" type="TextureRect" parent="AbilityAwakening/Materials/Material2" unique_id=184185277]
 layout_mode = 0
 offset_right = 148.0
 offset_bottom = 168.0
 texture = ExtResource("6_4nh5r")
 expand_mode = 1
 
-[node name="unit_classup_item_icon" type="TextureRect" parent="Material2" unique_id=577581218]
+[node name="unit_classup_item_icon" type="TextureRect" parent="AbilityAwakening/Materials/Material2" unique_id=577581218]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 41.0
@@ -251,7 +589,7 @@ offset_right = 130.0
 offset_bottom = 153.0
 expand_mode = 1
 
-[node name="unit_classup_item_num" type="Label" parent="Material2" unique_id=1590864243]
+[node name="unit_classup_item_num" type="Label" parent="AbilityAwakening/Materials/Material2" unique_id=1590864243]
 layout_mode = 0
 offset_left = 82.0
 offset_top = 111.0
@@ -261,7 +599,7 @@ theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
 vertical_alignment = 1
 
-[node name="unit_classup_have" type="TextureRect" parent="Material2" unique_id=1594628483]
+[node name="unit_classup_have" type="TextureRect" parent="AbilityAwakening/Materials/Material2" unique_id=1594628483]
 layout_mode = 0
 offset_left = 75.0
 offset_top = 133.0
@@ -270,7 +608,7 @@ offset_bottom = 155.0
 texture = ExtResource("7_tdaa3")
 expand_mode = 1
 
-[node name="unit_classup_item_have" type="Label" parent="Material2" unique_id=1553978813]
+[node name="unit_classup_item_have" type="Label" parent="AbilityAwakening/Materials/Material2" unique_id=1553978813]
 layout_mode = 0
 offset_left = -25.0
 offset_top = 130.0
@@ -281,7 +619,7 @@ text = "item_have"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="unit_classup_item_search_off" type="TextureRect" parent="Material2" unique_id=1784927876]
+[node name="unit_classup_item_search_off" type="TextureRect" parent="AbilityAwakening/Materials/Material2" unique_id=1784927876]
 layout_mode = 0
 offset_left = 48.0
 offset_top = 184.0
@@ -290,7 +628,7 @@ offset_bottom = 216.0
 texture = ExtResource("8_xii1g")
 expand_mode = 1
 
-[node name="unit_classup_item_search_on" type="TextureButton" parent="Material2" unique_id=2070682206]
+[node name="unit_classup_item_search_on" type="TextureButton" parent="AbilityAwakening/Materials/Material2" unique_id=2070682206]
 visible = false
 layout_mode = 0
 offset_left = 48.0
@@ -300,7 +638,7 @@ offset_bottom = 216.0
 texture_normal = ExtResource("9_l2lxy")
 texture_disabled = ExtResource("8_xii1g")
 
-[node name="unit_classup_item_frame" type="TextureRect" parent="Material2" unique_id=1162092035]
+[node name="unit_classup_item_frame" type="TextureRect" parent="AbilityAwakening/Materials/Material2" unique_id=1162092035]
 layout_mode = 0
 offset_left = 8.0
 offset_top = 156.0
@@ -309,7 +647,7 @@ offset_bottom = 186.0
 texture = ExtResource("10_s46q2")
 expand_mode = 1
 
-[node name="unit_classup_item_name" type="Label" parent="Material2" unique_id=879866680]
+[node name="unit_classup_item_name" type="Label" parent="AbilityAwakening/Materials/Material2" unique_id=879866680]
 layout_mode = 0
 offset_left = 11.0
 offset_top = 155.0
@@ -320,21 +658,20 @@ text = "item_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Material3" type="Control" parent="." unique_id=497712920]
+[node name="Material3" type="Control" parent="AbilityAwakening/Materials" unique_id=497712920]
 anchors_preset = 0
 offset_left = 255.0
-offset_top = 520.0
 offset_right = 394.0
-offset_bottom = 750.0
+offset_bottom = 230.0
 
-[node name="unit_classup_material_stand" type="TextureRect" parent="Material3" unique_id=1255392606]
+[node name="unit_classup_material_stand" type="TextureRect" parent="AbilityAwakening/Materials/Material3" unique_id=1255392606]
 layout_mode = 0
 offset_right = 148.0
 offset_bottom = 168.0
 texture = ExtResource("6_4nh5r")
 expand_mode = 1
 
-[node name="unit_classup_item_icon" type="TextureRect" parent="Material3" unique_id=118666438]
+[node name="unit_classup_item_icon" type="TextureRect" parent="AbilityAwakening/Materials/Material3" unique_id=118666438]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 41.0
@@ -342,7 +679,7 @@ offset_right = 130.0
 offset_bottom = 153.0
 expand_mode = 1
 
-[node name="unit_classup_item_num" type="Label" parent="Material3" unique_id=60712410]
+[node name="unit_classup_item_num" type="Label" parent="AbilityAwakening/Materials/Material3" unique_id=60712410]
 layout_mode = 0
 offset_left = 82.0
 offset_top = 111.0
@@ -352,7 +689,7 @@ theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
 vertical_alignment = 1
 
-[node name="unit_classup_have" type="TextureRect" parent="Material3" unique_id=439747306]
+[node name="unit_classup_have" type="TextureRect" parent="AbilityAwakening/Materials/Material3" unique_id=439747306]
 layout_mode = 0
 offset_left = 75.0
 offset_top = 133.0
@@ -361,7 +698,7 @@ offset_bottom = 155.0
 texture = ExtResource("7_tdaa3")
 expand_mode = 1
 
-[node name="unit_classup_item_have" type="Label" parent="Material3" unique_id=1113045088]
+[node name="unit_classup_item_have" type="Label" parent="AbilityAwakening/Materials/Material3" unique_id=1113045088]
 layout_mode = 0
 offset_left = -25.0
 offset_top = 130.0
@@ -372,7 +709,7 @@ text = "item_have"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="unit_classup_item_search_off" type="TextureRect" parent="Material3" unique_id=1491395444]
+[node name="unit_classup_item_search_off" type="TextureRect" parent="AbilityAwakening/Materials/Material3" unique_id=1491395444]
 layout_mode = 0
 offset_left = 48.0
 offset_top = 184.0
@@ -381,7 +718,7 @@ offset_bottom = 216.0
 texture = ExtResource("8_xii1g")
 expand_mode = 1
 
-[node name="unit_classup_item_search_on" type="TextureButton" parent="Material3" unique_id=1440747581]
+[node name="unit_classup_item_search_on" type="TextureButton" parent="AbilityAwakening/Materials/Material3" unique_id=1440747581]
 visible = false
 layout_mode = 0
 offset_left = 48.0
@@ -391,7 +728,7 @@ offset_bottom = 216.0
 texture_normal = ExtResource("9_l2lxy")
 texture_disabled = ExtResource("8_xii1g")
 
-[node name="unit_classup_item_frame" type="TextureRect" parent="Material3" unique_id=2071220607]
+[node name="unit_classup_item_frame" type="TextureRect" parent="AbilityAwakening/Materials/Material3" unique_id=2071220607]
 layout_mode = 0
 offset_left = 8.0
 offset_top = 156.0
@@ -400,7 +737,7 @@ offset_bottom = 186.0
 texture = ExtResource("10_s46q2")
 expand_mode = 1
 
-[node name="unit_classup_item_name" type="Label" parent="Material3" unique_id=358955804]
+[node name="unit_classup_item_name" type="Label" parent="AbilityAwakening/Materials/Material3" unique_id=358955804]
 layout_mode = 0
 offset_left = 11.0
 offset_top = 155.0
@@ -411,21 +748,20 @@ text = "item_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Material4" type="Control" parent="." unique_id=664000346]
+[node name="Material4" type="Control" parent="AbilityAwakening/Materials" unique_id=664000346]
 anchors_preset = 0
 offset_left = 377.0
-offset_top = 520.0
 offset_right = 516.0
-offset_bottom = 750.0
+offset_bottom = 230.0
 
-[node name="unit_classup_material_stand" type="TextureRect" parent="Material4" unique_id=490005380]
+[node name="unit_classup_material_stand" type="TextureRect" parent="AbilityAwakening/Materials/Material4" unique_id=490005380]
 layout_mode = 0
 offset_right = 148.0
 offset_bottom = 168.0
 texture = ExtResource("6_4nh5r")
 expand_mode = 1
 
-[node name="unit_classup_item_icon" type="TextureRect" parent="Material4" unique_id=272665496]
+[node name="unit_classup_item_icon" type="TextureRect" parent="AbilityAwakening/Materials/Material4" unique_id=272665496]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 41.0
@@ -433,7 +769,7 @@ offset_right = 130.0
 offset_bottom = 153.0
 expand_mode = 1
 
-[node name="unit_classup_item_num" type="Label" parent="Material4" unique_id=621018883]
+[node name="unit_classup_item_num" type="Label" parent="AbilityAwakening/Materials/Material4" unique_id=621018883]
 layout_mode = 0
 offset_left = 82.0
 offset_top = 111.0
@@ -443,7 +779,7 @@ theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
 vertical_alignment = 1
 
-[node name="unit_classup_have" type="TextureRect" parent="Material4" unique_id=649927452]
+[node name="unit_classup_have" type="TextureRect" parent="AbilityAwakening/Materials/Material4" unique_id=649927452]
 layout_mode = 0
 offset_left = 75.0
 offset_top = 133.0
@@ -452,7 +788,7 @@ offset_bottom = 155.0
 texture = ExtResource("7_tdaa3")
 expand_mode = 1
 
-[node name="unit_classup_item_have" type="Label" parent="Material4" unique_id=793123879]
+[node name="unit_classup_item_have" type="Label" parent="AbilityAwakening/Materials/Material4" unique_id=793123879]
 layout_mode = 0
 offset_left = -25.0
 offset_top = 130.0
@@ -463,7 +799,7 @@ text = "item_have"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="unit_classup_item_search_off" type="TextureRect" parent="Material4" unique_id=2068962608]
+[node name="unit_classup_item_search_off" type="TextureRect" parent="AbilityAwakening/Materials/Material4" unique_id=2068962608]
 layout_mode = 0
 offset_left = 48.0
 offset_top = 184.0
@@ -472,7 +808,7 @@ offset_bottom = 216.0
 texture = ExtResource("8_xii1g")
 expand_mode = 1
 
-[node name="unit_classup_item_search_on" type="TextureButton" parent="Material4" unique_id=1610560469]
+[node name="unit_classup_item_search_on" type="TextureButton" parent="AbilityAwakening/Materials/Material4" unique_id=1610560469]
 visible = false
 layout_mode = 0
 offset_left = 48.0
@@ -482,7 +818,7 @@ offset_bottom = 216.0
 texture_normal = ExtResource("9_l2lxy")
 texture_disabled = ExtResource("8_xii1g")
 
-[node name="unit_classup_item_frame" type="TextureRect" parent="Material4" unique_id=379552976]
+[node name="unit_classup_item_frame" type="TextureRect" parent="AbilityAwakening/Materials/Material4" unique_id=379552976]
 layout_mode = 0
 offset_left = 8.0
 offset_top = 156.0
@@ -491,7 +827,7 @@ offset_bottom = 186.0
 texture = ExtResource("10_s46q2")
 expand_mode = 1
 
-[node name="unit_classup_item_name" type="Label" parent="Material4" unique_id=612296601]
+[node name="unit_classup_item_name" type="Label" parent="AbilityAwakening/Materials/Material4" unique_id=612296601]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 155.0
@@ -502,21 +838,20 @@ text = "item_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Material5" type="Control" parent="." unique_id=1134286569]
+[node name="Material5" type="Control" parent="AbilityAwakening/Materials" unique_id=1134286569]
 anchors_preset = 0
 offset_left = 504.0
-offset_top = 520.0
 offset_right = 643.0
-offset_bottom = 750.0
+offset_bottom = 230.0
 
-[node name="unit_classup_material_stand" type="TextureRect" parent="Material5" unique_id=869536113]
+[node name="unit_classup_material_stand" type="TextureRect" parent="AbilityAwakening/Materials/Material5" unique_id=869536113]
 layout_mode = 0
 offset_right = 148.0
 offset_bottom = 168.0
 texture = ExtResource("6_4nh5r")
 expand_mode = 1
 
-[node name="unit_classup_item_icon" type="TextureRect" parent="Material5" unique_id=1392090385]
+[node name="unit_classup_item_icon" type="TextureRect" parent="AbilityAwakening/Materials/Material5" unique_id=1392090385]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 41.0
@@ -524,7 +859,7 @@ offset_right = 130.0
 offset_bottom = 153.0
 expand_mode = 1
 
-[node name="unit_classup_item_num" type="Label" parent="Material5" unique_id=205318588]
+[node name="unit_classup_item_num" type="Label" parent="AbilityAwakening/Materials/Material5" unique_id=205318588]
 layout_mode = 0
 offset_left = 82.0
 offset_top = 111.0
@@ -534,7 +869,7 @@ theme_override_font_sizes/font_size = 20
 text = "unit_classup_item_num"
 vertical_alignment = 1
 
-[node name="unit_classup_have" type="TextureRect" parent="Material5" unique_id=1491930845]
+[node name="unit_classup_have" type="TextureRect" parent="AbilityAwakening/Materials/Material5" unique_id=1491930845]
 layout_mode = 0
 offset_left = 75.0
 offset_top = 133.0
@@ -543,7 +878,7 @@ offset_bottom = 155.0
 texture = ExtResource("7_tdaa3")
 expand_mode = 1
 
-[node name="unit_classup_item_have" type="Label" parent="Material5" unique_id=1985701663]
+[node name="unit_classup_item_have" type="Label" parent="AbilityAwakening/Materials/Material5" unique_id=1985701663]
 layout_mode = 0
 offset_left = -25.0
 offset_top = 130.0
@@ -554,7 +889,7 @@ text = "item_have"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="unit_classup_item_search_off" type="TextureRect" parent="Material5" unique_id=2031815156]
+[node name="unit_classup_item_search_off" type="TextureRect" parent="AbilityAwakening/Materials/Material5" unique_id=2031815156]
 layout_mode = 0
 offset_left = 48.0
 offset_top = 184.0
@@ -563,7 +898,7 @@ offset_bottom = 216.0
 texture = ExtResource("8_xii1g")
 expand_mode = 1
 
-[node name="unit_classup_item_search_on" type="TextureButton" parent="Material5" unique_id=477391724]
+[node name="unit_classup_item_search_on" type="TextureButton" parent="AbilityAwakening/Materials/Material5" unique_id=477391724]
 visible = false
 layout_mode = 0
 offset_left = 48.0
@@ -573,7 +908,7 @@ offset_bottom = 216.0
 texture_normal = ExtResource("9_l2lxy")
 texture_disabled = ExtResource("8_xii1g")
 
-[node name="unit_classup_item_frame" type="TextureRect" parent="Material5" unique_id=886035917]
+[node name="unit_classup_item_frame" type="TextureRect" parent="AbilityAwakening/Materials/Material5" unique_id=886035917]
 layout_mode = 0
 offset_left = 8.0
 offset_top = 156.0
@@ -582,7 +917,7 @@ offset_bottom = 186.0
 texture = ExtResource("10_s46q2")
 expand_mode = 1
 
-[node name="unit_classup_item_name" type="Label" parent="Material5" unique_id=289993531]
+[node name="unit_classup_item_name" type="Label" parent="AbilityAwakening/Materials/Material5" unique_id=289993531]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 155.0
@@ -593,13 +928,95 @@ text = "item_name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_classup_ui_bg" type="TextureRect" parent="." unique_id=1458371036]
+[node name="Button" type="Control" parent="AbilityAwakening" unique_id=401871676]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="unit_classup_ui_bg" type="TextureRect" parent="AbilityAwakening/Button" unique_id=1755597940]
 layout_mode = 0
 offset_top = 756.0
 offset_right = 640.0
 offset_bottom = 862.0
 texture = ExtResource("11_djd65")
 expand_mode = 1
+
+[node name="unit_classup_button_evo" type="TextureButton" parent="AbilityAwakening/Button" unique_id=2079750008]
+layout_mode = 0
+offset_left = 223.0
+offset_top = 768.0
+offset_right = 415.0
+offset_bottom = 848.0
+texture_normal = ExtResource("12_ieqss")
+texture_pressed = ExtResource("13_7b64o")
+texture_disabled = ExtResource("18_djd65")
+
+[node name="unit_classup_button_label" type="TextureRect" parent="AbilityAwakening/Button/unit_classup_button_evo" unique_id=919464133]
+layout_mode = 0
+offset_left = 37.0
+offset_top = 14.0
+offset_right = 155.0
+offset_bottom = 66.0
+texture = ExtResource("14_4pytr")
+expand_mode = 1
+
+[node name="unit_classup_possible_bg" type="TextureRect" parent="AbilityAwakening/Button" unique_id=1336149426]
+layout_mode = 0
+offset_left = 418.0
+offset_top = 769.0
+offset_right = 640.0
+offset_bottom = 801.0
+texture = ExtResource("15_hvgnr")
+expand_mode = 1
+
+[node name="unit_classup_need_money_bg" type="TextureRect" parent="AbilityAwakening/Button" unique_id=1563602816]
+layout_mode = 0
+offset_left = 418.0
+offset_top = 809.0
+offset_right = 640.0
+offset_bottom = 841.0
+texture = ExtResource("15_hvgnr")
+expand_mode = 1
+
+[node name="unit_classup_need_money_label" type="Label" parent="AbilityAwakening/Button" unique_id=1095330676]
+layout_mode = 0
+offset_left = 415.0
+offset_top = 812.0
+offset_right = 511.0
+offset_bottom = 838.0
+theme_override_font_sizes/font_size = 18
+text = "Gil needed"
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="unit_classup_money_icon" type="TextureRect" parent="AbilityAwakening/Button" unique_id=1576812140]
+layout_mode = 0
+offset_left = 504.0
+offset_top = 809.0
+offset_right = 536.0
+offset_bottom = 841.0
+texture = ExtResource("16_rnje6")
+expand_mode = 1
+
+[node name="unit_classup_need_money_number" type="Label" parent="AbilityAwakening/Button" unique_id=72036882]
+layout_mode = 0
+offset_left = 540.0
+offset_top = 817.0
+offset_right = 810.0
+offset_bottom = 840.0
+theme_override_font_sizes/font_size = 16
+text = "unit_classup_need_money_number"
+vertical_alignment = 1
+
+[node name="unit_classup_check_result_text" type="Label" parent="AbilityAwakening/Button" unique_id=214805051]
+layout_mode = 0
+offset_left = 421.0
+offset_top = 771.0
+offset_right = 687.0
+offset_bottom = 799.0
+theme_override_font_sizes/font_size = 18
+text = "unit_classup_check_result_text"
+vertical_alignment = 1
 
 [node name="UnitNamebgChara" type="TextureRect" parent="." unique_id=78381028]
 layout_mode = 0
@@ -617,111 +1034,28 @@ offset_right = 335.0
 offset_bottom = 48.0
 text = "Awaken Ability"
 
-[node name="UnitMinibutton1" type="Button" parent="UnitNamebgChara" unique_id=580468129]
+[node name="UnitMinibutton1" type="TextureButton" parent="UnitNamebgChara" unique_id=94349620]
 layout_mode = 0
 offset_left = 46.0
 offset_top = -18.0
 offset_right = 142.0
 offset_bottom = 42.0
-icon = ExtResource("18_l2lxy")
-flat = true
+texture_normal = ExtResource("18_l2lxy")
+texture_pressed = ExtResource("37_iehgf")
 
 [node name="Back" type="Label" parent="UnitNamebgChara/UnitMinibutton1" unique_id=1053352658]
-layout_mode = 0
-offset_left = 32.0
-offset_top = 23.0
-offset_right = 72.0
-offset_bottom = 46.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
 text = "Back"
 horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Button" type="Control" parent="." unique_id=401871676]
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="unit_classup_ui_bg" type="TextureRect" parent="Button" unique_id=1755597940]
-layout_mode = 0
-offset_top = 756.0
-offset_right = 640.0
-offset_bottom = 862.0
-texture = ExtResource("11_djd65")
-expand_mode = 1
-
-[node name="unit_classup_button_evo" type="TextureButton" parent="Button" unique_id=2079750008]
-layout_mode = 0
-offset_left = 223.0
-offset_top = 768.0
-offset_right = 415.0
-offset_bottom = 848.0
-texture_normal = ExtResource("12_ieqss")
-texture_pressed = ExtResource("13_7b64o")
-texture_disabled = ExtResource("18_djd65")
-
-[node name="unit_classup_button_label" type="TextureRect" parent="Button/unit_classup_button_evo" unique_id=919464133]
-layout_mode = 0
-offset_left = 37.0
-offset_top = 14.0
-offset_right = 155.0
-offset_bottom = 66.0
-texture = ExtResource("14_4pytr")
-expand_mode = 1
-
-[node name="unit_classup_possible_bg" type="TextureRect" parent="Button" unique_id=1336149426]
-layout_mode = 0
-offset_left = 418.0
-offset_top = 769.0
-offset_right = 640.0
-offset_bottom = 801.0
-texture = ExtResource("15_hvgnr")
-expand_mode = 1
-
-[node name="unit_classup_need_money_bg" type="TextureRect" parent="Button" unique_id=1563602816]
-layout_mode = 0
-offset_left = 418.0
-offset_top = 809.0
-offset_right = 640.0
-offset_bottom = 841.0
-texture = ExtResource("15_hvgnr")
-expand_mode = 1
-
-[node name="unit_classup_need_money_label" type="Label" parent="Button" unique_id=1095330676]
-layout_mode = 0
-offset_left = 415.0
-offset_top = 812.0
-offset_right = 511.0
-offset_bottom = 838.0
-theme_override_font_sizes/font_size = 18
-text = "Gil needed"
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="unit_classup_money_icon" type="TextureRect" parent="Button" unique_id=1576812140]
-layout_mode = 0
-offset_left = 504.0
-offset_top = 809.0
-offset_right = 536.0
-offset_bottom = 841.0
-texture = ExtResource("16_rnje6")
-expand_mode = 1
-
-[node name="unit_classup_need_money_number" type="Label" parent="Button" unique_id=72036882]
-layout_mode = 0
-offset_left = 540.0
-offset_top = 817.0
-offset_right = 810.0
-offset_bottom = 840.0
-theme_override_font_sizes/font_size = 16
-text = "unit_classup_need_money_number"
-vertical_alignment = 1
-
-[node name="unit_classup_check_result_text" type="Label" parent="Button" unique_id=214805051]
-layout_mode = 0
-offset_left = 421.0
-offset_top = 771.0
-offset_right = 687.0
-offset_bottom = 799.0
-theme_override_font_sizes/font_size = 18
-text = "unit_classup_check_result_text"
 vertical_alignment = 1

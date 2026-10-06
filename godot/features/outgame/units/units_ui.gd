@@ -10,9 +10,9 @@ const SLOT_PEDESTAL_BOTTOM_MARGIN: float = 2.0
 @onready var back_button: Button = $UnitNamebgChara/UnitMinibutton1
 
 @onready var party_name_label: Label = $slot_label
-@onready var prev_party_btn: Button = $PartyHeaderHBox/PrevPartyButton
-@onready var next_party_btn: Button = $PartyHeaderHBox/NextPartyButton
-@onready var pagination_indicators: HBoxContainer = $PartyHeaderHBox/PaginationHBox
+@onready var prev_party_btn: TextureButton = $Pagination/ArrowLeft
+@onready var next_party_btn: TextureButton = $Pagination/ArrowRight
+@onready var pagination_indicators: HBoxContainer = $Pagination/Mark
 @onready var slots_container: HBoxContainer = $HBoxContainer
 
 @onready var view_units_btn: TextureButton = $BottomButtonsGrid/ViewUnitsButton
@@ -51,7 +51,7 @@ func _get_or_create_slot_visual(slot_btn: Button) -> Control:
 	if visual_container == null:
 		visual_container = Control.new()
 		visual_container.name = "SharedUnitVisual"
-		visual_container.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		#visual_container.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 		visual_container.clip_contents = true
 		visual_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot_btn.add_child(visual_container)
@@ -60,7 +60,7 @@ func _get_or_create_slot_visual(slot_btn: Button) -> Control:
 		var unit_visual: Control = UNIT_SCENE.instantiate() as Control
 		if unit_visual != null:
 			unit_visual.name = "UnitVisual"
-			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			#unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			unit_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			visual_container.add_child(unit_visual)
 
@@ -180,11 +180,11 @@ func _update_esper_icons(esper_ids: Array) -> void:
 
 func _update_pagination() -> void:
 	for i in range(pagination_indicators.get_child_count()):
-		var indicator: Label = pagination_indicators.get_child(i) as Label
+		var indicator: TextureRect = pagination_indicators.get_child(i) as TextureRect
 		if i == current_party_index:
-			indicator.text = "●"
+			indicator.texture = ResourceLoader.load("res://assets/ui/common/positionmark_on.tres")
 		else:
-			indicator.text = "○"
+			indicator.texture = ResourceLoader.load("res://assets/ui/common/positionmark_off.tres")
 
 func _update_slots(unit_uuids: Array) -> void:
 	for i in range(5):
@@ -407,18 +407,18 @@ func _on_awaken_base_selected(unit_inst: Dictionary) -> void:
 	call_deferred("_open_awaken_ui", base_instance_id, unit_inst)
 
 func _on_awaken_ability_selected(unit_inst: Dictionary) -> void:
-	UIManager.push("awaken_ability_selector_ui", {
-		"unit_inst": unit_inst
+	UIManager.push("awaken_ability_ui", {
+		"base_unit": unit_inst
 	})
 
 func _open_enhance_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 	UIManager.push("enhance_ui", {
 		"base_unit_instance_id": base_instance_id,
-		"base_unit_inst": unit_inst
+		"base_unit": unit_inst
 	})
 
 func _open_awaken_ui(base_instance_id: String, unit_inst: Dictionary) -> void:
 	UIManager.push("awaken_ui", {
 		"base_unit_instance_id": base_instance_id,
-		"base_unit_inst": unit_inst
+		"base_unit": unit_inst
 	})

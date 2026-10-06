@@ -4,7 +4,7 @@ class_name MonsterAIRuntime
 ## Walks a compiled MonsterAIScript against live battle state to decide what a
 ## monster does. MonsterAIScript is the parse, MonsterAIState the mutable state; this
 ## is the evaluator. It takes battle state as a plain Dictionary (see CONTEXT below)
-## rather than a BattleManager, so a whole turn can be simulated in a test.
+## (BattleEngine._ai_context builds it), so a whole turn can be simulated in a test.
 ##
 ## TURN MODEL. A monster's turn re-walks the rule list once per action: the first rule
 ## whose triggers and conditions all hold and whose probability roll passes fires. The

@@ -14,14 +14,13 @@ var _scenes_map: Dictionary = {
 	"edit_profile_ui": "res://features/outgame/profile/EditProfileUI.tscn",
 	"shop_ui": "res://features/outgame/shop/ShopUI.tscn",
 	"map_ui": "res://features/outgame/map/MapUI.tscn",
-	"units_ui": "res://features/outgame/units/UnitsUI.tscn",
+	"units_ui": "res://features/outgame/units/UnitManagementScreen.tscn",
 	"enhance_ui": "res://features/outgame/units/Enhance.tscn",
 	"awaken_ui": "res://features/outgame/units/UnitAwakening.tscn",
 	"awaken_ability_ui": "res://features/outgame/units/AbilityAwakening.tscn",
-	"awaken_ability_selector_ui": "res://features/outgame/units/AbilityAwakeningSelector.tscn",
-	"unit_selector_ui": "res://features/outgame/units/UnitSelectorUI.tscn",
-	"unit_stats_popup": "res://features/outgame/units/UnitStatsPopup.tscn",
+	"unit_selector_ui": "res://features/outgame/units/UnitSelectorScreen.tscn",
 	"unit_detail_ui": "res://features/outgame/units/UnitDetail.tscn",
+	"unit_sort_filter": "res://features/outgame/units/components/UnitSortFilter.tscn",
 	"items_ui": "res://features/outgame/inventory/ItemsUI.tscn",
 	"item_category_list_ui": "res://features/outgame/inventory/ItemCategoryListUI.tscn",
 	"friends_ui": "res://features/outgame/friends/FriendsUI.tscn",
@@ -89,24 +88,8 @@ func _load_persistent_overlays() -> void:
 		var home_buttons_scene: PackedScene = preload("res://features/shared/HomeButtons.tscn")
 		home_buttons = home_buttons_scene.instantiate()
 		home_buttons.hide()
-		home_buttons.world_map_pressed.connect(_on_world_map_pressed)
-		home_buttons.espers_pressed.connect(_on_espers_pressed)
-		home_buttons.craft_pressed.connect(_on_craft_pressed)
-		home_buttons.colosseum_pressed.connect(_on_colosseum_pressed)
 		canvas_layer.add_child(home_buttons)
 
-func _on_world_map_pressed() -> void:
-	push("map_ui")
-
-func _on_espers_pressed() -> void:
-	push("espers_ui")
-
-func _on_craft_pressed() -> void:
-	push("craft_ui")
-
-func _on_colosseum_pressed() -> void:
-	push("colosseum_ui")
-	
 func _update_overlays() -> void:
 	if _menu_stack.is_empty():
 		return
@@ -114,11 +97,12 @@ func _update_overlays() -> void:
 	var current_scene_name: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom: Array[String] = ["login_ui", "loginui", "combat_ui", "combatui", "town_map_ui", "townmapui", "settings_ui", "settingsui"]
+	var hide_top_and_bottom: Array[String] = ["login_ui", "loginui", "combat_ui", "combatui", "town_map_ui", "townmapui", "settings_ui", "settingsui", "unit_sort_filter"]
 	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "esper_detail_ui", "mapui", "editprofileui", "esperdetailui"]
+	var hide_top: Array[String] = []
 
 	if top_header:
-		if current_scene_name in hide_top_and_bottom:
+		if current_scene_name in hide_top_and_bottom or current_scene_name in hide_top:
 			top_header.hide()
 		else:
 			top_header.show()
@@ -195,7 +179,7 @@ func push(scene_name_key: String, params: Dictionary = {}) -> void:
 	instance.show()
 
 	# Pass any parameters if the scene has an init function
-	if params and instance.has_method("init_scene"):
+	if instance.has_method("init_scene"):
 		instance.init_scene(params)
 
 	_update_overlays()

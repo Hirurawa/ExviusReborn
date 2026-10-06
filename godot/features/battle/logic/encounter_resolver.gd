@@ -69,7 +69,7 @@ static func build_wave_plan(mission_id: String) -> Array:
 				"phase_num": n,
 				"is_boss": false,
 				# Story hooks: the in-combat dialogue script + its first-time gate,
-				# consumed by BattleManager.wave_dialogue_lines(). Empty/absent when
+				# consumed by BattleStory.wave_dialogue_lines(). Empty/absent when
 				# the wave has no scripted dialogue.
 				"battle_script_id": str(row.get("battleScriptId", "")),
 				"switch_non_info": row.get("switchNonInfo"),
@@ -230,6 +230,7 @@ static func _dictionary_id_for(parts: Dictionary, monster_id: String) -> String:
 	if dict_id != "":
 		return dict_id
 	if monster_id.is_valid_int():
+		@warning_ignore("integer_division")
 		return str((int(monster_id) / 1000) * 10)
 	return monster_id
 

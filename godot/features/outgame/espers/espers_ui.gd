@@ -11,6 +11,7 @@ var current_summon_id: String = ""
 var selection_callback: Callable = Callable()
 var _party_used_summons: Dictionary = {}
 
+
 func init_scene(params: Dictionary) -> void:
 	mode = str(params.get("mode", "view"))
 	target_party_index = int(params.get("party_index", -1))
@@ -23,10 +24,10 @@ func init_scene(params: Dictionary) -> void:
 	if is_node_ready():
 		_populate_espers_list()
 
+
 func _ready() -> void:
 	back_button.pressed.connect(func(): UIManager.pop())
-	_rebuild_party_used_summons()
-	_populate_espers_list()
+
 
 func _populate_espers_list() -> void:
 	for child in espers_list_container.get_children():
@@ -117,8 +118,6 @@ func _on_esper_pressed(summon_id: String, summon_name: String) -> void:
 
 		if selection_callback.is_valid():
 			selection_callback.call(summon_id, summon_name)
-		elif target_party_index >= 0 and target_slot_index >= 0:
-			PartyService.assign_esper_to_party(target_party_index, target_slot_index, summon_id)
 
 		UIManager.pop()
 		return
@@ -159,22 +158,12 @@ func _maybe_add_remove_entry() -> void:
 	if current_summon_id == "":
 		return
 
-	var frame: Button = esper_frame_template.duplicate()
-	frame.visible = true
-	frame.disabled = false
-	frame.modulate = Color(1, 1, 1, 1)
-
-	if frame.has_node("NameLabel"):
-		frame.get_node("NameLabel").text = "Remove"
-	if frame.has_node("LvlLabel"):
-		frame.get_node("LvlLabel").visible = false
-	if frame.has_node("SummonIcon"):
-		frame.get_node("SummonIcon").visible = false
-	if frame.has_node("RarityStar"):
-		frame.get_node("RarityStar").visible = false
-
-	frame.pressed.connect(_on_remove_pressed)
-	espers_list_container.add_child(frame)
+	var remove_button: TextureButton = TextureButton.new()
+	remove_button.texture_normal = ResourceLoader.load("res://assets/ui/common/remove_mini.tres")
+	remove_button.texture_pressed = ResourceLoader.load("res://assets/ui/common/remove_mini2.tres")
+	
+	remove_button.pressed.connect(_on_remove_pressed)
+	espers_list_container.add_child(remove_button)
 
 func _on_remove_pressed() -> void:
 	if mode != "select":

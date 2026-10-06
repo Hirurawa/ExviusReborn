@@ -10,9 +10,14 @@ const LACK_MP_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_mp.tres"
 const LACK_LIMIT_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_limit.tres")
 const LACK_SUMMON_TEXTURE: Texture2D = preload("res://assets/ui/battle/lack_summon.tres")
 
+## Why a disabled button is disabled; each of the three "lack" reasons has its overlay
+## (BattleCommandMenu's REASON_ values). Any other reason greys the button with no
+## overlay.
 const REASON_NONE: String = ""
 const REASON_LACK_MP: String = "lack_mp"
 const REASON_LACK_LIMIT: String = "lack_limit"
+## The esper gauge is not full, or holds fewer orbs than the ability consumes.
+const REASON_LACK_SUMMON: String = "lack_summon"
 const ROLE_STANDARD: String = "standard"
 const ROLE_LIMITBURST: String = "limitburst"
 const ROLE_ESPER: String = "esper_skill"
@@ -65,9 +70,10 @@ func setup_from_skill_data(skill_data: Dictionary, source: String = "", awaken_l
 		if texname == "Esper":
 			texname = "summons"
 		var cat_icon_path = "res://assets/ui/unit/unit_magic_category_" + texname + ".tres"
-		var cat_tex = load(cat_icon_path)
-		if cat_tex:
-			category_rect.texture = cat_tex
+		# Sources without an icon ("Granted": op 100 grants; "Extra": the sandbox's
+		# extra skills) show none.
+		if ResourceLoader.exists(cat_icon_path):
+			category_rect.texture = load(cat_icon_path)
 	
 	var mp_value = _build_mp_text(skill_data)
 	if mp_value != "--":
@@ -143,16 +149,23 @@ func _apply_action_state(enabled: bool, disabled_reason: String) -> void:
 		action_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
 
 	if unavailable_reason_rect != null:
-		if enabled or disabled_reason == REASON_NONE:
-			unavailable_reason_rect.hide()
-		elif disabled_reason == REASON_LACK_LIMIT:
-			unavailable_reason_rect.texture = LACK_LIMIT_TEXTURE
-			unavailable_reason_rect.show()
-		else:
-			unavailable_reason_rect.texture = LACK_MP_TEXTURE
-			unavailable_reason_rect.show()
+		var overlay: Texture2D = null if enabled else _overlay_for(disabled_reason)
+		unavailable_reason_rect.texture = overlay
+		unavailable_reason_rect.visible = overlay != null
 
 	modulate = Color(1.0, 1.0, 1.0, 1.0) if enabled else Color(0.45, 0.45, 0.45, 1.0)
+
+## The overlay for a disabled button's reason; null (greyed only) for any reason but the
+## three "lack" ones.
+static func _overlay_for(disabled_reason: String) -> Texture2D:
+	match disabled_reason:
+		REASON_LACK_MP:
+			return LACK_MP_TEXTURE
+		REASON_LACK_LIMIT:
+			return LACK_LIMIT_TEXTURE
+		REASON_LACK_SUMMON:
+			return LACK_SUMMON_TEXTURE
+	return null
 
 func _build_mp_text(skill_data: Dictionary) -> String:
 	var cost: Variant = skill_data.get("cost", {})

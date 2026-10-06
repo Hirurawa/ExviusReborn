@@ -16,7 +16,7 @@ class_name MonsterStatCalculator
 ##   contributors  A unit layers on equipment, esper bonuses, innate trait skills and
 ##                 parsed passive opcodes. A monster has none of those.
 ##   monster-only  MONSTER_PARTS carries physicsDmgCut / magicDmgCut, debuffResists and
-##                 spResist, which no unit has. (Not consumed yet -- see below.)
+##                 spResist, which no unit has. (Not part of this profile; see below.)
 ##
 ## Running a monster through the unit path would mean fabricating current_rarity, a
 ## RARITY_MAX_LEVELS entry, an empty equipment dict, unitSeries/rare that resolve to no
@@ -26,7 +26,7 @@ class_name MonsterStatCalculator
 ## buffs and debuffs combine -- lives on StatCalculator and is called from here, so a
 ## Full Break resolves identically on a boss and on a party member.
 ##
-## INPUTS, all placed on the enemy dict by BattleManager._generate_enemy_from_descriptor:
+## INPUTS, all placed on the input dict by CombatantFactory.monster_stat_input:
 ##   base_stats          { HP, MP, ATK, DEF, MAG, SPR } flat, from MONSTER_PARTS
 ##   elemResistValue     the raw comma-separated MONSTER_PARTS string
 ##   ailmentResistValue  likewise
@@ -35,7 +35,8 @@ class_name MonsterStatCalculator
 ## NOT MODELLED YET, and each needs work outside this file to be useful:
 ##   * monster passives (monster_passive_skill_set -> monster_passive_skill) would fill
 ##     `skills` / `passive_effects`; nothing consumes those for enemies today.
-##   * physicsDmgCut / magicDmgCut and debuffResists need action_processor support.
+##   * physicsDmgCut / magicDmgCut and debuffResists are read by the new battle engine
+##     straight from the parts row (CombatantFactory.enemy), not from this profile.
 
 ## Builds the profile. Shape matches StatCalculator.calculate_final_stats exactly.
 static func calculate_final_stats(monster: Dictionary) -> Dictionary:
@@ -88,4 +89,4 @@ static func _warn_missing_base_stats(monster: Dictionary) -> void:
 	if _warned_monsters.has(key):
 		return
 	_warned_monsters[key] = true
-	push_warning("MonsterStatCalculator: monster %s has no base_stats block; falling back to its existing final_stats. It was probably built outside _generate_enemy_from_descriptor." % key)
+	push_warning("MonsterStatCalculator: monster %s has no base_stats block; falling back to its existing final_stats. It was probably built outside CombatantFactory.monster_stat_input." % key)

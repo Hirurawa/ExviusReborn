@@ -141,7 +141,7 @@ func _refresh_list() -> void:
 				enemy_sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 				wrapper.add_child(enemy_sprite)
-				enemy_sprite.setup(0, monster_id.left(-2), true, null)
+				enemy_sprite.setup(0, monster_id.left(-2), true)
 
 
 func _populate_list(items: Array) -> void:
@@ -171,11 +171,11 @@ func _populate_list(items: Array) -> void:
 				rank_node.pressed.connect(_on_rank_selected.bind(rank.get("rankId")))
 				rank_containter.add_child(rank_node)
 		Depth.ROUND:
-			for round in items:
+			for round_data in items:
 				var round_node = round_row.duplicate()
 				var round_name = round_node.get_node("clsmVsCpu_round_num/RoundLabel")
-				round_name.text = str(round.get("roundId"))[4]
-				if round.get("roundId") == progress.get("roundId"):
+				round_name.text = str(round_data.get("roundId"))[4]
+				if round_data.get("roundId") == progress.get("roundId"):
 					var round_progress_bar = round_node.get_node("clsmVsCpu_rpgauge_bg/clsmVsCpu_rpgauge_bar")
 					round_progress_bar.value = progress.get("points", 0)
 					var round_point_label = round_node.get_node("clsmVsCpu_round_pt_txt")
@@ -190,7 +190,7 @@ func _populate_list(items: Array) -> void:
 					round_clear.visible = true
 				round_node.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				round_node.visible = true
-				round_node.pressed.connect(_on_round_selected.bind(round.get("roundId")))
+				round_node.pressed.connect(_on_round_selected.bind(round_data.get("roundId")))
 				round_containter.add_child(round_node)
 		Depth.START:
 			pass
@@ -208,8 +208,8 @@ func _on_rank_selected(rank: int) -> void:
 	_refresh_list()
 
 
-func _on_round_selected(round: int) -> void:
-	selected_round = round
+func _on_round_selected(round_id: int) -> void:
+	selected_round = round_id
 	current_depth = Depth.START
 	_refresh_list()
 

@@ -91,12 +91,11 @@ const TYPE_BADGE_BY_TYPE_NAME: Dictionary = {
 @onready var unit_equip_cat: TextureRect = $UnitEquipCategory
 @onready var equip_cat: TextureRect = $EquipCategory
 @onready var equipped_to: TextureRect = $EquippedTo
-@onready var prop_label_1: TextureRect = $unit_equip_list_property1_label
-@onready var prop_number_1: Label = $unit_equip_list_property1_number
-@onready var prop_label_2: TextureRect = $unit_equip_list_property2_label
-@onready var prop_number_2: Label = $unit_equip_list_property2_number
-@onready var detail_label: Label = $unit_equip_list_property3_text
+@onready var detail_label: Label = $VBoxContainer/DetailText
 @onready var click_area: Button = $ClickArea
+
+@onready var stats_container: GridContainer = $VBoxContainer/Stats
+@onready var stat_template: HBoxContainer = $VBoxContainer/Stats/Template
 
 var _texture_cache: Dictionary = {}
 
@@ -183,16 +182,6 @@ func _reset_visual_state() -> void:
 	if equipped_to != null:
 		equipped_to.texture = null
 		equipped_to.hide()
-	if prop_label_1 != null:
-		prop_label_1.hide()
-	if prop_number_1 != null:
-		prop_number_1.hide()
-		prop_number_1.text = ""
-	if prop_label_2 != null:
-		prop_label_2.hide()
-	if prop_number_2 != null:
-		prop_number_2.hide()
-		prop_number_2.text = ""
 	if detail_label != null:
 		detail_label.text = ""
 	if click_area != null:
@@ -246,10 +235,15 @@ func _apply_primary_stats(item_data: Dictionary) -> void:
 	var primary_stats: Array[Dictionary] = _extract_primary_stats(item_data)
 	if primary_stats.is_empty():
 		return
+	
+	for s in primary_stats:
+		var stat_instance = stat_template.duplicate()
+		stat_instance.visible = true
+		stat_instance.get_node("statNumber").text = str(s.value)
+		var label_texture_path: String = _build_stat_label_path(s.key)
+		stat_instance.get_node("stat_label_texture").texture = _load_texture(label_texture_path)
+		stats_container.add_child(stat_instance)
 
-	_apply_single_stat(prop_label_1, prop_number_1, primary_stats[0])
-	if primary_stats.size() > 1:
-		_apply_single_stat(prop_label_2, prop_number_2, primary_stats[1])
 
 func _apply_equipped_to(item_data: Dictionary, display_options: Dictionary) -> void:
 	var equipped_to_unit_id: String = str(display_options.get("equipped_to_unit_id", ""))
@@ -278,23 +272,12 @@ func _apply_equipped_to(item_data: Dictionary, display_options: Dictionary) -> v
 	if equipped_to.texture != null:
 		equipped_to.show()
 
-func _apply_single_stat(label_rect: TextureRect, value_label: Label, stat_info: Dictionary) -> void:
-	var stat_key: String = str(stat_info.get("key", ""))
-	var stat_value: int = int(stat_info.get("value", 0))
-	if stat_key == "" or stat_value == 0:
-		return
-
-	var label_texture_path: String = _build_stat_label_path(stat_key)
-	label_rect.texture = _load_texture(label_texture_path)
-	label_rect.show()
-	value_label.text = str(stat_value)
-	value_label.show()
 
 func _extract_primary_stats(item_data: Dictionary) -> Array[Dictionary]:
 	var stats_value: Variant = item_data.get("stats", {})
 	if not (stats_value is Dictionary):
 		return []
-
+	
 	var stats: Dictionary = stats_value as Dictionary
 	var primary_stats: Array[Dictionary] = []
 	for stat_key in CORE_STAT_KEYS:
@@ -304,7 +287,7 @@ func _extract_primary_stats(item_data: Dictionary) -> Array[Dictionary]:
 		primary_stats.append({"key": stat_key, "value": stat_value})
 		if primary_stats.size() == 2:
 			break
-
+	
 	return primary_stats
 
 func _build_detail_text(item_data: Dictionary, display_options: Dictionary) -> String:

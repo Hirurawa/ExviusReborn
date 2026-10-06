@@ -122,10 +122,14 @@ func assign_unit_to_party(party_index: int, slot_index: int, instance_id: String
 		return
 	if slot_index < 0 or slot_index >= SLOT_COUNT:
 		return
-
+	
+	if instance_id == "":
+		assign_esper_to_party(party_index, slot_index, "")
+	
 	var new_parties: Array = _normalize_parties_array(parties)
 	new_parties[party_index]["units"][slot_index] = instance_id
-	party_save_requested.emit(new_parties)
+	save_parties(new_parties)
+	#party_save_requested.emit(new_parties)
 
 
 func assign_esper_to_party(party_index: int, slot_index: int, summon_id: String) -> void:

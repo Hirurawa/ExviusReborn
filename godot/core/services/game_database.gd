@@ -47,6 +47,7 @@ var _ability_cache: Dictionary = {}
 var _passive_cache: Dictionary = {}
 var _limitburst_cache: Dictionary = {}
 var _equipment_cache: Dictionary = {}
+var _esper_skill_cache: Dictionary = {}
 
 # npcId -> row (see get_npc). Town maps hit this once per NPC per chunk redraw,
 # and DialogueLoader once per <name_npc=N> tag, so misses are cached too ({}).
@@ -544,7 +545,7 @@ const _MISSION_TYPE_NAMES: Dictionary = {"1": "BATTLE", "2": "EXPLORATION"}
 ## overlays them.)
 func get_mission(mission_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT missionId, name, dungeonId, type, cost, exp, gil, waveCount, rewards, openSwitch"
+		"SELECT missionId, name, dungeonId, worldId, type, cost, exp, gil, waveCount, rewards, openSwitch"
 		+ " FROM mission WHERE missionId = ? LIMIT 1",
 		[mission_id]
 	)
@@ -553,6 +554,7 @@ func get_mission(mission_id: String) -> Dictionary:
 	var r: Dictionary = rows[0]
 	return {
 		"dungeon_id": int(r.get("dungeonId", 0)),
+		"worldId": int(r.get("worldId", 0)),
 		"name": str(r.get("name", "")),
 		"difficulty": int(r.get("difficulty", 0)),
 		"type": _MISSION_TYPE_NAMES.get(str(r.get("type", "1")), "BATTLE"),
@@ -723,7 +725,7 @@ func get_battle_script(battle_script_id: String) -> Array:
 ## Cutscene phases (condInfoStr == 1) for a mission, each tagged with how many
 ## battle WAVES precede it (after_wave): 0 = intro (before wave 1), K = after wave
 ## K clears, total_waves = outro (before rewards). Wave count uses the same phases
-## as get_mission_phases, so the slots line up with BattleManager.total_waves.
+## as get_mission_phases, so the slots line up with the battle's waves (BattleStory).
 ## Each row: story_event_id, after_wave, switch_info, switch_non_info (the
 ## cutscene's own first-time/replay gate, if any).
 func get_mission_cutscenes(mission_id: String) -> Array:
@@ -821,17 +823,37 @@ func get_battle_group(battle_group_id: String) -> Array:
 ## dictionaryId (from the monster master) and the per-variant name used for the
 ## sprite and the display-name fallback. The datamine's mag/spr stats and the JP
 ## monsterName are aliased to the in-game `intl`/`mnd`/`name` keys the encounter
-## resolver expects.
+## resolver expects. `attackFrames` times the monster's basic attack (same grammar
+## as a skill's), `tribe` is its race id, and `debuffResists` its resistance to ATK,
+## DEF, MAG and SPR breaks, stop, charm and a seventh debuff (probably berserk).
 func get_monster_parts(monster_id: String) -> Dictionary:
 	var rows: Array = query(
 		"SELECT p.hp, p.mp, p.atk, p.def, p.mag, p.spr, p.level, p.exp, p.gil,"
 		+ " m.dictionaryId AS dictionaryId, m.name,"
-		+ " p.elemResistValue, p.ailmentResistValue, p.dropInfo"
+		+ " p.elemResistValue, p.ailmentResistValue, p.dropInfo, p.attackFrames, p.tribe, p.debuffResists,"
+		+ " p.physicsDmgCut, p.magicDmgCut"
 		+ " FROM monster_parts p LEFT JOIN monster m ON m.monsterId = p.monsterId"
 		+ " WHERE p.monsterId = ? ORDER BY p.partsNum LIMIT 1",
 		[monster_id]
 	)
 	return rows[0] if not rows.is_empty() else {}
+
+
+## Monsters whose dictionary name contains `fragment` (case-insensitive), for the
+## battle sandbox's picker: { monsterId, name, level, hp } from the main-body parts
+## row. Exact names first, then names starting with it, then the rest, each by name
+## then id; at most `limit` rows.
+func search_monsters(fragment: String, limit: int = 50) -> Array:
+	return query(
+		"SELECT m.monsterId AS monsterId, d.name AS name, p.level AS level, p.hp AS hp"
+		+ " FROM monster m JOIN monster_dictionary d ON d.dictionaryId = m.dictionaryId"
+		+ " JOIN monster_parts p ON p.monsterId = m.monsterId"
+		+ " WHERE d.name LIKE ?"
+		+ " AND p.partsNum = (SELECT MIN(partsNum) FROM monster_parts WHERE monsterId = m.monsterId)"
+		+ " ORDER BY CASE WHEN d.name = ? COLLATE NOCASE THEN 0 WHEN d.name LIKE ? THEN 1 ELSE 2 END,"
+		+ " d.name, m.monsterId LIMIT ?",
+		["%" + fragment + "%", fragment, fragment + "%", limit]
+	)
 
 
 ## Canonical display name for a 7-digit dictionaryId from monster_dictionary, or
@@ -877,7 +899,8 @@ func get_mission_scenario_groups(mission_id: String) -> Array:
 # Behaviour data imported from the FFBE datamine (F_AI_MST / F_MONSTER_SKILL_SET_MST
 # / F_MONSTER_SKILL_MST) into the ai / monster_skill_set / monster_skill tables.
 # features/battle/logic/monster_ai_script.gd compiles the rows into typed rules and
-# documents the grammar; monster_ai_resolver.gd prints the result when a wave spawns.
+# documents the grammar; monster_ai_resolver.gd prints the result when a wave starts
+# (BattleDirector, debug builds).
 
 ## Ordered AI rule rows for a 9-digit monsterId, by ruleOrder. Empty => the monster
 ## has no script (only 2778 of 16931 do) and needs the caller's default behaviour.
@@ -922,8 +945,8 @@ func get_monster_skill(monster_skill_id: String) -> Dictionary:
 
 
 ## An EXECUTABLE monster skill, in the same shape the magic/ability records use, so a
-## monster skill can go straight through SkillResolver.parse_skill_effects and
-## BattleManager.execute_parsed_skill. monster_skill packs its effects into the same
+## monster skill can go straight through the same parsers (SkillCatalog builds it as
+## a BattleSkill of kind monster_skill). monster_skill packs its effects into the same
 ## '@'-group target / targetRange / processId / processParam quartet as the player
 ## tables, so the shared decoders apply unchanged. {} if the id is unknown.
 ##
@@ -938,7 +961,7 @@ func get_monster_skill_record(monster_skill_id: String) -> Dictionary:
 
 	var rows: Array = query(
 		"SELECT monsterSkillId, name, cost, target, targetRange, elementInflict,"
-		+ " J35nicFV, processId, processParam, effectFrames, attackFrames"
+		+ " J35nicFV, Isb1GDe2, processId, processParam, effectFrames, attackFrames"
 		+ " FROM monster_skill WHERE monsterSkillId = ? LIMIT 1",
 		[key]
 	)
@@ -960,9 +983,20 @@ func get_monster_skill_record(monster_skill_id: String) -> Dictionary:
 		"element_inflict": _decode_boolean(_str_col(row, "elementInflict")),
 		"effects_raw": _decode_effects_raw(row),
 		"targetType": int(row.get("J35nicFV", 0)),
+		"attack_type": _attack_type(row),
 	}
 	_monster_skill_cache[key] = built
 	return built
+
+
+## A skill's attack type from the `Isb1GDe2` column: 1 physical, 2 magic, 3 hybrid,
+## 4 none (0 when the column is empty). It decides what a hit counts as for dodge,
+## mitigation and cover, independently of the damage formula: 361 abilities deal magic
+## damage with a physical attack type. Every magic record is 2; for active abilities
+## the value lines up with the damage opcode (opcode 1 -> 1, 40 -> 3), and heals are 4.
+func _attack_type(row: Dictionary) -> int:
+	var raw: Variant = row.get("Isb1GDe2")
+	return int(raw) if raw != null and str(raw).is_valid_int() else 0
 
 
 ## Display meta for a monster, joined off its MONSTER_PARTS row: { name, skillId,
@@ -1063,8 +1097,10 @@ func get_unit_class_up(unit_id: int) -> Dictionary:
 	var rows: Array = query("select * from unit where unitId = (select classUpUnitID from unit_class_up where unitId = ?) limit 1", [unit_id])
 	return rows[0] if not rows.is_empty() else {}
 
-func get_unit_skills(unit_series_id: int, rarity: int, level: int) -> Array:
-	return query("SELECT * from unit_series_lv_acquire where unitSeriesId = ? AND (rarity < ? OR (rarity = ? AND level <= ?)) order by rarity, level", [unit_series_id, rarity, rarity, level])
+func get_unit_skills(unit_series_id: int, rarity: int, level: int, nv_lvl: int = 0) -> Array:
+	return query("SELECT * from unit_series_lv_acquire where unitSeriesId = ? AND (rarity < ? OR (rarity = ? AND level <= ?)) and nvLvl <= ?"
+	#+ " and braveAbility is not 1"
+	+ " order by rarity, level", [unit_series_id, rarity, rarity, level, nv_lvl])
 
 func get_unit_awakenable_skills(unit_series_id: int) -> Array:
 	#return query("select usla.*, sr.* from sublimation_recipe sr"
@@ -1156,7 +1192,7 @@ func get_magic(magic_id) -> Dictionary:
 	if _magic_cache.has(key):
 		return _magic_cache[key]
 	var rows: Array = query(
-		"SELECT m.name, m.rarity, m.cost, m.magicType, m.element, m.effectFrames, m.attackFrames, m.J35nicFV, m.target, m.targetRange, m.processId, m.processParam, i.iconFile, e.explainShort"
+		"SELECT m.name, m.rarity, m.cost, m.magicType, m.element, m.effectFrames, m.attackFrames, m.J35nicFV, m.Isb1GDe2, m.target, m.targetRange, m.processId, m.processParam, i.iconFile, e.explainShort"
 		+ " FROM magic m"
 		+ " LEFT JOIN icon i ON i.iconId = m.iconId"
 		+ " LEFT JOIN magic_explain e ON e.magicId = m.magicId"
@@ -1191,6 +1227,7 @@ func _build_magic_record(row: Dictionary) -> Dictionary:
 		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
 		"targetType": int(row.get("J35nicFV")),
+		"attack_type": _attack_type(row),
 		"explainShort": str(row.get("explainShort", "")),
 	}
 
@@ -1234,7 +1271,7 @@ func get_ability(ability_id) -> Dictionary:
 	if _ability_cache.has(key):
 		return _ability_cache[key]
 	var rows: Array = query(
-		"SELECT a.name, a.rarity, a.cost, a.element, a.moveType, a.motionType, a.effectFrames, a.attackFrames, a.J35nicFV, a.target, a.targetRange, a.processId, a.processParam, i.iconFile, e.explainShort"
+		"SELECT a.name, a.rarity, a.cost, a.alternateCost, a.element, a.moveType, a.motionType, a.effectFrames, a.attackFrames, a.J35nicFV, a.Isb1GDe2, a.target, a.targetRange, a.processId, a.processParam, i.iconFile, e.explainShort"
 		+ " FROM ability a"
 		+ " LEFT JOIN icon i ON i.iconId = a.iconId"
 		+ " LEFT JOIN ability_explain e ON e.abilityId = a.abilityId"
@@ -1256,7 +1293,7 @@ func get_passive(ability_id) -> Dictionary:
 	if _passive_cache.has(key):
 		return _passive_cache[key]
 	var rows: Array = query(
-		"SELECT a.name, a.rarity, i.iconFile, e.explainShort"
+		"SELECT a.name, a.rarity, a.dispOrder, a.element, a.equipCondition, i.iconFile, e.explainShort, a.target, a.targetRange, a.processId, a.processParam"
 		+ " FROM ability a"
 		+ " LEFT JOIN icon i ON i.iconId = a.iconId"
 		+ " LEFT JOIN ability_explain e ON e.abilityId = a.abilityId"
@@ -1265,10 +1302,9 @@ func get_passive(ability_id) -> Dictionary:
 	)
 	if rows.is_empty():
 		return {}
-	var built: Dictionary = rows[0]
+	var built: Dictionary = _build_passive_record(rows[0])
 	_passive_cache[key] = built
 	return built
-
 
 ## Reconstructs the skills_ability.json record (active ability) from a joined row.
 ## Shares the magic decoders; `description` uses ability_explain.explainShort.
@@ -1282,6 +1318,7 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 		"iconFile": str(row.get("iconFile", "")),
 		"rarity": int(row.get("rarity", 0)),
 		"cost": {"MP": cost_val} if cost_val > 0 else {},
+		"alternate_cost": _decode_alternate_cost(_str_col(row, "alternateCost")),
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrames", ""))),
@@ -1290,9 +1327,37 @@ func _build_ability_record(row: Dictionary) -> Dictionary:
 		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"effects_raw": _decode_effects_raw(row),
 		"targetType": int(row.get("J35nicFV")),
+		"attack_type": _attack_type(row),
 		"explainShort": str(row.get("explainShort", "")),
 	}
 
+
+## An active ability's alternateCost, a cost on top of its MP: "1:N" consumes N esper
+## orbs from the party's evocation gauge (398 abilities; their texts say "consume
+## evocation gauge (N)" / 召喚ゲージを消費), "2:N" (343) takes N hundredths of a crystal
+## from the unit's own limit gauge ("Consume own LB gauge to ..."). Returns
+## { type, amount }, or {} when the ability has none.
+func _decode_alternate_cost(raw: String) -> Dictionary:
+	var parts: PackedStringArray = raw.split(":")
+	if parts.size() != 2 or not parts[0].is_valid_int() or not parts[1].is_valid_int():
+		return {}
+	return {"type": int(parts[0]), "amount": int(parts[1])}
+
+
+## Reconstructs the skills_passive.json record (passive) from a joined row.
+## `equip_condition` lists the items that switch the passive on, any one of them
+## (PassiveSources.decode_equip_condition); empty for an unconditional passive.
+func _build_passive_record(row: Dictionary) -> Dictionary:
+	return {
+		"name": str(row.get("name", "")),
+		"iconFile": str(row.get("iconFile", "")),
+		"compendium_id": int(row.get("dispOrder", 0)),
+		"rarity": int(row.get("rarity", 0)),
+		"element_inflict": _decode_boolean(_str_col(row, "element")),
+		"effects_raw": _decode_effects_raw(row),
+		"explainShort": str(row.get("explainShort", "")),
+		"equip_condition": PassiveSources.decode_equip_condition(_str_col(row, "equipCondition")),
+	}
 
 func get_effect_data(effect_group_id: int) -> Array:
 	var rows: Array = query("select eg.effectGroupId, eg.name, eg.effectData from effect_group eg"
@@ -1320,7 +1385,7 @@ func get_limitburst(limitburst_id) -> Dictionary:
 	var key: String = str(limitburst_id)
 	if _limitburst_cache.has(key):
 		return _limitburst_cache[key]
-	var rows: Array = query("SELECT lb.limitBurstId, lb.name, lb.limitBurstType, lb.target, lb.targetRange, lb.element, lb.skillType, lb.processId, lb.processParam, lb.fileInfo, lb.effectFrame, lb.attackFrames, lb.iconId, lb.description, i.iconFile FROM limitburst lb"
+	var rows: Array = query("SELECT lb.limitBurstId, lb.name, lb.limitBurstType, lb.target, lb.targetRange, lb.J35nicFV as targetType, lb.Isb1GDe2, lb.element, lb.skillType, lb.processId, lb.processParam, lb.fileInfo, lb.effectFrame, lb.attackFrames, lb.iconId, lb.description, i.iconFile FROM limitburst lb"
 		+ " LEFT JOIN icon i ON i.iconId = lb.iconId WHERE limitBurstId = ? LIMIT 1", [key])
 	if rows.is_empty():
 		return {}
@@ -1358,6 +1423,8 @@ func _build_limitburst_record(row: Dictionary, lv_rows: Array) -> Dictionary:
 		"attack_damage": attack_damage,
 		"attack_frames": attack_frames,
 		"effect_frames": _decode_effect_frames(str(row.get("effectFrame", ""))),
+		"targetType": str(row.get("targetType", "")),
+		"attack_type": _attack_type(row),
 		"element_inflict": _decode_boolean(str(row.get("element", ""))),
 		"levels": levels,
 		"effects_raw": levels[0][1] if not levels.is_empty() else [],
@@ -1417,11 +1484,46 @@ func get_all_esper() -> Array:
 		+ " group by b.beastId"
 	)
 
-func get_esper_skill(esper_id: int, rank: int) -> Dictionary:
-	var rows: Array = query("select skill.beastSkillId, skill.name, skill.target, skill.targetRange, skill.element, skill.processId, skill.processParam, skill.effectFrames, skill.attackFrames, skill.iconId, skill.description from beast_skill skill "
-		+ " join beast_status status on status.beastSkillId = skill.beastSkillId"
-		+ " where status.beastId = ? and status.rare  = ?", [esper_id, rank])
-	return rows[0] if not rows.is_empty() else {}
+## An esper's evocation (a beast_skill row, one per esper and rank: 10101 is Siren at
+## rank 1) as an executable skill record in the shape of get_monster_skill_record, plus
+## `esper_id` (the beastId) and `rank` from beast_status. {} for an unknown id.
+func get_esper_skill_record(beast_skill_id: String) -> Dictionary:
+	var key: String = str(beast_skill_id)
+	if _esper_skill_cache.has(key):
+		return _esper_skill_cache[key]
+	var rows: Array = query(
+		"SELECT s.beastSkillId, s.name, s.target, s.targetRange, s.element, s.Isb1GDe2, s.J35nicFV,"
+		+ " s.processId, s.processParam, s.effectFrames, s.attackFrames, s.iconId, s.description,"
+		+ " st.beastId, st.rare"
+		+ " FROM beast_skill s LEFT JOIN beast_status st ON st.beastSkillId = s.beastSkillId"
+		+ " WHERE s.beastSkillId = ? LIMIT 1",
+		[key]
+	)
+	if rows.is_empty():
+		return {}
+	var row: Dictionary = rows[0]
+	var attack_frames: Array = []
+	var attack_damage: Array = []
+	_decode_attack_frames(_str_col(row, "attackFrames"), attack_frames, attack_damage)
+	var built: Dictionary = {
+		"name": _str_col(row, "name"),
+		"skill_id": key,
+		"esper_id": int(row.get("beastId", 0)) if row.get("beastId") != null else 0,
+		"rank": int(row.get("rare", 0)) if row.get("rare") != null else 0,
+		"cost": {},
+		"attack_damage": attack_damage,
+		"attack_frames": attack_frames,
+		"effect_frames": _decode_effect_frames(_str_col(row, "effectFrames")),
+		"element_inflict": _decode_boolean(_str_col(row, "element")),
+		"effects_raw": _decode_effects_raw(row),
+		"targetType": int(row.get("J35nicFV", 0)),
+		"attack_type": _attack_type(row),
+		"iconId": int(row.get("iconId", 0)) if row.get("iconId") != null else 0,
+		"description": _str_col(row, "description"),
+	}
+	_esper_skill_cache[key] = built
+	return built
+
 
 func get_esper_board(esper_id: int, rank: int) -> Array:
 	return query("select * from beast_board_piece where beastId = ? and rarity <= ?", [esper_id, rank])
@@ -1485,6 +1587,10 @@ const _EQUIP_TYPE_ICONS: Dictionary = {
 	"6": "rod.png",
 	"7": "bow.png",
 	"8": "axe.png",
+	"30": "lightShield.png",
+	"31": "heavyShield.png",
+	"40": "hat.png",
+	"41": "helm.png",
 	"9": "hammer.png",
 	"10": "spear.png",
 	"11": "harp.png",
@@ -1493,10 +1599,6 @@ const _EQUIP_TYPE_ICONS: Dictionary = {
 	"14": "gun.png",
 	"15": "mace.png",
 	"16": "fist.png",
-	"30": "lightShield.png",
-	"31": "heavyShield.png",
-	"40": "hat.png",
-	"41": "helm.png",
 	"50": "clothes.png",
 	"51": "lightArmor.png",
 	"52": "heavyArmor.png",

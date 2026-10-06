@@ -12,6 +12,7 @@ extends Node
 @onready var energy_label_current: Label = $header_stamina_num_now
 @onready var energy_label_max: Label = $header_stamina_num
 @onready var energy_time_label: Label = $header_stamina_time
+@onready var energy_info: TextureRect = $header_stamina_info
 
 func _ready() -> void:
 	PlayerProfile.rank_updated.connect(_on_rank_updated)
@@ -33,15 +34,18 @@ func _on_nrg_updated(current_nrg: int, max_nrg: int, time_until_next: float) -> 
 		energy_bar.max_value = max_nrg
 		energy_bar.value = min(current_nrg, max_nrg)
 	energy_label_current.text = "%d" % current_nrg
-	energy_label_max.text = "%d" % max_nrg
+	energy_label_max.text = "/%d" % max_nrg
 
 	if current_nrg >= max_nrg:
-		energy_time_label.text = "Fully Charged"
+		#energy_time_label.text = "Fully Charged"
+		energy_time_label.visible = false
+		energy_info.texture = ResourceLoader.load("res://assets/ui/header/mypage_stamina_full.tres")
 	else:
 		@warning_ignore("integer_division")
 		var minutes: int = int(time_until_next) / 60
 		var seconds: int = int(time_until_next) % 60
 		energy_time_label.text = "%02d:%02d" % [minutes, seconds]
+		energy_info.texture = ResourceLoader.load("res://assets/ui/header/mypage_stamina_info.tres")
 
 func _on_currency_updated(gil: int, lapis: int) -> void:
 	gil_label.text = "%d" % gil

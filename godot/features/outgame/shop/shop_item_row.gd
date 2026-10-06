@@ -10,7 +10,6 @@ signal buy_requested(item_id: String, quantity: int)
 @onready var buy_ten_button: Button = $HBoxContainer/VBoxContainer2/HBoxContainer/BuyTenButton
 
 var _item_id: String
-var _type: String
 
 static var _texture_cache: Dictionary = {}
 

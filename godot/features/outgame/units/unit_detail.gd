@@ -3,6 +3,7 @@ extends Control
 const MagicScene: PackedScene = preload("res://features/shared/Skill.tscn")
 const ItemScene: PackedScene = preload("res://features/shared/Item.tscn")
 const UnitScene: PackedScene = preload("res://features/shared/Unit.tscn")
+const StatDetail: PackedScene = preload("res://features/outgame/units/UnitStatDetail.tscn")
 const UNIT_ANIM_TARGET_HEIGHT: float = 128.0
 const TAB_SMALL_TEXTURE_NORMAL: Texture2D = preload("res://assets/ui/unit/unit_status_button.tres")
 const TAB_SMALL_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_button_on.tres")
@@ -20,21 +21,21 @@ const TAB_BIG_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_
 @onready var unit_detail_back_button: TextureButton = $UnitNamebgChara2/BackButton
 @onready var unit_detail_name_label: Label = $unit_sublimation_name
 @onready var unit_detail_rarity_label: Label = $RarityStarsLabel
-@onready var unit_detail_level_label: Label = $UnitStatusLabelLv/UnitLevel
-@onready var unit_detail_level_next_exp_label: Label = $UnitLvupInfo2/NextExpLabel
-@onready var unit_detail_exp_bar: TextureProgressBar = $UnitExpBg/UnitExpBar
-@onready var unit_detail_hp_value: Label = $unit_statusbg/unit_status_label_hp/unit_status_ext_hp_now_number
-@onready var unit_detail_hp_max_value: Label = $unit_statusbg/unit_status_label_hp/unit_status_ext_hp_max_number
-@onready var unit_detail_mp_value: Label = $unit_statusbg/unit_status_label_mp/unit_status_ext_mp_now_number
-@onready var unit_detail_mp_max_value: Label = $unit_statusbg/unit_status_label_mp/unit_status_ext_mp_max_number
-@onready var unit_detail_atk_value: Label = $unit_statusbg/unit_status_label_attack/unit_status_ext_attack_now_number
-@onready var unit_detail_atk_max_value: Label = $unit_statusbg/unit_status_label_attack/unit_status_ext_attack_max_number
-@onready var unit_detail_def_value: Label = $unit_statusbg/unit_status_label_defense/unit_status_ext_defense_now_number
-@onready var unit_detail_def_max_value: Label = $unit_statusbg/unit_status_label_defense/unit_status_ext_defense_max_number
-@onready var unit_detail_mag_value: Label = $unit_statusbg/unit_status_label_magic/unit_status_ext_magic_now_number
-@onready var unit_detail_mag_max_value: Label = $unit_statusbg/unit_status_label_magic/unit_status_ext_magic_max_number
-@onready var unit_detail_spr_value: Label = $unit_statusbg/unit_status_label_mnd/unit_status_ext_mnd_now_number
-@onready var unit_detail_spr_max_value: Label = $unit_statusbg/unit_status_label_mnd/unit_status_ext_mnd_max_number
+@onready var unit_detail_level_label: Label = $unit_statusbg/UnitStatusLabelLv/UnitLevel
+@onready var unit_detail_level_next_exp_label: Label = $unit_statusbg/UnitLvupInfo2/NextExpLabel
+@onready var unit_detail_exp_bar: TextureProgressBar = $unit_statusbg/UnitExpBg/UnitExpBar
+@onready var unit_detail_hp_value: Label = $unit_statusbg/Stats/HP/unit_status_hp_now_number
+@onready var unit_detail_hp_max_value: Label = $unit_statusbg/Stats/HP/unit_status_hp_max_number
+@onready var unit_detail_mp_value: Label = $unit_statusbg/Stats/MP/unit_status_mp_now_number
+@onready var unit_detail_mp_max_value: Label = $unit_statusbg/Stats/MP/unit_status_mp_max_number
+@onready var unit_detail_atk_value: Label = $unit_statusbg/Stats/ATK/unit_status_attack_now_number
+@onready var unit_detail_atk_max_value: Label = $unit_statusbg/Stats/ATK/unit_status_attack_max_number
+@onready var unit_detail_def_value: Label = $unit_statusbg/Stats/DEF/unit_status_defense_now_number
+@onready var unit_detail_def_max_value: Label = $unit_statusbg/Stats/DEF/unit_status_defense_max_number
+@onready var unit_detail_mag_value: Label = $unit_statusbg/Stats/MAG/unit_status_magic_now_number
+@onready var unit_detail_mag_max_value: Label = $unit_statusbg/Stats/MAG/unit_status_magic_max_number
+@onready var unit_detail_spr_value: Label = $unit_statusbg/Stats/SPR/unit_status_mnd_now_number
+@onready var unit_detail_spr_max_value: Label = $unit_statusbg/Stats/SPR/unit_status_mnd_max_number
 @onready var unit_detail_equip_icons_grid: GridContainer = $unit_statusbg/EquipIconsGrid
 
 @onready var unit_detail_equip_btn: TextureButton = $unit_status_button_equip
@@ -58,6 +59,8 @@ const TAB_BIG_TEXTURE_ON: Texture2D = preload("res://assets/ui/unit/unit_status_
 @onready var unit_detail_ability_content: ScrollContainer = $ContentLayer/AbilityContent
 @onready var unit_detail_ability_grid: GridContainer = $ContentLayer/AbilityContent/AbilityGrid
 
+@onready var stat_detail_button: TextureButton = $DetailButton
+
 @onready var elem_resist_grid: HBoxContainer = $VBoxContainer/TraitContent/UnitResistbg/ElementResistGrid
 @onready var status_resist_grid: HBoxContainer = $VBoxContainer/TraitContent/UnitResistbg/StatusResistGrid
 @onready var lb_name_label: Label = $VBoxContainer/TraitContent/unit_detail_limit_offset/LimitBurstLabel
@@ -73,14 +76,6 @@ var _current_stats_sub_tab: String = "Equipment"
 var _current_equip_sub_tab: String = "Traits"
 var _idle_anim_token: int = 0
 
-var _texture_cache: Dictionary = {}
-
-func _get_dynamic_texture(path: String) -> Texture2D:
-	if _texture_cache.has(path):
-		return _texture_cache[path]
-	var tex: Texture2D = ResourceLoader.load(path) as Texture2D
-	_texture_cache[path] = tex
-	return tex
 
 func _ready() -> void:
 	unit_detail_back_button.pressed.connect(_on_back_pressed)
@@ -91,6 +86,7 @@ func _ready() -> void:
 	unit_detail_traits_btn.pressed.connect(_on_unit_detail_traits_btn_pressed)
 	unit_detail_magic_btn.pressed.connect(_on_unit_detail_magic_btn_pressed)
 	unit_detail_special_btn.pressed.connect(_on_unit_detail_special_btn_pressed)
+	stat_detail_button.pressed.connect(_on_stat_detail_btn_pressed)
 
 	if not UnitService.units_updated.is_connected(_on_units_updated):
 		UnitService.units_updated.connect(_on_units_updated)
@@ -106,6 +102,9 @@ func init_scene(params: Dictionary) -> void:
 	if params.has("unit_inst"):
 		current_unit_inst = params["unit_inst"]
 		_show_unit_detail(current_unit_inst)
+	if params.has("mode"):
+		if params.get("mode") == "equip":
+			_on_unit_detail_equipment_tab_btn_pressed()
 
 func _on_back_pressed() -> void:
 	UIManager.pop()
@@ -166,6 +165,7 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	# and persist back so other screens (enhance_ui, etc.) read up-to-date data.
 	var fresh_final_stats: Dictionary = StatCalculator.calculate_final_stats(unit_inst)
 	unit_inst["final_stats"] = fresh_final_stats
+	var base_stats = unit_inst["final_stats"]["base_stats"]
 	var final_stats: Dictionary = fresh_final_stats.get("stats", {})
 	var hp: int = int(final_stats.get("HP", 0))
 	var mp: int = int(final_stats.get("MP", 0))
@@ -175,17 +175,17 @@ func _show_unit_detail(unit_inst: Dictionary) -> void:
 	var spr: int = int(final_stats.get("SPR", 0))
 
 	unit_detail_hp_value.text = str(hp)
-	#unit_detail_hp_max_value.text = "/%d" % hp
+	unit_detail_hp_max_value.text = str(hp - int(base_stats["HP"]))
 	unit_detail_mp_value.text = str(mp)
-	#unit_detail_mp_max_value.text = "/%d" % mp
+	unit_detail_mp_max_value.text = str(mp - int(base_stats["MP"]))
 	unit_detail_atk_value.text = str(atk)
-	#unit_detail_atk_max_value.text = "/%d" % atk
+	unit_detail_atk_max_value.text = str(atk - int(base_stats["ATK"]))
 	unit_detail_def_value.text = str(def)
-	#unit_detail_def_max_value.text = "/%d" % def
+	unit_detail_def_max_value.text = str(def - int(base_stats["DEF"]))
 	unit_detail_mag_value.text = str(mag)
-	#unit_detail_mag_max_value.text = "/%d" % mag
+	unit_detail_mag_max_value.text = str(mag - int(base_stats["MAG"]))
 	unit_detail_spr_value.text = str(spr)
-	#unit_detail_spr_max_value.text = "/%d" % spr
+	unit_detail_spr_max_value.text = str(spr - int(base_stats["SPR"]))
 
 	_populate_equip_icons_grid(unit_inst)
 	_populate_skills(fresh_final_stats)
@@ -605,9 +605,6 @@ func _on_unit_detail_special_btn_pressed() -> void:
 	unit_detail_ability_content.hide()
 
 func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
-	for child in unit_detail_equip_icons_grid.get_children():
-		child.queue_free()
-
 	var raw_equip: Variant = unit_data.get("equipCategories")
 	var allowed_equip: Array = Array(String(raw_equip if raw_equip != null else "").split(',', false))
 	var equip_icons_data: Dictionary = GameDatabase._EQUIP_TYPE_ICONS
@@ -618,25 +615,14 @@ func _populate_equip_icons_grid(unit_data: Dictionary) -> void:
 		if type_id < 60:
 			valid_keys.append(key)
 
-	valid_keys.sort_custom(func(a, b): return int(a) < int(b))
-
 	for key in valid_keys:
 		var icon_name: String = str(equip_icons_data[key])
-		var tex_rect: TextureRect = TextureRect.new()
-		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tex_rect.custom_minimum_size = Vector2(16, 16)
-		tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tex_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-		var tex_path: String = "res://assets/icons/equipments/%s" % icon_name
-		if ResourceLoader.exists(tex_path):
-			tex_rect.texture = _get_dynamic_texture(tex_path)
-
+		var node_name = icon_name.split('.')[0].capitalize().replace(' ', '')
+		var node = unit_detail_equip_icons_grid.get_node(node_name)
+		
 		if not (key in allowed_equip or float(key) in allowed_equip):
-			tex_rect.modulate = Color(0.3, 0.3, 0.3, 1.0)
+			node.modulate = Color(0.3, 0.3, 0.3, 1.0)
 
-		unit_detail_equip_icons_grid.add_child(tex_rect)
 
 func _on_illustration_pressed() -> void:
 	if current_unit_inst.is_empty():
@@ -644,3 +630,9 @@ func _on_illustration_pressed() -> void:
 
 	var entry_id: String = str(current_unit_inst.get("unitId"))
 	_play_attack_then_resume_idle(entry_id)
+
+
+func _on_stat_detail_btn_pressed() -> void:
+	var popup: Control = StatDetail.instantiate() as Control
+	add_child(popup)
+	popup.init_scene({"unit_instance": current_unit_inst})

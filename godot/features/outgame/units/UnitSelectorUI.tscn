@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="4_quclg"]
 [ext_resource type="Texture2D" uid="uid://cf7anyq2hby7e" path="res://assets/ui/unit/unit_minibutton2.tres" id="5_g4uvh"]
 [ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="5_kqu5q"]
+[ext_resource type="Texture2D" uid="uid://dyk2312wm3mas" path="res://assets/ui/common_temp/search_bar.tres" id="6_3i2jn"]
 [ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="6_g4uvh"]
 [ext_resource type="Texture2D" uid="uid://5s3qsb0gvgv0" path="res://assets/ui/common/middlebutton_label_ok.tres" id="7_w32bh"]
 [ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="8_w32bh"]
@@ -121,6 +122,10 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 2
+
+[node name="SearchBar2" type="TextureRect" parent="VBoxContainer/ScrollContainer" unique_id=1961019394]
+layout_mode = 2
+texture = ExtResource("6_3i2jn")
 
 [node name="UnitsListContainer" type="GridContainer" parent="VBoxContainer/ScrollContainer" unique_id=1387667519]
 layout_mode = 2

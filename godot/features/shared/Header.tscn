@@ -1,15 +1,15 @@
 [gd_scene format=3 uid="uid://caat5jj5ltkpl"]
 
 [ext_resource type="Script" uid="uid://cfnwfn5444hx7" path="res://features/shared/header.gd" id="1_u18cj"]
-[ext_resource type="Texture2D" uid="uid://pg7vn5jxb2qh" path="res://assets/ui/header/mypage_header_.tres" id="2_sgcbl"]
+[ext_resource type="Texture2D" uid="uid://d2e5e7bfhf1bx" path="res://assets/ui/header/mypage_header_.tres" id="2_sgcbl"]
 [ext_resource type="Texture2D" uid="uid://c0kimka5uneid" path="res://assets/ui/common/icon_coin.tres" id="3_8vme6"]
 [ext_resource type="Texture2D" uid="uid://dfit203tpsbps" path="res://assets/ui/common/icon_dia.tres" id="4_earw3"]
-[ext_resource type="Texture2D" uid="uid://b8fgbckff6wge" path="res://assets/ui/header/mypage_exp_bar.tres" id="5_px8dm"]
-[ext_resource type="Texture2D" uid="uid://b4ycj8cfgagww" path="res://assets/ui/header/mypage_exp_gauge.tres" id="6_hawyt"]
-[ext_resource type="Texture2D" uid="uid://cikwillrit14d" path="res://assets/ui/header/mypage_stamina_info.tres" id="7_12k04"]
-[ext_resource type="Texture2D" uid="uid://c83au14w0ngnj" path="res://assets/ui/header/mypage_stamina_bar.tres" id="8_7281i"]
-[ext_resource type="Texture2D" uid="uid://o1bhyq626acv" path="res://assets/ui/header/mypage_stamina_gauge.tres" id="9_jv5fp"]
-[ext_resource type="Texture2D" uid="uid://bxgj7y4kntdtr" path="res://assets/ui/quest/result_rankup_info.tres" id="10_u18cj"]
+[ext_resource type="Texture2D" uid="uid://cgtsc7k60vulb" path="res://assets/ui/header/mypage_exp_bar.tres" id="5_px8dm"]
+[ext_resource type="Texture2D" uid="uid://dur5l0fvaf3de" path="res://assets/ui/header/mypage_exp_gauge.tres" id="6_hawyt"]
+[ext_resource type="Texture2D" uid="uid://cikwillrit14d" path="res://assets/ui/header/mypage_stamina_info.tres" id="7_u18cj"]
+[ext_resource type="Texture2D" uid="uid://bf0ylx7h6yb08" path="res://assets/ui/header/mypage_stamina_bar.tres" id="8_7281i"]
+[ext_resource type="Texture2D" uid="uid://dico2uxsvgl61" path="res://assets/ui/header/mypage_stamina_gauge.tres" id="9_jv5fp"]
+[ext_resource type="Texture2D" uid="uid://ccmv7yvv3jvg6" path="res://assets/ui/header/mypage_rankup_info.tres" id="10_u18cj"]
 
 [node name="Header" type="Control" unique_id=174978603]
 layout_mode = 3
@@ -103,18 +103,17 @@ offset_left = 61.0
 offset_top = 80.0
 offset_right = 153.0
 offset_bottom = 99.0
-texture = ExtResource("7_12k04")
-expand_mode = 1
+texture = ExtResource("7_u18cj")
 
 [node name="header_stamina_time" type="Label" parent="." unique_id=542554953]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 157.0
+offset_left = 207.0
 offset_top = 75.0
-offset_right = 365.0
+offset_right = 276.0
 offset_bottom = 103.0
 theme_override_font_sizes/font_size = 20
-text = "header_stamina_time"
+text = "??:??"
 
 [node name="header_stamina_bar" type="TextureProgressBar" parent="." unique_id=6659240]
 unique_name_in_owner = true
@@ -139,21 +138,22 @@ expand_mode = 1
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 153.0
-offset_top = 50.0
-offset_right = 362.0
-offset_bottom = 78.0
+offset_top = 48.0
+offset_right = 236.0
+offset_bottom = 76.0
 theme_override_font_sizes/font_size = 20
-text = "header_stamina_num"
+text = "nrg_max"
 
 [node name="header_stamina_num_now" type="Label" parent="." unique_id=1207978347]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 93.0
-offset_top = 50.0
-offset_right = 351.0
-offset_bottom = 78.0
+offset_left = 68.0
+offset_top = 48.0
+offset_right = 151.0
+offset_bottom = 76.0
 theme_override_font_sizes/font_size = 20
-text = "header_stamina_num_now"
+text = "nrg_now"
+horizontal_alignment = 2
 
 [node name="header_lv_num" type="Label" parent="." unique_id=770209109]
 unique_name_in_owner = true
@@ -163,7 +163,7 @@ offset_top = 48.0
 offset_right = 431.0
 offset_bottom = 90.0
 theme_override_font_sizes/font_size = 30
-text = "header_lv_num"
+text = "??"
 horizontal_alignment = 1
 vertical_alignment = 1
 

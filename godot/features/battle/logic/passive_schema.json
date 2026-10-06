@@ -1,210 +1,604 @@
 {
 	"1": {
 		"type": "STAT_BOOST_PCT",
-		"keys": ["ATK", "DEF", "MAG", "SPR", "HP", "MP", "UNKNOWN"]
+		"keys": ["ATK", "DEF", "MAG", "SPR", "HP", "MP", "crit_rate"],
+		"family": "stat",
+		"confidence": "verified",
+		"notes": "crit_rate (slot 6, 20 rows) is 'Boost critical hit rate' in every row that sets it; the engine has no crits, and PassiveAggregator ignores the key."
 	},
 	"2": {
 		"type": "STATUS_RESIST",
-		"keys": ["poison", "blind", "sleep", "silence", "paralysis", "confusion", "disease", "petrify"]
+		"keys": ["poison", "blind", "sleep", "silence", "paralysis", "confusion", "disease", "petrify"],
+		"family": "stat",
+		"confidence": "verified",
+		"notes": "Uses 'paralysis' where the skill schema says 'paralyze'; StatCalculator's RESIST_KEY_ALIASES maps both."
 	},
 	"3": {
 		"type": "ELEMENT_RESIST",
-		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"]
+		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"],
+		"family": "stat",
+		"confidence": "verified"
 	},
 	"4": {
 		"type": "HP_DEPENDENT_STAT_BOOST",
-		"keys": ["stat_id", "pct", "times", "hp_threshold", "", "turn_count"]
+		"keys": ["stat_id", "pct", "times", "hp_threshold", "", "turn_count"],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "Boost applies while HP is below hp_threshold %; turn_count -1 appears to mean permanent."
 	},
 	"5": {
 		"type": "ENABLE_EQUIP",
-		"keys": ["equip_id"]
+		"keys": ["equip_id"],
+		"family": "equipment",
+		"confidence": "verified"
 	},
 	"6": {
 		"type": "EQUIP_CONDITIONAL_BOOST",
-		"keys": ["equip_id", "ATK", "DEF", "MAG", "SPR", "HP", "MP"]
+		"keys": ["equip_id", "ATK", "DEF", "MAG", "SPR", "HP", "MP"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "Stat order ATK, DEF, MAG, SPR, HP, MP ('Katana Mastery' 4,50,50,50,50)."
+	},
+	"7": {
+		"type": "RACE_PRESENT_STAT_BOOST",
+		"keys": ["race_id", "", "", "", ""],
+		"family": "stat",
+		"confidence": "strong",
+		"notes": "'Boost DEF and SPR with dragon enemies present' (7,0,0,60,60; 1 row); the stat slots are unnamed."
 	},
 	"8": {
 		"type": "INTERCEPT",
-		"keys": ["condition", "", "reduce_phys", "reduce_mag", "chance_pct"]
+		"keys": ["condition", "hp_below_pct", "dmg_reduce_min", "dmg_reduce_max", "chance_pct"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "Physical single-target cover (Cover, Sentinel, Chivalry). condition 1 = female allies only (Chivalry). hp_below_pct is 100 in 30 of 31 rows and 30 in Scapegoat Block ('... when HP falls below a certain point'): the coverer's own HP (the user, 2026-10-01). Slots 2 and 3 are the mitigation min and max as in active 96 (Royal Armlet 701970 has 50/70, 701980 50/100), not physical and magic. Valorous Defense has four params (0,100,50,100), so no chance."
 	},
 	"9": {
 		"type": "HEALING_ITEM_POWER",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "skill",
+		"confidence": "verified"
 	},
 	"10": {
 		"type": "AUTO_POTION",
-		"keys": [""]
+		"keys": [""],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "1 row: item 101000100 (potion), 9999, 99, 0."
 	},
 	"11": {
 		"type": "KILLER",
-		"keys": ["race_id", "phys_pct", "mag_pct"]
+		"keys": ["race_id", "phys_pct", "mag_pct"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Race ids as in the skill schema's 92 (1 beast ... 12 reaper)."
 	},
 	"12": {
 		"type": "COUNTER",
-		"keys": ["chance_pct", "phys", "mag"]
+		"keys": ["chance_pct", "modifier", "max"],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Answers physical attacks with the normal attack. Layout is [chance, modifier, max per turn], shared with 41 ('Counter Whip' is 20,120,2). The modifier is the counter's damage in percent of the attack: Counter 910496 '30,200' enhances to '50,300' with 'Boosts counter damage (great)'; 0 (older rows such as Counter 101200 '30,0,5') is read as the plain attack. max is read as the per-turn cap, as on 49/50; 0 or missing as no cap. The keys were phys/mag until 2026-09-28."
 	},
 	"13": {
 		"type": "EQUIPMENT_ATK",
-		"keys": ["pct", ""]
+		"keys": ["pct", "accuracy", "wield_mode"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "Boosts equipment ATK. wield_mode 0 = 'one-handed weapon with the other hand empty' (doublehand), 1 or 2 = 'a single weapon equipped in both hands' (true doublehand, one- or two-handed weapon); descriptions agree in 545 of 548 rows (checked 2026-09-30). accuracy is a reading: 25 in 92% of rows, doublehand's accuracy bonus. OpcodeParser drops zeros, so a missing wield_mode is 0."
 	},
 	"14": {
 		"type": "DUAL_WIELD",
-		"keys": []
+		"keys": [],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "'none' = any one-handed weapon; otherwise the allowed weapon categories."
 	},
 	"16": {
 		"type": "STEAL",
-		"keys": ["success_rate", ""]
+		"keys": ["success_rate", ""],
+		"family": "flow",
+		"confidence": "verified"
 	},
 	"17": {
 		"type": "JUMP",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage for jump attacks': damage of opcodes 52 and 134. Sources add up, capped at 800% (wiki), as its own multiplier (the user's rule)."
 	},
 	"18": {
 		"type": "CURE_AFTER_BATTLE",
-		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "cConfusion", "disease", "petrify"]
+		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify"],
+		"family": "flow",
+		"confidence": "verified"
 	},
 	"19": {
 		"type": "UNARMED_ATK",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "equipment",
+		"confidence": "verified"
 	},
 	"20": {
 		"type": "COUNTER_CHANCE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "'Double chance of countering' (17 rows, all 100) or 'Boost activation rate of counter abilities'. Read as a relative boost of every counter source's chance (100 doubles it), passives and active counters alike."
 	},
 	"21": {
 		"type": "ESPER_DAMAGE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Descriptions say 'Boost parameters of espers evoked by N%' (EVO MAG)."
 	},
 	"22": {
 		"type": "EVASION",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "defense",
+		"confidence": "verified"
+	},
+	"23": {
+		"type": "PREVENT_AMBUSH",
+		"keys": ["pct", ""],
+		"family": "flow",
+		"confidence": "strong",
+		"notes": "'Protect from surprise attacks' (1 row)."
 	},
 	"24": {
 		"type": "AGGRO_INCREASE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "defense",
+		"confidence": "verified"
 	},
 	"25": {
 		"type": "AGGRO_DECREASE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "defense",
+		"confidence": "verified"
 	},
 	"26": {
 		"type": "BERSERK",
-		"keys": ["ATK", "turn_count"]
+		"keys": ["ATK", "turn_count"],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "'Start battle with berserk inflicted on self'."
 	},
 	"28": {
 		"type": "GUARD_REGEN",
-		"keys": ["mod", "HP"]
+		"keys": ["mod", "HP"],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "'Gradually restore HP when guarding'."
 	},
 	"29": {
 		"type": "EXPLORATION_HEAL",
-		"keys": ["", "HP", "", "MP", "per_step"]
+		"keys": ["", "HP", "", "MP", "per_step"],
+		"family": "flow",
+		"confidence": "verified"
 	},
 	"30": {
 		"type": "DRAIN_MP",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "resource",
+		"confidence": "verified",
+		"notes": "'Absorb MP when attacked with magic'."
 	},
 	"31": {
 		"type": "LB_FILLRATE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "resource",
+		"confidence": "verified"
 	},
 	"32": {
 		"type": "MP_PER_TURN",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "resource",
+		"confidence": "verified"
 	},
 	"33": {
 		"type": "LB_GAUGE_INCREASE",
-		"keys": ["amount"]
+		"keys": ["amount"],
+		"family": "resource",
+		"confidence": "verified",
+		"notes": "'Fill LB gauge every turn'."
 	},
 	"35": {
 		"type": "START_OF_BATTLE_OR_REVIVE",
-		"keys": ["ability_id"]
+		"keys": ["ability_id"],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "Casts the magic ability_id at the beginning of battle and after being revived (Auto-Reflect 230914). ability_id resolves to magic in every row (64 distinct), e.g. 10121 'Regen (Auto)' (a permanent regen), 30091 'Protect (Auto)'; the spells cost 3 MP, which the cast does not pay."
+	},
+	"36": {
+		"type": "AUTO_CURE_ITEMS",
+		"keys": [],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Auto-cure status ailments using items on hand'."
 	},
 	"37": {
 		"type": "GIL_INCREASE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "flow",
+		"confidence": "verified"
 	},
 	"41": {
 		"type": "COUNTER_MAGIC_ATTACK",
-		"keys": ["chance_pct", "", ""]
+		"keys": ["chance_pct", "modifier", "max"],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Answers magic attacks with the normal attack. Same layout as 12: [chance, modifier, max per turn]. Slots 1 and 2 were unnamed until 2026-09-28."
 	},
 	"42": {
 		"type": "ABSORB_ELEMENT",
-		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"]
+		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"],
+		"family": "defense",
+		"confidence": "verified"
 	},
 	"43": {
 		"type": "EXPLORATION_ENCOUNTER",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "flow",
+		"confidence": "verified"
 	},
 	"44": {
 		"type": "NORMAL_ATTACK",
-		"keys": ["times"]
+		"keys": ["times"],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Normal attack hits N times'."
 	},
 	"45": {
 		"type": "EXP_INCREASE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "flow",
+		"confidence": "verified"
+	},
+	"46": {
+		"type": "STEAL_GIL_PASSIVE",
+		"keys": ["pct_min", "pct_max"],
+		"family": "flow",
+		"confidence": "strong",
+		"notes": "'Obtain gil when stealing' (100,100); names follow the skill schema's 76."
 	},
 	"47": {
 		"type": "ITEM_DROPRATE",
-		"keys": ["normal", "rare"]
+		"keys": ["normal", "rare"],
+		"family": "flow",
+		"confidence": "verified"
 	},
 	"48": {
 		"type": "SONG_MP_REDUCTION",
-		"keys": ["amount"]
+		"keys": ["amount"],
+		"family": "resource",
+		"confidence": "verified"
 	},
 	"49": {
 		"type": "PHYS_COUNTER_ABILITY",
-		"keys": ["pct", "", "ability_id"]
+		"keys": ["chance_pct", "cast_type", "skill_id", "max"],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Answers physical attacks with any active, not only an attack. cast_type says which table skill_id is in: 1 the normal attack (id 0, First Strike 204940 '20,1,0'), 2 magic (Face Me! 910443 '45,2,91003' counters with Firaga), 3 ability, 4 monster skill (monster passives only); every row resolves under this reading. max is the most activations per turn (Sexy Pose 912697 '...,2' enhances to '...,3' with 'Increases maximum number of activations (to 3)'; Blessed Heart 910690 says 'Max: 1 activation per turn'); 0 or missing (89 older rows have 3 params) is read as no cap. 406 of the 410 cast abilities cost no MP; about a third target the party or an ally (counters can be buffs)."
 	},
 	"50": {
 		"type": "MAG_COUNTER_ABILITY",
-		"keys": ["pct", "", "ability_id"]
+		"keys": ["chance_pct", "cast_type", "skill_id", "max"],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Same layout as 49, answering magic attacks ('Your Guardian' 205100 answers with a party resistance buff). 286 passives carry 49 and 50 together, 271 with identical params."
 	},
 	"51": {
 		"type": "FATAL_PREVENT",
-		"keys": ["hp_threshold", "pct", "", "times"]
+		"keys": ["hp_threshold", "pct", "", "times"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "'Chance of escaping death when HP is above a certain point'."
 	},
 	"52": {
 		"type": "MULTICAST",
-		"keys": ["magic_type", "cast_amount", "ability_id"]
+		"keys": ["magic_type", "cast_amount", "ability_id"],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "magic_type 0 any, 1 black, 2 white (as in the skill schema's 97)."
+	},
+	"53": {
+		"type": "MULTICAST_SKILLS",
+		"keys": ["cast_count", "skill_id", "", "skill_ids", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Enable specific abilities to be used twice in one turn'; same layout as the skill schema's 53."
 	},
 	"54": {
 		"type": "MAGIC_EVASION",
-		"keys": ["", "pct"]
+		"keys": ["", "pct"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "Slot 0 is always -1."
 	},
 	"55": {
 		"type": "SPECIAL_STATUS_RESIST",
-		"keys": ["atk_break", "def_break", "mag_break", "spr_break", "stop", "charm"]
+		"keys": ["atk_break", "def_break", "mag_break", "spr_break", "stop", "charm"],
+		"family": "stat",
+		"confidence": "verified"
 	},
 	"56": {
 		"type": "REVIVE_AUTO_ABILITY",
-		"keys": ["ability_id"]
+		"keys": ["ability_id"],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "Casts the ability ability_id at the beginning of battle and after being revived (179 of 243 English texts say both, Reverie 227740; 61 older ones say only 'at the start of battle' and are read the same way). Casts are on the caster in 392 of 393 rows: op 98 x88, op 3 x78, op 100 x57, op 132 x21, op 123 x5."
 	},
 	"59": {
 		"type": "ST_MAGIC_COVER",
-		"keys": ["", "", "phys_pct", "mag_pct", "chance_pct"]
+		"keys": ["condition", "hp_below_pct", "dmg_reduce_min", "dmg_reduce_max", "chance_pct"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "Magic single-target cover, the counterpart of 8, with the same slots (condition is 0 and hp_below_pct 100 in all 8 rows)."
+	},
+	"61": {
+		"type": "ESPER_SHARE",
+		"keys": [],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Enable evocation of any esper equipped by an ally'."
+	},
+	"63": {
+		"type": "ESPER_STAT",
+		"keys": ["atk", "def", "mag", "spr", "hp", "mp", "esper_id"],
+		"family": "stat",
+		"confidence": "verified",
+		"notes": "Multiplies the stats the unit gets from its esper. esper_id is a beastId ('parameters when setting Odin', 10); missing (0) = any esper. One row disagrees with its text: 241740 'Ramuh's Aid' carries 7 (Carbuncle) but says Ramuh."
+	},
+	"64": {
+		"type": "EVOKE_DAMAGE_BOOST",
+		"keys": ["pct", "esper_id"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost evocation damage (for Bahamut)'; esper_id 0 = any espers (15 = Bahamut)."
 	},
 	"66": {
 		"type": "TURN_START_CAST",
-		"keys": ["skill_id", "pct"]
+		"keys": ["skill_id", "pct", ""],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "Casts the ability skill_id at the start of every turn with chance pct (100 in 176 of 185 rows; Parasol Mastery 230263 '509443,70,0'). The casts cost no MP. Slot 2 is 1 in 17 rows (ids from 912000 up, pct 100) with no difference in the texts; not read."
 	},
 	"68": {
 		"type": "LB_DAMAGE",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "modifier",
+		"confidence": "verified"
 	},
 	"69": {
 		"type": "DUAL_WIELD_EQUIPMENT_STAT",
-		"keys": ["stat_id", "pct", ""]
+		"keys": ["stat_id", "pct", ""],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "stat_id 1 ATK, 2 DEF, 3 MAG, 4 SPR (checked against the descriptions, 2026-09-30)."
 	},
 	"70": {
-		"type": "SINGLE_WIELD_EQUIPMENT_STAT",
-		"keys": ["pct", "", "stat_id"]
+		"type": "EQUIPMENT_MAG",
+		"keys": ["pct", "accuracy", "wield_mode"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "Boosts equipment MAG: every row without opcode 13 that names a stat says MAG (306). Same layout as 13; wield_mode matches the description in all 367 rows that state one. Was SINGLE_WIELD_EQUIPMENT_STAT with the last slot read as a stat id until 2026-09-30."
+	},
+	"72": {
+		"type": "LB_CHANGE",
+		"keys": ["lb_id"],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Change LB effects': lb_id resolves to a limit burst (257 of 257)."
+	},
+	"73": {
+		"type": "SKILL_DAMAGE_BOOST",
+		"keys": ["skill_ids", "damage_type", "opcode_filter", "pct"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage of certain abilities'. opcode_filter limits it to effects with those opcodes (e.g. 52&134, the two jump opcodes). damage_type (unnamed until 2026-09-30; the user's reading): 1 = all physical attacks, 2 = all magic attacks; set in 103 rows, 100 of them without skill ids. 3 appears twice (JP-only rows) and reads as both. Passive form of the skill schema's 136."
+	},
+	"74": {
+		"type": "EQUIP_SET_BOOST",
+		"keys": ["equip_ids", "ATK", "DEF", "MAG", "SPR", "HP", "MP", ""],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "'Stone Set: Boost ATK and SPR by 5% when equipped with stone crown'; same stat order as 6. equip_ids may be a list (any of them)."
+	},
+	"75": {
+		"type": "EQUIP_CONDITIONAL_KILLER",
+		"keys": ["equip_type", "race_id", "phys_pct", "mag_pct"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "'Boost physical damage against dragons when equipped with clothes': equip_type 50 clothes, 51 light armor, 52 heavy armor, or a weapon category. Race ids as in 11."
+	},
+	"76": {
+		"type": "WEAPON_ELEMENT_RESIST",
+		"keys": ["equip_type", "fire", "ice", "lightning", "water", "wind", "earth", "light", "dark"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "'Boost fire resistance by 50% when equipped with an axe'. equip_type is an equipCategory (1 to 53, armor too), as in 6 and 75; the key was weapon_types until 2026-09-30."
 	},
 	"77": {
 		"type": "MP_REDUCTION",
-		"keys": ["pct", "", ""]
+		"keys": ["pct", "", ""],
+		"family": "resource",
+		"confidence": "verified"
+	},
+	"80": {
+		"type": "LB_CHANGE_CONDITIONAL",
+		"keys": ["lb_id", "", "", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Change LB effect in a pinch' (Japanese descriptions): lb_id resolves to a limit burst (15 of 15); the condition slots are unnamed."
+	},
+	"81": {
+		"type": "DUAL_WIELD_CHAIN_LIMIT",
+		"keys": [],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage limit for various chains when armed with two one-handed weapons'. No value in the data; the raise is 200% ('Increase chain modifier cap (200%) when dual wielding', the user, 2026-09-30)."
+	},
+	"82": {
+		"type": "DAMAGE_DRAIN",
+		"keys": ["pct", "damage_type"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Drain HP when dealing physical damage' (damage_type 1) or hybrid damage (0)."
+	},
+	"84": {
+		"type": "CHAIN_DAMAGE_BOOST",
+		"keys": ["pct"],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "'Chain Master: Boost damage for various chains by N%'. Appears with 85 in 200 of 205 skills with the same value, and each alone reads the same, so PassiveAggregator counts the larger of the two once per skill (a reading, 2026-09-30). Adds to the chain modifier of the unit's own chained hits, up to its cap."
+	},
+	"85": {
+		"type": "CHAIN_DAMAGE_BOOST_2",
+		"keys": ["pct"],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "Companion of 84."
+	},
+	"89": {
+		"type": "FIX_STAT",
+		"keys": ["atk", "def", "mag", "spr", "hp", "mp"],
+		"family": "stat",
+		"confidence": "verified",
+		"notes": "Flat stat boosts; StatCalculator applies these as FIX_STAT."
+	},
+	"95": {
+		"type": "BREAK_STATE_DAMAGE_BOOST",
+		"keys": ["damage_type", "pct"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost physical (1) / magic (2) damage against enemies under break status'."
+	},
+	"97": {
+		"type": "ESPER_FIELD_EFFECT",
+		"keys": ["esper_id", "", "field_id"],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "'Activate area effect when evoking certain espers'; field_id is in the same unknown id range as the skill schema's 160."
+	},
+	"98": {
+		"type": "CHAIN_DAMAGE_LIMIT_BOOST",
+		"keys": ["", "pct", "", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage limit for various chains'."
+	},
+	"99": {
+		"type": "EQUIP_STAT_SINGLE_WEAPON",
+		"keys": ["stat_id", "pct", "weapon_types"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "'Boost equipment ATK when a single weapon is equipped in one or both hands'. stat_id 1 ATK, 2 DEF, 3 MAG, 4 SPR (checked against the descriptions, 2026-09-30); weapon_types lists the allowed categories (5 staff)."
 	},
 	"100": {
 		"type": "NORMAL_ATTACK_REPLACE",
-		"keys": ["skill_id"]
+		"keys": ["skill_id", "", "", "equip_type"],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Replaces the normal attack with skill_id. equip_type is an equipCategory the replacement needs ('when equipped with clothes': 50, in 8 rows; 0 elsewhere). Slots 1 and 2 are flags (0 or 1) not understood yet (2026-10-01): (1,1) 352 rows, (1,0) 160, (0,1) 122. Slot 1 is 1 when the replacement plays as an attack: its motionType is 8, the normal-attack motion, in 89-95% of those rows against 7% of the slot-1 = 0 rows (jumps, dispels, party buffs). Slot 2 tracks nothing found; the 0,1 rows are nearly all 9xxxxx awakenings."
+	},
+	"101": {
+		"type": "REFLECT_DAMAGE_BOOST",
+		"keys": ["", "pct", ""],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "'Boost damage of reflected magic' (2,20,1)."
+	},
+	"102": {
+		"type": "MULTICAST_SKILL_TYPES",
+		"keys": ["skill_types", "skill_ids", "", "cast_count", "skill_id", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Same layout as the six-param form of the skill schema's 102."
+	},
+	"103": {
+		"type": "BATTLE_START_CAST",
+		"keys": ["skill_id", "", ""],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "'... at the beginning of battle': casts skill_id (all 183 resolve to active abilities), e.g. Preemptive Cover - Physical 106190 '514923,0,1'. Slot 1 is 1 in 4 rows ('Gradually boost damage of certain abilities from next turn'); slot 2 is 0 in 93 rows and 1 in 90 with no pattern in texts, targets or ids. Neither is read. Unmapped passive 104 sits next to a 103 with the same params in 4 rows (perhaps its revive half)."
+	},
+	"105": {
+		"type": "KILLER_LIMIT_BOOST",
+		"keys": ["race_id", "pct"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost physical and magic damage and parameter limit for physical and magic damage against avian monsters by 10%'."
+	},
+	"106": {
+		"type": "DUAL_WIELD_CHAIN_LIMIT_FIXED",
+		"keys": [],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage limit for various chains by 200% regardless of current damage limit when armed with two one-handed weapons'."
+	},
+	"107": {
+		"type": "MONSTER_HP_TRIGGER",
+		"keys": ["trigger_1", "trigger_2", "trigger_3", "trigger_4", "trigger_5", "trigger_6", "", "", "", ""],
+		"family": "trigger",
+		"confidence": "strong",
+		"notes": "Monster passives named '<boss>_HP50%...' (HP-threshold actions). Each trigger is [flag, hp_pct, skill ids joined by '#']."
+	},
+	"114": {
+		"type": "DAMAGE_CUT",
+		"keys": ["pct"],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Monster passive named for a 10% damage cut (param 10, 1 row)."
+	},
+	"1001": {
+		"type": "CATEGORY_STAT_BOOST",
+		"keys": ["ATK", "DEF", "MAG", "SPR", "", ""],
+		"family": "stat",
+		"confidence": "verified",
+		"notes": "'Boost ATK and MAG by 100% for dark category units'. The category is not in the params."
+	},
+	"10002": {
+		"type": "PARTY_CONDITIONAL_SKILL",
+		"keys": ["unit_id", "", "skill_id", ""],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "'Activate X when <unit> is in party and not KO'd': unit_id resolves to units (11 of 11), skill_id to active abilities."
+	},
+	"10003": {
+		"type": "EQUIP_STATS_SINGLE_WEAPON",
+		"keys": ["HP", "MP", "ATK", "MAG", "DEF", "SPR", "wield_mode"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "Stat order HP, MP, ATK, MAG, DEF, SPR (HP, MP, MAG and SPR checked against descriptions). wield_mode as in 13: seven-param rows ('in both hands') end with 1 (true doublehand); six-param rows are 'one-handed weapon with the other hand empty' (doublehand), so the key is missing (0)."
+	},
+	"10004": {
+		"type": "ELEMENT_WEAPON_STAT_BOOST",
+		"keys": ["element", "HP", "MP", "ATK", "MAG", "DEF", "SPR"],
+		"family": "equipment",
+		"confidence": "verified",
+		"notes": "'Boost ATK by 80% when equipped with a lightning elemental weapon'. element 1 fire .. 8 dark; stat order as in 10003."
+	},
+	"10006": {
+		"type": "LOW_HP_BUFF",
+		"keys": ["buff_types", "pct", "", "hp_threshold", "", "turn_count"],
+		"family": "trigger",
+		"confidence": "strong",
+		"notes": "'Boost X when HP falls below a certain point'. buff_types seen: 1 ATK, 2 DEF, 23-30 fire..dark resistance, 63-74 killers (62 + race id), 95-98 resistance to ATK/DEF/MAG/SPR reductions."
+	},
+	"10007": {
+		"type": "MORALE_CONDITIONAL_SKILL",
+		"keys": ["skill_id", "morale_threshold", "above", ""],
+		"family": "trigger",
+		"confidence": "verified",
+		"notes": "'Enable X when morale gauge falls below / is above a certain point': above 1 = above, 0 = below; skill_id resolves to active abilities."
+	},
+	"20001": {
+		"type": "CATEGORY_STAT_BOOST_V2",
+		"keys": ["ATK", "DEF", "MAG", "SPR", "", "", "category_ids", ""],
+		"family": "stat",
+		"confidence": "strong",
+		"notes": "'Boost ATK and MAG by 750% and DEF and SPR by 200% for <categories> units'. Stat slots are pairs (e.g. 750&900); category_ids are ':'-joined."
 	}
 }

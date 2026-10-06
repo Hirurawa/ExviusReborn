@@ -133,6 +133,7 @@ static func create(parameter: String) -> ChallengeTracker:
 			)
 		"40": # Use no more than <num> items
 			var req_count = int(parts[1])
+			tracker.is_completed = true
 			tracker.bind_signal(BattleEvents.item_used, func(_item_id):
 				tracker.counter += 1
 				if tracker.counter > req_count:

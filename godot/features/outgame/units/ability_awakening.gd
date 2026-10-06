@@ -2,22 +2,46 @@ extends Control
 
 const MagicScene: PackedScene = preload("res://features/shared/Skill.tscn")
 
-@onready var back_button: Button = $UnitNamebgChara/UnitMinibutton1
-@onready var gil_label: Label = $Button/unit_classup_need_money_number
-@onready var awaken_button: TextureButton = $Button/unit_classup_button_evo
-@onready var before_skill_texture: Control = $Control/sublimation_frame_1/Control
-@onready var before_desc: Label = $Control/sublimation_frame_detail_1
-@onready var after_skill_texture: Control = $Control/sublimation_frame_2/Control
-@onready var after_desc: RichTextLabel = $Control/sublimation_frame_detail_2
-@onready var result_text_label: Label = $Button/unit_classup_check_result_text
+@onready var back_button: TextureButton = $UnitNamebgChara/UnitMinibutton1
+
+# --- Selector ---
+@onready var selector_containter: VBoxContainer = $AbilityAwakeningSelector
+@onready var skill_grid: GridContainer = $AbilityAwakeningSelector/SkillList
+
+@onready var unit_detail_name_label: Label = $AbilityAwakeningSelector/unit_statusbg/UnitName
+@onready var unit_detail_rarity_label: Label = $AbilityAwakeningSelector/unit_statusbg/RarityStarsLabel
+@onready var unit_detail_level_label: Label = $AbilityAwakeningSelector/unit_statusbg/UnitLevel/UnitLevel
+@onready var unit_detail_level_next_exp_label: Label = $AbilityAwakeningSelector/unit_statusbg/UnitLevel/UnitLvupInfo2/NextExpLabel
+@onready var unit_detail_exp_bar: TextureProgressBar = $AbilityAwakeningSelector/unit_statusbg/UnitLevel/UnitExpBg/UnitExpBar
+@onready var unit_detail_hp_value: Label = $AbilityAwakeningSelector/unit_statusbg/unit_status_label_hp/unit_status_ext_hp_now_number
+@onready var unit_detail_mp_value: Label = $AbilityAwakeningSelector/unit_statusbg/unit_status_label_mp/unit_status_ext_mp_now_number
+@onready var unit_detail_atk_value: Label = $AbilityAwakeningSelector/unit_statusbg/unit_status_label_attack/unit_status_ext_attack_now_number
+@onready var unit_detail_def_value: Label = $AbilityAwakeningSelector/unit_statusbg/unit_status_label_defense/unit_status_ext_defense_now_number
+@onready var unit_detail_mag_value: Label = $AbilityAwakeningSelector/unit_statusbg/unit_status_label_magic/unit_status_ext_magic_now_number
+@onready var unit_detail_spr_value: Label = $AbilityAwakeningSelector/unit_statusbg/unit_status_label_mnd/unit_status_ext_mnd_now_number
+
+@onready var unit_detail_pedestal: TextureRect = $AbilityAwakeningSelector/unit_statusbg/unit_charastand_large
+
+# --- Awakening ---
+@onready var awakening_containter: Control = $AbilityAwakening
+@onready var gil_label: Label = $AbilityAwakening/Button/unit_classup_need_money_number
+@onready var awaken_button: TextureButton = $AbilityAwakening/Button/unit_classup_button_evo
+@onready var before_skill_texture: Control = $AbilityAwakening/SkillInfo/sublimation_frame_1/Control
+@onready var before_desc: Label = $AbilityAwakening/SkillInfo/sublimation_frame_detail_1
+@onready var after_skill_texture: Control = $AbilityAwakening/SkillInfo/sublimation_frame_2/Control
+@onready var after_desc: RichTextLabel = $AbilityAwakening/SkillInfo/sublimation_frame_detail_2
+@onready var result_text_label: Label = $AbilityAwakening/Button/unit_classup_check_result_text
 
 @onready var material_nodes: Array[Control] = [
-	$Material1,
-	$Material2,
-	$Material3,
-	$Material4,
-	$Material5,
+	$AbilityAwakening/Materials/Material1,
+	$AbilityAwakening/Materials/Material2,
+	$AbilityAwakening/Materials/Material3,
+	$AbilityAwakening/Materials/Material4,
+	$AbilityAwakening/Materials/Material5,
 ]
+
+enum Depth { SELECTOR, AWAKENING }
+var current_depth: Depth = Depth.SELECTOR
 
 var _texture_cache: Dictionary = {}
 
@@ -29,18 +53,113 @@ var awakening: Dictionary = {}
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	awaken_button.pressed.connect(_on_awaken_pressed)
-	#init_scene({"before_skill_id": 20080})
+	#init_scene({"unit_instance": GameDatabase.get_unit(253000807)})
 
 
 func init_scene(params: Dictionary) -> void:
-	if params.has("before_skill_id"):
-		before_skill_id = params.get("before_skill_id", -1)
-	if params.has("unit_instance"):
-		unit_instance = params.get("unit_instance", {})
+	if params.has("base_unit"):
+		unit_instance = params.get("base_unit")
+	
+	_populate_skill_list()
+	_unit_details()
+
+
+# --- SELECTOR ---
+
+func _populate_skill_list() -> void:
+	for child in skill_grid.get_children():
+		child.queue_free()
+	
+	var skills = GameDatabase.get_unit_awakenable_skills(unit_instance.get("unitSeries"))
+	for skill in skills:
+		var skill_data = GameDatabase.get_magic(skill.get("beforeSkillId"))
+		var button: Button = Button.new()
+		button.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		button.flat = true
+		button.focus_mode = Control.FOCUS_NONE
+		button.z_index = 18
+		var add_button: bool = false
+		var panel: Control = MagicScene.instantiate()
+		# TODO: Make "temp" prettier. It looks like a mess.
+		var temp = unit_instance.get("final_stats").get("skills").get("magic").filter(func(x): return x["id"] == str(skill.get("beforeSkillId")))
+		if not skill_data.is_empty() and not temp.is_empty():
+			panel.setup_from_skill_data(skill_data, "Trait", temp[0].get("awaken_level"), false)
+			add_button = true
+		else:
+			skill_data = GameDatabase.get_ability(skill.get("beforeSkillId"))
+			temp = unit_instance.get("final_stats").get("skills").get("ability").filter(func(x): return x["id"] == str(skill.get("beforeSkillId")))
+			if not skill_data.is_empty() and not temp.is_empty():
+				panel.setup_from_skill_data(skill_data, "Trait", temp[0].get("awaken_level"), false)
+				add_button = true
+			else:
+				skill_data = GameDatabase.get_passive(skill.get("beforeSkillId"))
+				temp = unit_instance.get("final_stats").get("skills").get("passive").filter(func(x): return x["id"] == str(skill.get("beforeSkillId")))
+				if not skill_data.is_empty() and not temp.is_empty():
+					panel.setup_from_skill_data(skill_data, "Trait", temp[0].get("awaken_level"), false)
+					add_button = true
+					
+		if add_button:
+			button.pressed.connect(_on_skill_clicked.bind(skill.get("beforeSkillId")))
+			panel.add_child(button)
+			skill_grid.add_child(panel)
+
+
+func _unit_details() -> void:
+	var rarity: int = int(unit_instance.get("current_rarity", 1))
+	var pedestal_img_path: String = "res://assets/ui/unit/unit_charastand_rare%s_large.tres" % str(rarity)
+	var pedestal_tex: Texture2D = load(pedestal_img_path) as Texture2D
+	unit_detail_pedestal.texture = pedestal_tex
+	var max_rarity: int = int(unit_instance.get("rarity_max", 5))
+	var stars: String = ""
+	for i in range(rarity):
+		stars += "★"
+	for i in range(max_rarity - rarity):
+		stars += "☆"
+	unit_detail_rarity_label.text = stars
+
+	var level: int = int(unit_instance.get("level", 1))
+	var max_level: int = int(StatCalculator.RARITY_MAX_LEVELS.get(rarity, 15))
+	var next_xp: int = UnitService.calculate_next_xp_for_unit(unit_instance)
+	unit_detail_level_label.text = "%d/%d" % [level, max_level]
+	unit_detail_level_next_exp_label.text = str(next_xp)
+	var xp = unit_instance.get("xp")
+	var progress: Dictionary = UnitService.level_progress_at_xp(unit_instance, xp)
+	var level_floor: float = float(progress.get("level_floor", 0))
+	var span: float = maxf(1.0, float(progress.get("next_floor", 1)) - level_floor)
+	var into_level: float = clampf(xp - level_floor, 0.0, span)
+	unit_detail_exp_bar.max_value = span
+	unit_detail_exp_bar.value = into_level
+	
+	var final_stats: Dictionary = unit_instance.get("final_stats", {}).get("stats", {})
+	var hp: int = int(final_stats.get("HP", 0))
+	var mp: int = int(final_stats.get("MP", 0))
+	var atk: int = int(final_stats.get("ATK", 0))
+	var def: int = int(final_stats.get("DEF", 0))
+	var mag: int = int(final_stats.get("MAG", 0))
+	var spr: int = int(final_stats.get("SPR", 0))
+
+	unit_detail_hp_value.text = str(hp)
+	unit_detail_mp_value.text = str(mp)
+	unit_detail_atk_value.text = str(atk)
+	unit_detail_def_value.text = str(def)
+	unit_detail_mag_value.text = str(mag)
+	unit_detail_spr_value.text = str(spr)
+	
+	unit_detail_name_label.text = str(unit_instance.get("unitName", "Unknown"))
+
+
+func _on_skill_clicked(skill_id: int) -> void:
+	current_depth = Depth.AWAKENING
+	before_skill_id = skill_id
 	awakening = GameDatabase.get_skill_awakening_info(before_skill_id)
 	_refresh_skill_textures()
 	_populate_awakening_requirements()
 	_refresh_button_state()
+	selector_containter.visible = false
+	awakening_containter.visible = true
+
+
+# --- Awakening ---
 
 # TODO: Make prettier. This is a mess.
 func _refresh_skill_textures() -> void:
@@ -48,7 +167,8 @@ func _refresh_skill_textures() -> void:
 	var after_panel: Control = MagicScene.instantiate()
 	var after_skill_data
 	var before_skill_data = GameDatabase.get_magic(before_skill_id)
-	before_desc.text = awakening.get("beforeExplain")
+	if awakening.get("beforeExplain") != null:
+		before_desc.text = awakening.get("beforeExplain")
 	after_desc.text = awakening.get("afterExplain")
 	var temp = unit_instance.get("final_stats").get("skills").get("magic").filter(func(x): return x["id"] == str(before_skill_id))
 	if not before_skill_data.is_empty():
@@ -75,7 +195,6 @@ func _refresh_skill_textures() -> void:
 				after_skill_data = GameDatabase.get_passive(awakening.get("afterSkillId"))
 				after_panel.setup_from_skill_data(after_skill_data, "Trait", int(temp[0].get("awaken_level"))+1)
 				after_skill_texture.add_child(after_panel)
-			
 
 
 func _populate_awakening_requirements() -> void:
@@ -164,12 +283,18 @@ func _refresh_button_state() -> void:
 func _on_awaken_pressed() -> void:
 	var response: Dictionary = UnitService.awaken_ability(before_skill_id, unit_instance.get("instance_id"))
 	if bool(response.get("success", false)):
+		before_skill_id = awakening.get("afterSkillId")
+		awakening = GameDatabase.get_skill_awakening_info(before_skill_id)
+		unit_instance = UnitService.owned_units_ids.filter(func(x): return x.instance_id == unit_instance.get("instance_id"))[0]
+		_show_result_popup("Awakening successful!")
+		if awakening.is_empty():
+			_on_back_pressed()
+			return
 		_populate_awakening_requirements()
 		_refresh_button_state()
-		_show_result_popup("Awakening successful!")
+		_refresh_skill_textures()
 	else:
 		_show_result_popup(str(response.get("error", "Awakening failed")))
-		pass
 
 
 func _show_result_popup(message: String) -> void:
@@ -182,4 +307,12 @@ func _show_result_popup(message: String) -> void:
 
 
 func _on_back_pressed() -> void:
-	UIManager.pop()
+	match current_depth:
+		Depth.AWAKENING:
+			current_depth = Depth.SELECTOR
+			selector_containter.visible = true
+			awakening_containter.visible = false
+			_populate_skill_list()
+			_unit_details()
+		Depth.SELECTOR:
+			UIManager.pop()

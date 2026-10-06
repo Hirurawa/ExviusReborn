@@ -275,22 +275,22 @@ func _refresh_units_list(owned_units_ids: Array) -> void:
 		# Keep five columns and shrink cell width only when viewport is tight.
 		var container: Control = Control.new()
 		container.custom_minimum_size = Vector2(cell_width, UNIT_CELL_H)
-		container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		container.size_flags_vertical = Control.SIZE_FILL
+		#container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		#container.size_flags_vertical = Control.SIZE_FILL
 
 		var visual_container: Control = Control.new()
-		visual_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		#visual_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 		var unit_visual: Control = UNIT_SCENE.instantiate() as Control
 		if unit_visual:
 			unit_visual.unit_data_to_load = unit_inst
-			unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			#unit_visual.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			visual_container.add_child(unit_visual)
 		
 		container.add_child(visual_container)
 
 		var click_btn: Button = Button.new()
-		click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		#click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		click_btn.flat = true
 		click_btn.focus_mode = Control.FOCUS_NONE
 		click_btn.pressed.connect(_on_unit_clicked.bind(unit_inst))

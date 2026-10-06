@@ -9,7 +9,8 @@ var current_unit_inst: Dictionary = {}
 var current_slot_id: String = ""
 var allowed_types: Array = []
 var _pending_item_id: String = ""
-var _dual_wield_cache: Dictionary = {}
+## The unit's gear, resolved once for the hand checks of every candidate.
+var _equipped_items: Array = []
 
 var _conflict_dialog: ConfirmationDialog
 var _error_dialog: AcceptDialog
@@ -43,27 +44,33 @@ func init_scene(params: Dictionary) -> void:
 	current_slot_id = params.get("slot_id", "")
 	allowed_types = params.get("allowed_types", [])
 
-	_dual_wield_cache = EquipmentValidator.get_dual_wield_allowed_type_ids(current_unit_inst)
+	_equipped_items = StatCalculator.resolve_equipped_items(current_unit_inst)
 
 	_populate_list()
 
 func _populate_list() -> void:
 	for child in equip_selection_list.get_children():
 		child.queue_free()
-
-	var remove_cell: Control = ItemScene.instantiate()
-	remove_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	equip_selection_list.add_child(remove_cell)
-	remove_cell.setup_placeholder("Remove", "")
-	remove_cell.set_clickable(true)
-	remove_cell.pressed.connect(_on_equip_item_selected.bind(""))
+	
+	var remove_button: TextureButton = TextureButton.new()
+	remove_button.texture_normal = ResourceLoader.load("res://assets/ui/common/remove_long.tres")
+	remove_button.texture_pressed = ResourceLoader.load("res://assets/ui/common/remove_long2.tres")
+	equip_selection_list.add_child(remove_button)
+	remove_button.pressed.connect(_on_equip_item_selected.bind("")) 
+	
+	#var remove_cell: Control = ItemScene.instantiate()
+	#remove_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	#equip_selection_list.add_child(remove_cell)
+	#remove_cell.setup_placeholder("Remove", "")
+	#remove_cell.set_clickable(true)
+	#remove_cell.pressed.connect(_on_equip_item_selected.bind(""))
 
 	var allowed_equips = Array(current_unit_inst.get("equipCategories").split(',')).map(func(x): return int(x))
 
 	var available_items: Array = InventoryService.get_available_equipment_for_slot(current_slot_id, allowed_equips)
 
 	for item_dict in available_items:
-		if not _passes_dual_wield_filter(item_dict):
+		if not _passes_hand_rules(item_dict):
 			continue
 
 		var item_instance_id: String = str(item_dict.get("instance_id", ""))
@@ -87,37 +94,14 @@ func _populate_list() -> void:
 		item_cell.set_clickable(true)
 		item_cell.pressed.connect(_on_equip_item_selected.bind(item_instance_id))
 
-func _passes_dual_wield_filter(item_dict: Dictionary) -> bool:
-	# Only constrain weapon candidates for hand slots.
-	if not (current_slot_id in ["r_hand", "l_hand"]):
+## Hand slots list only what the unit can hold with its other hand: no second weapon it
+## cannot dual wield, no second shield. Items locked out by a two-handed weapon stay
+## listed; equipping one explains why it failed.
+func _passes_hand_rules(item_dict: Dictionary) -> bool:
+	if not (current_slot_id in EquipmentValidator.HAND_SLOTS):
 		return true
-	if str(item_dict.get("slot", "")) != "Weapon":
-		return true
-	if bool(item_dict.get("is_twohanded", false)):
-		return true
-	# One-handed weapon: ok if the *other* hand isn't already holding a one-handed
-	# weapon, OR the unit can dual-wield both types.
-	var equipment: Dictionary = current_unit_inst.get("equipment", {})
-	var other_hand: String = "l_hand" if current_slot_id == "r_hand" else "r_hand"
-	var other_item_id: String = str(equipment.get(other_hand, ""))
-	if other_item_id == "":
-		return true
-	var other_template_id: String = InventoryService.get_equipment_template_id(other_item_id)
-	var other_template: Dictionary = GameDatabase.get_equipment(other_template_id)
-	if other_template.is_empty():
-		return true
-	if str(other_template.get("slot", "")) != "Weapon" or bool(other_template.get("is_twohanded", false)):
-		return true
-	var incoming_type: int = int(item_dict.get("type_id", -1))
-	var other_type: int = int(other_template.get("type_id", -1))
-	return _dual_wield_permits(incoming_type) and _dual_wield_permits(other_type)
-
-func _dual_wield_permits(weapon_type_id: int) -> bool:
-	if not bool(_dual_wield_cache.get("has", false)):
-		return false
-	if bool(_dual_wield_cache.get("allows_any", false)):
-		return true
-	return weapon_type_id in (_dual_wield_cache.get("type_ids", []) as Array)
+	var reason: String = EquipmentValidator.hand_problem(current_unit_inst, _equipped_items, current_slot_id, str(item_dict.get("template_id", "")))
+	return reason != EquipmentValidator.ERR_DUAL_WIELD_REQUIRED and reason != EquipmentValidator.ERR_TWO_SHIELDS
 
 func _on_equip_item_selected(item_id: String) -> void:
 	_pending_item_id = item_id
@@ -145,6 +129,8 @@ func _error_message_for_code(code: String) -> String:
 	match code:
 		"ERR_DUAL_WIELD_REQUIRED":
 			return "This unit can't dual-wield this weapon."
+		"ERR_TWO_SHIELDS":
+			return "A unit can't hold two shields."
 		"ERR_TWO_HANDED_LOCKED":
 			return "This slot is occupied by a two-handed weapon."
 		"ERR_EQUIPMENT_ALREADY_IN_USE":

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://b2mr0adket8cd" path="res://features/outgame/shop/shop_ui.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dmunqh6phrvfg" path="res://assets/ui/create/cre_btn4_1.tres" id="2_y08we"]
 [ext_resource type="Texture2D" uid="uid://dn5ikad3sia4y" path="res://assets/ui/create/cre_btn4_2.tres" id="3_1fev2"]
+[ext_resource type="Texture2D" uid="uid://dyk2312wm3mas" path="res://assets/ui/common/search_bar.tres" id="4_1fev2"]
 
 [node name="ShopUI" type="Control" unique_id=679947962]
 layout_mode = 3
@@ -110,6 +111,7 @@ offset_left = 16.0
 offset_top = 8.0
 offset_right = -120.0
 offset_bottom = 48.0
+grow_horizontal = 2
 placeholder_text = "Filter by name"
 caret_blink = true
 
@@ -122,6 +124,7 @@ offset_left = -112.0
 offset_top = 8.0
 offset_right = -16.0
 offset_bottom = 48.0
+grow_horizontal = 0
 focus_mode = 0
 text = "Clear"
 
@@ -134,6 +137,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 15
+
+[node name="SearchBar2" type="TextureRect" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=276206056]
+layout_mode = 2
+texture = ExtResource("4_1fev2")
 
 [node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1204308379]
 layout_mode = 2

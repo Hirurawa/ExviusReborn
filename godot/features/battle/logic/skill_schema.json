@@ -1,163 +1,1019 @@
 {
 	"1": {
 		"type": "PHYSICAL_DAMAGE",
-		"keys": ["", "", "", "", "", "", "modifier", ""]
+		"keys": ["", "", "", "", "", "", "modifier", ""],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Slot 7 is set in 5% of rows (-50..999), unnamed."
 	},
 	"2": {
 		"type": "HEAL",
-		"keys": ["", "", "amount", "modifier", ""]
+		"keys": ["", "", "amount", "modifier", ""],
+		"family": "heal",
+		"confidence": "verified",
+		"notes": "Slot 4 is always 100."
 	},
 	"3": {
 		"type": "STAT_BOOST_PCT",
-		"keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""]
+		"keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Slot 5 is 1 in 91% of rows; slot 6 of the 7-param rows is unnamed."
 	},
 	"4": {
 		"type": "REVIVE",
-		"keys": ["HP_pct"]
+		"keys": ["HP_pct"],
+		"family": "heal",
+		"confidence": "verified"
 	},
 	"5": {
 		"type": "STATUS_CURE",
-		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify"]
+		"keys": ["status_1", "status_2", "status_3", "status_4", "status_5", "status_6", "status_7", "status_8"],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "Each slot holds the id of a status to cure, packed from slot 0 (1 poison, 2 blind, 3 sleep, 4 silence, 5 paralysis, 6 confusion, 7 disease, 8 petrify): 'cure sleep only' is 3,0,0,... The keys were per-status names until 2026-09-28, which misread packed lists."
 	},
 	"6": {
 		"type": "STATUS_INFLICT",
-		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "turn_count"]
+		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "turn_count"],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "Per-ailment inflict chance %. Slot 8 is 1 in 98% of rows; that it is a duration is unconfirmed."
 	},
 	"7": {
 		"type": "STATUS_RESIST",
-		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "", "turn_count"]
+		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "", "turn_count"],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "Per-ailment resist %. Slot 8 is 1."
 	},
 	"8": {
 		"type": "REGEN",
-		"keys": ["modifier", "", "amount", "turn_count"]
+		"keys": ["modifier", "", "amount", "turn_count"],
+		"family": "heal",
+		"confidence": "verified",
+		"notes": "Same layout as 30 MP_REGEN and the 56/57 songs."
 	},
 	"9": {
 		"type": "PCT_DAMAGE",
-		"keys": ["pct", "", "", ""]
+		"keys": ["pct", "", "", ""],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Slots 0/1 look like a min/max pair; slot 2 is 100. '3/4 HP' is 75: removes 75% of current HP."
 	},
 	"10": {
 		"type": "MP_DRAIN",
-		"keys": ["modifier", "chance_pct", ""]
+		"keys": ["modifier", "chance_pct", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "Layout matches 25 DRAIN (x, y, 100); the chance_pct name on slot 1 is doubtful (values up to 3000)."
+	},
+	"11": {
+		"type": "SAC_SELF_RESTORE",
+		"keys": ["HP_pct", "MP_pct"],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"13": {
+		"type": "DELAYED_PHYS_DAMAGE",
+		"keys": ["turn_delay", "", "", "area", "effect_id", "modifier"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Physical damage turn_delay turns later (1 = 'next turn', 2 = 'in two turns'), computed when it lands, with the skill's attack type (4, the wiki's 'fixed attack', on 21 rows). modifier is a percent even at 12000 (Dynamite Arrow 203140: 'fixed attack with physical damage (120x)', the wiki). area copies the targetRange (1 one enemy, 2 all) and is not read. effect_id is a visual effect id, not a skill; the effect's attackFrames group times the delayed hit."
 	},
 	"15": {
 		"type": "MAGIC_DAMAGE",
-		"keys": ["", "", "", "", "", "modifier", ""]
+		"keys": ["", "", "", "", "", "modifier", ""],
+		"family": "damage",
+		"confidence": "verified"
 	},
 	"16": {
 		"type": "HP_RESTORE",
-		"keys": ["amount"]
+		"keys": ["amount"],
+		"family": "heal",
+		"confidence": "verified"
 	},
 	"17": {
 		"type": "MP_RESTORE",
-		"keys": ["amount"]
+		"keys": ["amount"],
+		"family": "heal",
+		"confidence": "verified"
 	},
 	"18": {
 		"type": "PHYS_DAMAGE_REDUCE",
-		"keys": ["pct", "turn_count", "", ""]
+		"keys": ["pct", "turn_count", "", ""],
+		"family": "defense",
+		"confidence": "verified"
 	},
 	"19": {
 		"type": "MAG_DAMAGE_REDUCE",
-		"keys": ["pct", "turn_count", "", ""]
+		"keys": ["pct", "turn_count", "", ""],
+		"family": "defense",
+		"confidence": "verified"
+	},
+	"20": {
+		"type": "NORMAL_ATTACK_POWER_INCREASE",
+		"keys": ["min", "max", "damage_taken"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "min grows toward max with consecutive use; damage_taken is the DEF drop ('Reduce own DEF next turn'). 90 is the magic counterpart."
 	},
 	"21": {
 		"type": "PHYSICAL_DAMAGE_IGNORE_COVER",
-		"keys": ["", "", "modifier", "ignore_def"]
+		"keys": ["", "", "modifier", "ignore_def"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Despite the name this is DEF piercing ('partial unmitigated damage'): ignore_def -50 ignores 50% of DEF. The sign is negative here and positive in 70."
+	},
+	"22": {
+		"type": "PHYSICAL_DAMAGE_TRIBE",
+		"keys": ["tribe_id", "", "", "modifier"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "tribe_id uses the race ids of 92. Race ids: 1 beast, 2 avian, 3 aquatic, 4 demon, 5 human, 6 machina, 7 dragon, 8 fairy, 9 insect, 10 stone, 11 plant, 12 reaper."
+	},
+	"23": {
+		"type": "MAGICAL_DAMAGE_TRIBE",
+		"keys": ["tribe_id", "", "", "modifier"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "tribe_id uses the race ids of 92."
 	},
 	"24": {
 		"type": "STAT_BREAK",
-		"keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""]
+		"keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "turn_count is 0 in 27% of rows (1172 of them monster skills); what 0 means is unconfirmed."
 	},
 	"25": {
 		"type": "DRAIN",
-		"keys": ["pct", "modifier", ""]
+		"keys": ["pct", "modifier", ""],
+		"family": "damage",
+		"confidence": "verified"
+	},
+	"26": {
+		"type": "HP_PCT_RESTORE",
+		"keys": ["pct_min", "pct_max", ""],
+		"family": "heal",
+		"confidence": "verified"
 	},
 	"27": {
 		"type": "AUTO_REVIVE",
-		"keys": ["HP_pct", "turn_count", ""]
+		"keys": ["HP_pct", "turn_count", ""],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"28": {
+		"type": "ITEM_AOE",
+		"keys": ["item_id", "item_id_2", "item_id_3", "item_id_4", "item_id_5"],
+		"family": "legacy",
+		"confidence": "strong",
+		"notes": "'Potions used affect all allies' for the listed items."
+	},
+	"29": {
+		"type": "RANDOM_CAST",
+		"keys": ["choice_1", "choice_2", "choice_3", "choice_4", "choice_5", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Each choice is [skill_id, weight %] ('Dance', 'Use random ability on enemy'). Ids resolve to abilities, monster skills and, in 54 cases, passives."
 	},
 	"30": {
 		"type": "MP_REGEN",
-		"keys": ["modifier", "", "MP_amount", "turn_count"]
+		"keys": ["modifier", "", "MP_amount", "turn_count"],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"31": {
+		"type": "LB_TRANSFER",
+		"keys": [],
+		"family": "resource",
+		"confidence": "verified"
+	},
+	"32": {
+		"type": "ESPER_GAUGE_FILL",
+		"keys": ["min", "max"],
+		"family": "resource",
+		"confidence": "verified"
 	},
 	"33": {
 		"type": "ELEMENT_RESISTANCE",
-		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "", "turn_count"]
+		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "", "turn_count"],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Negative values are imperils. Slot 8 is 1 in 99% of rows."
+	},
+	"34": {
+		"type": "RANDOM_STATUS_INFLICT",
+		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "", "amount"],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "amount = how many of the listed ailments are rolled."
 	},
 	"35": {
 		"type": "KO",
-		"keys": ["pct"]
+		"keys": ["pct"],
+		"family": "status",
+		"confidence": "verified"
 	},
-	"40":{
+	"37": {
+		"type": "STEAL",
+		"keys": ["chance_pct"],
+		"family": "flow",
+		"confidence": "verified"
+	},
+	"38": {
+		"type": "PRAY",
+		"keys": ["", "", "", "", "chance_pct", "effect_id", "message"],
+		"family": "legacy",
+		"confidence": "strong",
+		"notes": "'Chance of restoring HP for all allies' (chance 50) and 'Restore HP' (100)."
+	},
+	"39": {
+		"type": "HP_SAC_PCT_DAMAGE",
+		"keys": ["", "hp_sac_pct", "", "damage_pct", "", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "20 rows; slots 0, 2, 4 and 5 are unnamed."
+	},
+	"40": {
 		"type": "HYBRID_DAMAGE",
-		"keys": ["",  "",  "",  "",  "",  "",  "",  "",  "phys_modifier",  "mag_modifier"]
+		"keys": ["", "", "", "", "", "", "", "", "phys_modifier", "mag_modifier"],
+		"family": "damage",
+		"confidence": "verified"
 	},
 	"41": {
 		"type": "FIXED_DAMAGE",
-		"keys": ["amount"]
+		"keys": ["amount"],
+		"family": "damage",
+		"confidence": "verified"
+	},
+	"42": {
+		"type": "NUM_PHYS_ATTACK",
+		"keys": ["", "", "num_min", "num_max", "modifier", ""],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Hits num_min..num_max randomly chosen enemies."
+	},
+	"43": {
+		"type": "PHYS_ATTACK_CHANCE_TO_MISS",
+		"keys": ["", "", "modifier", "miss_chance"],
+		"family": "damage",
+		"confidence": "verified"
+	},
+	"44": {
+		"type": "DUAL_BLACK_MAGIC",
+		"keys": [],
+		"family": "skill",
+		"confidence": "strong",
+		"notes": "'Enable black magic to be used twice in one turn'. The param is 'none'."
+	},
+	"45": {
+		"type": "DUALCAST",
+		"keys": [""],
+		"family": "skill",
+		"confidence": "verified"
+	},
+	"46": {
+		"type": "LEVEL_X_EFFECT",
+		"keys": ["level_multiple", ""],
+		"family": "flow",
+		"confidence": "verified",
+		"notes": "'Level 5 Death', 'Level 4 Graviga': affects units whose level is a multiple of level_multiple. Slot 1 (2027, 2028, 2035) is not a monster skill id."
+	},
+	"47": {
+		"type": "LIBRA",
+		"keys": [""],
+		"family": "flow",
+		"confidence": "verified"
+	},
+	"48": {
+		"type": "ENABLE_DRINK",
+		"keys": [],
+		"family": "legacy",
+		"confidence": "strong",
+		"notes": "'Allow use of drinkable items'."
+	},
+	"50": {
+		"type": "ENABLE_THROW",
+		"keys": [],
+		"family": "legacy",
+		"confidence": "strong",
+		"notes": "'Allow use of throwable items'."
+	},
+	"51": {
+		"type": "ESCAPE",
+		"keys": ["chance_pct"],
+		"family": "flow",
+		"confidence": "verified",
+		"notes": "'Can escape most enemies'."
+	},
+	"52": {
+		"type": "JUMP",
+		"keys": ["", "", "delay_min", "delay_max", "modifier"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Leaves the field and lands on its own at the start of the turn delay_min turns later, as the unit's action for that turn; 134 is the variant the player lands. delay_min equals delay_max in every row. Every jump row has five params; the 3, 4 and 6-param rows are magic multicast commands (see variants).",
+		"variants": [
+			{"match": {"param_count": 3}, "type": "MAGIC_MULTICAST", "keys": ["magic_type", "cast_count", "skill_id"], "family": "skill", "confidence": "verified", "notes": "All 13 rows are single-effect 0 MP abilities 'Enable (black/white) magic to be used N times in one turn' (Dual White Magic 502090, Chainspell 507693). magic_type as in 97: 0 any, 1 black, 2 white, 3 green."},
+			{"match": {"param_count": 4}, "type": "MAGIC_MULTICAST", "keys": ["magic_type", "cast_count", "skill_id", ""], "family": "skill", "confidence": "verified", "notes": "All 10 rows are magic multicast commands like the 3-param ones, with a trailing 0."},
+			{"match": {"param_count": 6}, "type": "MAGIC_MULTICAST", "keys": ["magic_type", "magic_type_2", "", "cast_count", "skill_id", ""], "family": "skill", "confidence": "hypothesis", "notes": "One row, Dual White/Green Magic 504180 '2,3,2,2,504180,504180': 'Enable white or green magic to be used twice in one turn', read as two magic types."}
+		]
+	},
+	"53": {
+		"type": "MULTICAST",
+		"keys": ["amount", "", "", "skill_id_array", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "amount = casts per turn; slot 1 is a generated ability id; skill_id_array lists the abilities that can be multicast. Two-param rows are HIDE (see variants).",
+		"variants": [
+			{"match": {"param_count": 2}, "type": "HIDE", "keys": ["turns_min", "turns_max"], "family": "flow", "confidence": "verified", "notes": "All 25 two-param rows are 'escape from battle for N turns'. Roy's Hide is 3,5; 'Escape from battle for one turn' is 1,1."}
+		]
 	},
 	"54": {
 		"type": "DODGE",
-		"keys": ["amount", "turn_count"]
+		"keys": ["amount", "turn_count"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "amount = hits evaded. Slot 2 (437 rows) is 1 in 5% of them, unnamed."
+	},
+	"56": {
+		"type": "SING_HP_RESTORE",
+		"keys": ["modifier", "", "amount", "turn_count"],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"57": {
+		"type": "SING_MP_RESTORE",
+		"keys": ["modifier", "", "amount", "turn_count"],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"58": {
+		"type": "SING_STAT_PCT",
+		"keys": ["ATK", "DEF", "MAG", "SPR", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified"
 	},
 	"59": {
 		"type": "DISPEL",
-		"keys": [""]
+		"keys": [""],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "Slot 0 is none/0/1/2; which side's effects it removes is unconfirmed."
+	},
+	"60": {
+		"type": "CHARM",
+		"keys": ["", "pct", ""],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "Slot 2 is a message key."
 	},
 	"61": {
 		"type": "AGGRO_INCREASE",
-		"keys": ["pct", "turn_count"]
+		"keys": ["pct", "turn_count"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "Provoke."
 	},
 	"63": {
 		"type": "LB_FILLRATE",
-		"keys": ["pct", "turn_count"]
+		"keys": ["pct", "turn_count"],
+		"family": "resource",
+		"confidence": "verified"
 	},
 	"64": {
 		"type": "PCT_RESTORE",
-		"keys": ["HP", "MP"]
+		"keys": ["HP", "MP"],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"65": {
+		"type": "HP_MP_RESTORE",
+		"keys": ["HP", "MP"],
+		"family": "heal",
+		"confidence": "verified"
+	},
+	"66": {
+		"type": "MAX_HP_DOUBLE",
+		"keys": ["pct", "", ""],
+		"family": "legacy",
+		"confidence": "strong",
+		"notes": "'Double the caster's maximum HP' (100, 1 row)."
+	},
+	"68": {
+		"type": "BERSERK",
+		"keys": ["turn_count", "atk_pct"],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "turn_count -1 appears to mean permanent."
 	},
 	"70": {
 		"type": "MAGIC_DAMAGE_IGNORE_SPR",
-		"keys": ["", "", "modifier", "ignore"]
+		"keys": ["", "", "modifier", "ignore"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "ignore 50 ignores 50% of SPR (positive, unlike 21)."
+	},
+	"71": {
+		"type": "CAST_SKILL",
+		"keys": ["skill_id", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Items (139 rows) and abilities (17) that cast another ability."
+	},
+	"72": {
+		"type": "CONSECUTIVE_MAG_DAMAGE",
+		"keys": ["", "", "modifier", "modifier_increment", "modifier_increment_2", "max_stacks"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Magic damage that powers up with consecutive use (magic counterpart of 126, one slot shorter). Checked against the wiki's Blood Pulsar 910225 (0,0,250,100,100,4 = 3.5x base, 1x per stack, 3 stacks): the wiki's base is modifier + modifier_increment, its stack modifier modifier_increment_2, its stack count max_stacks - 1 (the data counts the initial cast). modifier_increment_2 equals modifier_increment on every player skill and differs on 24 monster rows (Firaja 0,0,0,210,230,3). 15 rows have a physical attack type; 13 of them say magic damage."
+	},
+	"73": {
+		"type": "ROULETTE",
+		"keys": [],
+		"family": "flow",
+		"confidence": "strong",
+		"notes": "Monster 'Roulette' (random KO); the param is 'none'."
+	},
+	"74": {
+		"type": "DOOM_LEGACY",
+		"keys": ["turn_count", "", "chance_pct"],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "Monster 'Doom' (1 row), read by analogy with 1001."
+	},
+	"76": {
+		"type": "STEAL_GIL",
+		"keys": ["pct_min", "pct_max"],
+		"family": "flow",
+		"confidence": "verified"
+	},
+	"79": {
+		"type": "ESPER_PHYS_DAMAGE",
+		"keys": ["", "", "", "", "", "", "", "modifier"],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "Esper attacks of Titan, Odin and Ifrit (Gaia's Wrath, Gungnir, Hellfire, ...). Eight params like 1; the physical reading follows that layout."
+	},
+	"80": {
+		"type": "ESPER_MAG_DAMAGE",
+		"keys": ["", "", "", "", "", "", "modifier"],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "Esper attacks of Shiva, Ramuh, Leviathan, Bahamut and others (Diamond Dust, Judgment Bolt, Tsunami, Megaflare, ...). Seven params like 15."
+	},
+	"81": {
+		"type": "HP_SAC_PHYS_DAMAGE",
+		"keys": ["", "", "", "", "", "", "modifier", "hp_sac_pct", "", ""],
+		"family": "damage",
+		"confidence": "verified"
+	},
+	"82": {
+		"type": "RANDOM_MAGIC_CAST",
+		"keys": ["choice_1", "choice_2", "choice_3", "choice_4", "choice_5"],
+		"family": "skill",
+		"confidence": "strong",
+		"notes": "'Cast black magic on random enemy' (1 row); same [skill_id, weight %] pairs as 29."
+	},
+	"83": {
+		"type": "REAMINING_HP_DAMAGE",
+		"keys": [""],
+		"family": "damage",
+		"confidence": "hypothesis",
+		"notes": "Name unconfirmed (and misspelled). 'Convert' (param 1) reduces own HP to 1 and fully restores MP."
+	},
+	"84": {
+		"type": "NULLIFY",
+		"keys": ["turn_count", "", "spell_count"],
+		"family": "defense",
+		"confidence": "verified"
 	},
 	"86": {
 		"type": "REFLECT",
-		"keys": ["", "spell_count", "turn_count"]
+		"keys": ["chance_pct", "spell_count", "turn_count"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "spell_count -1 = unlimited."
+	},
+	"87": {
+		"type": "MONSTER_CALL_OR_MESSAGE",
+		"keys": ["", "", "message", "chance_pct", ""],
+		"family": "flow",
+		"confidence": "strong",
+		"notes": "Monster 'Call Allies' and scripted lines; message is a MST_MONSTERSKILL_PARAM_MSG key or literal text. Slot 1 (0-25) may be a formation slot (hypothesis)."
+	},
+	"88": {
+		"type": "STOP",
+		"keys": ["chance_pct", "turn_count"],
+		"family": "status",
+		"confidence": "verified"
+	},
+	"89": {
+		"type": "BREAK_RESISTANCE",
+		"keys": ["ATK", "DEF", "MAG", "SPR", "STOP", "CHARM", "turn_count", ""],
+		"family": "status",
+		"confidence": "verified"
+	},
+	"90": {
+		"type": "NEXT_MAGIC_ATTACK_BOOST",
+		"keys": ["min", "max", "damage_taken"],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "Magic counterpart of 20 ('Boost MAG for next attack and power up with consecutive use'), same min/max/damage_taken layout."
+	},
+	"92": {
+		"type": "PHYS_KILLER_BUFF",
+		"keys": ["race_1", "race_2", "race_3", "race_4", "race_5", "race_6", "race_7", "race_8", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Each race slot is [race_id, pct] or -1. Race ids: 1 beast, 2 avian, 3 aquatic, 4 demon, 5 human, 6 machina, 7 dragon, 8 fairy, 9 insect, 10 stone, 11 plant, 12 reaper."
+	},
+	"93": {
+		"type": "MAG_KILLER_BUFF",
+		"keys": ["race_1", "race_2", "race_3", "race_4", "race_5", "race_6", "race_7", "race_8", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Magic counterpart of 92, same layout."
+	},
+	"94": {
+		"type": "ESPER_KO_OR_DAMAGE",
+		"keys": ["modifier", "death_pct", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "Odin's Zantetsuken: 'Instantly KO or damage all enemies'. Layout like 112."
 	},
 	"95": {
 		"type": "PHYS_ELEMENT",
-		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "turn_count", ""]
+		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Imbue: adds the flagged elements to physical attacks."
 	},
 	"96": {
 		"type": "AOE_COVER",
-		"keys": ["", "", "dmg_reduce_min", "dmg_reduce_max", "pct_chance", "", "turn_count", "", "phys_mag"]
+		"keys": ["all_allies", "condition", "dmg_reduce_min", "dmg_reduce_max", "pct_chance", "", "turn_count", "", "phys_mag"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "phys_mag: 1 physical (191 rows), 2 magic (108), 0 both (32); missing in two Grandshelt Shield rows described as physical. The status goes on the effect's target, who covers (an ally with Illusion - Redirect, an enemy with Any Last Words?). all_allies 1 in 331 rows; 0 in two, 'guard one male ally' (with condition 2) and the monster's Bunny Block: a single-target cover of any ally. condition 2 = male allies only (a reading from that one row; passive 8 uses 1 for female)."
+	},
+	"97": {
+		"type": "MAGIC_MULTICAST",
+		"keys": ["magic_type", "cast_count", "skill_id", "turn_count", "", "", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "magic_type 0 any, 1 black, 2 white. turn_count counts the cast turn (3 = 'for two turns')."
+	},
+	"98": {
+		"type": "MULTICAST_SKILLS",
+		"keys": ["cast_count", "skill_id", "", "skill_ids", "turn_count", "", "", "", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Enable specific abilities to be used N times in one turn'. skill_id is a generated multicast ability. turn_count counts the cast turn (3 = 'for two turns')."
 	},
 	"99": {
 		"type": "REPLACEMENT",
-		"keys": ["", "condition", "", "true", "", "false"]
+		"keys": ["condition_types", "condition", "true_type", "true", "false_type", "false"],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "The skill becomes `true` if the caster used one of the `condition` skills last turn, otherwise `false` (the user's rule, 2026-10-05; 'Savage Blade: power up after using fast blade'). Each *_type is the skill type of the ids after it, as in 100's skill_types: 2 ability (767 condition entries, every true and false), 1 magic (8 condition entries, e.g. Blood Rend 910223 after Flare 20350)."
+	},
+	"100": {
+		"type": "UNLOCK_SKILLS",
+		"keys": ["skill_types", "skill_ids", "uses", "turn_count", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Enable X, Y for N turns' on the effect's targets (13 monster skills grant to the party). skill_types has one entry per id: 2 ability, 1 magic (checked against the ids). uses: 1 or 2 are uses; 0 (7 rows, none mentions uses) and 999 and up are unlimited. turn_count counts the cast turn (2 = 'for one turn', 4 = 'for three turns'); -1, 9999 and 99999 have no time limit. The turn_count 1 rows are cast by counters (passives 49, 50), battle-start and turn-start casts (56, 10002) and delayed casts (132), never by the player's own action. Slot 4 (1, or 0 on 15 rows) and slot 5 (a small number or a skill id; maybe a grant key) are not read."
 	},
 	"101": {
 		"type": "DAMAGE_REDUCE",
-		"keys": ["pct", "turn_count", "", ""]
+		"keys": ["pct", "turn_count", "", ""],
+		"family": "defense",
+		"confidence": "verified"
+	},
+	"102": {
+		"type": "DEF_DAMAGE",
+		"keys": ["", "max", "modifier"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Three-param rows are [100, max, modifier] like 103. Six-param rows are multicast (see variants).",
+		"variants": [
+			{"match": {"param_count": 6}, "type": "MULTICAST_SKILL_TYPES", "keys": ["skill_types", "skill_ids", "", "cast_count", "skill_id", ""], "family": "skill", "confidence": "verified", "notes": "All 494 six-param rows are 'Enable specific abilities to be used N times in one turn'; same layout as 168."}
+		]
 	},
 	"103": {
 		"type": "SPR_DAMAGE",
-		"keys": ["", "", "modifier"]
+		"keys": ["", "max", "modifier"],
+		"family": "damage",
+		"confidence": "verified"
+	},
+	"105": {
+		"type": "MP_DAMAGE",
+		"keys": ["pct", "max", "modifier"],
+		"family": "damage",
+		"confidence": "verified"
 	},
 	"111": {
 		"type": "REMOVE_STAT_DEBUFF",
-		"keys": ["ATK", "DEF", "MAG", "SPR", "STOP", "CHARM"]
+		"keys": ["ATK", "DEF", "MAG", "SPR", "STOP", "CHARM"],
+		"family": "status",
+		"confidence": "verified"
+	},
+	"112": {
+		"type": "DEATH_OR_PHYS_DAMAGE",
+		"keys": ["modifier", "death_pct", "", ""],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Slot 3 (-50) is DEF piercing, as in 21."
+	},
+	"113": {
+		"type": "DEATH_OR_MAG_DAMAGE",
+		"keys": ["modifier", "death_pct", "", ""],
+		"family": "damage",
+		"confidence": "verified"
+	},
+	"115": {
+		"type": "MONSTER_PHYS_GUARD",
+		"keys": ["pct", "", "turn_count", ""],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Monster-only 'Anti Weapon Activation'. pct 100 with turn_count 999 or 9999 reads as physical immunity; compare 18."
+	},
+	"116": {
+		"type": "MONSTER_MAG_GUARD",
+		"keys": ["pct", "", "turn_count", ""],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Magic counterpart of 115 ('Anti Magic Activation')."
+	},
+	"118": {
+		"type": "ST_COVER",
+		"keys": ["dmg_reduce_min", "dmg_reduce_max", "chance_pct", "turn_count", "", "physical_only"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "'Temporarily take physical and magic damage for one selected unit'. The caster covers the selected ally. Mitigation min/max as in 96; chance is 100 in every row. physical_only is 1 in two rows, Cover (Galuf) and the JP Hiding Bear ('takes physical attacks for one ally'), 0 in the 17 described as physical and magic (a reading). Slot 4 is 1 in every row."
+	},
+	"119": {
+		"type": "PHYS_COUNTER",
+		"keys": ["counter_chance", "", "modifier", "turn_count", "", "max"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "A timed chance to counter physical attacks with the normal attack (on the caster). Avoid 218520 '20,1,550,2,1,0' enhances to 914053 '50,1,1000,...': 'Boosts chance of countering (to 50%)', 'Boosts damage amount of counter attack (to 1000%)', so modifier is the counter's damage in percent of the attack. turn_count 99999 (the rows passive 56 casts) lasts the battle. max is read as counters per turn (5 x10, 0 x6, 3 x3; 0 = no cap). Slot 1 (1 in 23 of 27 rows) and slot 4 (mostly 1) are unknown and not read."
 	},
 	"120": {
 		"type": "LB_DAMAGE",
-		"keys": ["pct", "turn_count", "", ""]
+		"keys": ["pct", "turn_count", "", ""],
+		"family": "modifier",
+		"confidence": "verified"
+	},
+	"122": {
+		"type": "KO_IMMUNITY",
+		"keys": ["turn_count", ""],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "'Nullify instant KOs' (1 row, 99999 turns)."
+	},
+	"123": {
+		"type": "ALLY_COUNTER",
+		"keys": ["counter_chance", "", "modifier", "turn_count", "", "max"],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "'Add chance of counterattacking when an ally receives a physical attack' (variants: 'allies other than self', 'another ally'): the bearer counters attacks on its allies, not on itself. Same layout as 119 PHYS_COUNTER (Antagonize 216120 '50,1,150,5,1'); max 1 x15, 2 x7, 3 x6."
+	},
+	"124": {
+		"type": "EVOKE_DAMAGE",
+		"keys": ["", "", "", "", "", "", "", "modifier", "modifier_2", "stat_ratio"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "'Consume evocation gauge to damage'. stat_ratio is the [MAG, SPR] weighting (100:0, 50:50, 0:100). modifier_2 is set in 31% of rows."
+	},
+	"125": {
+		"type": "FILL_LB",
+		"keys": ["amount_min", "amount_max"],
+		"family": "resource",
+		"confidence": "verified",
+		"notes": "Amounts are gauge x100."
+	},
+	"126": {
+		"type": "CONSECUTIVE_PHYS_DAMAGE",
+		"keys": ["", "", "", "modifier", "modifier_increment", "modifier_increment_2", "max_stacks"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "Physical damage that powers up with consecutive use (Agent Olive's Scattering Shot). Same reading as 72: the wiki's base is modifier + modifier_increment, its stack modifier modifier_increment_2 (equal to modifier_increment in every row), its stack count max_stacks - 1. Slot 0 is 1 (3 on one row)."
 	},
 	"127": {
 		"type": "SHIELD",
-		"keys": ["HP", "turn_count", ""]
+		"keys": ["HP", "turn_count", ""],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "Barrier HP."
 	},
-	"1020":
-	{
+	"130": {
+		"type": "COOLDOWN_SKILL",
+		"keys": ["skill_id", "", "cooldown", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Wraps the ability in skill_id (3330 of 3332 resolve). cooldown = [turns, initial]: 'One use every N turns' is turns N-1 (all 811 rows of 4:4 say every 5 turns). initial equals turns or is 0; 0 presumably means not ready on turn 1. Use limits come from 1014 in the same skill."
+	},
+	"131": {
+		"type": "SONG_DOT",
+		"keys": ["damage_type", "modifier", "", "", "", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "'Deal fixed damage every turn to all enemies while singing' (1 row; damage_type 3 = fixed, as in 139)."
+	},
+	"132": {
+		"type": "DELAYED_CAST",
+		"keys": ["skill_id", "", "turn_delay", "chance_pct", "", "key"],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Casts the ability in skill_id (all 617 resolve) turn_delay turns after the turn of the cast: 1 = 'next turn'; 'three turns after the beginning of battle' is 3 on a battle-start cast. chance_pct is 100 in every row. key (absent in the 41 five-param rows) names the pending cast: the parent's id, the cast's id, a chain root's id or a small per-unit number, distinct within a parent; a new cast with a pending cast's key replaces it (the user's rule). Slot 1 (1 on every single-ally child and most renamed children, likely a display flag) and slot 4 (leans towards attacking children) are not read; nor the 7th param of 509591 and 512230."
+	},
+	"133": {
+		"type": "DEBUFF_TRANSFER",
+		"keys": ["ATK", "DEF", "MAG", "SPR", "", "", "", ""],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "'Remove ATK, DEF, MAG, and SPR reductions from one ally and place them on self'. Slots 4-7 are unnamed (compare 111's STOP/CHARM)."
+	},
+	"134": {
+		"type": "JUMP_ACTIVATED",
+		"keys": ["", "", "delay_min", "delay_max", "modifier"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "'Leap into the air, then attack one enemy next turn when activated': like 52, but the player lands it (LAND) from the turn delay_min turns later. delay_min equals delay_max in every row. A sixth param on 10 rows (Retribution, Warp-strike) is an animation path of x|y|z|pct waypoints, not read."
+	},
+	"136": {
+		"type": "SKILL_DAMAGE_BOOST",
+		"keys": ["skill_ids", "", "opcode_filter", "pct", "turn_count", "", "stack_id", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage of certain abilities'. skill_ids resolve to abilities and magic. opcode_filter (rare: 124, 70) limits the boost to effects with those opcodes. stack_id is not a skill id in most rows; presumably a non-stacking group."
+	},
+	"139": {
+		"type": "DAMAGE_OVER_TIME",
+		"keys": ["damage_type", "modifier", "", "", "turn_count", "", "stack_id"],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "'Deal gradual damage'. damage_type is 1, 3 or 4; 3 is fixed damage per turn ('Dissonant Sonata'). stack_id is often the skill's own id."
+	},
+	"140": {
+		"type": "STATUS_RESIST_DOWN",
+		"keys": ["poison", "blind", "sleep", "silence", "paralyze", "confusion", "disease", "petrify", "", "turn_count"],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "'Reduce resistance to poison, blind, ...' (ability) and monster skills named 'Resistance to <ailment> has been ...'. Values are 1 or -100 per ailment; what they scale is unconfirmed. Same layout as 7."
+	},
+	"141": {
+		"type": "REMOVE_BUFFS",
+		"keys": ["buff_types", ""],
+		"family": "status",
+		"confidence": "verified",
+		"notes": "'Remove ATK boosts' is 1; 1&2&3&4 removes ATK/DEF/MAG/SPR boosts; 9..16 remove elemental resistance boosts. Ids 17-36 are unmapped."
+	},
+	"142": {
+		"type": "MONSTER_COVER",
+		"keys": ["", "", "", "chance_pct", "turn_count", "", "", ""],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "Monster-only 'Cover - All' (4 rows)."
+	},
+	"144": {
+		"type": "ZOMBIE_INFLICT",
+		"keys": ["", "chance_pct", "", "", "", "", "", "", ""],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "Monster-only 'Zombie Virus' and 'Zombie Infection'."
+	},
+	"146": {
+		"type": "STATUS_RESIST_DOWN_V2",
+		"keys": ["ailments", "", "", "", "", "", "", "", "", "turn_count"],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "Monster-only ('Deranging Fear'); ailments is an 8-value list of percentages."
+	},
+	"148": {
+		"type": "STATUS_CURE_EXT",
+		"keys": ["ailments", "zombie"],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "'Cure zombie' and 'Cure poison ... stone, and zombie'. ailments is an 8-value flag list."
+	},
+	"149": {
+		"type": "ELEMENT_DAMAGE_BOOST",
+		"keys": ["", "elements", "", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "elements = pct per element (fire, ice, lightning, water, wind, earth, light, dark). Most skills carry it twice, with slot 0 = 0 and 1, for 'boost X damage of LB, abilities, and magic'; what the flag selects is unconfirmed."
+	},
+	"153": {
+		"type": "PHYS_RACE_MITIGATION",
+		"keys": ["race_1", "race_2", "race_3", "race_4", "race_5", "race_6", "", "turn_count", ""],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "'Reduce physical damage dealt by fairies'. Race slots are [race_id, pct] as in 92."
+	},
+	"154": {
+		"type": "MAG_RACE_MITIGATION",
+		"keys": ["race_1", "race_2", "race_3", "race_4", "race_5", "race_6", "", "turn_count", ""],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "Magic counterpart of 153, same layout."
+	},
+	"157": {
+		"type": "LIMITED_USE_SKILL",
+		"keys": ["skill_id", "", "uses", "", "", "", "", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "Wraps the ability in skill_id (all 579 resolve). uses matches '(N uses per battle)'; slot 3 always equals slot 2."
+	},
+	"159": {
+		"type": "BREAK_GAUGE_DAMAGE_BOOST",
+		"keys": ["weapon_types", "pct", "", "", "", ""],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "'Boost damage to break gauge for this ability when equipped with a katana'. weapon_types as in 163 (1 dagger, 2 sword, 3 large sword, 4 katana, 7 bow)."
+	},
+	"160": {
+		"type": "FIELD_EFFECT",
+		"keys": ["field_id"],
+		"family": "flow",
+		"confidence": "strong",
+		"notes": "'Activate area effect'. No table in ffbe-data.db holds the field ids (100000002..900000040), so the field effects themselves are unknown."
+	},
+	"162": {
+		"type": "ACCURACY_MOD",
+		"keys": ["pct", "", "turn_count", "", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "Positive values boost and negative values reduce the accuracy of physical attacks."
+	},
+	"163": {
+		"type": "WEAPON_RESIST_DOWN",
+		"keys": ["weapon_types", "pct_min", "pct_max", "", "turn_count", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Reduce resistance to staves'. weapon_types are equipment categories (seen: 2 sword, 4 katana, 5 staff, 6 rod, 10 spear) and may be a list."
+	},
+	"168": {
+		"type": "MULTICAST_SKILL_TYPES",
+		"keys": ["skill_types", "skill_ids", "", "cast_count", "skill_id", "", "turn_count", "", ""],
+		"family": "skill",
+		"confidence": "strong",
+		"notes": "Same layout as the six-param form of 102 plus three slots; skill_types values are 1, 2, 3, 5. turn_count counts the cast turn (3 = 'for two turns')."
+	},
+	"169": {
+		"type": "MP_CONSUME_DAMAGE",
+		"keys": ["", "", "", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "'Consume remaining MP to deal magic damage'. Slot 1 (10-250) may scale with MP spent; unconfirmed, so nothing is named."
+	},
+	"170": {
+		"type": "COOLDOWN_REDUCE",
+		"keys": ["turns", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "'Reduce turns required to use cooldown abilities'."
+	},
+	"171": {
+		"type": "LB_DAMAGE_BOOST_SPECIFIC",
+		"keys": ["lb_ids", "", "opcode_filter", "pct", "turn_count", "stack_id", ""],
+		"family": "modifier",
+		"confidence": "verified",
+		"notes": "'Boost damage of certain LBs'. lb_ids resolve to limit bursts (173 of 173) and are 0 in 78% of rows, presumably the caster's own LB. opcode_filter lists damage opcodes (e.g. 1&15&102&103&40&72&126)."
+	},
+	"1001": {
+		"type": "DOOM",
+		"keys": ["turn_count", "", "chance_pct"],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "Monster 'Death Declaration': KO after turn_count turns."
+	},
+	"1002": {
+		"type": "DOOM_DELAY",
+		"keys": ["turns", ""],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "'Delay effect of Death Declaration for three turns' (params 3,9)."
+	},
+	"1003": {
+		"type": "LB_FILL_PCT",
+		"keys": ["", "pct"],
+		"family": "resource",
+		"confidence": "strong",
+		"notes": "'Fill own LB gauge' (50) and 'completely fill' (100)."
+	},
+	"1005": {
+		"type": "BUFF_COPY",
+		"keys": ["", "", "", "buff_types"],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "'Apply caster's boosts to ...'. buff_types is a ';'-separated list, which _decode_param_token does not split on."
+	},
+	"1006": {
+		"type": "MULTICAST_SKILL_GROUP",
+		"keys": ["cast_count", "skill_ids"],
+		"family": "skill",
+		"confidence": "strong",
+		"notes": "'Use blood abilities twice in one turn' (4 rows)."
+	},
+	"1007": {
+		"type": "CONSECUTIVE_DAMAGE_V3",
+		"keys": ["", "", "modifier", "modifier_increment", "modifier_increment_2", "max_stacks"],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "'Point-Blank Shot' (2 rows), same layout as 72 but physical damage (attack type 1, 'Damage one enemy')."
+	},
+	"1011": {
+		"type": "SKIP_TURN",
+		"keys": ["turn_count"],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "'Skip next turn' (value 2); probably counts the cast turn like 100."
+	},
+	"1012": {
+		"type": "HEX",
+		"keys": ["chance_pct", "turn_count", "", "modifier", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "'Take damage based on their status ailments and enfeeblements'. Slot 4 is a ';'-separated list, which _decode_param_token does not split on."
+	},
+	"1013": {
+		"type": "MULTI_TARGET_SELECT",
+		"keys": ["target_count", ""],
+		"family": "skill",
+		"confidence": "strong",
+		"notes": "Skills that hit 'chosen enemies'; target_count is 3 in every row, so the player picks up to 3 targets."
+	},
+	"1014": {
+		"type": "USES_PER_BATTLE",
+		"keys": ["skill_id", "", "uses", "", "", ""],
+		"family": "skill",
+		"confidence": "verified",
+		"notes": "skill_id is the owning ability itself in 296 of 306 rows. uses matches '(N uses per battle)'; slot 3 equals slot 2. Pairs with 130."
+	},
+	"1015": {
+		"type": "MORALE_FILL",
+		"keys": ["amount", "", "", "", "", "per_turn", ""],
+		"family": "resource",
+		"confidence": "verified",
+		"notes": "'Fill morale gauge'. per_turn 1 = 'every turn' (2 in 75 rows, unconfirmed). Negative amounts on monster skills drain it."
+	},
+	"1016": {
+		"type": "MORALE_DAMAGE",
+		"keys": ["modifier", "damage_type", "", "", "", "", ""],
+		"family": "damage",
+		"confidence": "verified",
+		"notes": "'Deal morale-based damage'. damage_type 2 = magic (6 of 7 single-effect descriptions); 1 and 3 are likely physical and hybrid."
+	},
+	"1017": {
+		"type": "ELEMENT_ABSORB",
+		"keys": ["fire", "ice", "lightning", "water", "wind", "earth", "light", "dark", "turn_count", ""],
+		"family": "defense",
+		"confidence": "verified",
+		"notes": "'Convert fire damage received to HP restoration': one flag per element."
+	},
+	"1018": {
+		"type": "MORALE_BARRIER",
+		"keys": ["amount", "", "", "", "", "turn_count", ""],
+		"family": "defense",
+		"confidence": "strong",
+		"notes": "'Activate morale-based barrier'. amount and turn_count are read from value ranges; the morale-scaling slots are unnamed."
+	},
+	"1019": {
+		"type": "HEAL_REDUCTION",
+		"keys": ["pct", "", "turn_count", ""],
+		"family": "status",
+		"confidence": "strong",
+		"notes": "'Reduce HP restoration amount for all enemies'."
+	},
+	"1020": {
 		"type": "RESTORE_CHARGE",
-		"keys": ["ability_id", "restore_amount", ""]
+		"keys": ["ability_id", "restore_amount", ""],
+		"family": "skill",
+		"confidence": "strong",
+		"notes": "Slot 0 lists abilities, restore_amount 1-2; likely restores uses or charges of those abilities."
+	},
+	"1022": {
+		"type": "SKILL_DAMAGE_BOOST_EXT",
+		"keys": ["skill_ids", "", "opcode_filter", "pct", "", "", "", "", "turn_count", "", "skill_id", ""],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "Twelve-param form of 136: skill_ids resolve to abilities; opcode_filter is often 1016 (morale damage). skill_id is the owning ability or a related one."
+	},
+	"1023": {
+		"type": "LB_DAMAGE_BOOST_EXT",
+		"keys": ["lb_ids", "", "opcode_filter", "pct", "", "", "", "", "turn_count", "", "skill_id", ""],
+		"family": "modifier",
+		"confidence": "strong",
+		"notes": "Twelve-param form of 171: lb_ids resolve to limit bursts (0 in 82% of rows). Descriptions add conditions ('when <unit> is in party', 'at the beginning of battle') that probably sit on the granting passive."
+	},
+	"1024": {
+		"type": "MORALE_EVOKE_DAMAGE",
+		"keys": ["modifier", "", "stat_ratio", "", "", "", ""],
+		"family": "damage",
+		"confidence": "strong",
+		"notes": "'Consume evocation gauge to deal morale-based evocation damage'; stat_ratio as in 124."
 	}
 }

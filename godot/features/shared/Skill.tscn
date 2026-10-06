@@ -23,9 +23,10 @@ expand_mode = 1
 
 [node name="unit_magic_icon_1" type="TextureRect" parent="." unique_id=740905204]
 layout_mode = 0
-offset_left = -3.0
-offset_right = 69.0
-offset_bottom = 72.0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 70.0
+offset_bottom = 70.0
 
 [node name="unit_magic_unavailable_reason_1" type="TextureRect" parent="." unique_id=1656987001]
 visible = false

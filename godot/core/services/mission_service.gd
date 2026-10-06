@@ -76,8 +76,9 @@ func request_start_mission(mission_id: String) -> Dictionary:
 		if PlayerProfile.current_nrg < cost_amount:
 			return {"success": false, "error": "Not enough NRG to start this mission."}
 		PlayerProfile.deduct_nrg(cost_amount)
-
-	last_entered_mission_id = str(mission_id)
+	
+	if int(mission_data.get("worldId")) != 2:
+		last_entered_mission_id = str(mission_id)
 
 	# Stats snapshot bundles last_entered_mission_id with the profile blob.
 	# We will handle it by creating a method in PlayerProfile that does this and saves.
@@ -86,7 +87,7 @@ func request_start_mission(mission_id: String) -> Dictionary:
 
 
 ## Finishes a mission. `unit_exp` and `battle_gil` are what the battle accumulated
-## from defeated enemies (BattleManager.mission_unit_exp / mission_gil): every unit
+## from defeated enemies (RewardLedger.unit_exp / gil, via BattleDirector): every unit
 ## in the party that ran the mission gains the full unit EXP, and the battle gil is
 ## paid out on top of the mission's own gil reward.
 func request_finish_mission(win_status: bool, mission_id: String, used_items: Dictionary = {}, challenge_results: Array = [], mission_drops: Array = [], unit_exp: int = 0, battle_gil: int = 0) -> Dictionary:
@@ -150,7 +151,7 @@ func request_finish_mission(win_status: bool, mission_id: String, used_items: Di
 		var current_qty: int = int(owned_items["stackables"].get(drop_id, 0))
 		owned_items["stackables"][drop_id] = current_qty + 1
 
-	last_entered_mission_id = str(mission_id)
+	#last_entered_mission_id = str(mission_id)
 
 	var rewards_text: String = ""
 	if granted_gil > 0:
@@ -250,7 +251,7 @@ func _grant_reward(reward: Array):
 
 
 ## Instance ids of the party that ran the mission, in slot order (empty slots are
-## skipped). Mirrors the party BattleManager builds when it starts a battle:
+## skipped). Mirrors the party BattleBuilder.active_party_units builds a battle from:
 ## the active party, falling back to the first saved one.
 func _active_party_instance_ids() -> Array:
 	if PartyService.parties.is_empty():

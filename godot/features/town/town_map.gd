@@ -108,12 +108,15 @@ func init_scene(params: Dictionary) -> void:
 	current_town_id = town_id
 	_load_town(town_id)
 
-# The town id (e.g. "1102") is NOT the on-disk folder name. The real folder id
-# is encoded in the town's icon (TOWN.iconFile): "map_icon_<digits>.png" ->
-# "<digits>00". Returns "" if the town is unknown or its icon doesn't follow the
-# expected convention.
+# The town id (e.g. "1102") is NOT the on-disk folder name. Prefer the canonical
+# map resource resolved from TOWN.fileInfo; several special towns deliberately
+# reuse another location's icon. Keep the icon convention as a legacy fallback.
 func _resolve_town_folder_id(town_id: String) -> String:
-	var icon: String = str(GameDatabase.get_town(town_id).get("iconFile", ""))
+	var town: Dictionary = GameDatabase.get_town(town_id)
+	var folder_id: String = str(town.get("mapFolderId", ""))
+	if folder_id != "":
+		return folder_id
+	var icon: String = str(town.get("iconFile", ""))
 	if icon == "":
 		return ""
 	var base: String = icon.get_file().get_basename()

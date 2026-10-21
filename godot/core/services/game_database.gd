@@ -297,18 +297,22 @@ func get_store_items(store_id: String) -> Array:
 	)
 
 
-## A single town row (townName, iconFile) for the town scene, or {} if unknown.
-## `townName` is the display name; `iconFile` ("map_icon_<digits>.png", in
-## assets/map_icons, resolved via town.iconId -> icon.iconFile) also encodes the
-## on-disk town-data folder id.
+## A single town row for the town scene, or {} if unknown. `mapFolderId` is the
+## canonical on-disk folder resolved from town.fileInfo -> resource_map. iconFile
+## remains available for the map pin and as a legacy fallback.
 func get_town(town_id: String) -> Dictionary:
 	var rows: Array = query(
-		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile, COALESCE(t.openSwitch, '') AS openSwitch FROM town t"
+		"SELECT t.name AS townName, COALESCE(i.iconFile, '') AS iconFile,"
+		+ " COALESCE(t.openSwitch, '') AS openSwitch, COALESCE(t.fileInfo, '') AS fileInfo FROM town t"
 		+ " LEFT JOIN icon i ON i.iconId = t.iconId"
 		+ " WHERE t.townId = ? LIMIT 1",
 		[town_id]
 	)
-	return rows[0] if not rows.is_empty() else {}
+	if rows.is_empty():
+		return {}
+	var town: Dictionary = rows[0]
+	town["mapFolderId"] = get_map_id_for_resource(str(town.get("fileInfo", "")))
+	return town
 
 func get_story_sub(town_id: String) -> Array:
 	return query("SELECT storySubId, storyId, storyNo, locationType, targetId, switchInfo, openSwitch FROM story_sub WHERE targetId = ?", [town_id])
@@ -327,6 +331,24 @@ func get_event_id_for_resource(resource_csv: String) -> String:
 	if rows.is_empty():
 		return ""
 	return str(rows[0].get("fileName", "")).get_basename()  # "111010203.cpk" -> "111010203"
+
+
+## Resolves a resource list to its first map cpk folder. Town fileInfo is usually
+## one map id, but Farplane also lists sound resources, so filter by resource kind.
+func get_map_id_for_resource(resource_csv: String) -> String:
+	if resource_csv == null or str(resource_csv).strip_edges() == "":
+		return ""
+	for token in str(resource_csv).split(","):
+		var resource_id: String = token.strip_edges()
+		if not resource_id.is_valid_int():
+			continue
+		var rows: Array = query(
+			"SELECT fileName FROM resource_map WHERE resourceId = ? AND drE35YcF = 'map' LIMIT 1",
+			[int(resource_id)]
+		)
+		if not rows.is_empty():
+			return str(rows[0].get("fileName", "")).get_basename()
+	return ""
 
 
 func get_quests_for_town(town_id: String) -> Array:

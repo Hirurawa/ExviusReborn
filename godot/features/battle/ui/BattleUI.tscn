@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://broo6sqmyl0c4" path="res://features/battle/ui/enemy_field.gd" id="26_enemy_field"]
 [ext_resource type="Script" uid="uid://dj2nw852vsili" path="res://features/battle/ui/party_field.gd" id="27_party_field"]
 [ext_resource type="Script" uid="uid://c1ohe05rkmu3y" path="res://features/battle/ui/battle_menus.gd" id="28_menus"]
+[ext_resource type="Script" path="res://features/battle/ui/battle_background.gd" id="29_background"]
 [ext_resource type="PackedScene" uid="uid://eupai3x1p8wt" path="res://features/battle/ui/UnitInfoPopup.tscn" id="4_popup"]
 [ext_resource type="Texture2D" uid="uid://cnhfbhvsnu0ar" path="res://assets/ui/battle/battle_bg_ally.tres" id="5_party_bg"]
 [ext_resource type="Texture2D" uid="uid://4iruksxhhilr" path="res://assets/ui/battle/battle_com_bg.tres" id="6_bottom_bar"]
@@ -110,13 +111,15 @@ unique_name_in_owner = true
 script = ExtResource("3_director")
 session = NodePath("../BattleSession")
 
-[node name="Background" type="TextureRect" parent="." unique_id=533043043]
+[node name="Background" type="TextureRect" parent="." node_paths=PackedStringArray("front") unique_id=533043043]
 custom_minimum_size = Vector2(640, 0)
 layout_mode = 0
 offset_right = 640.0
 offset_bottom = 540.0
 expand_mode = 1
 stretch_mode = 3
+script = ExtResource("29_background")
+front = NodePath("../BackgroundFront")
 
 [node name="VisualLayer" type="Control" parent="." unique_id=1226300491]
 layout_mode = 1
@@ -403,6 +406,16 @@ offset_left = 511.0
 offset_top = 350.0
 offset_right = 613.0
 offset_bottom = 452.0
+mouse_filter = 2
+
+[node name="BackgroundFront" type="Control" parent="." unique_id=1530000001]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -496.0
+grow_horizontal = 2
 mouse_filter = 2
 
 [node name="RewardsPopup" type="AcceptDialog" parent="." unique_id=461772511]

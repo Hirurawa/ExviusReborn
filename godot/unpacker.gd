@@ -104,7 +104,7 @@ func _parse_plist_sprites(plist_path: String) -> Array[Dictionary]:
 				is_next_line_rect = false
 				continue
 
-			if key_name == "textureRect" and current_sprite_name != "":
+			if (key_name == "textureRect" or key_name == "frame") and current_sprite_name != "":
 				is_next_line_rect = true
 				continue
 

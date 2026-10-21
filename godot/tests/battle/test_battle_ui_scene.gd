@@ -13,6 +13,8 @@ const POTION: String = "101000100"
 
 var _screen: BattleScreen = null
 var _finished: Array = []
+## The cutscenes the screen was asked to play.
+var _scenes: Array[String] = []
 
 
 func before_each() -> void:
@@ -26,6 +28,9 @@ func before_each() -> void:
 		_finished.append([win, mission_id, used_items, results, drops, unit_exp, gil])
 	director.kill_recorder = func(_template_id: String) -> void: pass
 	director.wait = func(_seconds: float) -> Variant: return null
+	_screen.cutscene_player = func(story_event_id: String, _mission_id: String) -> Dictionary:
+		_scenes.append(story_event_id)
+		return {}
 
 
 ## Detached now, freed at the end of the frame: TouchScrollInstaller's deferred calls
@@ -99,6 +104,38 @@ func test_the_test_battle_opens_with_its_party_and_enemy() -> void:
 	var gauge: Range = _screen.get_node("VisualLayer/SummonGaugeBg/BattleSummonBar")
 	assert_eq([gauge.value, gauge.max_value], [0.0, float(engine.rules.esper_gauge_max)])
 	assert_not_null(_screen.background.texture, "the colosseum background")
+	assert_eq(_screen.background.players, [], "the colosseum has no animations")
+
+
+## Dalnakya Cavern's waterfalls and moss play over its jpg, under the units, with their
+## origin 216 px below the picture's centre: on the line between field and panels.
+func test_a_missions_background_plays_its_animation_over_the_jpg() -> void:
+	if BattleBackground.ssbp_path("battle_bg_0005_01.ssbp") == "":
+		return
+	_screen._apply_battle_background("1110301")
+	var players: Array[SsbpPlayer] = _screen.background.players
+	assert_eq(players.size(), 1)
+	assert_eq(players[0].get_parent(), _screen.background, "under the units")
+	assert_eq(players[0].animation, "back/anime")
+	assert_eq(players[0].global_position, Vector2(320, 270 + 216))
+	assert_eq(_screen.background.texture.get_size(), Vector2(960, 1024))
+
+
+## Latius Woods adds light rays over the units, clipped to the field above the panels.
+func test_a_front_layer_plays_over_the_units() -> void:
+	if BattleBackground.ssbp_path("battle_bg_0003_01.ssbp") == "":
+		return
+	_screen._apply_battle_background("1110201")
+	var players: Array[SsbpPlayer] = _screen.background.players
+	assert_eq(players.map(func(p: SsbpPlayer) -> String: return p.animation), ["back/anime", "front/anime"])
+	var front: Control = _screen.get_node("BackgroundFront")
+	assert_eq(players[1].get_parent(), front)
+	assert_eq(players[1].global_position, players[0].global_position, "one origin for both")
+	assert_true(front.get_index() > _screen.party_field.get_index(), "drawn after the party")
+	assert_true(front.clip_contents)
+	assert_eq(front.get_global_rect().end.y, _screen.get_node("VisualLayer/PartyBackdrop").get_global_rect().position.y, "stops where the panels' backdrop starts")
+	_screen._apply_battle_background("1110301")
+	assert_eq(front.get_child_count(), 0, "a new background drops the old animations")
 
 
 # === Commands ===
@@ -435,5 +472,6 @@ func test_a_mission_plays_its_dialogue_and_changes_wave() -> void:
 	assert_eq(_screen.get_node("%TurnLabel").text, "Turn 1", "the turn restarts each wave")
 
 	_play()
+	assert_eq(_scenes, ["1001001"] as Array[String], "the prologue's outro, main0-0_OP")
 	assert_eq(_finished.size(), 1)
 	assert_eq(_finished[0].slice(0, 2), [true, mission_id])

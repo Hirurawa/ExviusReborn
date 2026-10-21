@@ -1,6 +1,9 @@
 extends Control
 
 const INTRO_MISSION_ID: String = "1110100"
+## main0-0_OP1, before the intro mission: its page plays the opening movie (op_clip.usm,
+## not played yet). ❓ What starts the night-sky dialogue on the same layer.
+const OPENING_STORY_EVENT: String = "1001000"
 const ANDROID_PCK_PATH: String = "/storage/emulated/0/Android/data/com.hirurawa.exviusreborn/files/assets.pck"
 
 # Persists across scene re-entry within the process: ProjectSettings.load_resource_pack
@@ -165,6 +168,7 @@ func _on_new_game_created(_username: String) -> void:
 	UIManager.push("game_ui")
 	await get_tree().process_frame
 	_log_mem("after push game_ui")
+	await StoryFlow.play_scenes([StoryFlow.story_event_scene(OPENING_STORY_EVENT)])
 
 	var mission_result: Dictionary = MissionService.request_start_mission(INTRO_MISSION_ID)
 	_log_mem("after request_start_mission")

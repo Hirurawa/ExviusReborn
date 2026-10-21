@@ -1,302 +1,239 @@
-extends Node2D
 class_name EventActor
+extends Node2D
 
-# One on-stage actor in a running event. Wraps an AnimatedSprite2D
-# whose SpriteFrames are built at runtime from ANIM_REGIONS (the
-# uniform 64x64 grid layout shared by every map_characterN.png sheet --
-# extracted verbatim from player.tscn). The source PNG is swapped per
-# actor: PC slot N -> map_characterN.png. Provides tween-driven
-# move / face / visibility helpers used by event_runner.gd.
+## One actor on the cutscene stage: a party member (a script's kind-0 reference, sheet
+## map_character<N>.png) or a record of the event bin. `position` is the world position
+## the script gives, the top-left of the 58 px tile the actor stands on.
+##
+## EventStage calls tick() once per frame (60 per second); moves, facing and the emote
+## bubble all advance there, so a scene plays the same frame for frame every time. Only
+## the walk cycle's frames run on the sprite's own clock.
 
-const PLACEHOLDER_SIZE := 32
-const PLACEHOLDER_PARTY_COLOR := Color(0.3, 0.7, 1.0, 0.9)
-const PLACEHOLDER_NPC_COLOR := Color(0.9, 0.6, 0.3, 0.9)
-const TILE_SIZE := 58.0
-const FRAMES_PER_SECOND := 60.0
-const MAP_COMMON_PATH := "res://assets/map_common/"
-const ANIM_FPS := 5.0
-# Character sprites are rendered at 2x. The in-game placement anchors
-# at the TOP-LEFT of the unscaled 64x64 cell rather than at the feet,
-# so we disable AnimatedSprite2D.centered and offset the sprite by
-# (-32, -32) -- the same spot the top-left of an un-scaled, centered
-# sprite would have occupied. Scaling then grows the sprite down-right
-# from that anchor, matching how the original engine positions actors.
-const SPRITE_SCALE := 2.0
-const SPRITE_OFFSET := Vector2(-32, -32)
+const MAP_COMMON: String = "res://assets/map_common/"
+const SPRITE_SCALE: float = 2.0
+## Centre of the scaled sprite cell relative to `position`: the middle of the tile's top
+## edge. Measured against the map in both recordings (deck, bridge, forest, shrine,
+## forge: 17 to 22 px above the first estimate of y + 21, which had assumed the camera
+## point at the screen centre), within about 3 px.
+const SPRITE_CENTER: Vector2 = Vector2(29, 0)
+## Emote bubble centre relative to `position`, before the command's own y offset: Rain's
+## "!" (offset -1) and Lasswell's (offset -10) on the deck.
+const BUBBLE_CENTER: Vector2 = Vector2(29, -83)
+## The 64 px icon drew 42 px wide in the recording (❓).
+const BUBBLE_SCALE: float = 0.75
+const BUBBLE_CELL: int = 64
+const BUBBLE_FRAME_TICKS: int = 15
+const WALK_FPS: float = 10.0  # ❓ not measured yet
+const DIRECTIONS: Array[String] = ["down", "up", "left", "right"]
+const DOWN: int = 0
+const UP: int = 1
+const LEFT: int = 2
+const RIGHT: int = 3
 
-# Emoticon bubble atlas (`map_common/emotion_icon.png`). 2 cols x 12
-# rows of 64x64 cells; the two columns are the two animation frames
-# of a single emote, rows index by (bubble_id - 1).
-const EMOTION_ATLAS_PATH := MAP_COMMON_PATH + "emotion_icon.png"
-const EMOTION_CELL := 64
-const EMOTION_FRAME_COUNT := 2
-const EMOTION_FPS := 4.0
-# Bubble sits just above the (scaled) sprite. With top-left anchor at
-# (-32, -32) and scale 2x the sprite spans x: -32..96, y: -32..96, so
-# the head's horizontal centre is at x=32 (not x=0).
-const BUBBLE_OFFSET := Vector2(32, -48)
-
-# (pose, facing) -> animation name in ANIM_REGIONS. The .bin only
-# encodes 4 cardinals so diagonals aren't reachable from event data;
-# the diagonal anims still exist in ANIM_REGIONS if we ever need them.
-const POSE_FACING_TO_ANIM := {
-	"idle": {"down": "idle_down", "up": "idle_up", "left": "idle_left", "right": "idle_right"},
-	"walk": {"down": "walk_down", "up": "walk_up", "left": "walk_left", "right": "walk_right"},
-	"run":  {"down": "run_down",  "up": "run_up",  "left": "run_left",  "right": "run_right"},
-}
-
-# Animation regions for every map_characterN.png sheet (uniform 64x64
-# grid). Extracted verbatim from player.tscn -- if that atlas layout
-# ever changes, regenerate this dict from the SpriteFrames sub-resource
-# rather than hand-editing.
-const ANIM_REGIONS := {
+## Animation regions of every map_character<N>.png (a uniform 64 px grid), taken from
+## player.tscn's SpriteFrames.
+const ANIM_REGIONS: Dictionary = {
 	"idle_down": [Rect2(0, 0, 64, 64)],
-	"idle_down_left": [Rect2(0, 256, 64, 64)],
-	"idle_down_right": [Rect2(0, 320, 64, 64)],
+	"idle_up": [Rect2(0, 64, 64, 64)],
 	"idle_left": [Rect2(0, 128, 64, 64)],
 	"idle_right": [Rect2(0, 192, 64, 64)],
-	"idle_up": [Rect2(0, 64, 64, 64)],
-	"idle_up_left": [Rect2(0, 384, 64, 64)],
-	"idle_up_right": [Rect2(0, 448, 64, 64)],
-	"run_down": [Rect2(64, 512, 64, 64), Rect2(128, 512, 64, 64), Rect2(192, 512, 64, 64), Rect2(256, 512, 64, 64), Rect2(320, 512, 64, 64), Rect2(384, 512, 64, 64)],
-	"run_down_left": [Rect2(64, 768, 64, 64), Rect2(128, 768, 64, 64), Rect2(192, 768, 64, 64), Rect2(256, 768, 64, 64), Rect2(320, 768, 64, 64), Rect2(384, 768, 64, 64)],
-	"run_down_right": [Rect2(64, 832, 64, 64), Rect2(128, 832, 64, 64), Rect2(192, 832, 64, 64), Rect2(256, 832, 64, 64), Rect2(320, 832, 64, 64), Rect2(384, 832, 64, 64)],
-	"run_left": [Rect2(64, 640, 64, 64), Rect2(128, 640, 64, 64), Rect2(192, 640, 64, 64), Rect2(256, 640, 64, 64), Rect2(320, 640, 64, 64), Rect2(384, 640, 64, 64)],
-	"run_right": [Rect2(64, 704, 64, 64), Rect2(128, 704, 64, 64), Rect2(192, 704, 64, 64), Rect2(256, 704, 64, 64), Rect2(320, 704, 64, 64), Rect2(384, 704, 64, 64)],
-	"run_up": [Rect2(64, 576, 64, 64), Rect2(128, 576, 64, 64), Rect2(192, 576, 64, 64), Rect2(256, 576, 64, 64), Rect2(320, 576, 64, 64), Rect2(384, 576, 64, 64)],
-	"run_up_left": [Rect2(64, 896, 64, 64), Rect2(128, 896, 64, 64), Rect2(192, 896, 64, 64), Rect2(256, 896, 64, 64), Rect2(320, 896, 64, 64), Rect2(384, 896, 64, 64)],
-	"run_up_right": [Rect2(64, 960, 64, 64), Rect2(128, 960, 64, 64), Rect2(192, 960, 64, 64), Rect2(256, 960, 64, 64), Rect2(320, 960, 64, 64), Rect2(384, 960, 64, 64)],
 	"walk_down": [Rect2(64, 1024, 64, 64), Rect2(128, 1024, 64, 64), Rect2(192, 1024, 64, 64), Rect2(256, 1024, 64, 64), Rect2(320, 1024, 64, 64), Rect2(384, 1024, 64, 64)],
-	"walk_down_left": [Rect2(64, 1280, 64, 64), Rect2(128, 1280, 64, 64), Rect2(192, 1280, 64, 64), Rect2(256, 1280, 64, 64), Rect2(320, 1280, 64, 64), Rect2(384, 1280, 64, 64)],
-	"walk_down_right": [Rect2(64, 1344, 64, 64), Rect2(128, 1344, 64, 64), Rect2(192, 1344, 64, 64), Rect2(256, 1344, 64, 64), Rect2(320, 1344, 64, 64), Rect2(384, 1344, 64, 64)],
+	"walk_up": [Rect2(64, 1088, 64, 64), Rect2(128, 1088, 64, 64), Rect2(192, 1088, 64, 64), Rect2(256, 1088, 64, 64), Rect2(320, 1088, 64, 64), Rect2(384, 1088, 64, 64)],
 	"walk_left": [Rect2(64, 1152, 64, 64), Rect2(128, 1152, 64, 64), Rect2(192, 1152, 64, 64), Rect2(256, 1152, 64, 64), Rect2(320, 1152, 64, 64), Rect2(384, 1152, 64, 64)],
 	"walk_right": [Rect2(64, 1216, 64, 64), Rect2(128, 1216, 64, 64), Rect2(192, 1216, 64, 64), Rect2(256, 1216, 64, 64), Rect2(320, 1216, 64, 64), Rect2(384, 1216, 64, 64)],
-	"walk_up": [Rect2(64, 1088, 64, 64), Rect2(128, 1088, 64, 64), Rect2(192, 1088, 64, 64), Rect2(256, 1088, 64, 64), Rect2(320, 1088, 64, 64), Rect2(384, 1088, 64, 64)],
-	"walk_up_left": [Rect2(64, 1408, 64, 64), Rect2(128, 1408, 64, 64), Rect2(192, 1408, 64, 64), Rect2(256, 1408, 64, 64), Rect2(320, 1408, 64, 64), Rect2(384, 1408, 64, 64)],
-	"walk_up_right": [Rect2(64, 1472, 64, 64), Rect2(128, 1472, 64, 64), Rect2(192, 1472, 64, 64), Rect2(256, 1472, 64, 64), Rect2(320, 1472, 64, 64), Rect2(384, 1472, 64, 64)],
 }
 
-var actor_id: int = 0
-var is_npc: bool = false                       # variant=1 -> ext_ref=0x030d NPC
-var facing: String = "down"
-var pose: String = "idle"                      # idle | walk | run
-var _placeholder: ColorRect
-var _sprite: AnimatedSprite2D
-var _bubble_sprite: AnimatedSprite2D
-var _active_tween: Tween = null
-var _bubble_tween: Tween = null
-static var _emotion_tex_cache: Texture2D = null
+static var _sheet_cache: Dictionary = {}
+static var _emotion_texture: Texture2D
 
-func _ready() -> void:
-	z_index = 5  # above ground / static decor (matches player.gd)
-	var built := false
-	if not is_npc:
-		built = _try_build_sprite()
-	if not built:
-		_build_placeholder()
-	_build_bubble()
-	_update_animation()
+## "pc<N>" for party members, "e<slot>" for records.
+var key: String = ""
+var facing: int = DOWN
+var moving: bool = false
 
-func _try_build_sprite() -> bool:
-	# PC slot N -> map_characterN.png. Uniform 64x64 grid; all
-	# animations defined by ANIM_REGIONS apply identically.
-	var path := MAP_COMMON_PATH + "map_character%d.png" % actor_id
-	if not ResourceLoader.exists(path):
-		push_warning("EventActor: sheet not found at %s" % path)
+var _target: Vector2 = Vector2.ZERO
+var _speed: float = 0.0
+## "sheet" (map_character), "npc" (4x4 npc sheet), "image" (a still) or "" (nothing drawn).
+var _kind: String = ""
+var _sprite: Node2D = null
+var _bubble: Sprite2D = null
+var _bubble_row: int = 0
+var _bubble_ticks: int = 0
+var _bubble_age: int = 0
+
+
+## A party member: map_character<index>.png.
+func use_party_sheet(index: int) -> bool:
+	return _use_sheet(MAP_COMMON + "map_character%d.png" % index)
+
+
+## A record's graphic (EventBin.Page.graphic). A character id is an `npc` row or an npc
+## texture id (all 923 in the dump resolve to an npc sheet; 13 is "Gran", the
+## Grandshelt soldier, not map_character13.png). `images` maps image ids to texture
+## paths (the bin's manifest and map_common/common_image.txt). Returns false when
+## nothing could be drawn; the actor still exists and moves, it is just invisible.
+func use_graphic(graphic: Dictionary, images: Dictionary, size: Vector2i) -> bool:
+	if graphic.has("character"):
+		var npc: AnimatedSprite2D = NpcSpriteBuilder.build(int(graphic["character"]))
+		if npc == null:
+			return false
+		npc.stop()
+		_attach(npc, "npc")
+		return true
+	if graphic.has("image"):
+		var texture_path: String = str(images.get(int(graphic["image"]), ""))
+		if texture_path == "" or not ResourceLoader.exists(texture_path):
+			return false
+		var still := Sprite2D.new()
+		still.texture = load(texture_path)
+		still.region_enabled = true
+		still.region_rect = Rect2(int(graphic["src_x"]), int(graphic["src_y"]), size.x, size.y)
+		_attach(still, "image")
+		return true
+	return false
+
+
+func face(direction: int) -> void:
+	facing = clampi(direction, DOWN, RIGHT)
+	_update_pose()
+
+
+## Starts a move to `target` at `speed` px per frame; 0 jumps there at once. The actor
+## turns to the move's main axis and walks (❓ the move's trailer bytes may control
+## both; see CUTSCENE-PLAN.md section 5).
+func move_to(target: Vector2, speed: float) -> void:
+	if speed <= 0.0 or target.is_equal_approx(position):
+		position = target
+		moving = false
+		_update_pose()
+		return
+	var delta: Vector2 = target - position
+	if absf(delta.x) >= absf(delta.y):
+		facing = RIGHT if delta.x > 0 else LEFT
+	else:
+		facing = DOWN if delta.y > 0 else UP
+	_target = target
+	_speed = speed
+	moving = true
+	_update_pose()
+
+
+## Shows emote `bubble_id` (1-based row of emotion_icon.png) for `ticks` frames.
+func show_bubble(bubble_id: int, ticks: int, offset_y: int) -> void:
+	if bubble_id < 1 or bubble_id > 12:
+		return
+	if _bubble == null:
+		_bubble = Sprite2D.new()
+		_bubble.texture = _emotion_atlas()
+		_bubble.region_enabled = true
+		_bubble.scale = Vector2(BUBBLE_SCALE, BUBBLE_SCALE)
+		_bubble.z_index = 10
+		add_child(_bubble)
+	_bubble_row = bubble_id - 1
+	_bubble_ticks = maxi(ticks, 1)
+	_bubble_age = 0
+	_bubble.position = BUBBLE_CENTER + Vector2(0, offset_y)
+	_bubble.region_rect = Rect2(0, _bubble_row * BUBBLE_CELL, BUBBLE_CELL, BUBBLE_CELL)
+	_bubble.visible = true
+
+
+## One frame: the move and the bubble.
+func tick() -> void:
+	if moving:
+		var delta: Vector2 = _target - position
+		var distance: float = delta.length()
+		if distance <= _speed:
+			position = _target
+			moving = false
+			_update_pose()
+		else:
+			position += delta / distance * _speed
+	if _bubble != null and _bubble.visible:
+		_bubble_age += 1
+		if _bubble_age >= _bubble_ticks:
+			_bubble.visible = false
+		else:
+			var column: int = (_bubble_age / BUBBLE_FRAME_TICKS) % 2
+			_bubble.region_rect = Rect2(column * BUBBLE_CELL, _bubble_row * BUBBLE_CELL, BUBBLE_CELL, BUBBLE_CELL)
+
+
+## Moving or showing a bubble: what `advance` waits for.
+func is_busy() -> bool:
+	return moving or (_bubble != null and _bubble.visible)
+
+
+func has_sprite() -> bool:
+	return _sprite != null
+
+
+func _use_sheet(texture_path: String) -> bool:
+	if not ResourceLoader.exists(texture_path):
 		return false
-	var tex: Texture2D = load(path)
-	if tex == null:
-		return false
-	_sprite = AnimatedSprite2D.new()
-	_sprite.centered = false
-	_sprite.position = SPRITE_OFFSET
-	_sprite.scale = Vector2(SPRITE_SCALE, SPRITE_SCALE)
-	_sprite.sprite_frames = _build_sprite_frames(tex)
-	add_child(_sprite)
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = _sheet_frames(texture_path)
+	sprite.centered = true
+	_attach(sprite, "sheet")
 	return true
 
-func _build_sprite_frames(tex: Texture2D) -> SpriteFrames:
-	var frames := SpriteFrames.new()
-	# Drop the auto-created "default" animation.
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-	for anim_name in ANIM_REGIONS.keys():
-		var rects: Array = ANIM_REGIONS[anim_name]
-		frames.add_animation(anim_name)
-		frames.set_animation_loop(anim_name, true)
-		frames.set_animation_speed(anim_name, ANIM_FPS)
-		for rect in rects:
-			var at := AtlasTexture.new()
-			at.atlas = tex
-			at.region = rect
-			frames.add_frame(anim_name, at)
-	return frames
 
-func _build_placeholder() -> void:
-	# NPC with no sheet, or a PC sheet missing on disk -- show a
-	# coloured rect so the actor remains visible and debuggable.
-	_placeholder = ColorRect.new()
-	_placeholder.color = PLACEHOLDER_NPC_COLOR if is_npc else PLACEHOLDER_PARTY_COLOR
-	_placeholder.size = Vector2(PLACEHOLDER_SIZE, PLACEHOLDER_SIZE)
-	_placeholder.position = Vector2(-PLACEHOLDER_SIZE * 0.5, -PLACEHOLDER_SIZE * 0.5)
-	_placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_placeholder)
+## Party sheets (64 px cells) are centred on SPRITE_CENTER. NPC sheets and stills
+## (58 px cells) hang from their top-left corner at `position`, as the town draws its
+## NPCs: a bridge soldier's centre sat 60 px right of and 57 px below its record's
+## position in the recording, against 58 and 58 for this rule.
+func _attach(sprite: Node2D, kind: String) -> void:
+	_sprite = sprite
+	_kind = kind
+	if kind == "sheet":
+		sprite.position = SPRITE_CENTER
+	else:
+		sprite.set("centered", false)
+		sprite.position = Vector2.ZERO
+	sprite.scale = Vector2(SPRITE_SCALE, SPRITE_SCALE)
+	add_child(sprite)
+	_update_pose()
 
-func _build_bubble() -> void:
-	# AnimatedSprite2D over the actor's head; built lazily on first
-	# show_bubble() call since most actors never emote.
-	_bubble_sprite = AnimatedSprite2D.new()
-	_bubble_sprite.position = BUBBLE_OFFSET
-	_bubble_sprite.centered = true
-	_bubble_sprite.z_index = 10  # above the character sprite
-	_bubble_sprite.visible = false
-	add_child(_bubble_sprite)
 
-# Pick the (pose, facing) animation and play it. Safe to call any
-# number of times; only restarts the AnimatedSprite2D if the resolved
-# animation actually changed.
-func _update_animation() -> void:
+func _update_pose() -> void:
 	if _sprite == null:
 		return
-	var by_dir: Variant = POSE_FACING_TO_ANIM.get(pose, POSE_FACING_TO_ANIM["idle"])
-	var anim: String = by_dir.get(facing, "idle_down")
-	if _sprite.animation != StringName(anim):
-		_sprite.play(anim)
-
-# Move to absolute world coords. ticks==0 (or unspecified for abs spawns)
-# means snap instantly; otherwise tween over (ticks / 60) seconds.
-func move_absolute(x: int, y: int, ticks: int, run: bool = false) -> Tween:
-	return _start_move(Vector2(x, y), ticks, run)
-
-# Move by relative pixel delta over `ticks` frames.
-func move_relative(dx: int, dy: int, ticks: int, run: bool = false) -> Tween:
-	return _start_move(position + Vector2(dx, dy), ticks, run)
-
-func _start_move(target: Vector2, ticks: int, run: bool = false) -> Tween:
-	_stop_active_tween()
-	if ticks <= 0:
-		position = target
-		return null
-	var delta := target - position
-	# Two distinct timing conventions, gated by `run`:
-	#   * walk (run=false): `ticks` is FRAMES-PER-TILE, so duration
-	#     scales with distance -- constant walking speed across moves.
-	#   * run (run=true): `ticks` is TOTAL FRAMES for the move. This
-	#     matches what we observed at @0x34c9+ in 112020101 after the
-	#     op_0x67 payload=0x00 "set_move_mode = run" marker: a 4-tile
-	#     dy=-232 / ticks=50 burst finishes in 50/60 = 0.83s, i.e.
-	#     ~5 tiles/sec instead of the ~1 tile/sec the per-tile formula
-	#     would have produced.
-	# Movement is also axis-sequenced (the actor walks one axis, then
-	# the other) -- the engine does not do diagonal pathing in field
-	# cutscenes. Tween the horizontal leg first, then the vertical leg.
-	var t := create_tween()
-	var leg_x_target := position + Vector2(delta.x, 0.0)
-	var leg_y_target := target
-	var has_x: bool = absf(delta.x) > 0.5
-	var has_y: bool = absf(delta.y) > 0.5
-	var dist_total: float = absf(delta.x) + absf(delta.y)
-	if has_x:
-		var dur_x: float
-		if run:
-			dur_x = (absf(delta.x) / dist_total) * ticks / FRAMES_PER_SECOND
+	var direction: String = DIRECTIONS[facing]
+	if _kind == "sheet":
+		var sheet: AnimatedSprite2D = _sprite
+		var animation := StringName(("walk_" if moving else "idle_") + direction)
+		if sheet.animation != animation or not sheet.is_playing():
+			sheet.play(animation)
+	elif _kind == "npc":
+		var npc: AnimatedSprite2D = _sprite
+		if npc.sprite_frames.has_animation(direction):
+			npc.animation = StringName(direction)
+		if moving:
+			npc.play()
 		else:
-			dur_x = absf(delta.x) / TILE_SIZE * ticks / FRAMES_PER_SECOND
-		dur_x = maxf(dur_x, 1.0 / FRAMES_PER_SECOND)
-		t.tween_property(self, "position", leg_x_target, dur_x)
-	if has_y:
-		var dur_y: float
-		if run:
-			dur_y = (absf(delta.y) / dist_total) * ticks / FRAMES_PER_SECOND
-		else:
-			dur_y = absf(delta.y) / TILE_SIZE * ticks / FRAMES_PER_SECOND
-		dur_y = maxf(dur_y, 1.0 / FRAMES_PER_SECOND)
-		t.tween_property(self, "position", leg_y_target, dur_y)
-	if not has_x and not has_y:
-		# Degenerate (no-op) move: still create a 1-frame tween so the
-		# caller's await on the tween completes immediately.
-		t.tween_interval(1.0 / FRAMES_PER_SECOND)
-	_active_tween = t
-	# Face the direction of the FIRST leg (horizontal if present, else
-	# vertical). The engine flips facing again partway through the
-	# motion in-game; this is a reasonable approximation.
-	if has_x:
-		facing = "right" if delta.x > 0 else "left"
-	elif has_y:
-		facing = "down" if delta.y > 0 else "up"
-	pose = "run" if run else "walk"
-	_update_animation()
-	t.finished.connect(func():
-		pose = "idle"
-		_update_animation())
-	return t
+			npc.stop()
+			npc.frame = 0
 
-func face(dir: String) -> void:
-	facing = dir
-	_update_animation()
 
-func set_visible_state(v: bool) -> void:
-	visible = v
-
-# Show the op_0x46 emoticon bubble. `bubble_id` is 1-based and indexes
-# the row in `map_common/emotion_icon.png` (2x12 grid; both columns
-# are the two animation frames of that emote). map_character sheets
-# have no "talking" pose so the actor's own anim continues during the
-# bubble.
-func show_bubble(bubble_id: int, duration_ticks: int) -> void:
-	if _bubble_sprite == null:
-		return
-	var frames := _build_emotion_frames(bubble_id)
-	if frames == null:
-		return
-	_bubble_sprite.sprite_frames = frames
-	_bubble_sprite.visible = true
-	# loop=false on the animation -> AnimatedSprite2D stops on the last
-	# frame after one cycle, then we hide on the duration timer.
-	_bubble_sprite.play(&"emote")
-	if _bubble_tween != null and _bubble_tween.is_valid():
-		_bubble_tween.kill()
-	_bubble_tween = create_tween()
-	_bubble_tween.tween_interval(maxf(duration_ticks / FRAMES_PER_SECOND, 0.1))
-	_bubble_tween.tween_callback(func():
-		if _bubble_sprite != null:
-			_bubble_sprite.stop()
-			_bubble_sprite.visible = false)
-
-func _build_emotion_frames(bubble_id: int) -> SpriteFrames:
-	var tex := _get_emotion_texture()
-	if tex == null:
-		return null
-	var row := bubble_id - 1
-	if row < 0 or row > 11:
-		push_warning("EventActor: bubble_id %d out of range" % bubble_id)
-		return null
+static func _sheet_frames(texture_path: String) -> SpriteFrames:
+	if _sheet_cache.has(texture_path):
+		return _sheet_cache[texture_path]
+	var texture: Texture2D = load(texture_path)
 	var frames := SpriteFrames.new()
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
-	frames.add_animation(&"emote")
-	frames.set_animation_loop(&"emote", false)
-	frames.set_animation_speed(&"emote", EMOTION_FPS)
-	for col in range(EMOTION_FRAME_COUNT):
-		var at := AtlasTexture.new()
-		at.atlas = tex
-		at.region = Rect2(col * EMOTION_CELL, row * EMOTION_CELL, EMOTION_CELL, EMOTION_CELL)
-		frames.add_frame(&"emote", at)
+	for animation in ANIM_REGIONS:
+		frames.add_animation(animation)
+		frames.set_animation_loop(animation, true)
+		frames.set_animation_speed(animation, WALK_FPS)
+		for region in ANIM_REGIONS[animation]:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			atlas.region = region
+			frames.add_frame(animation, atlas)
+	_sheet_cache[texture_path] = frames
 	return frames
 
-func _get_emotion_texture() -> Texture2D:
-	if _emotion_tex_cache != null:
-		return _emotion_tex_cache
-	if not ResourceLoader.exists(EMOTION_ATLAS_PATH):
-		push_warning("EventActor: emotion atlas missing at %s" % EMOTION_ATLAS_PATH)
-		return null
-	_emotion_tex_cache = load(EMOTION_ATLAS_PATH)
-	return _emotion_tex_cache
 
-func _stop_active_tween() -> void:
-	if _active_tween != null and _active_tween.is_valid():
-		_active_tween.kill()
-	_active_tween = null
-
-func is_busy() -> bool:
-	return _active_tween != null and _active_tween.is_valid() and _active_tween.is_running()
+static func _emotion_atlas() -> Texture2D:
+	if _emotion_texture == null:
+		_emotion_texture = load(MAP_COMMON + "emotion_icon.png")
+	return _emotion_texture

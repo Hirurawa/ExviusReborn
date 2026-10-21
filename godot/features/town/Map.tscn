@@ -3884,7 +3884,6 @@ script = ExtResource("14_tpiga")
 layer = 50
 
 [node name="HUD" type="Control" parent="HUDLayer" unique_id=832276842]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

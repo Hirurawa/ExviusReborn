@@ -35,6 +35,13 @@ var _active_chunk_data: Dictionary = {}
 		trigger_redraw()
 
 @export_category("Chunk Object Overlays")
+# Off for cutscenes (Event.tscn): the map's NPCs, chests and warp triggers stay
+# out, and only the event bin's own actors stand on the layer, as in the game.
+@export var spawn_entities: bool = true :
+	set(v):
+		spawn_entities = v
+		trigger_redraw()
+
 @export var show_dynamic_entities: bool = true :
 	set(v):
 		show_dynamic_entities = v
@@ -207,6 +214,19 @@ func chunk_index_for_lid(lid: int) -> int:
 func trigger_redraw():
 	if not is_node_ready(): return
 	draw_chunk(target_chunk)
+
+# Draws the layer with the given layer_id without touching any player:
+# cutscenes (EventStage) place their own actors. Returns false when this
+# map has no such layer.
+func show_layer(lid: int) -> bool:
+	var idx := chunk_index_for_lid(lid)
+	if idx < 0:
+		return false
+	if target_chunk != idx:
+		target_chunk = idx  # the setter redraws
+	else:
+		draw_chunk(idx)
+	return true
 
 # --- THE NEW BINARY HEADER PARSER ---
 func read_manifest_from_binary():
@@ -389,7 +409,7 @@ func _input(event):
 		# the blueprint's static_assets x/y fields (cell index * tile_size).
 		var px: int = int(cx) * tile_size
 		var py: int = int(cy) * tile_size
-		print("Click @ grid (", cx, ", ", cy, ") top-left px (", px, ", ", py, ")")
+		#print("Click @ grid (", cx, ", ", cy, ") top-left px (", px, ", ", py, ")")
 
 		# List every static_asset record in the active chunk whose bounding
 		# box contains this clicked cell. Helps verify which record is
@@ -412,58 +432,58 @@ func _input(event):
 				var rh: int = int(round(int(rec["height"]) * rs))
 				if mx >= rx and mx < rx + rw and my >= ry and my < ry + rh:
 					matches.append({"idx": i, "rec": rec})
-			if matches.is_empty():
-				print("  no static_asset bounding box contains this cell")
-			else:
-				print("  ", matches.size(), " static_asset record(s) overlap this cell:")
-				for m in matches:
-					var r: Dictionary = m["rec"]
-					print("    [#", m["idx"], "] x=", r["x"], " y=", r["y"],
-						" w=", r["width"], " h=", r["height"],
-						" atlas_id=", r["atlas_id"],
-						" atlas=(", r["atlas_x"], ",", r["atlas_y"], ")",
-						" layer=", r.get("layer", 0),
-						" layer_flags=", r.get("layer_flags", 0),
-						" scale=", r.get("scale", 100))
+			#if matches.is_empty():
+				#print("  no static_asset bounding box contains this cell")
+			#else:
+				#print("  ", matches.size(), " static_asset record(s) overlap this cell:")
+				#for m in matches:
+					#var r: Dictionary = m["rec"]
+					#print("    [#", m["idx"], "] x=", r["x"], " y=", r["y"],
+						#" w=", r["width"], " h=", r["height"],
+						#" atlas_id=", r["atlas_id"],
+						#" atlas=(", r["atlas_x"], ",", r["atlas_y"], ")",
+						#" layer=", r.get("layer", 0),
+						#" layer_flags=", r.get("layer_flags", 0),
+						#" scale=", r.get("scale", 100))
 
 		# Ensure we are clicking inside the actual map boundaries
-		if cx >= 0 and cx < map_width and cy >= 0 and cy < map_height:
-			probe_tile_data(cx, cy)
-
-func probe_tile_data(cx: int, cy: int):
-	var file = FileAccess.open(map_file_path, FileAccess.READ)
-	if file == null: return
-	file.big_endian = true 
-	
-	# Calculate the exact byte address in the .bin file
-	var tile_index = (cy * map_width) + cx
-	var byte_address = active_debug_offset + (tile_index * 4)
-	
-	# Jump to that exact address and read the 4 bytes
-	file.seek(byte_address)
-	var atlas_id = file.get_16()
-	var sprite_id = file.get_16()
-	
-	# Format the output into Hex so it matches ImHex perfectly
-	var hex_address = "%X" % byte_address
-	var hex_atlas = "%04X" % atlas_id
-	var hex_sprite = "%04X" % sprite_id
-	
-	print("--- HEX PROBE ---")
-	print("Grid Coordinate: (", cx, ", ", cy, ")")
-	print("Linear Index:    ", tile_index)
-	print("BIN Offset:      0x", hex_address, " (Decimal: ", byte_address, ")")
-	print("Raw Hex Data:    ", hex_atlas, " ", hex_sprite)
-	
-	if atlas_id == 65535:
-		print("Status:          BLANK / TRANSPARENT (FF FF)")
-	elif atlas_id == 10000:
-		print("Status:          INVISIBLE WALL (27 10)")
-	elif id_map.has(atlas_id):
-		print("Status:          VALID TILE")
-	else:
-		print("Status:          UNKNOWN / ANOMALY")
-	print("-----------------")
+		#if cx >= 0 and cx < map_width and cy >= 0 and cy < map_height:
+			#probe_tile_data(cx, cy)
+#
+#func probe_tile_data(cx: int, cy: int):
+	#var file = FileAccess.open(map_file_path, FileAccess.READ)
+	#if file == null: return
+	#file.big_endian = true 
+	#
+	## Calculate the exact byte address in the .bin file
+	#var tile_index = (cy * map_width) + cx
+	#var byte_address = active_debug_offset + (tile_index * 4)
+	#
+	## Jump to that exact address and read the 4 bytes
+	#file.seek(byte_address)
+	#var atlas_id = file.get_16()
+	#var sprite_id = file.get_16()
+	#
+	## Format the output into Hex so it matches ImHex perfectly
+	#var hex_address = "%X" % byte_address
+	#var hex_atlas = "%04X" % atlas_id
+	#var hex_sprite = "%04X" % sprite_id
+	#
+	#print("--- HEX PROBE ---")
+	#print("Grid Coordinate: (", cx, ", ", cy, ")")
+	#print("Linear Index:    ", tile_index)
+	#print("BIN Offset:      0x", hex_address, " (Decimal: ", byte_address, ")")
+	#print("Raw Hex Data:    ", hex_atlas, " ", hex_sprite)
+	#
+	#if atlas_id == 65535:
+		#print("Status:          BLANK / TRANSPARENT (FF FF)")
+	#elif atlas_id == 10000:
+		#print("Status:          INVISIBLE WALL (27 10)")
+	#elif id_map.has(atlas_id):
+		#print("Status:          VALID TILE")
+	#else:
+		#print("Status:          UNKNOWN / ANOMALY")
+	#print("-----------------")
 
 func _draw():
 	if map_width == 0 or map_height == 0:
@@ -791,10 +811,12 @@ func draw_chunk(chunk_index: int):
 	# --- SPAWN NPC ANIMATED SPRITES ---
 	# Visual-only AnimatedSprite2D per scripted_entity that carries a
 	# `sprite_id` in the blueprint.
-	_spawn_npcs(chunk_data)
+	if spawn_entities:
+		_spawn_npcs(chunk_data)
 
 	# --- SPAWN TREASURE CHESTS ---
-	_spawn_chests(chunk_data)
+	if spawn_entities:
+		_spawn_chests(chunk_data)
 
 	# --- DRAW COLLISION OVERLAY (on top of everything) ---
 	_draw_collision_overlay()
@@ -803,7 +825,7 @@ func draw_chunk(chunk_index: int):
 	_update_minimap()
 
 	# --- BUILD WARP TRIGGERS (only when running, not in @tool editor) ---
-	if not Engine.is_editor_hint():
+	if not Engine.is_editor_hint() and spawn_entities:
 		_build_warp_triggers(chunk_data)
 
 	update_layer_visibility()

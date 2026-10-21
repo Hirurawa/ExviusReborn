@@ -312,7 +312,7 @@ func _compute_esper_flat_bonus(esper: Dictionary, boost_pct: Dictionary = {}) ->
 
 ## The final-stat profile for a battle/roster instance: { stats, base_stats,
 ## element_resist, status_resist, debuff_resist, skills, passive_effects, passives,
-## equipment_stats, equipment_bonus, esper_stats, loadout } (see
+## equipment_stats, equipment_bonus, passive_stats, passive_pct, esper_stats, loadout } (see
 ## calculate_unit_profile). Monster profiles
 ## carry stats, element_resist, status_resist, skills and passive_effects.
 ##
@@ -389,9 +389,9 @@ func resolve_item(slot_id: String, template_id: String) -> Dictionary:
 ## equipment's stats x the capped percent) to the flat part, its esper boost scales
 ## esper_stats, and its battle
 ## modifiers (killers, killer cap raises, LB and skill damage) go to `passives` with the
-## effects it has no handler for (passives.unconsumed). equipment_stats, esper_stats and
-## base_stats are each only their own part of the total (the stat detail screen's
-## columns).
+## effects it has no handler for (passives.unconsumed). base_stats, equipment_stats,
+## equipment_bonus, passive_stats and esper_stats are each only their own part of the
+## total (the stat detail screen's columns), and add up to it when the unit has no buffs.
 func calculate_unit_profile(unit_instance: Dictionary, items: Array, esper: Dictionary) -> Dictionary:
 	var final_profile = empty_stat_profile()
 
@@ -502,6 +502,18 @@ func calculate_unit_profile(unit_instance: Dictionary, items: Array, esper: Dict
 	for key in PassiveAggregator.BATTLE_KEYS:
 		battle_passives[key] = totals[key]
 	final_profile["passives"] = battle_passives
+
+	# The stat detail screen's "Passive" column: what the passives' (capped) percentages
+	# add to the base, plus their flat stats. Computed as the total would be, so the
+	# columns add up to it exactly. Battle buffs are left out. passive_pct is the summed
+	# percent, before the cap, shown beside it.
+	var passive_stats: Dictionary = {}
+	for stat_name in CORE_STATS:
+		var base: int = int(base_calculated[stat_name])
+		passive_stats[stat_name] = combine_stat(float(base), int(totals[PassiveAggregator.POOL_STAT_PCT][stat_name]),
+			int(totals[PassiveAggregator.POOL_STAT_FLAT][stat_name])) - base
+	final_profile["passive_stats"] = passive_stats
+	final_profile["passive_pct"] = (totals[PassiveAggregator.POOL_STAT_PCT] as Dictionary).duplicate()
 
 	var esper_flat_bonus: Dictionary = _compute_esper_flat_bonus(esper, totals[PassiveAggregator.POOL_ESPER_PCT])
 	for stat_name in CORE_STATS:

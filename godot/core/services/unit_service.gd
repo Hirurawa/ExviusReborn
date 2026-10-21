@@ -33,6 +33,8 @@ const UNIT_TYPE_TRUST_MATERIAL: String = "trust_material"
 const PLAYABLE_ACCUMULATED_EXP_TRANSFER_RATE: float = 0.5
 const PLAYABLE_DUPLICATE_TRUST_BONUS: float = 5.0
 const DEFAULT_MAX_ACCUMULATED_EXP: int = 2000000000
+## Level a unit starts at after its 7* awakening (other awakenings reset to 1).
+const SEVEN_STAR_START_LEVEL: int = 101
 const EXP_UNIT_JOB_ID: int = 901
 const TRUST_MATERIAL_JOB_ID: int = 903
 const MATERIAL_UNIT_JOB_IDS: Array[int] = [900, 901, 902, 903]
@@ -347,8 +349,8 @@ func awaken_unit(instance_id: String) -> Dictionary:
 	var exp_pattern: int = unit_data.get("expPatternId")
 	unit.merge(unit_data, true)
 	if new_rarity == 7:
-		unit["xp"] = _calculate_total_xp_for_level(101, exp_pattern)
-		unit["level"] = 101
+		unit["xp"] = _calculate_total_xp_for_level(SEVEN_STAR_START_LEVEL, exp_pattern)
+		unit["level"] = SEVEN_STAR_START_LEVEL
 	else:
 		unit["xp"] = 0
 		unit["level"] = 1
@@ -971,9 +973,13 @@ func _get_unit_max_level(unit: Dictionary) -> int:
 	return int(StatCalculator.RARITY_MAX_LEVELS.get(rarity, 15))
 
 # Total-XP table for all exp patterns, lazily fetched from the DB
-# (unit_exp_pattern table) and cached. The DB stores needExp[L] as
-# the cumulative XP required to REACH level L (with an L=1=0 row).
-# The cache stores them in a PackedInt32Array where index == level.
+# (unit_exp_pattern table) and cached. The DB stores needExp[L] as the
+# XP needed to go from level L-1 to level L (the L=1 row is 0), the same
+# convention as team_lv. Pattern 30 sums to 1,993,672 over levels 2-100
+# and to exactly 45,000,000 over levels 101-120.
+# The cache stores the running totals in a PackedInt64Array where
+# index == level and arr[L] is the cumulative XP required to REACH level
+# L, which is what a unit's stored (accumulated) xp is compared against.
 var _exp_patterns_loaded: bool = false
 
 func _ensure_exp_patterns_loaded() -> void:
@@ -1000,17 +1006,19 @@ func _ensure_exp_patterns_loaded() -> void:
 		for l in temp_dict[pattern_id].keys():
 			max_lvl = maxi(max_lvl, l)
 
-		var arr: PackedInt32Array = PackedInt32Array()
+		var arr: PackedInt64Array = PackedInt64Array()
 		arr.resize(max_lvl + 1)
-		arr.fill(-1) # Default to -1 so bsearch isn't confused by trailing zeroes
-		for l in temp_dict[pattern_id].keys():
-			arr[l] = temp_dict[pattern_id][l]
+		arr[0] = -1 # Index 0 is not a level; -1 keeps bsearch from landing on it
+		var running_total: int = 0
+		for l in range(1, max_lvl + 1):
+			running_total += int(temp_dict[pattern_id].get(l, 0))
+			arr[l] = running_total
 
 		_unit_exp_patterns_cache[pattern_id] = arr
 
 func _calculate_total_xp_for_level(level: int, exp_pattern: int) -> int:
 	_ensure_exp_patterns_loaded()
-	var arr: PackedInt32Array = _unit_exp_patterns_cache.get(exp_pattern, PackedInt32Array())
+	var arr: PackedInt64Array = _unit_exp_patterns_cache.get(exp_pattern, PackedInt64Array())
 	if arr.is_empty():
 		return 0
 
@@ -1023,7 +1031,7 @@ func _calculate_total_xp_for_level(level: int, exp_pattern: int) -> int:
 
 func _calculate_level_from_xp(total_xp: int, exp_pattern: int, max_level: int) -> int:
 	_ensure_exp_patterns_loaded()
-	var arr: PackedInt32Array = _unit_exp_patterns_cache.get(exp_pattern, PackedInt32Array())
+	var arr: PackedInt64Array = _unit_exp_patterns_cache.get(exp_pattern, PackedInt64Array())
 	if arr.is_empty():
 		return 1
 
@@ -1082,6 +1090,11 @@ func _hydrate_owned_units(units: Array) -> Array:
 		# Recalculate level and next_xp from current xp
 		var xp_val: int = int(hydrated_unit.get("xp", 0))
 		var exp_pattern: int = template_data.get("expPatternId")
+		# A 7* unit never sits below its starting level. Saves written while the
+		# exp table was misread as cumulative hold far too little xp for it.
+		if int(hydrated_unit.get("current_rarity", 1)) == 7:
+			xp_val = maxi(xp_val, _calculate_total_xp_for_level(SEVEN_STAR_START_LEVEL, exp_pattern))
+			hydrated_unit["xp"] = xp_val
 
 		var max_level: int = template_data.get("maxLv")
 		var calc_level: int = _calculate_level_from_xp(xp_val, exp_pattern, max_level)

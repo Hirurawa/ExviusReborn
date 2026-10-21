@@ -27,6 +27,15 @@ const BROADSWORD: int = 302000100  # sword, ATK 15, no passives
 const SELPHIE: String = "208000505"
 const EDEA: String = "208001306"
 const ALEXANDER: String = "13"
+## Selphie 7* at level 120 dual wields; her gear (the user's loadout, 2026-10-14) adds a
+## MAG multiplier, flat MAG passives and Crimson Furisode's HP +200%.
+const SELPHIE_7: String = "208000517"
+const ROD_OF_BAHAMUT: int = 310009500  # rod, MAG 190
+const CRESCENT_WISH: int = 309005000  # MAG 183, HP +20% and "Celestial Sparks" (MAG +1000)
+const FROZEN_CROWN: int = 403043600  # HP 500
+const CRIMSON_FURISODE: int = 405021200  # HP 3000, MAG 30, HP +200%
+const STOLA_PAX: int = 409085700  # MAG 71
+const HOLLY_HEADPIECE: int = 1100000691  # MAG 60, "Festive Fortune" (MAG +500)
 ## Dark Knight Luneth 5* has "True Doublehand" (50%, either kind of weapon); Tessen 5*
 ## at level 24 has "Doublehand" (50%, a one-handed weapon only).
 const LUNETH: String = "203001405"
@@ -147,6 +156,29 @@ func test_the_equipment_and_esper_columns_hold_only_their_own_stats() -> void:
 	assert_eq(profile["equipment_stats"]["DEF"], 51, "Brave Suit's DEF")
 	assert_eq(profile["equipment_stats"]["HP"], 0, "no esper HP in the equipment column")
 	assert_true(int(profile["esper_stats"]["HP"]) > 0, "Golem gives HP")
+
+
+func test_the_stat_detail_columns_add_up_to_the_total() -> void:
+	var golem: Dictionary = {"summon_id": GOLEM, "rank": 3, "level": 60, "unlocked_skills": [], "board_bonus": {}}
+	var items: Array = [
+		_equipment("r_hand", ROD_OF_BAHAMUT), _equipment("l_hand", CRESCENT_WISH),
+		_equipment("head", FROZEN_CROWN), _equipment("body", CRIMSON_FURISODE),
+		_equipment("acc1", STOLA_PAX), _equipment("acc2", HOLLY_HEADPIECE),
+	]
+	var profile: Dictionary = StatCalculator.calculate_unit_profile(_unit(SELPHIE_7, 120), items, golem)
+	for stat_name in ["HP", "MP", "ATK", "DEF", "MAG", "SPR"]:
+		var columns: int = int(profile["base_stats"][stat_name]) + int(profile["equipment_stats"][stat_name]) \
+			+ int(profile["equipment_bonus"][stat_name]) + int(profile["passive_stats"][stat_name]) \
+			+ int(profile["esper_stats"][stat_name])
+		assert_eq(columns, int(profile["stats"][stat_name]), stat_name)
+	# Selphie's Band 30, Bold & Daring 20, Balamb Garden Transfer Student 20, Crescent
+	# Wish's HP +20% and Crimson Furisode's HP +200%.
+	assert_eq(profile["passive_stats"]["HP"], 14558, "base 5020 x 290%")
+	assert_eq(profile["passive_pct"]["HP"], 290)
+	# Her traits give MAG +250%; the flat MAG is Selphie's Band 1000, Celestial Sparks 1000
+	# and Festive Fortune 500.
+	assert_eq(profile["passive_stats"]["MAG"], 715 + 2500, "base 286 x 250% plus the flat MAG")
+	assert_eq(profile["equipment_bonus"]["MAG"], 1335, "534 equipment MAG x 250% while dual wielding")
 
 
 func test_an_esper_boost_scales_the_esper_share() -> void:

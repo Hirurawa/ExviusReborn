@@ -90,6 +90,7 @@ func start_new_local_game(username: String) -> Dictionary:
 	CombatItemsService.reset_to_empty()
 	_dbg("SNG: after CombatItemsService.reset_to_empty")
 	MissionService.reset_to_starter()
+	SwitchService.reset()
 	EsperService.reset_to_empty()
 	_dbg("SNG: after EsperService.reset_to_empty")
 	PartyService.reset_to_starter(PartyService.build_default_parties(UnitService.STARTER_LASSWELL_INSTANCE_ID, UnitService.STARTER_RAIN_INSTANCE_ID))

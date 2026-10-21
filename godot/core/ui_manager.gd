@@ -36,6 +36,7 @@ var _scenes_map: Dictionary = {
 	"equip_selection_popup": "res://features/outgame/equipment/EquipSelectionPopup.tscn",
 	"combat_ui": "res://features/battle/ui/BattleUI.tscn",
 	"town_map_ui": "res://features/town/Map.tscn",
+	"cutscene_ui": "res://features/event/CutsceneScreen.tscn",
 	"settings_ui": "res://features/outgame/profile/SettingsUI.tscn",
 	"vortex_dungeon_ui": "res://features/outgame/vortex/vortex_dungeon.tscn",
 	"colosseum_ui": "res://features/outgame/colosseum/Colosseum.tscn"
@@ -55,6 +56,8 @@ var _bgm_for_scene: Dictionary = {
 	"combat_ui": BGM_BATTLE,
 	"map_ui": BGM_MAP,
 	"settings_ui": BGM_NONE,
+	# Scenes keep what was playing until their own music ops are built.
+	"cutscene_ui": BGM_NONE,
 }
 
 # When true, the next scene transition will not change music. Used so the
@@ -97,7 +100,7 @@ func _update_overlays() -> void:
 	var current_scene_name: String = _menu_stack.back().get_meta("scene_key", _menu_stack.back().name.to_lower())
 
 	# Determine overlay visibility based on context
-	var hide_top_and_bottom: Array[String] = ["login_ui", "loginui", "combat_ui", "combatui", "town_map_ui", "townmapui", "settings_ui", "settingsui", "unit_sort_filter"]
+	var hide_top_and_bottom: Array[String] = ["login_ui", "loginui", "combat_ui", "combatui", "town_map_ui", "townmapui", "cutscene_ui", "settings_ui", "settingsui", "unit_sort_filter"]
 	var hide_bottom: Array[String] = ["map_ui", "edit_profile_ui", "esper_detail_ui", "mapui", "editprofileui", "esperdetailui"]
 	var hide_top: Array[String] = []
 

@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://features/event/cutscene_screen.gd" id="1"]
+[ext_resource type="PackedScene" path="res://features/event/Event.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/event/event_skipbutton1.tres" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/event/event_skipbutton2.tres" id="4"]
+
+[node name="CutsceneScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Black" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Container" type="SubViewportContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="Viewport" type="SubViewport" parent="Container"]
+handle_input_locally = false
+size = Vector2i(640, 960)
+render_target_update_mode = 4
+
+[node name="Event" parent="Container/Viewport" instance=ExtResource("2")]
+story_event_id = ""
+auto_start = false
+
+[node name="SkipButton" type="TextureButton" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -130.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 81.0
+grow_horizontal = 0
+texture_normal = ExtResource("3")
+texture_pressed = ExtResource("4")
+ignore_texture_size = true
+stretch_mode = 5
+

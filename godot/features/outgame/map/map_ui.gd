@@ -619,7 +619,15 @@ func _on_home_pressed() -> void:
 
 # === Dungeon mission-list popup ===
 
+## A dungeon's entry scenes play first, the first time its story calls for them
+## (StoryFlow.dungeon_entry_scenes); then its mission list, unless a scene led elsewhere.
 func _on_dungeon_clicked(dungeon_id: String, dungeon_name: String) -> void:
+	var scenes: Array = StoryFlow.dungeon_entry_scenes(dungeon_id)
+	if not scenes.is_empty():
+		var next: Dictionary = await StoryFlow.play_scenes(scenes)
+		if not next.is_empty():
+			StoryFlow.go_to(next)
+			return
 	var missions: Array[Dictionary] = _build_mission_popup_entries(GameDatabase.get_missions(dungeon_id))
 	_open_mission_popup(dungeon_name, missions)
 
@@ -801,11 +809,11 @@ func _unlock_town_progression() -> void:
 		if SwitchService.is_unlocked(item.get("switchInfo")) and not SwitchService.is_unlocked(item.get("openSwitch")):
 			SwitchService.unlock_switches(item.get("openSwitch"))
 
+## The town's scenes play first (StoryFlow.enter_town), then the town opens.
 func _on_enter_town_confirmed() -> void:
 	if _pending_town_id == "":
 		return
-	_unlock_town_progression()
-	UIManager.push("town_map_ui", {"town_id": _pending_town_id})
+	StoryFlow.enter_town(_pending_town_id)
 
 
 # === Map Refresh ===

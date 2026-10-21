@@ -12,8 +12,8 @@ const POTION: String = "101000100"
 
 var _session: BattleSession = null
 var _director: BattleDirector = null
-## What the director asked for, in order: "say <first line>", "transition 1>2/2",
-## "wait 1.0", "finish".
+## What the director asked for, in order: "say <first line>", "scene <story event>",
+## "transition 1>2/2", "wait 1.0", "finish".
 var _log: Array[String] = []
 var _paused_while_talking: Array[bool] = []
 var _finished: Array = []
@@ -34,6 +34,7 @@ func before_each() -> void:
 	_director.kill_recorder = func(template_id: String) -> void: _kills.append(template_id)
 	_director.wait = _wait
 	_director.dialogue_requested.connect(_on_dialogue)
+	_director.cutscene_requested.connect(_on_cutscene)
 	_director.wave_transition_requested.connect(_on_transition)
 	_director.item_dropped.connect(func(enemy_id: int, item_id: String) -> void: _drops.append([enemy_id, item_id]))
 	_on_completed = func(party: Variant, turns: Variant) -> void: _completed.append([party, turns])
@@ -58,6 +59,12 @@ func _on_dialogue(lines: Array) -> void:
 	for line in lines:
 		_log.append("say " + str(line.get("text", "")).split("\n")[0])
 	_director.dialogue_finished()
+
+
+func _on_cutscene(story_event_id: String) -> void:
+	_paused_while_talking.append(_session.paused)
+	_log.append("scene " + story_event_id)
+	_director.cutscene_finished()
 
 
 func _on_transition(wave: int, next_wave: int, waves: int) -> void:
@@ -93,8 +100,7 @@ static func _story() -> BattleStory:
 		func(script_id: String) -> Array: return [
 			{"cond": BattleStory.COND_START, "lines": [{"speaker": "A", "text": "%s start" % script_id}]},
 			{"cond": BattleStory.COND_VICTORY, "lines": [{"speaker": "A", "text": "%s won" % script_id}]},
-		],
-		func(story_event_id: String) -> Dictionary: return {"name": "scene %s" % story_event_id})
+		])
 
 
 static func _foe(template_id: String, exp_value: int, gil_value: int, loot: Array) -> Combatant:
@@ -167,14 +173,14 @@ func _fight(potion: bool = false, until: Callable = Callable(), max_frames: int 
 
 
 static func _says(log_lines: Array[String]) -> Array:
-	return log_lines.filter(func(line: String) -> bool: return line.begins_with("say "))
+	return log_lines.filter(func(line: String) -> bool: return line.begins_with("say ") or line.begins_with("scene "))
 
 
 # === Fixture battles ===
 
 func test_the_intro_plays_the_opening_cutscenes_then_the_first_waves_lines() -> void:
 	_start(_two_waves)
-	assert_eq(_log, ["say scene e0", "say s1 start"] as Array[String])
+	assert_eq(_log, ["scene e0", "say s1 start"] as Array[String])
 	assert_eq(_paused_while_talking, [true, true] as Array[bool], "the battle waits while dialogue shows")
 	assert_false(_session.paused, "and runs once the intro is over")
 	assert_false(_session.auto_advance_waves, "the director starts each wave")
@@ -185,7 +191,7 @@ func test_a_cleared_wave_plays_its_victory_the_transition_then_the_next_wave() -
 	_start(_two_waves)
 	_log.clear()
 	_fight(false, func() -> bool: return _session.engine.wave == 2)
-	assert_eq(_log, ["wait 1.0", "say s1 won", "say scene e1", "transition 1>2/2", "wait 2.0"] as Array[String],
+	assert_eq(_log, ["wait 1.0", "say s1 won", "scene e1", "transition 1>2/2", "wait 2.0"] as Array[String],
 		"wave 2's opening lines were seen already (its switch is set)")
 	assert_eq([_session.engine.wave, _session.engine.phase], [2, BattleEngine.Phase.PLAYER])
 	assert_false(_session.paused)
@@ -197,7 +203,7 @@ func test_victory_reports_the_rewards_the_challenges_and_the_turns() -> void:
 	_fight(true)
 	var engine: BattleEngine = _session.engine
 	assert_eq(engine.outcome, BattleEngine.OUTCOME_VICTORY)
-	assert_eq(_log.slice(_log.size() - 3), ["wait 1.0", "say scene e2", "finish"] as Array[String],
+	assert_eq(_log.slice(_log.size() - 3), ["wait 1.0", "scene e2", "finish"] as Array[String],
 		"the last wave's lines were seen; the outro cutscene; the replay-only one is not active")
 	assert_eq(_finished.size(), 1)
 	var drops: Array = _drops.map(func(drop: Array) -> String: return drop[1])
@@ -223,10 +229,9 @@ func test_defeat_reports_the_items_used_and_disconnects_the_challenges() -> void
 func test_a_battle_with_no_enemies_is_won_without_opening_a_wave() -> void:
 	var story := BattleStory.new([], [{"story_event_id": "e0", "after_wave": 0}, {"story_event_id": "e1", "after_wave": 1}],
 		func(_switch: Variant) -> bool: return false,
-		func(_script_id: String) -> Array: return [],
-		func(story_event_id: String) -> Dictionary: return {"name": "scene %s" % story_event_id})
+		func(_script_id: String) -> Array: return [])
 	_start(_no_enemies, story)
-	assert_eq(_log, ["say scene e0", "wait 1.0", "say scene e1", "finish"] as Array[String])
+	assert_eq(_log, ["scene e0", "wait 1.0", "scene e1", "finish"] as Array[String])
 	assert_eq(_finished.size(), 1)
 	assert_eq(_finished[0][0], true)
 
@@ -265,7 +270,7 @@ static func _real_factory(mission_id: String) -> Callable:
 
 ## Runs `mission_id` through the director with the mission's own story (every
 ## first-time switch unset) and challenges, and checks what the old engine's flow would
-## have produced: the dialogue of each wave in order, the cutscene cards, one
+## have produced: the dialogue of each wave in order, the cutscenes, one
 ## transition per wave change, and the finisher's arguments.
 func _run_real_mission(mission_id: String, expected_results: Array) -> void:
 	var story: BattleStory = BattleStory.for_params({"mission_id": mission_id})
@@ -279,12 +284,12 @@ func _run_real_mission(mission_id: String, expected_results: Array) -> void:
 
 	var plan: Array = EncounterResolver.build_wave_plan(mission_id)
 	var cutscenes: Array = GameDatabase.get_mission_cutscenes(mission_id)
-	var expected_says: Array = _cards(cutscenes, 0)
+	var expected_says: Array = _scenes(cutscenes, 0)
 	var expected_transitions: Array[String] = []
 	for wave in range(1, plan.size() + 1):
 		expected_says.append_array(_lines(plan[wave - 1], BattleStory.COND_START))
 		expected_says.append_array(_lines(plan[wave - 1], BattleStory.COND_VICTORY))
-		expected_says.append_array(_cards(cutscenes, wave))
+		expected_says.append_array(_scenes(cutscenes, wave))
 		if wave < plan.size():
 			expected_transitions.append("transition %d>%d/%d" % [wave, wave + 1, plan.size()])
 	assert_true(not expected_says.is_empty(), "%s has dialogue to check" % mission_id)
@@ -327,11 +332,11 @@ static func _lines(wave: Dictionary, cond: int) -> Array:
 	return out
 
 
-static func _cards(cutscenes: Array, slot: int) -> Array:
+static func _scenes(cutscenes: Array, slot: int) -> Array:
 	var out: Array = []
 	for cut in cutscenes:
 		if int(cut.get("after_wave", -1)) == slot and not BattleStory.switch_present(cut.get("switch_info")):
-			out.append("say " + str(GameDatabase.get_story_event(str(cut.get("story_event_id", ""))).get("name", "?")))
+			out.append("scene " + str(cut.get("story_event_id", "")))
 	return out
 
 

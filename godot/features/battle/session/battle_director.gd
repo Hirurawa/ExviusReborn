@@ -7,8 +7,9 @@ extends Node
 ## flow (initialize_battle's intro, _trigger_wave_clear, _spawn_next_wave,
 ## _trigger_mission_complete, _trigger_defeat), keeping its 1.0 s and 2.0 s waits.
 ##
-## It asks the battle screen for dialogue and the wave transition through signals and
-## waits for the answer (dialogue_finished(), transition_finished()), as the old
+## It asks the battle screen for dialogue, cutscenes and the wave transition through
+## signals and waits for the answer (dialogue_finished(), cutscene_finished(),
+## transition_finished()), as the old
 ## play_dialogue awaited dialogue_completed. An answer may come at once, from inside the
 ## signal. The session is paused while dialogue shows.
 ##
@@ -32,6 +33,8 @@ extends Node
 
 ## Show these [{ speaker, text }] lines; answer with dialogue_finished().
 signal dialogue_requested(lines: Array)
+## Play story event `story_event_id`'s scene; answer with cutscene_finished().
+signal cutscene_requested(story_event_id: String)
 ## Play the wave counter roll from `wave` to `next_wave` of `waves`; answer with
 ## transition_finished().
 signal wave_transition_requested(wave: int, next_wave: int, waves: int)
@@ -39,6 +42,7 @@ signal wave_transition_requested(wave: int, next_wave: int, waves: int)
 signal item_dropped(enemy_id: int, item_id: String)
 
 signal _dialogue_answered
+signal _cutscene_answered
 signal _transition_answered
 
 ## The old engine's wait for the death tweens before a cleared wave moves on.
@@ -69,6 +73,9 @@ var challenges: ChallengeSet = null
 
 ## "" for a battle group or the test battle (the old engine finished those with "" too).
 var mission_id: String = ""
+## Where the mission's cutscenes lead once it ends (op 0x59: { type, id }), {} for
+## back to the map. The prologue's last scene leads into the Earth Shrine.
+var next_location: Dictionary = {}
 var ledger: RewardLedger = null
 var bridge: BattleEventsBridge = null
 
@@ -80,6 +87,7 @@ var _flows: Array[Dictionary] = []
 var _flow_running: bool = false
 var _holds: int = 0
 var _dialogue_pending: bool = false
+var _cutscene_pending: bool = false
 var _transition_pending: bool = false
 
 
@@ -138,6 +146,17 @@ func dialogue_finished() -> void:
 		return
 	_dialogue_pending = false
 	_dialogue_answered.emit()
+
+
+## The battle screen has played the requested cutscene, which named `next` as where
+## the game goes once the mission ends (op 0x59; {} for nowhere).
+func cutscene_finished(next: Dictionary = {}) -> void:
+	if not next.is_empty():
+		next_location = next
+	if not _cutscene_pending:
+		return
+	_cutscene_pending = false
+	_cutscene_answered.emit()
 
 
 ## The battle screen has played the requested wave transition.
@@ -252,10 +271,18 @@ func _play_dialogue(lines: Array) -> void:
 	_release()
 
 
-## Each cutscene slotted at `slot` as its own dialogue, as the old engine showed them.
+## The cutscenes slotted at `slot`, one after another, with the battle paused. Nothing
+## to wait for when nobody listens.
 func _play_cutscenes(slot: int) -> void:
-	for card in story.cutscene_cards(slot):
-		await _play_dialogue([card])
+	for story_event_id in story.cutscenes_at(slot):
+		if cutscene_requested.get_connections().is_empty():
+			return
+		_hold()
+		_cutscene_pending = true
+		cutscene_requested.emit(story_event_id)
+		if _cutscene_pending:
+			await _cutscene_answered
+		_release()
 
 
 ## The old 2.0 s wait for the wave counter roll, then the screen's answer if it has not

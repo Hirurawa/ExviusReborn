@@ -2,11 +2,10 @@ class_name BattleStory
 extends RefCounted
 
 ## A mission's story inside its battle: the dialogue each wave plays when it starts and
-## when it is cleared, and the cutscenes slotted between waves (shown as placeholder
-## cards until EventRunner plays them). Ported from the old BattleManager's
-## wave_dialogue_lines, _dialogue_gate_seen, _play_cutscenes_for_slot,
-## _cutscene_placeholder_line and _switch_present. BattleDirector asks it what to show;
-## the battle screen shows it.
+## when it is cleared, and the cutscenes slotted between waves (their story events,
+## which the battle screen plays through StoryFlow). Ported from the old BattleManager's
+## wave_dialogue_lines, _dialogue_gate_seen, _play_cutscenes_for_slot and
+## _switch_present. BattleDirector asks it what to show; the battle screen shows it.
 ##
 ## Session-layer code: by default it reads GameDatabase, MissionTimeline and
 ## SwitchService. Tests pass their own readers.
@@ -28,16 +27,13 @@ var cutscenes: Array = []
 var switch_check: Callable
 ## Callable(battle_script_id: String) -> Array of { cond, lines: [{ speaker, text }] }.
 var script_reader: Callable
-## Callable(story_event_id: String) -> Dictionary { name, sceneRes }, {} when unknown.
-var story_event_reader: Callable
 
 
-func _init(plan: Array = [], mission_cutscenes: Array = [], switches: Callable = Callable(), scripts: Callable = Callable(), story_events: Callable = Callable()) -> void:
+func _init(plan: Array = [], mission_cutscenes: Array = [], switches: Callable = Callable(), scripts: Callable = Callable()) -> void:
 	wave_plan = plan
 	cutscenes = mission_cutscenes
 	switch_check = switches if switches.is_valid() else SwitchService.is_unlocked
 	script_reader = scripts if scripts.is_valid() else MissionTimeline.parse_battle_script
-	story_event_reader = story_events if story_events.is_valid() else GameDatabase.get_story_event
 
 
 ## The story for the params the battle scene gets: a mission's wave plan and cutscenes,
@@ -69,11 +65,10 @@ func wave_dialogue_lines(wave_index: int, cond: int) -> Array:
 	return lines
 
 
-## One placeholder card ({ speaker, text }) for each cutscene slotted at `slot` (0 =
-## intro, K = after wave K) that the player should see now: not seen yet, and, for a
-## replay-only cutscene, active. The old engine showed each card as its own dialogue.
-func cutscene_cards(slot: int) -> Array:
-	var cards: Array = []
+## The story events of the cutscenes slotted at `slot` (0 = intro, K = after wave K)
+## that the player should see now: not seen yet, and, for a replay-only cutscene, active.
+func cutscenes_at(slot: int) -> Array[String]:
+	var ids: Array[String] = []
 	for cut in cutscenes:
 		if int(cut.get("after_wave", -1)) != slot:
 			continue
@@ -82,8 +77,8 @@ func cutscene_cards(slot: int) -> Array:
 		var replay_switch: Variant = cut.get("switch_info")
 		if switch_present(replay_switch) and not switch_check.call(replay_switch):
 			continue
-		cards.append(_placeholder_card(cut))
-	return cards
+		ids.append(str(cut.get("story_event_id", "")))
+	return ids
 
 
 ## True when a switch field holds an active value (not null, "", "0" or "null").
@@ -98,24 +93,3 @@ static func switch_present(value: Variant) -> bool:
 ## switch is set when the mission is cleared).
 func _gate_seen(gate: Variant) -> bool:
 	return switch_present(gate) and switch_check.call(gate)
-
-
-## A card naming the cutscene that should play here, with its event cpk (the folder id
-## EventRunner takes) and resource id.
-func _placeholder_card(cut: Dictionary) -> Dictionary:
-	var story_event_id: String = str(cut.get("story_event_id", ""))
-	var story_event: Dictionary = story_event_reader.call(story_event_id)
-	var scene_ref: String = str(story_event.get("sceneRes", ""))
-	var event_id: String = str(cut.get("event_id", ""))
-	var resource_id: String = str(cut.get("resource_id", ""))
-	var second_line: String = "storyEvent %s" % story_event_id
-	if scene_ref != "":
-		second_line += "  ·  " + scene_ref
-	var third_line: String = "event %s  (resource %s)" % [
-		event_id if event_id != "" else "?",
-		resource_id if resource_id != "" else "?",
-	]
-	return {
-		"speaker": "🎬 CUTSCENE (placeholder)",
-		"text": "%s\n%s\n%s" % [str(story_event.get("name", "?")), second_line, third_line],
-	}

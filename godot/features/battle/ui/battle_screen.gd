@@ -9,6 +9,7 @@ extends Control
 ##   EnemyField   %EnemyRegion             enemy views, the target arrow, drops
 ##   PartyField   %PlayerSpritesContainer  party sprites, effects, crystals, cover
 ##   BattleMenus  %BottomUIWrapper         unit panels, skill and item menus, ally picks
+##   BattleBackground $Background          the mission's jpg and its SpriteStudio layers
 ##   BattleHud    (helper)                 labels, the top bar, esper gauge, wave counter
 ## UIManager.push("combat_ui", params) calls init_scene(params): { mission_id },
 ## { battle_group } (colosseum) or {} (the test battle).
@@ -22,7 +23,7 @@ const COLOSSEUM_BACKGROUND: String = "Colosseum.jpg"
 @onready var enemy_field: EnemyField = %EnemyRegion
 @onready var party_field: PartyField = %PlayerSpritesContainer
 @onready var menus: BattleMenus = %BottomUIWrapper
-@onready var background: TextureRect = $Background
+@onready var background: BattleBackground = $Background
 @onready var finish_button: Button = %FinishButton
 @onready var rewards_popup: AcceptDialog = %RewardsPopup
 @onready var unit_info_popup: UnitInfoPopup = %UnitInfoPopup
@@ -33,6 +34,10 @@ const COLOSSEUM_BACKGROUND: String = "Colosseum.jpg"
 
 var hud: BattleHud
 var dialogue: BattleDialogue
+## Plays a cutscene the director asks for: Callable(story_event_id: String, mission_id:
+## String) -> the next location it named (Dictionary), awaitable. StoryFlow by default;
+## tests answer at once.
+var cutscene_player: Callable
 
 ## The enemy the player's attacks go to (-1 when none is standing).
 var _target_enemy_id: int = -1
@@ -59,10 +64,13 @@ func _ready() -> void:
 	party_field.crystal_template = limit_crystal
 	dialogue = BattleDialogue.new()
 	add_child(dialogue)
+	if not cutscene_player.is_valid():
+		cutscene_player = _play_story_event
 
 	session.battle_started.connect(_on_battle_started)
 	session.events_emitted.connect(_on_events)
 	director.dialogue_requested.connect(dialogue.play)
+	director.cutscene_requested.connect(_on_cutscene_requested)
 	dialogue.finished.connect(_on_dialogue_finished)
 	director.wave_transition_requested.connect(_on_wave_transition_requested)
 	director.item_dropped.connect(enemy_field.show_drop)
@@ -111,13 +119,15 @@ func init_scene(params: Dictionary) -> void:
 	director.start(params)
 
 
+## The mission's jpg and the animations played over it (none for the colosseum).
 func _apply_battle_background(mission_id: String) -> void:
 	var file_name: String = GameDatabase.get_mission_bg(mission_id) if mission_id != "" else COLOSSEUM_BACKGROUND
 	var path: String = "res://assets/battle_bg/%s" % file_name
-	if ResourceLoader.exists(path):
-		background.texture = load(path)
-	else:
+	if not ResourceLoader.exists(path):
 		push_warning("BattleScreen: background not found at %s" % path)
+		return
+	var layers: String = GameDatabase.get_mission_bg_layers(mission_id) if mission_id != "" else ""
+	background.show_background(load(path), layers)
 
 
 # === Building the views ===
@@ -755,6 +765,16 @@ func _on_wave_transition_requested(wave: int, next_wave: int, waves: int) -> voi
 	director.transition_finished()
 
 
+## A cutscene between waves: played over the battle, which waits for it.
+func _on_cutscene_requested(story_event_id: String) -> void:
+	var next: Dictionary = await cutscene_player.call(story_event_id, director.mission_id)
+	director.cutscene_finished(next)
+
+
+static func _play_story_event(story_event_id: String, mission_id: String) -> Dictionary:
+	return await StoryFlow.play_scenes([StoryFlow.story_event_scene(story_event_id, mission_id)])
+
+
 # === Mission end ===
 
 func _on_mission_completed(result: Dictionary) -> void:
@@ -765,7 +785,8 @@ func _on_mission_completed(result: Dictionary) -> void:
 	var sequence: Node = MissionResultScene.instantiate()
 	add_child(sequence)
 	sequence.start(result, BattleEventsBridge.party_sources(engine, PartyService.SLOT_COUNT))
-	sequence.finished.connect(_on_result_sequence_finished)
+	# Next keeps emitting finished on the last page; the scenes after it play once.
+	sequence.finished.connect(_on_result_sequence_finished, CONNECT_ONE_SHOT)
 
 
 func _on_mission_failed(error_msg: String = "") -> void:
@@ -782,5 +803,14 @@ func _on_rewards_confirmed() -> void:
 	UIManager.pop()
 
 
+## After the results: the scenes a clear plays (StoryFlow.after_clear_scenes), then
+## back to the map, or where the mission's scenes led (the prologue leads into the
+## Earth Shrine).
 func _on_result_sequence_finished() -> void:
+	var next: Dictionary = director.next_location
+	var after_clear: Dictionary = await StoryFlow.play_scenes(StoryFlow.after_clear_scenes(director.mission_id))
+	if not after_clear.is_empty():
+		next = after_clear
 	UIManager.pop()
+	if not next.is_empty():
+		StoryFlow.go_to(next)

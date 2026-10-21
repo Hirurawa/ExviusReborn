@@ -1,0 +1,118 @@
+[gd_scene format=3 uid="uid://bpdf78jr5hkhb"]
+
+[ext_resource type="Texture2D" uid="uid://da1rs1lu6ecg" path="res://assets/ui/unit/unit_bondsbg.tres" id="2_a3peg"]
+[ext_resource type="Texture2D" uid="uid://cax1wdglpwgux" path="res://assets/ui/unit/unit_bondsbg_second.tres" id="3_isop2"]
+[ext_resource type="Texture2D" uid="uid://cf4mspq2gjh8" path="res://assets/ui/common/arrow_large_l.tres" id="4_ajb2g"]
+[ext_resource type="PackedScene" uid="uid://baq2silquhrr6" path="res://features/shared/Unit.tscn" id="6_1kfes"]
+[ext_resource type="Texture2D" uid="uid://bs5dhxcgkqqe" path="res://assets/ui/common/arrow_large_r.tres" id="7_jht7e"]
+[ext_resource type="Script" uid="uid://d1vomdyvvs60i" path="res://carousel_test.gd" id="8_jht7e"]
+
+[node name="Temp" type="Control" unique_id=1137087664]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Carousel" type="Control" parent="." unique_id=90002917]
+visible = false
+custom_minimum_size = Vector2(640, 106)
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("8_jht7e")
+
+[node name="Mask" type="Control" parent="Carousel" unique_id=942170367]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UnitBondsbg" type="TextureRect" parent="Carousel/Mask" unique_id=1193917026]
+custom_minimum_size = Vector2(640, 106)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -53.0
+offset_right = 320.0
+offset_bottom = 53.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_a3peg")
+
+[node name="UnitBondsbgSecond" type="TextureRect" parent="Carousel/Mask" unique_id=1117422908]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -53.0
+offset_right = 320.0
+offset_bottom = 53.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_isop2")
+
+[node name="LeftButton" type="TextureButton" parent="Carousel" unique_id=1791514411]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -39.0
+offset_right = 46.0
+offset_bottom = 39.0
+grow_vertical = 2
+texture_normal = ExtResource("4_ajb2g")
+
+[node name="RightButton" type="TextureButton" parent="Carousel" unique_id=1963019189]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -46.0
+offset_top = -39.0
+offset_bottom = 39.0
+grow_horizontal = 0
+grow_vertical = 2
+texture_normal = ExtResource("7_jht7e")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1074598645]
+clip_contents = false
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 646.0
+
+[node name="GridContainer" type="GridContainer" parent="ScrollContainer" unique_id=513165584]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 5
+
+[node name="Node2D" parent="ScrollContainer/GridContainer" unique_id=425515258 instance=ExtResource("6_1kfes")]
+layout_mode = 2
+
+[node name="Node2D2" parent="ScrollContainer/GridContainer" unique_id=1054311063 instance=ExtResource("6_1kfes")]
+layout_mode = 2
+
+[node name="Node2D3" parent="ScrollContainer/GridContainer" unique_id=578408006 instance=ExtResource("6_1kfes")]
+layout_mode = 2
+
+[node name="Node2D4" parent="ScrollContainer/GridContainer" unique_id=1791605369 instance=ExtResource("6_1kfes")]
+layout_mode = 2
+
+[node name="Node2D5" parent="ScrollContainer/GridContainer" unique_id=1184870542 instance=ExtResource("6_1kfes")]
+layout_mode = 2
+
+[node name="Node2D6" parent="ScrollContainer/GridContainer" unique_id=1802353135 instance=ExtResource("6_1kfes")]
+layout_mode = 2
+
+[node name="Node2D7" parent="ScrollContainer/GridContainer" unique_id=338618577 instance=ExtResource("6_1kfes")]
+layout_mode = 2

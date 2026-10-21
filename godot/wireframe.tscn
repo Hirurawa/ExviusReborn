@@ -1,236 +1,589 @@
 [gd_scene format=3 uid="uid://dnbyjkd8gw51i"]
 
 [ext_resource type="Script" uid="uid://faaeonaoeta2" path="res://wireframe.gd" id="1_5oock"]
-[ext_resource type="Texture2D" uid="uid://bpp4tupk1k84y" path="res://assets/ui/common/pagebottom_platebg.tres" id="2_8revc"]
-[ext_resource type="Texture2D" uid="uid://bx1vvdckcg33q" path="res://assets/ui/common/button_mini_long_red1.tres" id="3_gw063"]
-[ext_resource type="Texture2D" uid="uid://hq2eg04xrkw" path="res://assets/ui/common/button_mini_long_red2.tres" id="4_5njym"]
-[ext_resource type="Texture2D" uid="uid://cyioreel1h8xw" path="res://assets/ui/unit/minibutton_label_materialclear.tres" id="5_eendj"]
-[ext_resource type="Texture2D" uid="uid://bk40y4gofsrr8" path="res://assets/ui/common/button_middle_long1.tres" id="6_1faml"]
-[ext_resource type="Texture2D" uid="uid://c71vhsxk42rfl" path="res://assets/ui/common/button_middle_long2.tres" id="7_k03pa"]
-[ext_resource type="Texture2D" uid="uid://cp5bdnf6n328g" path="res://assets/ui/unit/middlebutton_label_union.tres" id="8_fuxka"]
-[ext_resource type="Texture2D" uid="uid://b30vj2xdiepw8" path="res://assets/ui/common/pagebottom_plateinfo.tres" id="9_sraih"]
-[ext_resource type="Texture2D" uid="uid://c0kimka5uneid" path="res://assets/ui/common/icon_coin.tres" id="10_jpmmd"]
-[ext_resource type="Texture2D" uid="uid://b002karm5uh73" path="res://assets/ui/common/quantity_bg.tres" id="11_lqrm3"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h0ld1"]
-bg_color = Color(1, 0, 0, 0.2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wdbbo"]
-bg_color = Color(1, 0, 0, 0.2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e8dos"]
-bg_color = Color(1, 0, 0, 0.2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqsw0"]
-bg_color = Color(1, 0, 0, 0.2)
+[ext_resource type="Texture2D" uid="uid://btoabeyxietl1" path="res://assets/ui/unit/unit_unitdetailbg.tres" id="2_1faml"]
+[ext_resource type="Texture2D" uid="uid://46iaxn3r28vy" path="res://assets/ui/unit/unit_status_label_hp.tres" id="3_k03pa"]
+[ext_resource type="Texture2D" uid="uid://cl8jmbv2l7sfy" path="res://assets/ui/unit/unit_status_up_mini.tres" id="4_fuxka"]
+[ext_resource type="Texture2D" uid="uid://bbi36qxe4cjea" path="res://assets/ui/unit/unit_status_label_mp.tres" id="5_sraih"]
+[ext_resource type="Texture2D" uid="uid://cqdi80rpwqu72" path="res://assets/ui/unit/unit_status_label_attack.tres" id="6_jpmmd"]
+[ext_resource type="Texture2D" uid="uid://bb04aof47yu2s" path="res://assets/ui/unit/unit_status_label_defense.tres" id="7_lqrm3"]
+[ext_resource type="Texture2D" uid="uid://d3yhol2vs4058" path="res://assets/ui/unit/unit_status_label_magic.tres" id="8_h0ld1"]
+[ext_resource type="Texture2D" uid="uid://bxwwusylfw7wy" path="res://assets/ui/unit/unit_status_label_mind.tres" id="9_wdbbo"]
+[ext_resource type="Texture2D" uid="uid://cvahr7pyk0fjn" path="res://assets/ui/unit/unit_status_label_total.tres" id="10_e8dos"]
+[ext_resource type="Texture2D" uid="uid://ceokxjo22gmwl" path="res://assets/ui/unit/unit_status_label_status.tres" id="11_hqsw0"]
+[ext_resource type="Texture2D" uid="uid://bpbk44l1da3lu" path="res://assets/ui/unit/unit_status_label_abilitymag.tres" id="12_10vms"]
+[ext_resource type="Texture2D" uid="uid://dvvdveuesxbtv" path="res://assets/ui/unit/unit_status_label_equipetc.tres" id="13_x6oes"]
+[ext_resource type="Texture2D" uid="uid://dkr6637oxuvj8" path="res://assets/ui/unit/unit_status_label_equipmag_weapon3.tres" id="14_lhd8b"]
+[ext_resource type="Texture2D" uid="uid://biy2m7pb7bi3c" path="res://assets/ui/common/button_mini_short1.tres" id="15_gjbsy"]
 
 [node name="Wireframe" type="Control" unique_id=174978603]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_5oock")
-layout_csv = "uid://7jttuearqihl"
+layout_csv = "res://assets/ui/layout/unit/layout_unit_detail_status_detail.csv"
 plist_directory = "res://assets/ui"
 atlas_texture_directory = "res://assets/ui"
 tres_directory = "res://assets/ui"
 
-[node name="unit_mix_ui_bg_0" type="TextureRect" parent="." unique_id=1542598048]
+[node name="unit_detail_statusbg" type="TextureRect" parent="." unique_id=1905470027]
 layout_mode = 0
-offset_top = 718.0
 offset_right = 640.0
-offset_bottom = 824.0
-texture = ExtResource("2_8revc")
+offset_bottom = 224.0
+texture = ExtResource("2_1faml")
 expand_mode = 1
 
-[node name="unit_mix_button_clear" type="TextureRect" parent="." unique_id=374789251]
+[node name="unit_status_detail_hp_label" type="TextureRect" parent="." unique_id=1886275610]
 layout_mode = 0
-offset_left = 31.0
-offset_top = 735.0
-offset_right = 183.0
-offset_bottom = 799.0
-texture = ExtResource("3_gw063")
+offset_left = 19.0
+offset_top = 47.0
+offset_right = 61.0
+offset_bottom = 67.0
+texture = ExtResource("3_k03pa")
 expand_mode = 1
 
-[node name="unit_mix_button_clear_on" type="TextureRect" parent="." unique_id=888364516]
+[node name="unit_status_detail_hp_total" type="Label" parent="." unique_id=834579252]
 layout_mode = 0
-offset_left = 31.0
-offset_top = 735.0
-offset_right = 183.0
-offset_bottom = 799.0
-texture = ExtResource("4_5njym")
-expand_mode = 1
-
-[node name="unit_mix_button_clear_label" type="TextureRect" parent="." unique_id=434567182]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 757.0
-offset_right = 172.0
-offset_bottom = 781.0
-texture = ExtResource("5_eendj")
-expand_mode = 1
-
-[node name="unit_mix_button_union" type="TextureRect" parent="." unique_id=1114378465]
-layout_mode = 0
-offset_left = 223.0
-offset_top = 729.0
-offset_right = 415.0
-offset_bottom = 809.0
-texture = ExtResource("6_1faml")
-expand_mode = 1
-
-[node name="unit_mix_button_union_on" type="TextureRect" parent="." unique_id=1919139791]
-layout_mode = 0
-offset_left = 223.0
-offset_top = 729.0
-offset_right = 415.0
-offset_bottom = 809.0
-texture = ExtResource("7_k03pa")
-expand_mode = 1
-
-[node name="unit_mix_button_union_label" type="TextureRect" parent="." unique_id=1075121258]
-layout_mode = 0
-offset_left = 236.0
-offset_top = 742.0
-offset_right = 402.0
-offset_bottom = 794.0
-texture = ExtResource("8_fuxka")
-expand_mode = 1
-
-[node name="unit_mix_get_exp_bg" type="TextureRect" parent="." unique_id=1282406982]
-layout_mode = 0
-offset_left = 418.0
-offset_top = 732.0
-offset_right = 640.0
-offset_bottom = 764.0
-texture = ExtResource("9_sraih")
-expand_mode = 1
-
-[node name="unit_mix_get_exp_label" type="Label" parent="." unique_id=361472629]
-layout_mode = 0
-offset_left = 431.0
-offset_top = 739.0
-offset_right = 608.0
-offset_bottom = 762.0
+offset_left = 84.0
+offset_top = 49.0
+offset_right = 291.0
+offset_bottom = 72.0
 theme_override_font_sizes/font_size = 18
-text = "unit_mix_get_exp_label"
+text = "unit_status_detail_hp_total"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_get_exp_number" type="Label" parent="." unique_id=1532013375]
+[node name="unit_status_detail_hp_origin" type="Label" parent="." unique_id=2023708096]
 layout_mode = 0
-offset_left = 558.0
-offset_top = 743.0
-offset_right = 759.0
-offset_bottom = 766.0
+offset_left = 200.0
+offset_top = 50.0
+offset_right = 415.0
+offset_bottom = 73.0
 theme_override_font_sizes/font_size = 14
-text = "unit_mix_get_exp_number"
+text = "unit_status_detail_hp_origin"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_need_money_bg" type="TextureRect" parent="." unique_id=310560846]
+[node name="unit_status_detail_hp_ability_num" type="Label" parent="." unique_id=974670356]
 layout_mode = 0
-offset_left = 418.0
-offset_top = 772.0
-offset_right = 640.0
-offset_bottom = 804.0
-texture = ExtResource("9_sraih")
+offset_left = 300.0
+offset_top = 50.0
+offset_right = 560.0
+offset_bottom = 73.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_hp_ability_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_hp_equip" type="Label" parent="." unique_id=658669445]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 50.0
+offset_right = 619.0
+offset_bottom = 73.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_hp_equip"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_hp_both_hand" type="Label" parent="." unique_id=1263825548]
+layout_mode = 0
+offset_left = 492.0
+offset_top = 50.0
+offset_right = 745.0
+offset_bottom = 73.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_hp_both_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_hp_dual_hand" type="Label" parent="." unique_id=696233270]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 50.0
+offset_right = 801.0
+offset_bottom = 73.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_hp_dual_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_hp_friend_arrow" type="TextureRect" parent="." unique_id=1032107929]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 49.0
+offset_right = 466.0
+offset_bottom = 65.0
+texture = ExtResource("4_fuxka")
 expand_mode = 1
 
-[node name="unit_mix_need_money_label" type="Label" parent="." unique_id=224330161]
+[node name="unit_status_detail_mp_label" type="TextureRect" parent="." unique_id=588103127]
 layout_mode = 0
-offset_left = 431.0
-offset_top = 779.0
-offset_right = 647.0
-offset_bottom = 802.0
+offset_left = 19.0
+offset_top = 75.0
+offset_right = 61.0
+offset_bottom = 95.0
+texture = ExtResource("5_sraih")
+expand_mode = 1
+
+[node name="unit_status_detail_mp_total" type="Label" parent="." unique_id=2101399562]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 77.0
+offset_right = 296.0
+offset_bottom = 100.0
 theme_override_font_sizes/font_size = 18
-text = "unit_mix_need_money_label"
+text = "unit_status_detail_mp_total"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_money_icon" type="TextureRect" parent="." unique_id=756727984]
+[node name="unit_status_detail_mp_origin" type="Label" parent="." unique_id=767986924]
 layout_mode = 0
-offset_left = 504.0
-offset_top = 773.0
-offset_right = 536.0
-offset_bottom = 805.0
-texture = ExtResource("10_jpmmd")
+offset_left = 200.0
+offset_top = 78.0
+offset_right = 420.0
+offset_bottom = 101.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mp_origin"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mp_ability_num" type="Label" parent="." unique_id=376832167]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 78.0
+offset_right = 565.0
+offset_bottom = 101.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mp_ability_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mp_equip" type="Label" parent="." unique_id=320038868]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 78.0
+offset_right = 624.0
+offset_bottom = 101.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mp_equip"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mp_both_hand" type="Label" parent="." unique_id=696913925]
+layout_mode = 0
+offset_left = 492.0
+offset_top = 78.0
+offset_right = 750.0
+offset_bottom = 101.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mp_both_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mp_dual_hand" type="Label" parent="." unique_id=1248242350]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 78.0
+offset_right = 806.0
+offset_bottom = 101.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mp_dual_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mp_friend_arrow" type="TextureRect" parent="." unique_id=2015617565]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 77.0
+offset_right = 466.0
+offset_bottom = 93.0
+texture = ExtResource("4_fuxka")
 expand_mode = 1
 
-[node name="unit_mix_need_money_number" type="Label" parent="." unique_id=1289513974]
+[node name="unit_status_detail_atk_label" type="TextureRect" parent="." unique_id=1727102231]
 layout_mode = 0
-offset_left = 558.0
-offset_top = 783.0
-offset_right = 799.0
-offset_bottom = 806.0
+offset_left = 19.0
+offset_top = 103.0
+offset_right = 61.0
+offset_bottom = 123.0
+texture = ExtResource("6_jpmmd")
+expand_mode = 1
+
+[node name="unit_status_detail_atk_total" type="Label" parent="." unique_id=2079382080]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 105.0
+offset_right = 295.0
+offset_bottom = 128.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_detail_atk_total"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_atk_origin" type="Label" parent="." unique_id=570803173]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 106.0
+offset_right = 420.0
+offset_bottom = 129.0
 theme_override_font_sizes/font_size = 14
-text = "unit_mix_need_money_number"
+text = "unit_status_detail_atk_origin"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_scroll_area" type="Label" parent="." unique_id=1231503795]
+[node name="unit_status_detail_atk_ability_num" type="Label" parent="." unique_id=1314607813]
 layout_mode = 0
-offset_top = 225.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_h0ld1")
-text = "unit_mix_scroll_area"
+offset_left = 300.0
+offset_top = 106.0
+offset_right = 565.0
+offset_bottom = 129.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_atk_ability_num"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_scroll_bar" type="Label" parent="." unique_id=862505392]
+[node name="unit_status_detail_atk_equip" type="Label" parent="." unique_id=1200124906]
 layout_mode = 0
-offset_left = 624.0
-offset_top = 225.0
-offset_right = 772.0
-offset_bottom = 663.0
-text = "unit_mix_scroll_bar"
+offset_left = 405.0
+offset_top = 106.0
+offset_right = 624.0
+offset_bottom = 129.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_atk_equip"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_clip_area" type="Label" parent="." unique_id=1012093353]
+[node name="unit_status_detail_atk_both_hand" type="Label" parent="." unique_id=1894840065]
 layout_mode = 0
-offset_top = 225.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_wdbbo")
-text = "unit_mix_clip_area"
+offset_left = 492.0
+offset_top = 106.0
+offset_right = 750.0
+offset_bottom = 129.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_atk_both_hand"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_scroll_area_enable_unit_box_tab" type="Label" parent="." unique_id=438942818]
+[node name="unit_status_detail_atk_dual_hand" type="Label" parent="." unique_id=2121076920]
 layout_mode = 0
-offset_top = 305.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_e8dos")
-text = "unit_mix_scroll_area_enable_unit_box_tab"
+offset_left = 550.0
+offset_top = 106.0
+offset_right = 805.0
+offset_bottom = 129.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_atk_dual_hand"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_scroll_bar_enable_unit_box_tab" type="Label" parent="." unique_id=884022424]
+[node name="unit_status_detail_atk_friend_arrow" type="TextureRect" parent="." unique_id=172665043]
 layout_mode = 0
-offset_left = 624.0
-offset_top = 305.0
-offset_right = 937.0
-offset_bottom = 663.0
-text = "unit_mix_scroll_bar_enable_unit_box_tab"
+offset_left = 450.0
+offset_top = 105.0
+offset_right = 466.0
+offset_bottom = 121.0
+texture = ExtResource("4_fuxka")
+expand_mode = 1
+
+[node name="unit_status_detail_def_label" type="TextureRect" parent="." unique_id=77553353]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 131.0
+offset_right = 61.0
+offset_bottom = 151.0
+texture = ExtResource("7_lqrm3")
+expand_mode = 1
+
+[node name="unit_status_detail_def_total" type="Label" parent="." unique_id=1731614500]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 133.0
+offset_right = 295.0
+offset_bottom = 156.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_detail_def_total"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_clip_area_enable_unit_box_tab" type="Label" parent="." unique_id=510669229]
+[node name="unit_status_detail_def_origin" type="Label" parent="." unique_id=1869865424]
 layout_mode = 0
-offset_top = 305.0
-offset_right = 640.0
-offset_bottom = 663.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_hqsw0")
-text = "unit_mix_clip_area_enable_unit_box_tab"
+offset_left = 200.0
+offset_top = 134.0
+offset_right = 420.0
+offset_bottom = 157.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_def_origin"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="unit_mix_quantity" type="TextureRect" parent="." unique_id=1607029287]
+[node name="unit_status_detail_def_ability_num" type="Label" parent="." unique_id=2066057423]
 layout_mode = 0
-offset_left = 457.0
-offset_top = 627.0
-offset_right = 625.0
-offset_bottom = 659.0
-texture = ExtResource("11_lqrm3")
+offset_left = 300.0
+offset_top = 134.0
+offset_right = 565.0
+offset_bottom = 157.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_def_ability_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_def_equip" type="Label" parent="." unique_id=1493365379]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 134.0
+offset_right = 624.0
+offset_bottom = 157.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_def_equip"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_def_both_hand" type="Label" parent="." unique_id=739514747]
+layout_mode = 0
+offset_left = 492.0
+offset_top = 134.0
+offset_right = 750.0
+offset_bottom = 157.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_def_both_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_def_dual_hand" type="Label" parent="." unique_id=14569307]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 134.0
+offset_right = 806.0
+offset_bottom = 157.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_def_dual_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_def_friend_arrow" type="TextureRect" parent="." unique_id=1674491160]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 133.0
+offset_right = 466.0
+offset_bottom = 149.0
+texture = ExtResource("4_fuxka")
+expand_mode = 1
+
+[node name="unit_status_detail_mag_label" type="TextureRect" parent="." unique_id=780631790]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 159.0
+offset_right = 61.0
+offset_bottom = 179.0
+texture = ExtResource("8_h0ld1")
+expand_mode = 1
+
+[node name="unit_status_detail_mag_total" type="Label" parent="." unique_id=865557105]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 161.0
+offset_right = 304.0
+offset_bottom = 184.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_detail_mag_total"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mag_origin" type="Label" parent="." unique_id=2105775263]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 162.0
+offset_right = 428.0
+offset_bottom = 185.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mag_origin"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mag_ability_num" type="Label" parent="." unique_id=244694215]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 162.0
+offset_right = 574.0
+offset_bottom = 185.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mag_ability_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mag_equip" type="Label" parent="." unique_id=294261857]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 162.0
+offset_right = 632.0
+offset_bottom = 185.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mag_equip"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mag_both_hand" type="Label" parent="." unique_id=1627611166]
+layout_mode = 0
+offset_left = 492.0
+offset_top = 162.0
+offset_right = 758.0
+offset_bottom = 185.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mag_both_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mag_dual_hand" type="Label" parent="." unique_id=386974660]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 162.0
+offset_right = 814.0
+offset_bottom = 185.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_mag_dual_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_mag_friend_arrow" type="TextureRect" parent="." unique_id=1825112148]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 161.0
+offset_right = 466.0
+offset_bottom = 177.0
+texture = ExtResource("4_fuxka")
+expand_mode = 1
+
+[node name="unit_status_detail_min_label" type="TextureRect" parent="." unique_id=721450101]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 187.0
+offset_right = 61.0
+offset_bottom = 207.0
+texture = ExtResource("9_wdbbo")
+expand_mode = 1
+
+[node name="unit_status_detail_min_total" type="Label" parent="." unique_id=370387305]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 189.0
+offset_right = 300.0
+offset_bottom = 212.0
+theme_override_font_sizes/font_size = 18
+text = "unit_status_detail_min_total"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_min_origin" type="Label" parent="." unique_id=1901725444]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 190.0
+offset_right = 425.0
+offset_bottom = 213.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_min_origin"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_min_ability_num" type="Label" parent="." unique_id=1735157005]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 190.0
+offset_right = 570.0
+offset_bottom = 213.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_min_ability_num"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_min_equip" type="Label" parent="." unique_id=525557785]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 190.0
+offset_right = 629.0
+offset_bottom = 213.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_min_equip"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_min_both_hand" type="Label" parent="." unique_id=1636396207]
+layout_mode = 0
+offset_left = 492.0
+offset_top = 190.0
+offset_right = 755.0
+offset_bottom = 213.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_min_both_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_min_dual_hand" type="Label" parent="." unique_id=856393747]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 190.0
+offset_right = 810.0
+offset_bottom = 213.0
+theme_override_font_sizes/font_size = 14
+text = "unit_status_detail_min_dual_hand"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="unit_status_detail_min_friend_arrow" type="TextureRect" parent="." unique_id=1478427932]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 189.0
+offset_right = 466.0
+offset_bottom = 205.0
+texture = ExtResource("4_fuxka")
+expand_mode = 1
+
+[node name="unit_status_detail_total_title" type="TextureRect" parent="." unique_id=1352913156]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 12.0
+offset_right = 168.0
+offset_bottom = 40.0
+texture = ExtResource("10_e8dos")
+expand_mode = 1
+
+[node name="unit_status_detail_origin_title" type="TextureRect" parent="." unique_id=1869202449]
+layout_mode = 0
+offset_left = 182.0
+offset_top = 12.0
+offset_right = 278.0
+offset_bottom = 40.0
+texture = ExtResource("11_hqsw0")
+expand_mode = 1
+
+[node name="unit_status_detail_ability_title" type="TextureRect" parent="." unique_id=688666974]
+layout_mode = 0
+offset_left = 290.0
+offset_top = 4.0
+offset_right = 370.0
+offset_bottom = 48.0
+texture = ExtResource("12_10vms")
+expand_mode = 1
+
+[node name="unit_status_detail_equip_title" type="TextureRect" parent="." unique_id=1266264401]
+layout_mode = 0
+offset_left = 394.0
+offset_top = 12.0
+offset_right = 466.0
+offset_bottom = 40.0
+texture = ExtResource("13_x6oes")
+expand_mode = 1
+
+[node name="unit_status_detail_equip_ability_title" type="TextureRect" parent="." unique_id=1936302201]
+layout_mode = 0
+offset_left = 498.0
+offset_top = 4.0
+offset_right = 597.0
+offset_bottom = 48.0
+texture = ExtResource("14_lhd8b")
+expand_mode = 1
+
+[node name="unit_status_detail_detail_icon" type="TextureRect" parent="." unique_id=489562509]
+layout_mode = 0
+offset_right = 41.0
+offset_bottom = 44.0
+texture = ExtResource("15_gjbsy")
 expand_mode = 1

@@ -56,13 +56,13 @@ expand_mode = 1
 layout_mode = 0
 offset_left = 90.0
 offset_top = 152.0
-offset_right = 640.0
+offset_right = 624.0
 offset_bottom = 192.0
 
 [node name="Stats" type="HBoxContainer" parent="." unique_id=1281918261]
 layout_mode = 0
 offset_top = 190.0
-offset_right = 640.0
+offset_right = 624.0
 offset_bottom = 354.0
 
 [node name="StatTextures" type="VBoxContainer" parent="Stats" unique_id=18032228]

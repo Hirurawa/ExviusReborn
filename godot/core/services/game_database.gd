@@ -263,6 +263,16 @@ func get_mission_bg(mission_id: String) -> String:
 	return str(rows[0].get("fileInfo", "")) if not rows.is_empty() else ""
 
 
+## The SpriteStudio layers played over a mission's battle background (battle_bg's
+## unnamed column Dc5w1Yda), or "" when it has none. BattleBackground.parse_layers
+## reads them.
+func get_mission_bg_layers(mission_id: String) -> String:
+	var rows = query("SELECT bg.Dc5w1Yda AS layers FROM battle_bg bg JOIN mission m ON m.battleBgId = bg.battleBgId WHERE m.missionId = ? LIMIT 1", [mission_id])
+	if rows.is_empty() or rows[0].get("layers") == null:
+		return ""
+	return str(rows[0]["layers"])
+
+
 ## Display name of a dungeon (dungeon.name), or "" if the dungeon id is unknown.
 ## Used to build the combat background path and the last-played-dungeon label.
 func get_dungeon_name(dungeon_id: String) -> String:
@@ -302,25 +312,6 @@ func get_town(town_id: String) -> Dictionary:
 
 func get_story_sub(town_id: String) -> Array:
 	return query("SELECT storySubId, storyId, storyNo, locationType, targetId, switchInfo, openSwitch FROM story_sub WHERE targetId = ?", [town_id])
-
-
-func get_map_event_switch_unlock(target_id: int, switch_info: int) -> Variant:
-	var rows = query("select locationType, targetId, resourceId, storyEventId, switchInfo, openSwitch from map_event where targetId = ? and switchInfo = ?", [target_id, switch_info])
-	return rows[0].get("openSwitch") if not rows.is_empty() else {}
-
-
-## Map-object cutscene triggers for a location. locationType: 1=mission, 2=town,
-## 3=dungeon. Returns every map_event row for the target (a location may have
-## several, gated by different switches). Each row: locationType, targetId,
-## resourceId (comma list; first id -> event cpk via resource_map), storyEventId,
-## switchInfo (gate to trigger), openSwitch (the "watched" marker). Caller plays a
-## row iff SwitchService.is_unlocked(switchInfo) and NOT is_unlocked(openSwitch).
-func get_map_event(target_id: int, location_type: int) -> Array:
-	return query(
-		"SELECT locationType, targetId, resourceId, storyEventId, switchInfo, openSwitch"
-		+ " FROM map_event WHERE targetId = ? AND locationType = ?",
-		[target_id, location_type]
-	)
 
 
 ## Resolves a resourceId (or a comma list, e.g. map_event.resourceId "311102103,400205")
@@ -758,15 +749,97 @@ func get_mission_cutscenes(mission_id: String) -> Array:
 	return out
 
 
-## Story-event display info for a cutscene (placeholder now; EventRunner later).
-## {} when unknown. name = scene name (e.g. "main1-1_OP1"); sceneRes = the scene
-## resource ref (source column "25oxcKwN", e.g. "map@65").
-func get_story_event(story_event_id: String) -> Dictionary:
+## Where story event `story_event_id` plays (CUTSCENE-PLAN.md sections 2.5 and 10):
+## { name, bin_id, layer, switches }. The bin comes from the first route that names one:
+## the map_event row that plays the story event, the event package of the mission it is
+## filed under, or that of `mission_id`, the mission playing it (some chapters play
+## scenes filed under another mission). A town's story events have only the first.
+## `layer` is the story event's "map@N", or -1 for the bin's own start layer;
+## `switches` ({ switch id: value }) comes from its switchId ("19100010:0,19100011:1")
+## and selects the page that plays. {} when the story event or its bin is unknown.
+func get_story_event_scene(story_event_id: String, mission_id: String = "") -> Dictionary:
 	var rows: Array = query(
-		"SELECT storyEventId, name, \"25oxcKwN\" AS sceneRes FROM story_event WHERE storyEventId = ?",
+		"SELECT name, locationType, targetId, \"25oxcKwN\" AS sceneRes, switchId"
+		+ " FROM story_event WHERE storyEventId = ?",
 		[story_event_id]
 	)
-	return rows[0] if not rows.is_empty() else {}
+	if rows.is_empty():
+		return {}
+	var row: Dictionary = rows[0]
+	var bin_id: String = ""
+	var events: Array = query("SELECT resourceId FROM map_event WHERE storyEventId = ?", [story_event_id])
+	if not events.is_empty():
+		bin_id = get_event_id_for_resource(str(events[0].get("resourceId", "")))
+	if bin_id == "" and int(row.get("locationType", 0)) == 1:
+		bin_id = str(get_mission_event_resource(str(row.get("targetId", ""))).get("event_id", ""))
+	if bin_id == "" and mission_id != "":
+		bin_id = str(get_mission_event_resource(mission_id).get("event_id", ""))
+	if bin_id == "":
+		return {}
+	var layer: int = -1
+	var scene_res: Variant = row.get("sceneRes")
+	if scene_res != null and str(scene_res).begins_with("map@") and str(scene_res).substr(4).is_valid_int():
+		layer = int(str(scene_res).substr(4))
+	var switches: Dictionary = {}
+	var switch_list: Variant = row.get("switchId")
+	if switch_list != null:
+		for entry in str(switch_list).split(",", false):
+			var parts: PackedStringArray = entry.split(":")
+			if parts.size() == 2 and parts[0].strip_edges().is_valid_int() and parts[1].strip_edges().is_valid_int():
+				switches[int(parts[0])] = int(parts[1])
+	return {"name": str(row.get("name", "")), "bin_id": bin_id, "layer": layer, "switches": switches}
+
+
+## The story scenes map_event attaches to a location, for one trigger: location_type 1
+## a mission, 2 a town, 3 a dungeon; trigger (column XFh30CkV) 1 on entering, 2 after
+## a clear, 3 used by 8 town rows (CUTSCENE-PLAN.md section 10.1). A row plays while its
+## switchInfo is on and its openSwitch off. Each: storyEventId, resourceId, switchInfo,
+## openSwitch.
+func get_map_events(location_type: int, target_id: int, trigger: int) -> Array:
+	return query(
+		"SELECT storyEventId, resourceId, switchInfo, openSwitch FROM map_event"
+		+ " WHERE locationType = ? AND targetId = ? AND XFh30CkV = ? ORDER BY storyEventId",
+		[location_type, target_id, trigger]
+	)
+
+
+## The event packages attached to a town (map_ext_resource rows with targetType 2), in
+## table order: { switch_info, open_switch, bin_id }. A package is on the town while its
+## switch_info is on (0: always) and its open_switch off (0: never closes); bin_id is ""
+## when the row names no event package (sound only).
+func get_town_event_packages(town_id: int) -> Array:
+	var packages: Array = []
+	for row in query("SELECT switchInfo, openSwitch, resourceId FROM map_ext_resource WHERE targetType = 2 AND targetId = ?", [town_id]):
+		var bin_id: String = ""
+		for token in str(row.get("resourceId", "")).split(","):
+			var rid: String = token.strip_edges()
+			if not rid.is_valid_int():
+				continue
+			var found: Array = query("SELECT fileName, drE35YcF FROM resource_map WHERE resourceId = ?", [int(rid)])
+			if not found.is_empty() and str(found[0].get("drE35YcF", "")) == "event":
+				bin_id = str(found[0].get("fileName", "")).get_basename()
+				break
+		packages.append({
+			"switch_info": int(row.get("switchInfo")) if row.get("switchInfo") != null else 0,
+			"open_switch": int(row.get("openSwitch")) if row.get("openSwitch") != null else 0,
+			"bin_id": bin_id,
+		})
+	return packages
+
+
+## What kind of switch `switch_id` is: { type (switch_type id: 100 to 104 the main
+## story, 102 its scene-local switches), scope (switch_type's third column: 0 kept once
+## the mission clears ❓, 1 saved, 2 local to a scene) }; scope -1 for an unknown switch.
+func get_switch_kind(switch_id: int) -> Dictionary:
+	var rows: Array = query(
+		"SELECT s.switchType AS type, t.\"2n9Zm8FG\" AS scope FROM switch s"
+		+ " LEFT JOIN switch_type t ON t.typeId = s.switchType WHERE s.switchId = ?",
+		[switch_id]
+	)
+	if rows.is_empty():
+		return {"type": -1, "scope": -1}
+	var scope: Variant = rows[0].get("scope")
+	return {"type": int(rows[0].get("type", -1)), "scope": int(scope) if scope != null else -1}
 
 
 ## The event cpk that holds a mission's in-mission cutscenes. The story_event
@@ -1019,9 +1092,10 @@ func get_monster_ai_meta(monster_id: String) -> Dictionary:
 # === Unit progression ===
 
 ## Per-level XP rows for a unit exp pattern, ordered by level. Each row:
-## { level, needExp }. `needExp` at level L is the cumulative XP required to
-## REACH level L (the table carries an L=1=0 row); callers convert this to the
-## marginal XP per level as needed. Empty if the pattern id is unknown.
+## { level, needExp }. `needExp` at level L is the XP needed to go from level
+## L-1 to level L (the table carries an L=1=0 row), like team_lv; callers sum
+## the rows for the cumulative XP to reach a level. Empty if the pattern id is
+## unknown.
 func get_unit_exp_pattern(pattern_id: int) -> Array:
 	return query(
 		"SELECT level, needExp FROM unit_exp_pattern WHERE expPatternId = ? ORDER BY level",

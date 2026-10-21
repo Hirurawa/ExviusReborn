@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dhgreviex5agt"]
+
+[ext_resource type="Script" path="res://features/spritestudio/ssbp_viewer.gd" id="1"]
+
+[node name="SsbpViewer" type="Node2D" unique_id=508934262]
+script = ExtResource("1")
